@@ -14,10 +14,23 @@ export const supabase = createClient(url, anon, {
 
 const DEFAULT_STATS = [
   { key: 'СИЛ', label: 'Сила',      value: 5 },
-  { key: 'КРС', label: 'Красота',   value: 5 },
+  { key: 'СТЙ', label: 'Стойкость', value: 5 },
   { key: 'ИНТ', label: 'Интеллект', value: 5 },
   { key: 'ХАР', label: 'Харизма',   value: 5 },
 ];
+
+function reconcileStats(stats) {
+  if (!Array.isArray(stats)) return { stats: DEFAULT_STATS, changed: true };
+  const next = DEFAULT_STATS.map((def, i) => ({
+    key: def.key,
+    label: def.label,
+    value: typeof stats[i]?.value === 'number' ? stats[i].value : def.value,
+  }));
+  const changed =
+    stats.length !== next.length ||
+    stats.some((s, i) => s.key !== next[i].key || s.label !== next[i].label);
+  return { stats: next, changed };
+}
 
 const DEFAULT_SKILLS = [
   { name: 'Чтение',           level: 1, xp: 20 },
@@ -57,6 +70,19 @@ export async function loadProfile() {
     .eq('id', user.id)
     .maybeSingle();
   if (error) throw error;
+  if (!data) return data;
+  const { stats, changed } = reconcileStats(data.stats);
+  if (changed) {
+    data.stats = stats;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ stats, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+    } catch (e) {
+      console.error('stats reconcile save failed', e);
+    }
+  }
   return data;
 }
 
