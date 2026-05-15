@@ -14,7 +14,7 @@ export const supabase = createClient(url, anon, {
 
 const DEFAULT_STATS = [
   { key: 'СИЛ', label: 'Сила',      value: 5 },
-  { key: 'ЛОВ', label: 'Ловкость',  value: 5 },
+  { key: 'КРС', label: 'Красота',   value: 5 },
   { key: 'ИНТ', label: 'Интеллект', value: 5 },
   { key: 'ХАР', label: 'Харизма',   value: 5 },
 ];
