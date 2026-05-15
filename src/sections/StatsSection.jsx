@@ -13,6 +13,7 @@ export default function StatsSection() {
     <ul className="stats">
       {profile.stats.map((s) => (
         <li key={s.key} className="stat">
+          <span className="stat-key">{s.key}</span>
           <span className="stat-label">{s.label}</span>
           <span className="stat-controls">
             <button onClick={() => bump(s.key, -1)}>−</button>
