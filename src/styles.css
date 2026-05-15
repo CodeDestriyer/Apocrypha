@@ -689,27 +689,51 @@ html, body, #root {
 
 .nav-card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 48px 1fr auto;
   align-items: center;
-  gap: 10px;
-  padding: 14px 14px;
+  gap: 16px;
+  padding: 22px 20px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--text);
   font-family: 'Cinzel', serif;
-  font-size: 14px;
-  letter-spacing: 0.06em;
+  font-size: 17px;
+  letter-spacing: 0.08em;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s, box-shadow 0.2s;
 }
-.nav-card:hover { border-color: var(--gold); background: rgba(20, 12, 8, 0.6); }
-.nav-card:active { transform: scale(0.98); }
+.nav-card:hover {
+  border-color: var(--gold);
+  background: rgba(20, 12, 8, 0.6);
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.15);
+}
+.nav-card:active { transform: scale(0.99); }
 
-.nav-icon { font-size: 18px; color: var(--gold-bright); }
+.nav-icon {
+  font-size: 28px;
+  color: var(--gold-bright);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(212,175,55,0.18), rgba(0,0,0,0.4));
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
 .nav-label { color: var(--text); }
-.nav-summary { font-family: 'Cinzel', serif; color: var(--gold-bright); font-size: 14px; }
+.nav-summary {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-bright);
+  font-size: 18px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  min-width: 36px;
+  text-align: center;
+}
 
 .sub-page { width: min(480px, 100%); }
 
