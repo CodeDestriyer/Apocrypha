@@ -9,7 +9,7 @@ const NAV = [
   { id: 'goals',       label: 'Цели',         icon: '✧', summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
   { id: 'skills',      label: 'Навыки',       icon: '✦', summary: (p) => (p.skills ?? []).reduce((s, v) => s + v.level, 0) },
   { id: 'asceses',     label: 'Аскезы',       icon: '☥', summary: (p) => (p.asceses ?? []).filter((a) => a.status === 'active').length },
-  { id: 'moneymaxing', label: 'Moneymaxing',  icon: '💰', summary: (p) => (p.moneymaxing ?? []).length },
+  { id: 'moneymaxing', label: 'Moneymaxing',  icon: '❖', summary: (p) => (p.moneymaxing ?? []).length },
   { id: 'looksmaxing', label: 'Looksmaxing',  icon: '✺', summary: (p) => (p.looksmaxing ?? []).length },
 ];
 

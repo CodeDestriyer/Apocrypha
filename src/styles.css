@@ -488,7 +488,7 @@ html, body, #root {
 .goal-title-input::placeholder { color: var(--text-dim); font-style: italic; }
 
 .icon-btn {
-  width: 30px;
+  min-width: 30px;
   height: 30px;
   border-radius: 6px;
   border: 1px solid rgba(212, 175, 55, 0.2);
@@ -496,18 +496,16 @@ html, body, #root {
   color: var(--gold);
   cursor: pointer;
   font-size: 13px;
-  padding: 0;
+  padding: 0 8px;
   display: grid;
   place-items: center;
   white-space: nowrap;
+  font-family: 'Cinzel', serif;
   transition: background 0.15s, border-color 0.15s;
 }
 .icon-btn:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--gold-dim); }
-.icon-btn.remove { color: #c87a7a; border-color: rgba(139, 30, 30, 0.4); }
+.icon-btn.remove { color: #c87a7a; border-color: rgba(139, 30, 30, 0.4); padding: 0; width: 30px; }
 .icon-btn.remove:hover { background: rgba(139, 30, 30, 0.15); }
-
-/* If a deadline text is shown (DD.MM.YY), give the button more room */
-.icon-btn:has(:not(.placeholder)) { padding: 0 8px; }
 
 .hidden-date {
   position: absolute;
