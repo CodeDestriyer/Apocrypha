@@ -51,7 +51,7 @@ export default function AscesesSection() {
 
   return (
     <>
-      <div className="add-goal">
+      <div className="add-asceza-inline">
         <input
           className="goal-input"
           placeholder="Новая аскеза"
@@ -60,18 +60,16 @@ export default function AscesesSection() {
           onKeyDown={(e) => e.key === 'Enter' && add()}
           maxLength={64}
         />
-        <div className="add-asceza-row">
-          <input
-            type="number"
-            min="1"
-            className="date-input"
-            value={targetDays}
-            onChange={(e) => setTargetDays(e.target.value)}
-            placeholder="дней"
-          />
-          <span className="days-label">дней</span>
-          <button className="add-btn" onClick={add}>+</button>
-        </div>
+        <input
+          type="number"
+          min="1"
+          className="days-input"
+          value={targetDays}
+          onChange={(e) => setTargetDays(e.target.value)}
+          aria-label="Дней"
+        />
+        <span className="days-label">дн.</span>
+        <button className="add-btn" onClick={add}>+</button>
       </div>
 
       {asceses.length === 0 && <div className="empty">—</div>}

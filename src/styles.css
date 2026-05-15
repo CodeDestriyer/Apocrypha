@@ -731,21 +731,21 @@ html, body, #root {
   margin-top: 12px;
 }
 
-.nav-grid { gap: 6px; }
+.nav-grid { gap: 8px; }
 
 .nav-card {
   position: relative;
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 26px 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px 12px 16px;
+  gap: 16px;
+  padding: 16px 18px 16px 20px;
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(212, 175, 55, 0.12);
-  border-radius: 8px;
+  border-radius: 9px;
   color: var(--text);
   font-family: 'Cinzel', serif;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.08em;
   cursor: pointer;
   text-align: left;
@@ -770,7 +770,7 @@ html, body, #root {
 }
 
 .nav-icon {
-  font-size: 18px;
+  font-size: 20px;
   color: var(--gold);
   text-align: center;
   line-height: 1;
@@ -779,7 +779,7 @@ html, body, #root {
 .nav-summary {
   font-family: 'Cinzel', serif;
   color: var(--gold-bright);
-  font-size: 14px;
+  font-size: 15px;
   min-width: 20px;
   text-align: right;
   letter-spacing: 0.04em;
@@ -887,12 +887,29 @@ html, body, #root {
 .section { display: grid; gap: 10px; }
 .section-body { display: grid; gap: 10px; }
 
-.add-asceza-row {
+.add-asceza-inline {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr 64px auto auto;
   gap: 8px;
   align-items: center;
+  margin-bottom: 14px;
 }
+
+.days-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--gold-dim);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  outline: none;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.days-input::-webkit-outer-spin-button,
+.days-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.days-input:focus { border-color: var(--gold); }
 .days-label {
   color: var(--text-dim);
   font-size: 13px;
