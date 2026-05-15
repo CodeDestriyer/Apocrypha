@@ -2,11 +2,11 @@
   --bg-0: #060a12;
   --bg-1: #0a1320;
   --bg-2: #142133;
-  --gold: #7fb8c7;
-  --gold-dim: #4c7a86;
-  --gold-bright: #b7dde6;
-  --text: #d8e4ee;
-  --text-dim: #7c8a99;
+  --gold: #9cc9d4;
+  --gold-dim: #5f8c97;
+  --gold-bright: #f0f6fa;
+  --text: #f2f6fa;
+  --text-dim: #aab5c2;
   --danger: #9d5252;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(127, 184, 199, 0.15) inset;
 }
