@@ -73,9 +73,12 @@ export function ProfileProvider({ children }) {
     }
   };
 
-  const update = (patch) => {
-    setProfile((curr) => ({ ...curr, ...patch }));
-    pendingPatch.current = { ...pendingPatch.current, ...patch };
+  const update = (patchOrFn) => {
+    setProfile((curr) => {
+      const patch = typeof patchOrFn === 'function' ? patchOrFn(curr) : patchOrFn;
+      pendingPatch.current = { ...pendingPatch.current, ...patch };
+      return { ...curr, ...patch };
+    });
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const toSave = pendingPatch.current;

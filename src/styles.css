@@ -452,6 +452,86 @@ html, body, #root {
 }
 .date-input:focus { border-color: var(--gold); }
 
+.goal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.goal-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 8px;
+  transition: opacity 0.2s;
+}
+.goal-row.done { opacity: 0.5; }
+.goal-row.done .goal-title-input { text-decoration: line-through; color: var(--text-dim); }
+
+.goal-title-input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  outline: none;
+  padding: 6px 2px;
+  width: 100%;
+  min-width: 0;
+}
+.goal-title-input::placeholder { color: var(--text-dim); font-style: italic; }
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.icon-btn:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--gold-dim); }
+.icon-btn.remove { color: #c87a7a; border-color: rgba(139, 30, 30, 0.4); }
+.icon-btn.remove:hover { background: rgba(139, 30, 30, 0.15); }
+
+/* If a deadline text is shown (DD.MM.YY), give the button more room */
+.icon-btn:has(:not(.placeholder)) { padding: 0 8px; }
+
+.hidden-date {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.add-row {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px dashed var(--gold-dim);
+  border-radius: 8px;
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.add-row:hover { background: rgba(212, 175, 55, 0.08); border-color: var(--gold); color: var(--gold-bright); }
+
 .goal-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .goal-deadline {
   font-size: 11px;
