@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CharacterPage from './pages/CharacterPage.jsx';
 import SubPage from './pages/SubPage.jsx';
 import NameModal from './NameModal.jsx';
+import LoginScreen from './LoginScreen.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import GoalsSection from './sections/GoalsSection.jsx';
 import SkillsSection from './sections/SkillsSection.jsx';
@@ -26,6 +27,9 @@ function Shell() {
   }
   if (status === 'error') {
     return <div className="splash"><div className="ornament">⚠</div><div className="error-text">{error}</div></div>;
+  }
+  if (status === 'unauthenticated') {
+    return <LoginScreen />;
   }
   if (status === 'need-name') {
     return <NameModal />;

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useProfile } from './ProfileContext.jsx';
 
 export default function NameModal() {
-  const { submitName } = useProfile();
-  const [name, setName] = useState('');
+  const { submitName, defaultName } = useProfile();
+  const [name, setName] = useState(defaultName || '');
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {

@@ -26,12 +26,26 @@ const DEFAULT_SKILLS = [
   { name: 'Медитация',        level: 0, xp: 0  },
 ];
 
-export async function ensureSession() {
+export async function getSession() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (session) return session;
-  const { data, error } = await supabase.auth.signInAnonymously();
+  return session;
+}
+
+export async function signInAnonymous() {
+  const { error } = await supabase.auth.signInAnonymously();
   if (error) throw error;
-  return data.session;
+}
+
+export async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  if (error) throw error;
+}
+
+export async function signOut() {
+  await supabase.auth.signOut();
 }
 
 export async function loadProfile() {

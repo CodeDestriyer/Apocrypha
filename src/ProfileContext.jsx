@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { ensureSession, loadProfile, createProfile, saveProfile } from './supabase.js';
+import { supabase, getSession, loadProfile, createProfile, saveProfile } from './supabase.js';
 
 const ProfileContext = createContext(null);
 
@@ -10,24 +10,32 @@ export function useProfile() {
 }
 
 export function ProfileProvider({ children }) {
-  const [status, setStatus] = useState('loading'); // loading | need-name | ready | error
+  const [status, setStatus] = useState('loading'); // loading | unauthenticated | need-name | ready | error
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState(null);
+  const [defaultName, setDefaultName] = useState('');
   const saveTimer = useRef(null);
   const pendingPatch = useRef({});
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const handleSession = async (session) => {
       try {
-        await ensureSession();
+        if (!session) {
+          if (!cancelled) setStatus('unauthenticated');
+          return;
+        }
         const p = await loadProfile();
         if (cancelled) return;
-        if (!p) {
-          setStatus('need-name');
-        } else {
+        if (p) {
           setProfile(p);
           setStatus('ready');
+        } else {
+          const meta = session.user?.user_metadata ?? {};
+          const suggested = meta.full_name || meta.name || (session.user?.email?.split('@')[0]) || '';
+          setDefaultName(suggested);
+          setStatus('need-name');
         }
       } catch (e) {
         console.error(e);
@@ -36,8 +44,21 @@ export function ProfileProvider({ children }) {
           setStatus('error');
         }
       }
+    };
+
+    (async () => {
+      const session = await getSession();
+      await handleSession(session);
     })();
-    return () => { cancelled = true; };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
+    });
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const submitName = async (name) => {
@@ -65,7 +86,7 @@ export function ProfileProvider({ children }) {
   };
 
   return (
-    <ProfileContext.Provider value={{ status, profile, error, submitName, update }}>
+    <ProfileContext.Provider value={{ status, profile, error, defaultName, submitName, update }}>
       {children}
     </ProfileContext.Provider>
   );
