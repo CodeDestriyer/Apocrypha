@@ -9,12 +9,13 @@ import SkillsSection from './sections/SkillsSection.jsx';
 import AscesesSection from './sections/AscesesSection.jsx';
 import TrackerSection from './sections/TrackerSection.jsx';
 import LooksmaxingSection from './sections/LooksmaxingSection.jsx';
+import MoneymaxingSection from './sections/MoneymaxingSection.jsx';
 
 const SUB_PAGES = {
   goals:       { title: 'Цели',        render: () => <GoalsSection /> },
   skills:      { title: 'Навыки',      render: () => <SkillsSection /> },
   asceses:     { title: 'Аскезы',      render: () => <AscesesSection /> },
-  moneymaxing: { title: 'Moneymaxing', render: () => <TrackerSection field="moneymaxing" placeholder="Источник дохода / финансовая цель" /> },
+  moneymaxing: { title: 'Moneymaxing', render: () => <MoneymaxingSection /> },
   looksmaxing: { title: 'Looksmaxing', render: () => <LooksmaxingSection /> },
 };
 

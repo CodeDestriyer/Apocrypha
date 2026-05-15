@@ -13,6 +13,20 @@ const NAV = [
   { id: 'looksmaxing', label: 'Looksmaxing',  icon: '✺', summary: (p) => (p.looksmaxing ?? []).length },
 ];
 
+function TagRow({ profile }) {
+  const tags = [];
+  if (profile.looks_rating)  tags.push({ key: 'looks', label: profile.looks_rating });
+  if (profile.money_activity) tags.push({ key: 'money', label: profile.money_activity });
+  if (tags.length === 0) return null;
+  return (
+    <div className="tag-row">
+      {tags.map((t) => (
+        <span key={t.key} className="tag">{t.label}</span>
+      ))}
+    </div>
+  );
+}
+
 export default function CharacterPage({ onNavigate }) {
   const { profile, update } = useProfile();
   const [editingName, setEditingName] = useState(false);
@@ -43,6 +57,7 @@ export default function CharacterPage({ onNavigate }) {
               {profile.name || '—'}
             </h1>
           )}
+          <TagRow profile={profile} />
         </div>
       </div>
 

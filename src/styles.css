@@ -116,6 +116,50 @@ html, body, #root {
 .char-info .name { text-align: left; }
 .char-info .subtitle { text-align: left; }
 
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.field-block {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.field-label {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.field-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--gold-dim);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  outline: none;
+}
+.field-input:focus { border-color: var(--gold); }
+
 .tap-hint {
   margin-top: 8px;
   font-size: 11px;
