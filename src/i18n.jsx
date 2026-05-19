@@ -3,9 +3,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const STORAGE_KEY = 'lr.lang';
 
 export const LANGS = [
-  { code: 'ru', label: 'Русский' },
-  { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
 ];
 
 const DICT = {
@@ -50,6 +50,8 @@ const DICT = {
     'money.tracker': 'Источник дохода / финансовая цель',
     'lang.title': 'Язык',
     'settings.title': 'Настройки',
+    'settings.modules': 'Модули',
+    'settings.done': 'Готово',
   },
   en: {
     'nav.goals': 'Goals',
@@ -92,6 +94,8 @@ const DICT = {
     'money.tracker': 'Income source / financial goal',
     'lang.title': 'Language',
     'settings.title': 'Settings',
+    'settings.modules': 'Modules',
+    'settings.done': 'Done',
   },
   es: {
     'nav.goals': 'Objetivos',
@@ -134,6 +138,8 @@ const DICT = {
     'money.tracker': 'Fuente de ingresos / meta financiera',
     'lang.title': 'Idioma',
     'settings.title': 'Ajustes',
+    'settings.modules': 'Módulos',
+    'settings.done': 'Hecho',
   },
 };
 
