@@ -51,6 +51,7 @@ const DICT = {
     'lang.title': 'Язык',
     'settings.title': 'Настройки',
     'settings.modules': 'Модули',
+    'settings.info': 'Инфа',
     'settings.done': 'Готово',
   },
   en: {
@@ -95,6 +96,7 @@ const DICT = {
     'lang.title': 'Language',
     'settings.title': 'Settings',
     'settings.modules': 'Modules',
+    'settings.info': 'Info',
     'settings.done': 'Done',
   },
   es: {
@@ -139,6 +141,7 @@ const DICT = {
     'lang.title': 'Idioma',
     'settings.title': 'Ajustes',
     'settings.modules': 'Módulos',
+    'settings.info': 'Info',
     'settings.done': 'Hecho',
   },
 };

@@ -41,7 +41,7 @@ function useModulePrefs() {
   return [prefs, setPrefs];
 }
 
-function SettingsMenu({ setEditing }) {
+function SettingsMenu({ setEditing, setEditingInfo }) {
   const { lang, setLang, t } = useLang();
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState(null); // null | 'lang' | 'modules'
@@ -64,6 +64,10 @@ function SettingsMenu({ setEditing }) {
     setEditing(true);
     setOpen(false);
   };
+  const openInfo = () => {
+    setEditingInfo(true);
+    setOpen(false);
+  };
 
   return (
     <div className="settings-menu" ref={ref}>
@@ -79,6 +83,10 @@ function SettingsMenu({ setEditing }) {
         <div className="settings-dropdown">
           {section === null && (
             <>
+              <button className="settings-row" onClick={openInfo}>
+                <span>{t('settings.info')}</span>
+                <span className="settings-row-value">›</span>
+              </button>
               <button className="settings-row" onClick={() => setSection('lang')}>
                 <span>{t('lang.title')}</span>
                 <span className="settings-row-value">{currentLang.flag}</span>
@@ -229,39 +237,48 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 
 export default function CharacterPage({ onNavigate }) {
   const { profile, update } = useProfile();
-  const [editingName, setEditingName] = useState(false);
+  const { t } = useLang();
   const [prefs, setPrefs] = useModulePrefs();
   const [editing, setEditing] = useState(false);
+  const [editingInfo, setEditingInfo] = useState(false);
 
-  const cycleAvatar = () => update({ avatar_idx: (profile.avatar_idx + 1) % AVATARS.length });
+  const cycleAvatar = () => {
+    if (!editingInfo) return;
+    update({ avatar_idx: (profile.avatar_idx + 1) % AVATARS.length });
+  };
   const setName = (name) => update({ name });
 
   return (
     <div className="card character-card">
-      <SettingsMenu setEditing={setEditing} />
+      <SettingsMenu setEditing={setEditing} setEditingInfo={setEditingInfo} />
       <div className="char-layout">
-        <button className="avatar avatar-big" onClick={cycleAvatar}>
+        <button
+          className={`avatar avatar-big ${editingInfo ? 'editable' : ''}`}
+          onClick={cycleAvatar}
+          disabled={!editingInfo}
+        >
           <span>{AVATARS[profile.avatar_idx] ?? '⚔️'}</span>
         </button>
         <div className="char-info">
-          {editingName ? (
+          {editingInfo ? (
             <input
               autoFocus
-              className="name-input"
+              className="name-input name-input-blink"
               value={profile.name}
               onChange={(e) => setName(e.target.value)}
-              onBlur={() => setEditingName(false)}
-              onKeyDown={(e) => e.key === 'Enter' && setEditingName(false)}
               maxLength={24}
             />
           ) : (
-            <h1 className="name" onClick={() => setEditingName(true)}>
-              {profile.name || '—'}
-            </h1>
+            <h1 className="name">{profile.name || '—'}</h1>
           )}
           <TagRow profile={profile} />
         </div>
       </div>
+      {editingInfo && (
+        <button className="settings-done nav-done" onClick={() => setEditingInfo(false)}>
+          {t('settings.done')}
+        </button>
+      )}
 
       <div className="divider" />
 

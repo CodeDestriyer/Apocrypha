@@ -356,8 +356,19 @@ body {
   color: var(--gold-bright);
   margin: 0 0 4px;
   letter-spacing: 0.08em;
-  cursor: text;
+  cursor: default;
   text-shadow: 0 1px 0 #000, 0 0 12px rgba(127, 184, 199, 0.3);
+}
+
+.avatar-big:disabled { cursor: default; }
+.avatar-big.editable { cursor: pointer; }
+
+@keyframes name-caret-blink {
+  0%, 49%   { border-bottom-color: var(--gold); }
+  50%, 100% { border-bottom-color: transparent; }
+}
+.name-input-blink {
+  animation: name-caret-blink 1s steps(1, end) infinite;
 }
 
 .name-input {
