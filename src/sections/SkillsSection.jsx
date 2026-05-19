@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
+import { useLang } from '../i18n.jsx';
 
 export default function SkillsSection() {
   const { profile, update } = useProfile();
+  const { t } = useLang();
   const [newSkill, setNewSkill] = useState('');
 
   const setSkills = (skills) => update({ skills });
@@ -36,7 +38,7 @@ export default function SkillsSection() {
           <li key={s.name + i} className="skill">
             <div className="skill-head">
               <span className="skill-name">{s.name}</span>
-              <span className="skill-level">Ур. {s.level}</span>
+              <span className="skill-level">{t('skill.level')} {s.level}</span>
             </div>
             <div className="bar">
               <div className="bar-fill" style={{ width: `${s.xp}%` }} />
@@ -52,7 +54,7 @@ export default function SkillsSection() {
       </ul>
       <div className="add-skill">
         <input
-          placeholder="Новый навык"
+          placeholder={t('skill.new')}
           value={newSkill}
           onChange={(e) => setNewSkill(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addSkill()}

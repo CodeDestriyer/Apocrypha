@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
+import { useLang } from '../i18n.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -8,6 +9,7 @@ const newId = () =>
 
 export default function TrackerSection({ field, placeholder }) {
   const { profile, update } = useProfile();
+  const { t } = useLang();
   const items = profile[field] ?? [];
   const [name, setName] = useState('');
 
@@ -42,7 +44,7 @@ export default function TrackerSection({ field, placeholder }) {
           <li key={s.id} className="skill">
             <div className="skill-head">
               <span className="skill-name">{s.name}</span>
-              <span className="skill-level">Ур. {s.level}</span>
+              <span className="skill-level">{t('skill.level')} {s.level}</span>
             </div>
             <div className="bar">
               <div className="bar-fill" style={{ width: `${s.xp}%` }} />

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
+import { useLang } from '../i18n.jsx';
 import { uploadLooksPhoto } from '../supabase.js';
 import TrackerSection from './TrackerSection.jsx';
 
@@ -16,6 +17,7 @@ const RATINGS = [
 
 export default function LooksmaxingSection() {
   const { profile, update } = useProfile();
+  const { t } = useLang();
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState(null);
@@ -48,23 +50,23 @@ export default function LooksmaxingSection() {
           {profile.looks_photo_url ? (
             <img src={profile.looks_photo_url} alt="" />
           ) : (
-            <span className="looks-photo-empty">{uploading ? '…' : '+ фото'}</span>
+            <span className="looks-photo-empty">{uploading ? '…' : t('looks.photoEmpty')}</span>
           )}
         </button>
 
         <div className="looks-rating">
-          <label className="looks-rating-label">Твоя оценка</label>
+          <label className="looks-rating-label">{t('looks.yourRating')}</label>
           <select
             className="period-select looks-rating-select"
             value={profile.looks_rating ?? ''}
             onChange={(e) => setRating(e.target.value)}
           >
-            <option value="">— не выбрано —</option>
+            <option value="">{t('looks.notSelected')}</option>
             {RATINGS.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
           {profile.looks_photo_url && (
             <button className="link-btn" onClick={onPick} disabled={uploading}>
-              {uploading ? 'Загружаем…' : 'Заменить фото'}
+              {uploading ? t('looks.uploading') : t('looks.replace')}
             </button>
           )}
           {err && <div className="error-text">{err}</div>}
@@ -81,7 +83,7 @@ export default function LooksmaxingSection() {
 
       <div className="divider" />
 
-      <TrackerSection field="looksmaxing" placeholder="Что прокачиваешь во внешности" />
+      <TrackerSection field="looksmaxing" placeholder={t('looks.tracker')} />
     </>
   );
 }

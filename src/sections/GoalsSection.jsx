@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
+import { useLang } from '../i18n.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -8,6 +9,7 @@ const newId = () =>
 
 export default function GoalsSection() {
   const { profile, update } = useProfile();
+  const { t } = useLang();
   const goals = profile.goals ?? [];
   const newIdRef = useRef(null);
 
@@ -43,12 +45,13 @@ export default function GoalsSection() {
           />
         ))}
       </ul>
-      <button className="add-row" onClick={add}>+ цель</button>
+      <button className="add-row" onClick={add}>{t('goal.add')}</button>
     </>
   );
 }
 
 function GoalRow({ goal, autoFocus, onPatch, onRemove }) {
+  const { t } = useLang();
   const inputRef = useRef(null);
   const dateRef = useRef(null);
 
@@ -64,6 +67,10 @@ function GoalRow({ goal, autoFocus, onPatch, onRemove }) {
   };
 
   const progress = computeProgress(goal);
+  const MIN_VISIBLE = 4;
+  const displayPct = progress
+    ? Math.max(MIN_VISIBLE, Math.min(100, progress.ratio * 100))
+    : 0;
 
   return (
     <li className={`goal-row ${goal.done ? 'done' : ''}`}>
@@ -78,11 +85,11 @@ function GoalRow({ goal, autoFocus, onPatch, onRemove }) {
           ref={inputRef}
           className="goal-title-input"
           value={goal.title}
-          placeholder="Цель"
+          placeholder={t('goal.placeholder')}
           onChange={(e) => onPatch({ title: e.target.value })}
           maxLength={64}
         />
-        <button className="icon-btn" onClick={openDate} title="Дедлайн">
+        <button className="icon-btn" onClick={openDate} title={t('goal.deadline')}>
           {goal.deadline ? formatDate(goal.deadline) : '📅'}
         </button>
         <input
@@ -92,16 +99,16 @@ function GoalRow({ goal, autoFocus, onPatch, onRemove }) {
           value={goal.deadline ?? ''}
           onChange={(e) => onPatch({ deadline: e.target.value || null })}
         />
-        <button className="icon-btn remove" onClick={onRemove} title="Удалить">✕</button>
+        <button className="icon-btn remove" onClick={onRemove} title={t('goal.remove')}>✕</button>
       </div>
       {progress && (
         <div
           className={`goal-progress ${progress.overdue ? 'overdue' : ''}`}
-          title={`${Math.round(progress.ratio * 100)}% времени прошло`}
+          title={t('goal.elapsed', { n: Math.round(progress.ratio * 100) })}
         >
           <div
             className="goal-progress-fill"
-            style={{ width: `${Math.min(100, progress.ratio * 100)}%` }}
+            style={{ width: `${displayPct}%` }}
           />
         </div>
       )}

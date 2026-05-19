@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
+import { useLang } from '../i18n.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -22,6 +23,7 @@ const formatDate = (iso) => {
 
 export default function AscesesSection() {
   const { profile, update } = useProfile();
+  const { t } = useLang();
   const asceses = profile.asceses ?? [];
 
   const [title, setTitle] = useState('');
@@ -54,7 +56,7 @@ export default function AscesesSection() {
       <div className="add-asceza-inline">
         <input
           className="goal-input"
-          placeholder="Новая аскеза"
+          placeholder={t('asceza.new')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && add()}
@@ -66,9 +68,9 @@ export default function AscesesSection() {
           className="days-input"
           value={targetDays}
           onChange={(e) => setTargetDays(e.target.value)}
-          aria-label="Дней"
+          aria-label={t('asceza.daysLabel')}
         />
-        <span className="days-label">дн.</span>
+        <span className="days-label">{t('asceza.daysShort')}</span>
         <button className="add-btn" onClick={add}>+</button>
       </div>
 
@@ -85,21 +87,21 @@ export default function AscesesSection() {
                 <div className="asceza-head">
                   <span className="goal-title">{a.title}</span>
                   <span className="asceza-days">
-                    {passed}/{a.target_days} дн.
+                    {passed}/{a.target_days} {t('asceza.daysShort')}
                   </span>
                 </div>
                 <div className="bar">
                   <div className="bar-fill" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="asceza-meta">
-                  с {formatDate(a.started_at)}
-                  {a.status === 'done'   && ' · завершено'}
-                  {a.status === 'broken' && ' · сорвано'}
+                  {t('asceza.from')} {formatDate(a.started_at)}
+                  {a.status === 'done'   && ' · ' + t('asceza.done')}
+                  {a.status === 'broken' && ' · ' + t('asceza.broken')}
                 </div>
               </div>
               <div className="asceza-actions">
-                {isActive && <button onClick={() => setStatus(a.id, 'done')} title="Завершить">✓</button>}
-                {isActive && <button className="break" onClick={() => setStatus(a.id, 'broken')} title="Сорвать">⚠</button>}
+                {isActive && <button onClick={() => setStatus(a.id, 'done')} title={t('asceza.complete')}>✓</button>}
+                {isActive && <button className="break" onClick={() => setStatus(a.id, 'broken')} title={t('asceza.break')}>⚠</button>}
                 <button className="remove" onClick={() => remove(a.id)}>✕</button>
               </div>
             </li>
