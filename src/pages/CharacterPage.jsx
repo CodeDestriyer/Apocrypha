@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import Section from '../Section.jsx';
-import StatsSection from '../sections/StatsSection.jsx';
 
 const AVATARS = ['⚔️', '🧙', '🏹', '🛡️', '🗡️', '🐺', '🦊', '🦅'];
 
@@ -33,7 +31,6 @@ export default function CharacterPage({ onNavigate }) {
 
   const cycleAvatar = () => update({ avatar_idx: (profile.avatar_idx + 1) % AVATARS.length });
   const setName = (name) => update({ name });
-  const statsSum = profile.stats.reduce((s, v) => s + v.value, 0);
 
   return (
     <div className="card character-card">
@@ -62,10 +59,6 @@ export default function CharacterPage({ onNavigate }) {
       </div>
 
       <div className="divider" />
-
-      <Section title="Характеристики" summary={statsSum}>
-        <StatsSection />
-      </Section>
 
       <div className="nav-grid">
         {NAV.map((n) => (

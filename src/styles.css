@@ -545,18 +545,39 @@ body {
 }
 
 .goal-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   padding: 6px 10px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(127, 184, 199, 0.15);
   border-radius: 8px;
   transition: opacity 0.2s;
 }
+.goal-row-main {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
 .goal-row.done { opacity: 0.5; }
 .goal-row.done .goal-title-input { text-decoration: line-through; color: var(--text-dim); }
+
+.goal-progress {
+  position: relative;
+  height: 4px;
+  background: rgba(127, 184, 199, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.3s ease;
+}
+.goal-progress.overdue .goal-progress-fill {
+  background: #d97070;
+}
 
 .goal-title-input {
   background: transparent;
