@@ -426,6 +426,32 @@ body {
   font-style: italic;
 }
 
+.skill-rank {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rank-pips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.rank-pip {
+  flex: 1;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.rank-pip.on {
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  box-shadow: 0 0 6px rgba(127, 184, 199, 0.4);
+}
+
 .bar {
   height: 8px;
   background: rgba(0, 0, 0, 0.5);

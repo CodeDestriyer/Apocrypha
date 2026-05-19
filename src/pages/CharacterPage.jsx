@@ -6,7 +6,7 @@ const AVATARS = ['⚔️', '🧙', '🏹', '🛡️', '🗡️', '🐺', '🦊',
 
 const NAV = [
   { id: 'goals',       labelKey: 'nav.goals',       icon: '✧', summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
-  { id: 'skills',      labelKey: 'nav.skills',      icon: '✦', summary: (p) => (p.skills ?? []).reduce((s, v) => s + v.level, 0) },
+  { id: 'skills',      labelKey: 'nav.skills',      icon: '✦', summary: (p) => (p.skills ?? []).reduce((s, v) => s + (typeof v.rank === 'number' ? v.rank : (v.level ?? 0)), 0) },
   { id: 'asceses',     labelKey: 'nav.asceses',     icon: '☥', summary: (p) => (p.asceses ?? []).filter((a) => a.status === 'active').length },
   { id: 'moneymaxing', labelKey: 'nav.moneymaxing', icon: '❖', summary: (p) => (p.moneymaxing ?? []).length },
   { id: 'looksmaxing', labelKey: 'nav.looksmaxing', icon: '✺', summary: (p) => (p.looksmaxing ?? []).length },

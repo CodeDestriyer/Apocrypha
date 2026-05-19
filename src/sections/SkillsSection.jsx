@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 
+const MAX_RANK = 4;
+
+const rankOf = (s) => {
+  if (typeof s.rank === 'number') return clamp(s.rank);
+  if (typeof s.level === 'number') return clamp(s.level);
+  return 0;
+};
+const clamp = (n) => Math.max(0, Math.min(MAX_RANK, n));
+
 export default function SkillsSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -9,24 +18,18 @@ export default function SkillsSection() {
 
   const setSkills = (skills) => update({ skills });
 
-  const addXp = (i, amount) => {
+  const bumpRank = (i, delta) => {
     setSkills(
-      profile.skills.map((s, idx) => {
-        if (idx !== i) return s;
-        let xp = s.xp + amount;
-        let level = s.level;
-        while (xp >= 100) { xp -= 100; level += 1; }
-        while (xp < 0 && level > 0) { xp += 100; level -= 1; }
-        if (xp < 0) xp = 0;
-        return { ...s, xp, level };
-      })
+      profile.skills.map((s, idx) =>
+        idx === i ? { ...s, rank: clamp(rankOf(s) + delta) } : s
+      )
     );
   };
 
   const addSkill = () => {
     const n = newSkill.trim();
     if (!n) return;
-    setSkills([...profile.skills, { name: n, level: 0, xp: 0 }]);
+    setSkills([...profile.skills, { name: n, rank: 0 }]);
     setNewSkill('');
   };
   const removeSkill = (i) => setSkills(profile.skills.filter((_, idx) => idx !== i));
@@ -34,23 +37,30 @@ export default function SkillsSection() {
   return (
     <>
       <ul className="skills">
-        {profile.skills.map((s, i) => (
-          <li key={s.name + i} className="skill">
-            <div className="skill-head">
-              <span className="skill-name">{s.name}</span>
-              <span className="skill-level">{t('skill.level')} {s.level}</span>
-            </div>
-            <div className="bar">
-              <div className="bar-fill" style={{ width: `${s.xp}%` }} />
-            </div>
-            <div className="skill-actions">
-              <button onClick={() => addXp(i, -10)}>−10</button>
-              <span className="xp-text">{s.xp}/100</span>
-              <button onClick={() => addXp(i, +10)}>+10</button>
-              <button className="remove" onClick={() => removeSkill(i)}>✕</button>
-            </div>
-          </li>
-        ))}
+        {profile.skills.map((s, i) => {
+          const r = rankOf(s);
+          return (
+            <li key={s.name + i} className="skill">
+              <div className="skill-head">
+                <span className="skill-name">{s.name}</span>
+                <span className="skill-rank">{t(`rank.${r}`)}</span>
+              </div>
+              <div className="rank-pips">
+                {Array.from({ length: MAX_RANK + 1 }, (_, idx) => (
+                  <span
+                    key={idx}
+                    className={`rank-pip ${idx <= r ? 'on' : ''}`}
+                  />
+                ))}
+              </div>
+              <div className="skill-actions">
+                <button onClick={() => bumpRank(i, -1)} disabled={r === 0}>−</button>
+                <button onClick={() => bumpRank(i, +1)} disabled={r === MAX_RANK}>+</button>
+                <button className="remove" onClick={() => removeSkill(i)}>✕</button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
       <div className="add-skill">
         <input
