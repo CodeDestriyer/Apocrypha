@@ -41,7 +41,7 @@ function useModulePrefs() {
   return [prefs, setPrefs];
 }
 
-function SettingsMenu({ prefs, setPrefs, editing, setEditing }) {
+function SettingsMenu({ setEditing }) {
   const { lang, setLang, t } = useLang();
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState(null); // null | 'lang' | 'modules'
@@ -49,7 +49,6 @@ function SettingsMenu({ prefs, setPrefs, editing, setEditing }) {
 
   useEffect(() => {
     if (!open) { setSection(null); return; }
-    if (section === 'modules') return;
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
@@ -57,23 +56,12 @@ function SettingsMenu({ prefs, setPrefs, editing, setEditing }) {
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
-  }, [open, section]);
+  }, [open]);
 
   const currentLang = LANGS.find((l) => l.code === lang) ?? LANGS[0];
 
-  const toggleHidden = (id) => {
-    setPrefs((p) => {
-      const isHidden = p.hidden.includes(id);
-      return { ...p, hidden: isHidden ? p.hidden.filter((x) => x !== id) : [...p.hidden, id] };
-    });
-  };
-
   const openModules = () => {
-    setSection('modules');
     setEditing(true);
-  };
-  const finishEditing = () => {
-    setEditing(false);
     setOpen(false);
   };
 
@@ -118,31 +106,6 @@ function SettingsMenu({ prefs, setPrefs, editing, setEditing }) {
               ))}
             </>
           )}
-          {section === 'modules' && (
-            <>
-              <button className="settings-row settings-back" onClick={() => setSection(null)}>
-                <span>‹ {t('settings.modules')}</span>
-              </button>
-              {prefs.order.map((id) => {
-                const n = NAV_BY_ID[id];
-                if (!n) return null;
-                const hidden = prefs.hidden.includes(id);
-                return (
-                  <label key={id} className="settings-check">
-                    <input
-                      type="checkbox"
-                      checked={!hidden}
-                      onChange={() => toggleHidden(id)}
-                    />
-                    <span>{t(n.labelKey)}</span>
-                  </label>
-                );
-              })}
-              <button className="settings-done" onClick={finishEditing}>
-                {t('settings.done')}
-              </button>
-            </>
-          )}
         </div>
       )}
     </div>
@@ -163,17 +126,25 @@ function TagRow({ profile }) {
   );
 }
 
-function NavGrid({ profile, onNavigate, prefs, setPrefs, editing }) {
+function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) {
   const { t } = useLang();
   const gridRef = useRef(null);
   const dragState = useRef(null);
   const [dragId, setDragId] = useState(null);
 
-  const visibleIds = prefs.order.filter((id) => NAV_BY_ID[id] && !prefs.hidden.includes(id));
+  const renderedIds = editing
+    ? prefs.order.filter((id) => NAV_BY_ID[id])
+    : prefs.order.filter((id) => NAV_BY_ID[id] && !prefs.hidden.includes(id));
+
+  const toggleHidden = (id) =>
+    setPrefs((p) => {
+      const isHidden = p.hidden.includes(id);
+      return { ...p, hidden: isHidden ? p.hidden.filter((x) => x !== id) : [...p.hidden, id] };
+    });
 
   const onPointerDown = (e, id) => {
     if (!editing) return;
-    if (e.target.closest('.nav-hide')) return;
+    if (e.target.closest('.nav-check')) return;
     e.preventDefault();
     const card = e.currentTarget;
     card.setPointerCapture?.(e.pointerId);
@@ -214,38 +185,45 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing }) {
     setDragId(null);
   };
 
-  const hide = (id) => setPrefs((p) => ({ ...p, hidden: [...new Set([...p.hidden, id])] }));
-
   return (
-    <div className={`nav-grid ${editing ? 'editing' : ''}`} ref={gridRef}>
-      {visibleIds.map((id) => {
-        const n = NAV_BY_ID[id];
-        return (
-          <button
-            key={id}
-            data-id={id}
-            className={`nav-card ${editing ? 'wobble' : ''} ${dragId === id ? 'dragging' : ''}`}
-            onClick={() => { if (!editing) onNavigate(id); }}
-            onPointerDown={(e) => onPointerDown(e, id)}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-          >
-            <span className="nav-icon">{n.icon}</span>
-            <span className="nav-label">{t(n.labelKey)}</span>
-            <span className="nav-summary">{n.summary(profile)}</span>
-            {editing && (
-              <span
-                className="nav-hide"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => { e.stopPropagation(); hide(id); }}
-                title="✕"
-              >✕</span>
-            )}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <div className={`nav-grid ${editing ? 'editing' : ''}`} ref={gridRef}>
+        {renderedIds.map((id) => {
+          const n = NAV_BY_ID[id];
+          const isHidden = prefs.hidden.includes(id);
+          return (
+            <button
+              key={id}
+              data-id={id}
+              className={`nav-card ${editing ? 'wobble' : ''} ${dragId === id ? 'dragging' : ''} ${editing && isHidden ? 'hidden-module' : ''}`}
+              onClick={() => { if (!editing) onNavigate(id); }}
+              onPointerDown={(e) => onPointerDown(e, id)}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+            >
+              <span className="nav-icon">{n.icon}</span>
+              <span className="nav-label">{t(n.labelKey)}</span>
+              <span className="nav-summary">{n.summary(profile)}</span>
+              {editing && (
+                <span
+                  className="nav-check"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); toggleHidden(id); }}
+                  role="checkbox"
+                  aria-checked={!isHidden}
+                >{isHidden ? '' : '✓'}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {editing && (
+        <button className="settings-done nav-done" onClick={() => setEditing(false)}>
+          {t('settings.done')}
+        </button>
+      )}
+    </>
   );
 }
 
@@ -260,12 +238,7 @@ export default function CharacterPage({ onNavigate }) {
 
   return (
     <div className="card character-card">
-      <SettingsMenu
-        prefs={prefs}
-        setPrefs={setPrefs}
-        editing={editing}
-        setEditing={setEditing}
-      />
+      <SettingsMenu setEditing={setEditing} />
       <div className="char-layout">
         <button className="avatar avatar-big" onClick={cycleAvatar}>
           <span>{AVATARS[profile.avatar_idx] ?? '⚔️'}</span>
@@ -298,6 +271,7 @@ export default function CharacterPage({ onNavigate }) {
         prefs={prefs}
         setPrefs={setPrefs}
         editing={editing}
+        setEditing={setEditing}
       />
     </div>
   );
