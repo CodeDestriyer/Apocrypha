@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import CharacterPage from './pages/CharacterPage.jsx';
+import CalendarPage from './pages/CalendarPage.jsx';
 import SubPage from './pages/SubPage.jsx';
 import NameModal from './NameModal.jsx';
 import LoginScreen from './LoginScreen.jsx';
@@ -57,9 +58,48 @@ function Shell() {
             {subRender()}
           </SubPage>
         ) : (
-          <CharacterPage onNavigate={setView} />
+          <MainView view={view} setView={setView} t={t} />
         )}
       </div>
+    </div>
+  );
+}
+
+function MainView({ view, setView, t }) {
+  const mainView = view === 'calendar' ? 'calendar' : 'home';
+  const startX = useRef(null);
+  const startY = useRef(null);
+
+  const onTouchStart = (e) => {
+    if (e.touches.length !== 1) return;
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e) => {
+    if (startX.current == null) return;
+    const dx = e.changedTouches[0].clientX - startX.current;
+    const dy = e.changedTouches[0].clientY - startY.current;
+    startX.current = null;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx)) return;
+    if (dx < 0 && mainView === 'home') setView('calendar');
+    if (dx > 0 && mainView === 'calendar') setView('home');
+  };
+
+  return (
+    <div className="main-shell" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="top-tabs">
+        <button
+          className={`top-tab ${mainView === 'home' ? 'active' : ''}`}
+          onClick={() => setView('home')}
+        >{t('tab.character')}</button>
+        <button
+          className={`top-tab ${mainView === 'calendar' ? 'active' : ''}`}
+          onClick={() => setView('calendar')}
+        >{t('tab.calendar')}</button>
+      </div>
+      {mainView === 'home'
+        ? <CharacterPage onNavigate={setView} />
+        : <CalendarPage />}
     </div>
   );
 }
