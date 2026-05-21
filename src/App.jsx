@@ -92,6 +92,7 @@ function MainView({ view, setView, t }) {
           className={`top-tab ${mainView === 'home' ? 'active' : ''}`}
           onClick={() => setView('home')}
         >{t('tab.character')}</button>
+        <span className="top-tabs-sep">✦</span>
         <button
           className={`top-tab ${mainView === 'calendar' ? 'active' : ''}`}
           onClick={() => setView('calendar')}
