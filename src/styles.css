@@ -360,7 +360,7 @@ body {
   text-shadow: 0 1px 0 #000, 0 0 12px rgba(127, 184, 199, 0.3);
 }
 
-.avatar-big:disabled { cursor: default; }
+.avatar-big:disabled { cursor: default; opacity: 1; }
 .avatar-big.editable { cursor: pointer; }
 
 @keyframes name-caret-blink {
