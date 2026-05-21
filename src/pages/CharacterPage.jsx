@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
 
-const AVATARS = ['⚔️', '🧙', '🏹', '🛡️', '🗡️', '🐺', '🦊', '🦅'];
+const AVATARS = [
+  '/avatars/ganslanda.jpg',
+  '/avatars/hitler.png',
+  '/avatars/loganpaul.jpg',
+];
 
 const NAV = [
   { id: 'goals',       labelKey: 'nav.goals',       icon: '✧', summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
@@ -244,7 +248,8 @@ export default function CharacterPage({ onNavigate }) {
 
   const cycleAvatar = () => {
     if (!editingInfo) return;
-    update({ avatar_idx: (profile.avatar_idx + 1) % AVATARS.length });
+    const idx = ((profile.avatar_idx ?? 0) % AVATARS.length + AVATARS.length) % AVATARS.length;
+    update({ avatar_idx: (idx + 1) % AVATARS.length });
   };
   const setName = (name) => update({ name });
 
@@ -256,7 +261,11 @@ export default function CharacterPage({ onNavigate }) {
           className={`avatar avatar-big ${editingInfo ? 'editable' : ''}`}
           onClick={cycleAvatar}
         >
-          <span>{AVATARS[profile.avatar_idx] ?? '⚔️'}</span>
+          <img
+            className="avatar-img"
+            src={AVATARS[((profile.avatar_idx ?? 0) % AVATARS.length + AVATARS.length) % AVATARS.length]}
+            alt=""
+          />
         </button>
         <div className="char-info">
           {editingInfo ? (
