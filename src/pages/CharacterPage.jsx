@@ -255,7 +255,6 @@ export default function CharacterPage({ onNavigate }) {
         <button
           className={`avatar avatar-big ${editingInfo ? 'editable' : ''}`}
           onClick={cycleAvatar}
-          disabled={!editingInfo}
         >
           <span>{AVATARS[profile.avatar_idx] ?? '⚔️'}</span>
         </button>
