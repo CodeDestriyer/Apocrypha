@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 
@@ -18,7 +18,7 @@ const WD_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const WD_ES = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const WD = { ru: WD_RU, en: WD_EN, es: WD_ES };
 
-function loadPlans() {
+function readLegacyPlans() {
   try {
     const v = JSON.parse(localStorage.getItem(PLANS_KEY));
     if (Array.isArray(v)) return v;
@@ -33,9 +33,8 @@ function loadPlans() {
       }));
     }
   } catch {}
-  return [];
+  return null;
 }
-function savePlans(v) { try { localStorage.setItem(PLANS_KEY, JSON.stringify(v)); } catch {} }
 
 function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 function ymd(d) {
@@ -65,15 +64,24 @@ function buildMonthGrid(viewDate) {
 }
 
 export default function CalendarPage() {
-  const { profile } = useProfile();
+  const { profile, update } = useProfile();
   const { t, lang } = useLang();
   const [viewDate, setViewDate] = useState(() => {
     const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d;
   });
-  const [plans, setPlans] = useState(loadPlans);
+  const plans = Array.isArray(profile?.plans) ? profile.plans : [];
   const [selStart, setSelStart] = useState(null); // ymd string
   const [selEnd, setSelEnd] = useState(null);
   const [picking, setPicking] = useState(false);
+
+  useEffect(() => {
+    if (profile?.plans !== null && profile?.plans !== undefined) return;
+    const legacy = readLegacyPlans();
+    if (legacy && legacy.length) {
+      update({ plans: legacy });
+      try { localStorage.removeItem(PLANS_KEY); localStorage.removeItem(LEGACY_KEY); } catch {}
+    }
+  }, [profile?.plans]);
 
   const days = buildMonthGrid(viewDate);
   const todayKey = ymd(new Date());
@@ -86,7 +94,7 @@ export default function CalendarPage() {
     (goalsByDay[k] ||= []).push(g);
   }
 
-  const updatePlans = (next) => { setPlans(next); savePlans(next); };
+  const updatePlans = (next) => update({ plans: next });
 
   const planOnDay = (plan, day) => {
     const s = parseYmd(plan.start);

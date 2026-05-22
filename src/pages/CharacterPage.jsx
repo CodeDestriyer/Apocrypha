@@ -20,28 +20,40 @@ const DEFAULT_ORDER = NAV.map((n) => n.id);
 
 const PREFS_KEY = 'lr.modulePrefs';
 
-function loadPrefs() {
+function reconcilePrefs(stored) {
+  const knownInOrder = (stored?.order ?? []).filter((id) => NAV_BY_ID[id]);
+  const missing = DEFAULT_ORDER.filter((id) => !knownInOrder.includes(id));
+  return {
+    order: [...knownInOrder, ...missing],
+    hidden: (stored?.hidden ?? []).filter((id) => NAV_BY_ID[id]),
+  };
+}
+
+function readLegacyPrefs() {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
-    if (!raw) return { order: DEFAULT_ORDER, hidden: [] };
-    const p = JSON.parse(raw);
-    const knownInOrder = (p.order ?? []).filter((id) => NAV_BY_ID[id]);
-    const missing = DEFAULT_ORDER.filter((id) => !knownInOrder.includes(id));
-    return {
-      order: [...knownInOrder, ...missing],
-      hidden: (p.hidden ?? []).filter((id) => NAV_BY_ID[id]),
-    };
-  } catch {
-    return { order: DEFAULT_ORDER, hidden: [] };
-  }
-}
-function savePrefs(p) {
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch {}
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
 function useModulePrefs() {
-  const [prefs, setPrefs] = useState(loadPrefs);
-  useEffect(() => { savePrefs(prefs); }, [prefs]);
+  const { profile, update } = useProfile();
+  const stored = profile?.module_prefs ?? null;
+
+  useEffect(() => {
+    if (stored) return;
+    const legacy = readLegacyPrefs();
+    if (legacy && (legacy.order?.length || legacy.hidden?.length)) {
+      update({ module_prefs: reconcilePrefs(legacy) });
+      try { localStorage.removeItem(PREFS_KEY); } catch {}
+    }
+  }, [stored]);
+
+  const prefs = reconcilePrefs(stored);
+  const setPrefs = (next) => {
+    const value = typeof next === 'function' ? next(prefs) : next;
+    update({ module_prefs: reconcilePrefs(value) });
+  };
   return [prefs, setPrefs];
 }
 
@@ -214,18 +226,18 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
             >
-              <span className="nav-icon">{n.icon}</span>
-              <span className="nav-label">{t(n.labelKey)}</span>
-              <span className="nav-summary">{n.summary(profile)}</span>
               {editing && (
                 <span
-                  className="nav-check"
+                  className={`nav-check ${isHidden ? 'off' : 'on'}`}
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); toggleHidden(id); }}
                   role="checkbox"
                   aria-checked={!isHidden}
-                >{isHidden ? '' : '✓'}</span>
+                >{!isHidden && <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span>
               )}
+              <span className="nav-icon">{n.icon}</span>
+              <span className="nav-label">{t(n.labelKey)}</span>
+              <span className="nav-summary">{n.summary(profile)}</span>
             </button>
           );
         })}

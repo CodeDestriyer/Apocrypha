@@ -332,29 +332,32 @@ body {
 .nav-grid.editing .nav-card.dragging { cursor: grabbing; }
 
 .nav-check {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(10, 14, 18, 0.95);
-  border: 1px solid var(--gold);
-  color: var(--gold-bright);
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
   display: grid;
   place-items: center;
-  font-size: 13px;
-  font-family: 'Cinzel', serif;
   cursor: pointer;
-  z-index: 2;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.nav-check.on {
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: #0a1320;
+}
+.nav-check.off {
+  background: transparent;
+  border: 1.5px solid var(--gold-dim);
+  color: transparent;
+}
+.nav-grid.editing .nav-card {
+  grid-template-columns: 20px 26px 1fr auto;
 }
 .nav-card.hidden-module {
-  opacity: 0.4;
+  opacity: 0.55;
   border-style: dashed;
-}
-.nav-card.hidden-module .nav-check {
-  border-color: rgba(127, 184, 199, 0.4);
-  color: transparent;
 }
 .nav-done { width: 100%; margin-top: 12px; }
 
