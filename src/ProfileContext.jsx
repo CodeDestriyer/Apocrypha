@@ -27,13 +27,20 @@ export function ProfileProvider({ children }) {
       setStatus((s) => (s === 'loading' ? 'unauthenticated' : s));
     }, 4000);
 
+    const withTimeout = (promise, ms, tag) =>
+      Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout:' + tag)), ms)),
+      ]);
+
     const handleSession = async (session) => {
       try {
         if (!session) {
           if (!cancelled) setStatus('unauthenticated');
           return;
         }
-        const p = await loadProfile();
+        if (!cancelled) setStatus('loading');
+        const p = await withTimeout(loadProfile(), 6000, 'loadProfile');
         if (cancelled) return;
         if (p) {
           setProfile(p);
