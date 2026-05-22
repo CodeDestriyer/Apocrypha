@@ -69,6 +69,11 @@ function MainView({ view, setView, t }) {
   const mainView = view === 'calendar' ? 'calendar' : 'home';
   const startX = useRef(null);
   const startY = useRef(null);
+  const prevView = useRef(mainView);
+  const direction = mainView === prevView.current
+    ? 'none'
+    : (prevView.current === 'home' ? 'left' : 'right');
+  prevView.current = mainView;
 
   const onTouchStart = (e) => {
     if (e.touches.length !== 1) return;
@@ -98,9 +103,11 @@ function MainView({ view, setView, t }) {
           onClick={() => setView('calendar')}
         >{t('tab.calendar')}</button>
       </div>
-      {mainView === 'home'
-        ? <CharacterPage onNavigate={setView} />
-        : <CalendarPage />}
+      <div key={mainView} className={`page-slide page-slide-${direction}`}>
+        {mainView === 'home'
+          ? <CharacterPage onNavigate={setView} />
+          : <CalendarPage />}
+      </div>
     </div>
   );
 }

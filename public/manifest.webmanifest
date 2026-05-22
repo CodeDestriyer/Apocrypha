@@ -1,0 +1,25 @@
+{
+  "name": "Apocrypha",
+  "short_name": "Apocrypha",
+  "description": "Apocrypha",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060a12",
+  "theme_color": "#060a12",
+  "icons": [
+    {
+      "src": "/logo-apocrypha.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-apocrypha.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
