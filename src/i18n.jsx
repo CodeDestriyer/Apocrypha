@@ -220,7 +220,7 @@ export function LangProvider({ children }) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved && DICT[saved]) return saved;
     } catch {}
-    return 'ru';
+    return 'es';
   });
 
   useEffect(() => {

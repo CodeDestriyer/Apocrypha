@@ -722,6 +722,56 @@ body {
 }
 .landing-brand { font-weight: 800; }
 .landing-domain { color: #8a7d63; font-size: 11px; }
+
+.landing-lang { position: relative; }
+.landing-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #d6c9a8;
+  border-radius: 6px;
+  color: #1b1814;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.landing-lang-btn:hover { background: #fff; border-color: #b8a674; }
+.landing-lang-code { font-weight: 700; }
+.landing-lang-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+  background: #fff;
+  border: 1px solid #d6c9a8;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+.landing-lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 8px 10px;
+  text-align: left;
+  color: #1b1814;
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.landing-lang-option:hover { background: #f5efde; }
+.landing-lang-option.active { background: #ece4d2; font-weight: 600; }
 .landing-main {
   flex: 1;
   max-width: 640px;
@@ -771,7 +821,7 @@ body {
   background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
   color: #fff8e6;
   border: none;
-  border-radius: 999px;
+  border-radius: 6px;
   font-family: 'Cinzel', serif;
   font-size: clamp(15px, 2.6vw, 19px);
   font-weight: 700;

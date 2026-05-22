@@ -1,4 +1,39 @@
-import { useLang } from './i18n.jsx';
+import { useEffect, useRef, useState } from 'react';
+import { useLang, LANGS } from './i18n.jsx';
+
+function LangPicker() {
+  const { lang, setLang } = useLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+  const current = LANGS.find((l) => l.code === lang) ?? LANGS[0];
+  return (
+    <div className="landing-lang" ref={ref}>
+      <button className="landing-lang-btn" onClick={() => setOpen((o) => !o)} aria-label="Language">
+        <span>{current.flag}</span>
+        <span className="landing-lang-code">{current.code.toUpperCase()}</span>
+      </button>
+      {open && (
+        <div className="landing-lang-menu">
+          {LANGS.map((l) => (
+            <button
+              key={l.code}
+              className={`landing-lang-option ${l.code === lang ? 'active' : ''}`}
+              onClick={() => { setLang(l.code); setOpen(false); }}
+            >
+              <span>{l.flag}</span><span>{l.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Landing({ onEnter }) {
   const { t } = useLang();
@@ -6,7 +41,7 @@ export default function Landing({ onEnter }) {
     <div className="landing">
       <header className="landing-nav">
         <span className="landing-brand">Varkanis</span>
-        <span className="landing-domain">varkanis.com</span>
+        <LangPicker />
       </header>
 
       <main className="landing-main">
