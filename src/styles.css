@@ -1430,6 +1430,84 @@ body {
   line-height: 1;
 }
 .cal-nav-btn:hover { border-color: var(--gold); }
+
+/* Day focus panel under the month grid */
+.day-focus {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.day-focus-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.day-focus-date {
+  flex: 1;
+  text-align: center;
+  line-height: 1.1;
+}
+.day-focus-weekday {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.day-focus-full {
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  color: var(--text);
+  margin-top: 2px;
+}
+.day-focus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.day-focus-empty {
+  text-align: center;
+  color: var(--text-dim);
+  font-style: italic;
+  font-size: 12px;
+  padding: 6px 0;
+}
+.day-focus-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(127, 184, 199, 0.1);
+  border-left: 3px solid var(--gold-dim);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.day-focus-row-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.day-focus-row-meta {
+  color: var(--text-dim);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.day-focus-row.goal.done .day-focus-row-name {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.day-focus-add {
+  display: flex;
+  gap: 8px;
+}
+.day-focus-add .field-input { flex: 1; }
+.cal-nav-btn.add { width: 38px; font-size: 18px; }
+.cal-nav-btn.add:disabled { opacity: 0.35; cursor: not-allowed; }
 .cal-week-label { text-transform: capitalize; }
 
 .cal-week {

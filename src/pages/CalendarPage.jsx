@@ -76,6 +76,8 @@ export default function CalendarPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customColor, setCustomColor] = useState(COLORS[0]);
+  const [focusDay, setFocusDay] = useState(() => ymd(new Date()));
+  const [quickGoal, setQuickGoal] = useState('');
 
   useEffect(() => {
     if (profile?.plans !== null && profile?.plans !== undefined) return;
@@ -107,6 +109,7 @@ export default function CalendarPage() {
 
   const onDayClick = (d) => {
     const k = ymd(d);
+    setFocusDay(k);
     if (!selStart) { setSelStart(k); setSelEnd(null); return; }
     if (selStart && selEnd) { setSelStart(k); setSelEnd(null); return; }
     if (k === selStart) { setSelStart(null); return; }
@@ -114,6 +117,26 @@ export default function CalendarPage() {
     if (parseYmd(k) < parseYmd(selStart)) { setSelEnd(selStart); setSelStart(k); }
     else { setSelEnd(k); }
   };
+
+  const shiftFocus = (delta) => setFocusDay((k) => ymd(addDays(parseYmd(k), delta)));
+  const focusDate = parseYmd(focusDay);
+  const focusPlans = plans.filter((p) => focusDate >= parseYmd(p.start) && focusDate <= parseYmd(p.end));
+  const focusGoals = (profile.goals ?? []).filter((g) => String(g.deadline ?? '').slice(0, 10) === focusDay);
+  const addQuickGoal = () => {
+    const title = quickGoal.trim();
+    if (!title) return;
+    update((curr) => ({
+      goals: [
+        ...(curr.goals ?? []),
+        { id: newId(), title, deadline: focusDay, done: false, created_at: new Date().toISOString() },
+      ],
+    }));
+    setQuickGoal('');
+  };
+  const toggleGoal = (id) =>
+    update((curr) => ({
+      goals: (curr.goals ?? []).map((g) => (g.id === id ? { ...g, done: !g.done } : g)),
+    }));
 
   const selRange = selStart && selEnd ? { start: selStart, end: selEnd } : null;
   const isSelected = (k) => k === selStart || k === selEnd;
@@ -195,6 +218,62 @@ export default function CalendarPage() {
             </button>
           );
         })}
+      </div>
+
+      <div className="day-focus">
+        <div className="day-focus-head">
+          <button className="cal-nav-btn" onClick={() => shiftFocus(-1)} aria-label="prev day">‹</button>
+          <div className="day-focus-date">
+            <div className="day-focus-weekday">
+              {new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(focusDate)}
+            </div>
+            <div className="day-focus-full">
+              {new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long' }).format(focusDate)}
+            </div>
+          </div>
+          <button className="cal-nav-btn" onClick={() => shiftFocus(1)} aria-label="next day">›</button>
+        </div>
+
+        <div className="day-focus-list">
+          {focusPlans.length === 0 && focusGoals.length === 0 && (
+            <div className="day-focus-empty">{t('cal.dayEmpty')}</div>
+          )}
+          {focusPlans.map((p) => {
+            const dayNum = Math.floor((focusDate - parseYmd(p.start)) / 86400000) + 1;
+            const total = Math.round((parseYmd(p.end) - parseYmd(p.start)) / 86400000) + 1;
+            return (
+              <div key={p.id} className="day-focus-row" style={{ borderLeftColor: p.color }}>
+                <span className="day-focus-row-name">
+                  <span className="period-emoji">{p.emoji}</span>
+                  {p.name}
+                </span>
+                <span className="day-focus-row-meta">{dayNum}/{total}</span>
+              </div>
+            );
+          })}
+          {focusGoals.map((g) => (
+            <div key={g.id} className={`day-focus-row goal ${g.done ? 'done' : ''}`}>
+              <button
+                className={`checkbox ${g.done ? 'checked' : ''}`}
+                onClick={() => toggleGoal(g.id)}
+                aria-label="toggle"
+              >{g.done ? '✓' : ''}</button>
+              <span className="day-focus-row-name">{g.title || t('goal.untitled')}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="day-focus-add">
+          <input
+            className="field-input"
+            placeholder={t('cal.addGoalPlaceholder')}
+            value={quickGoal}
+            onChange={(e) => setQuickGoal(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addQuickGoal()}
+            maxLength={80}
+          />
+          <button className="cal-nav-btn add" onClick={addQuickGoal} disabled={!quickGoal.trim()} aria-label="add">+</button>
+        </div>
       </div>
 
       {selStart && !selEnd && (
