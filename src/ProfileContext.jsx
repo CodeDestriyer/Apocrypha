@@ -20,6 +20,13 @@ export function ProfileProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
 
+    // Safety net: if anything below hangs (e.g. broken cached SW / blocked storage),
+    // never strand the user on the splash — drop them on the login screen instead.
+    const loadingFallback = setTimeout(() => {
+      if (cancelled) return;
+      setStatus((s) => (s === 'loading' ? 'unauthenticated' : s));
+    }, 4000);
+
     const handleSession = async (session) => {
       try {
         if (!session) {
@@ -40,15 +47,23 @@ export function ProfileProvider({ children }) {
       } catch (e) {
         console.error(e);
         if (!cancelled) {
-          setError(e.message || String(e));
-          setStatus('error');
+          // On any error during session/profile load, send the user to login
+          // rather than a dead-end error screen — they can sign in again from there.
+          setStatus('unauthenticated');
         }
       }
     };
 
     (async () => {
-      const session = await getSession();
-      await handleSession(session);
+      try {
+        const session = await getSession();
+        await handleSession(session);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setStatus('unauthenticated');
+      } finally {
+        clearTimeout(loadingFallback);
+      }
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -57,6 +72,7 @@ export function ProfileProvider({ children }) {
 
     return () => {
       cancelled = true;
+      clearTimeout(loadingFallback);
       sub.subscription.unsubscribe();
     };
   }, []);
