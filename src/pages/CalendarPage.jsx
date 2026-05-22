@@ -222,16 +222,21 @@ export default function CalendarPage() {
 
       <div className="day-focus">
         <div className="day-focus-head">
-          <button className="cal-nav-btn" onClick={() => shiftFocus(-1)} aria-label="prev day">‹</button>
           <div className="day-focus-date">
-            <div className="day-focus-weekday">
-              {new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(focusDate)}
-            </div>
-            <div className="day-focus-full">
-              {new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long' }).format(focusDate)}
+            <div className="day-focus-day">{focusDate.getDate()}</div>
+            <div className="day-focus-meta">
+              <div className="day-focus-weekday">
+                {new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(focusDate)}
+              </div>
+              <div className="day-focus-month">
+                {new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(focusDate)}
+              </div>
             </div>
           </div>
-          <button className="cal-nav-btn" onClick={() => shiftFocus(1)} aria-label="next day">›</button>
+          <div className="day-focus-nav">
+            <button className="cal-nav-btn" onClick={() => shiftFocus(-1)} aria-label="prev day">‹</button>
+            <button className="cal-nav-btn" onClick={() => shiftFocus(1)} aria-label="next day">›</button>
+          </div>
         </div>
 
         <div className="day-focus-list">

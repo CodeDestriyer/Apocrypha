@@ -1433,34 +1433,61 @@ body {
 
 /* Day focus panel under the month grid */
 .day-focus {
-  margin-top: 14px;
+  margin-top: 18px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(127, 184, 199, 0.18);
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  position: relative;
+}
+.day-focus::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
 }
 .day-focus-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .day-focus-date {
   flex: 1;
-  text-align: center;
-  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
 }
+.day-focus-day {
+  font-family: 'Cinzel', serif;
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--gold-bright);
+  letter-spacing: 0.02em;
+  min-width: 52px;
+  text-align: center;
+}
+.day-focus-meta { display: flex; flex-direction: column; gap: 2px; }
 .day-focus-weekday {
   font-family: 'Cinzel', serif;
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold);
 }
-.day-focus-full {
+.day-focus-month {
   font-family: 'EB Garamond', serif;
-  font-size: 15px;
-  color: var(--text);
-  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-dim);
 }
+.day-focus-nav { display: flex; gap: 6px; }
 .day-focus-list {
   display: flex;
   flex-direction: column;
