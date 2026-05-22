@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CharacterPage from './pages/CharacterPage.jsx';
 import CalendarPage from './pages/CalendarPage.jsx';
 import SubPage from './pages/SubPage.jsx';
@@ -33,6 +33,10 @@ function Shell() {
   const { status, error } = useProfile();
   const { t } = useLang();
   const [view, setView] = useState('home');
+
+  useEffect(() => {
+    if (status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
+  }, [status]);
 
   if (status === 'loading') {
     return <div className="splash"><div className="ornament">⚜ ⚔ ⚜</div></div>;
