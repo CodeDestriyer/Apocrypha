@@ -216,11 +216,11 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <div className="divider" />
+      {plans.length > 0 && <div className="divider" />}
 
+      {plans.length > 0 && (
       <div className="periods-section">
         <h3 className="periods-title">{t('cal.activePeriods')}</h3>
-        {plans.length === 0 && <div className="periods-empty">{t('cal.empty')}</div>}
         {plans.map((p) => {
           const s = parseYmd(p.start);
           const e = parseYmd(p.end);
@@ -238,6 +238,7 @@ export default function CalendarPage() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

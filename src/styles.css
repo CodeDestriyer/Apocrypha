@@ -1390,21 +1390,24 @@ body {
   user-select: none;
 }
 
-/* Page slide animation between Character / Calendar */
-.page-slide { will-change: transform, opacity; }
-.page-slide-left  { animation: page-slide-in-left  0.55s cubic-bezier(0.16, 0.84, 0.3, 1); }
-.page-slide-right { animation: page-slide-in-right 0.55s cubic-bezier(0.16, 0.84, 0.3, 1); }
-@keyframes page-slide-in-left {
-  from { transform: translateX(60px) scale(0.985); opacity: 0; filter: blur(4px); }
-  to   { transform: translateX(0)    scale(1);     opacity: 1; filter: blur(0); }
+/* Drag-driven carousel between Character / Calendar */
+.swipe-viewport {
+  width: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
 }
-@keyframes page-slide-in-right {
-  from { transform: translateX(-60px) scale(0.985); opacity: 0; filter: blur(4px); }
-  to   { transform: translateX(0)     scale(1);     opacity: 1; filter: blur(0); }
+.swipe-track {
+  display: flex;
+  width: 200%;
+  will-change: transform;
 }
-@media (prefers-reduced-motion: reduce) {
-  .page-slide-left, .page-slide-right { animation: none; }
+.swipe-page {
+  width: 50%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
 }
+.swipe-viewport.dragging { cursor: grabbing; }
 
 /* Calendar */
 .calendar-card { padding: 18px; }

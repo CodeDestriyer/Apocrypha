@@ -71,31 +71,70 @@ function Shell() {
 
 function MainView({ view, setView, t }) {
   const mainView = view === 'calendar' ? 'calendar' : 'home';
-  const startX = useRef(null);
-  const startY = useRef(null);
-  const prevView = useRef(mainView);
-  const direction = mainView === prevView.current
-    ? 'none'
-    : (prevView.current === 'home' ? 'left' : 'right');
-  prevView.current = mainView;
+  const idx = mainView === 'home' ? 0 : 1;
+  const trackRef = useRef(null);
+  const viewportRef = useRef(null);
+  const drag = useRef(null); // { startX, startY, width, active, axisLocked }
+  const [dragDx, setDragDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
 
-  const onTouchStart = (e) => {
-    if (e.touches.length !== 1) return;
-    startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
+  const widthOf = () => viewportRef.current?.clientWidth ?? window.innerWidth;
+
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    drag.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      width: widthOf(),
+      active: true,
+      axisLocked: null,
+      pointerId: e.pointerId,
+    };
   };
-  const onTouchEnd = (e) => {
-    if (startX.current == null) return;
-    const dx = e.changedTouches[0].clientX - startX.current;
-    const dy = e.changedTouches[0].clientY - startY.current;
-    startX.current = null;
-    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx)) return;
-    if (dx < 0 && mainView === 'home') setView('calendar');
-    if (dx > 0 && mainView === 'calendar') setView('home');
+
+  const onPointerMove = (e) => {
+    const st = drag.current;
+    if (!st?.active || st.pointerId !== e.pointerId) return;
+    const dx = e.clientX - st.startX;
+    const dy = e.clientY - st.startY;
+    if (st.axisLocked === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      st.axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (st.axisLocked === 'x') {
+        setDragging(true);
+        viewportRef.current?.setPointerCapture?.(e.pointerId);
+      }
+    }
+    if (st.axisLocked !== 'x') return;
+    e.preventDefault?.();
+    // Rubber-band at edges
+    let next = dx;
+    if (idx === 0 && next > 0) next = next * 0.35;
+    if (idx === 1 && next < 0) next = next * 0.35;
+    setDragDx(next);
+  };
+
+  const onPointerEnd = (e) => {
+    const st = drag.current;
+    if (!st?.active || st.pointerId !== e.pointerId) return;
+    drag.current = null;
+    if (st.axisLocked !== 'x') { setDragging(false); setDragDx(0); return; }
+    const dx = dragDx;
+    const threshold = st.width * 0.2;
+    setDragging(false);
+    setDragDx(0);
+    if (dx < -threshold && idx === 0) setView('calendar');
+    else if (dx > threshold && idx === 1) setView('home');
+  };
+
+  const translatePct = -idx * 100;
+  const trackStyle = {
+    transform: `translate3d(calc(${translatePct}% + ${dragDx}px), 0, 0)`,
+    transition: dragging ? 'none' : 'transform 0.45s cubic-bezier(0.16, 0.84, 0.3, 1)',
   };
 
   return (
-    <div className="main-shell" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <div className="main-shell">
       <div className="top-tabs">
         <button
           className={`top-tab ${mainView === 'home' ? 'active' : ''}`}
@@ -107,10 +146,22 @@ function MainView({ view, setView, t }) {
           onClick={() => setView('calendar')}
         >{t('tab.calendar')}</button>
       </div>
-      <div key={mainView} className={`page-slide page-slide-${direction}`}>
-        {mainView === 'home'
-          ? <CharacterPage onNavigate={setView} />
-          : <CalendarPage />}
+      <div
+        ref={viewportRef}
+        className={`swipe-viewport ${dragging ? 'dragging' : ''}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+      >
+        <div ref={trackRef} className="swipe-track" style={trackStyle}>
+          <div className="swipe-page">
+            <CharacterPage onNavigate={setView} />
+          </div>
+          <div className="swipe-page">
+            <CalendarPage />
+          </div>
+        </div>
       </div>
     </div>
   );
