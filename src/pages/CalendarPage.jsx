@@ -7,11 +7,9 @@ const LEGACY_KEY = 'lr.periods';
 
 const TEMPLATES = [
   { id: 'dopamine', emoji: '🧠', name: 'Дофаминовый детокс', color: '#7fb8c7' },
-  { id: 'cold',     emoji: '❄️', name: 'Холодный душ',       color: '#9bd1e5' },
-  { id: 'social',   emoji: '📵', name: 'Без соцсетей',        color: '#c79b7f' },
-  { id: 'nofap',    emoji: '🚫', name: 'No-fap',              color: '#a37fc7' },
-  { id: 'early',    emoji: '🌅', name: 'Ранний подъём 5:00',  color: '#c7b87f' },
 ];
+
+const QUICK_DAYS = [7, 10, 21];
 
 const WD_RU = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -180,7 +178,20 @@ export default function CalendarPage() {
       </div>
 
       {selStart && !selEnd && (
-        <div className="cal-hint">{t('cal.selectRange')}</div>
+        <>
+          <div className="cal-hint">{t('cal.selectRange')}</div>
+          <div className="cal-quick-days">
+            {QUICK_DAYS.map((n) => (
+              <button
+                key={n}
+                className="cal-quick-day"
+                onClick={() => setSelEnd(ymd(addDays(parseYmd(selStart), n - 1)))}
+              >
+                {n} {t('cal.daysShort')}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {selRange && !picking && (

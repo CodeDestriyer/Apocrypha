@@ -1392,15 +1392,15 @@ body {
 
 /* Page slide animation between Character / Calendar */
 .page-slide { will-change: transform, opacity; }
-.page-slide-left  { animation: page-slide-in-left  0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.page-slide-right { animation: page-slide-in-right 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.page-slide-left  { animation: page-slide-in-left  0.55s cubic-bezier(0.16, 0.84, 0.3, 1); }
+.page-slide-right { animation: page-slide-in-right 0.55s cubic-bezier(0.16, 0.84, 0.3, 1); }
 @keyframes page-slide-in-left {
-  from { transform: translateX(28px); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from { transform: translateX(60px) scale(0.985); opacity: 0; filter: blur(4px); }
+  to   { transform: translateX(0)    scale(1);     opacity: 1; filter: blur(0); }
 }
 @keyframes page-slide-in-right {
-  from { transform: translateX(-28px); opacity: 0; }
-  to   { transform: translateX(0);     opacity: 1; }
+  from { transform: translateX(-60px) scale(0.985); opacity: 0; filter: blur(4px); }
+  to   { transform: translateX(0)     scale(1);     opacity: 1; filter: blur(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .page-slide-left, .page-slide-right { animation: none; }
@@ -1656,6 +1656,29 @@ body {
   font-size: 12px;
   font-style: italic;
 }
+.cal-quick-days {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.cal-quick-day {
+  flex: 1;
+  max-width: 90px;
+  padding: 8px 0;
+  background: rgba(127, 184, 199, 0.08);
+  border: 1px solid var(--gold-dim);
+  border-radius: 7px;
+  color: var(--gold-bright);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.cal-quick-day:hover { background: rgba(127, 184, 199, 0.18); border-color: var(--gold); }
+.cal-quick-day:active { transform: scale(0.97); }
 .cal-create-btn {
   margin-top: 12px;
   width: 100%;
