@@ -63,6 +63,8 @@ const DICT = {
     'cal.selectRange': 'Выбери начало и конец',
     'cal.createPlan': 'Создать план',
     'cal.choosePlan': 'Какой план?',
+    'cal.customPlaceholder': 'Свой план…',
+    'cal.saveCustom': 'Сохранить',
   },
   en: {
     'nav.goals': 'Goals',
@@ -118,6 +120,8 @@ const DICT = {
     'cal.selectRange': 'Pick start and end',
     'cal.createPlan': 'Create plan',
     'cal.choosePlan': 'Which plan?',
+    'cal.customPlaceholder': 'Custom plan…',
+    'cal.saveCustom': 'Save',
   },
   es: {
     'nav.goals': 'Objetivos',
@@ -173,6 +177,8 @@ const DICT = {
     'cal.selectRange': 'Elige inicio y fin',
     'cal.createPlan': 'Crear plan',
     'cal.choosePlan': '¿Qué plan?',
+    'cal.customPlaceholder': 'Plan personalizado…',
+    'cal.saveCustom': 'Guardar',
   },
 };
 

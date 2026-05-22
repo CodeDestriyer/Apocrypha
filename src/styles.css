@@ -1575,6 +1575,35 @@ body {
   letter-spacing: 0.05em;
 }
 
+.custom-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(127, 184, 199, 0.12);
+  border-radius: 7px;
+}
+.custom-plan-name { width: 100%; }
+.custom-plan-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.color-swatch:hover { transform: scale(1.08); }
+.color-swatch.active { border-color: var(--gold-bright); }
+.custom-plan-save { grid-template-columns: 1fr auto; }
+.custom-plan-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* Month calendar */
 .cal-month-wd {
   display: grid;
@@ -1627,26 +1656,34 @@ body {
   text-decoration-color: var(--gold);
   text-underline-offset: 3px;
 }
+.cal-cell { overflow: visible; }
 .cal-cell-num { line-height: 1; }
-.cal-cell-dots {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-  justify-content: center;
+.cal-cell-goal {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 8px;
+  color: var(--gold-bright);
+  line-height: 1;
+  pointer-events: none;
 }
+.cal-band {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 4px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+/* Extend across the 4px grid gap when the plan continues into the next cell */
+.cal-band.cont-r { right: -4px; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.cal-band.cont-l { left: -4px;  border-top-left-radius: 0;  border-bottom-left-radius: 0;  }
 .cal-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
   display: inline-block;
-}
-.cal-dot-goal {
-  width: auto;
-  height: auto;
-  font-size: 8px;
-  color: var(--gold-bright);
-  background: transparent;
-  line-height: 1;
 }
 
 .cal-hint {
