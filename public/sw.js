@@ -1,8 +1,12 @@
-const CACHE = 'apocrypha-v1';
-const ASSETS = ['/', '/index.html', '/manifest.webmanifest', '/logo-apocrypha.png'];
+// Minimal SW: required for PWA install prompt eligibility.
+// Strategy: pass-through to network. Cache only the app shell as offline fallback for navigations.
+// Never cache hashed JS/CSS chunks — they become stale across deploys.
+
+const CACHE = 'apocrypha-shell-v2';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).catch(() => {}));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
   self.skipWaiting();
 });
 
@@ -18,15 +22,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
-  e.respondWith(
-    fetch(req)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      })
-      .catch(() => caches.match(req).then((m) => m || caches.match('/index.html')))
-  );
+
+  // Only intervene for navigations (HTML). Everything else (JS/CSS/API) goes straight to network.
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req).catch(() => caches.match('/index.html'))
+    );
+  }
 });
