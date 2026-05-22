@@ -63,7 +63,8 @@ const DICT = {
     'cal.selectRange': 'Выбери начало и конец',
     'cal.createPlan': 'Создать план',
     'cal.choosePlan': 'Какой план?',
-    'cal.customPlaceholder': 'Свой план…',
+    'cal.custom': 'Свой план',
+    'cal.customPlaceholder': 'Название…',
     'cal.saveCustom': 'Сохранить',
   },
   en: {
@@ -120,7 +121,8 @@ const DICT = {
     'cal.selectRange': 'Pick start and end',
     'cal.createPlan': 'Create plan',
     'cal.choosePlan': 'Which plan?',
-    'cal.customPlaceholder': 'Custom plan…',
+    'cal.custom': 'Custom plan',
+    'cal.customPlaceholder': 'Name…',
     'cal.saveCustom': 'Save',
   },
   es: {
@@ -177,7 +179,8 @@ const DICT = {
     'cal.selectRange': 'Elige inicio y fin',
     'cal.createPlan': 'Crear plan',
     'cal.choosePlan': '¿Qué plan?',
-    'cal.customPlaceholder': 'Plan personalizado…',
+    'cal.custom': 'Plan personalizado',
+    'cal.customPlaceholder': 'Nombre…',
     'cal.saveCustom': 'Guardar',
   },
 };

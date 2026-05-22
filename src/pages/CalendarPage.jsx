@@ -73,6 +73,7 @@ export default function CalendarPage() {
   const [selStart, setSelStart] = useState(null); // ymd string
   const [selEnd, setSelEnd] = useState(null);
   const [picking, setPicking] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customColor, setCustomColor] = useState(COLORS[0]);
 
@@ -129,7 +130,7 @@ export default function CalendarPage() {
       { id: newId(), name: tpl.name, emoji: tpl.emoji, color: tpl.color, start: selRange.start, end: selRange.end },
     ]);
     setSelStart(null); setSelEnd(null); setPicking(false);
-    setCustomName(''); setCustomColor(COLORS[0]);
+    setCustomOpen(false); setCustomName(''); setCustomColor(COLORS[0]);
   };
   const saveCustomPlan = () => {
     const n = customName.trim();
@@ -230,37 +231,46 @@ export default function CalendarPage() {
             </button>
           ))}
 
-          <div className="custom-plan">
-            <input
-              className="field-input custom-plan-name"
-              placeholder={t('cal.customPlaceholder')}
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && saveCustomPlan()}
-              maxLength={48}
-            />
-            <div className="custom-plan-colors">
-              {COLORS.map((c) => (
-                <button
-                  key={c}
-                  className={`color-swatch ${customColor === c ? 'active' : ''}`}
-                  style={{ background: c }}
-                  onClick={() => setCustomColor(c)}
-                  aria-label={c}
-                />
-              ))}
-            </div>
-            <button
-              className="period-template custom-plan-save"
-              disabled={!customName.trim()}
-              onClick={saveCustomPlan}
-            >
-              <span className="period-tpl-name">{t('cal.saveCustom')}</span>
-              <span className="cal-dot" style={{ background: customColor }} />
+          {!customOpen ? (
+            <button className="period-template" onClick={() => setCustomOpen(true)}>
+              <span className="period-tpl-emoji">{EMOJI_DEFAULT}</span>
+              <span className="period-tpl-name">{t('cal.custom')}</span>
+              <span className="period-tpl-days">›</span>
             </button>
-          </div>
+          ) : (
+            <div className="custom-plan">
+              <input
+                autoFocus
+                className="field-input custom-plan-name"
+                placeholder={t('cal.customPlaceholder')}
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && saveCustomPlan()}
+                maxLength={48}
+              />
+              <div className="custom-plan-colors">
+                {COLORS.map((c) => (
+                  <button
+                    key={c}
+                    className={`color-swatch ${customColor === c ? 'active' : ''}`}
+                    style={{ background: c }}
+                    onClick={() => setCustomColor(c)}
+                    aria-label={c}
+                  />
+                ))}
+              </div>
+              <button
+                className="period-template custom-plan-save"
+                disabled={!customName.trim()}
+                onClick={saveCustomPlan}
+              >
+                <span className="period-tpl-name">{t('cal.saveCustom')}</span>
+                <span className="cal-dot" style={{ background: customColor }} />
+              </button>
+            </div>
+          )}
 
-          <button className="add-row" onClick={() => { setPicking(false); setSelStart(null); setSelEnd(null); setCustomName(''); }}>
+          <button className="add-row" onClick={() => { setPicking(false); setSelStart(null); setSelEnd(null); setCustomOpen(false); setCustomName(''); }}>
             {t('cal.cancel')}
           </button>
         </div>
