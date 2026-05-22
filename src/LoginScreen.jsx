@@ -18,7 +18,7 @@ export default function LoginScreen() {
     <div className="modal-backdrop">
       <div className="card modal-card">
         <div className="ornament">⚜ ⚔ ⚜</div>
-        <h1 className="name">Apocrypha</h1>
+        <h1 className="name">Varkanis</h1>
         <div className="divider" />
         <button className="primary-btn google-btn" onClick={onGoogle} disabled={busy}>
           <span className="g-icon">G</span>

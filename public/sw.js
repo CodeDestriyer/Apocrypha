@@ -2,7 +2,7 @@
 // Strategy: pass-through to network. Cache only the app shell as offline fallback for navigations.
 // Never cache hashed JS/CSS chunks — they become stale across deploys.
 
-const CACHE = 'apocrypha-shell-v2';
+const CACHE = 'varkanis-shell-v1';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
