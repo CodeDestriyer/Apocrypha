@@ -1390,6 +1390,22 @@ body {
   user-select: none;
 }
 
+/* Page slide animation between Character / Calendar */
+.page-slide { will-change: transform, opacity; }
+.page-slide-left  { animation: page-slide-in-left  0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.page-slide-right { animation: page-slide-in-right 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@keyframes page-slide-in-left {
+  from { transform: translateX(28px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes page-slide-in-right {
+  from { transform: translateX(-28px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-slide-left, .page-slide-right { animation: none; }
+}
+
 /* Calendar */
 .calendar-card { padding: 18px; }
 .cal-week-nav {
