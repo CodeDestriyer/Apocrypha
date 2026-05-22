@@ -4,6 +4,7 @@ import CalendarPage from './pages/CalendarPage.jsx';
 import SubPage from './pages/SubPage.jsx';
 import NameModal from './NameModal.jsx';
 import LoginScreen from './LoginScreen.jsx';
+import Landing from './Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import { LangProvider, useLang } from './i18n.jsx';
 import GoalsSection from './sections/GoalsSection.jsx';
@@ -33,9 +34,14 @@ function Shell() {
   const { status, error } = useProfile();
   const { t } = useLang();
   const [view, setView] = useState('home');
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     if (status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
+  }, [status]);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') setShowLogin(false);
   }, [status]);
 
   if (status === 'loading') {
@@ -45,7 +51,7 @@ function Shell() {
     return <div className="splash"><div className="ornament">⚠</div><div className="error-text">{error}</div></div>;
   }
   if (status === 'unauthenticated') {
-    return <LoginScreen />;
+    return showLogin ? <LoginScreen /> : <Landing onEnter={() => setShowLogin(true)} />;
   }
   if (status === 'need-name') {
     return <NameModal />;

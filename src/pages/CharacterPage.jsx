@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
+import { signOut } from '../supabase.js';
 
 const AVATARS = [
   '/avatars/ganslanda.jpg',
@@ -110,6 +111,11 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
               <button className="settings-row" onClick={openModules}>
                 <span>{t('settings.modules')}</span>
                 <span className="settings-row-value">›</span>
+              </button>
+              <div className="settings-sep" />
+              <button className="settings-row settings-logout" onClick={() => signOut()}>
+                <span>{t('settings.logout')}</span>
+                <span className="settings-row-value">⎋</span>
               </button>
             </>
           )}
