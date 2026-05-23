@@ -167,24 +167,23 @@ export default function CalendarPage() {
   const shortFmt = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' });
 
   return (
-    <div className="card calendar-card">
-      <div className="cal-week-nav">
-        <button className="cal-nav-btn" onClick={() => {
-          const d = new Date(viewDate); d.setMonth(d.getMonth() - 1); setViewDate(d);
-        }}>‹</button>
-        <span className="cal-week-label">{monthFmt.format(viewDate)}</span>
-        <button className="cal-nav-btn" onClick={() => {
-          const d = new Date(viewDate); d.setMonth(d.getMonth() + 1); setViewDate(d);
-        }}>›</button>
-      </div>
+    <div className="cal-shell">
+      <div className="card calendar-card">
+        <div className="cal-week-nav">
+          <button className="cal-nav-btn" onClick={() => {
+            const d = new Date(viewDate); d.setMonth(d.getMonth() - 1); setViewDate(d);
+          }}>‹</button>
+          <span className="cal-week-label">{monthFmt.format(viewDate)}</span>
+          <button className="cal-nav-btn" onClick={() => {
+            const d = new Date(viewDate); d.setMonth(d.getMonth() + 1); setViewDate(d);
+          }}>›</button>
+        </div>
 
-      <div className="cal-body">
-        <div className="cal-grid-col">
-          <div className="cal-month-wd">
-            {wd.map((w) => <span key={w}>{w}</span>)}
-          </div>
+        <div className="cal-month-wd">
+          {wd.map((w) => <span key={w}>{w}</span>)}
+        </div>
 
-          <div className="cal-month">
+        <div className="cal-month">
             {days.map((d, i) => {
           const k = ymd(d);
           const inMonth = d.getMonth() === viewMonth;
@@ -205,20 +204,23 @@ export default function CalendarPage() {
               <span className="cal-cell-num">{d.getDate()}</span>
               {(activeOnDay.length > 0 || dayGoals.length > 0) && (
                 <span className="cal-cell-dots">
-                  {activeOnDay.slice(0, 4).map(({ p }) => (
+                  {activeOnDay.slice(0, 3).map(({ p }) => (
                     <span key={p.id} className="cal-dot" style={{ background: p.color }} />
                   ))}
+                  {activeOnDay.length > 3 && (
+                    <span className="cal-dot-more">+{activeOnDay.length - 3}</span>
+                  )}
                   {dayGoals.length > 0 && <span className="cal-dot cal-dot-goal" />}
                 </span>
               )}
             </button>
           );
         })}
-          </div>
         </div>
+      </div>
 
-        <div className="day-focus">
-          <div className="day-focus-head">
+      <div className="card day-focus-card">
+        <div className="day-focus-head">
             <div className="day-focus-date">
               <div className="day-focus-day">{focusDate.getDate()}</div>
               <div className="day-focus-meta">
@@ -271,7 +273,6 @@ export default function CalendarPage() {
             maxLength={80}
           />
           <button className="cal-nav-btn add" onClick={addQuickGoal} disabled={!quickGoal.trim()} aria-label="add">+</button>
-        </div>
         </div>
       </div>
 
