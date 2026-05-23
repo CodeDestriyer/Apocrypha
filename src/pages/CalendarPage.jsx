@@ -75,6 +75,7 @@ export default function CalendarPage() {
   const [customColor, setCustomColor] = useState(COLORS[0]);
   const [focusDay, setFocusDay] = useState(() => ymd(new Date()));
   const [quickGoal, setQuickGoal] = useState('');
+  const [goalAddOpen, setGoalAddOpen] = useState(false);
 
   useEffect(() => {
     if (profile?.plans !== null && profile?.plans !== undefined) return;
@@ -109,6 +110,8 @@ export default function CalendarPage() {
     setPicking(false);
     setCustomOpen(false);
     setCustomName('');
+    setGoalAddOpen(false);
+    setQuickGoal('');
   };
 
   const shiftFocus = (delta) => setFocusDay((k) => ymd(addDays(parseYmd(k), delta)));
@@ -125,6 +128,7 @@ export default function CalendarPage() {
       ],
     }));
     setQuickGoal('');
+    setGoalAddOpen(false);
   };
   const toggleGoal = (id) =>
     update((curr) => ({
@@ -240,16 +244,35 @@ export default function CalendarPage() {
           ))}
         </div>
 
-        <div className="day-focus-add">
-          <input
-            className="field-input"
-            placeholder={t('cal.addGoalPlaceholder')}
-            value={quickGoal}
-            onChange={(e) => setQuickGoal(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addQuickGoal()}
-            maxLength={80}
-          />
-          <button className="cal-nav-btn add" onClick={addQuickGoal} disabled={!quickGoal.trim()} aria-label="add">+</button>
+        <div className={`day-focus-add ${goalAddOpen ? 'open' : ''}`}>
+          <button
+            className="goal-add-toggle"
+            onClick={() => setGoalAddOpen((o) => !o)}
+            aria-label={t('cal.addGoalPlaceholder')}
+            aria-expanded={goalAddOpen}
+          >+</button>
+          <div className="goal-add-slot">
+            <input
+              className="field-input"
+              placeholder={t('cal.addGoalPlaceholder')}
+              value={quickGoal}
+              onChange={(e) => setQuickGoal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') addQuickGoal();
+                if (e.key === 'Escape') { setGoalAddOpen(false); setQuickGoal(''); }
+              }}
+              maxLength={80}
+              ref={(el) => { if (goalAddOpen && el && document.activeElement !== el) el.focus(); }}
+              tabIndex={goalAddOpen ? 0 : -1}
+            />
+            <button
+              className="cal-nav-btn add"
+              onClick={addQuickGoal}
+              disabled={!quickGoal.trim()}
+              aria-label="add"
+              tabIndex={goalAddOpen ? 0 : -1}
+            >✓</button>
+          </div>
         </div>
 
         {!picking ? (
