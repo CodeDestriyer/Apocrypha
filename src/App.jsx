@@ -151,7 +151,6 @@ function Shell() {
 }
 
 function DesktopSidebar({ view, setView }) {
-  const { profile } = useProfile();
   const { t, lang, setLang } = useLang();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
@@ -165,17 +164,10 @@ function DesktopSidebar({ view, setView }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [settingsOpen]);
 
-  const avatarIdx = ((profile.avatar_idx ?? 0) % 3 + 3) % 3;
-  const avatars = ['/avatars/ganslanda.jpg', '/avatars/hitler.png', '/avatars/loganpaul.jpg'];
-
   return (
     <aside className="desktop-sidebar">
-      <button className="desktop-profile" onClick={() => setView('home')}>
-        <img className="desktop-avatar" src={avatars[avatarIdx]} alt="" />
-        <div className="desktop-profile-text">
-          <div className="desktop-profile-name">{profile.name || '—'}</div>
-          {profile.looks_rating && <div className="desktop-profile-meta">{profile.looks_rating}</div>}
-        </div>
+      <button className="desktop-brand" onClick={() => setView('home')}>
+        <span className="desktop-brand-text">varkanis</span>
       </button>
 
       <nav className="desktop-nav">

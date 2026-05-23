@@ -2045,12 +2045,7 @@ body {
   opacity: 0.35;
   background: rgba(0, 0, 0, 0.18);
 }
-.cal-cell.today {
-  background: transparent;
-  border-color: #fff;
-  color: #fff;
-  box-shadow: 0 0 0 1px #fff inset;
-}
+/* today: no special styling — looks like a regular day */
 .cal-cell.in-range {
   background: linear-gradient(160deg, rgba(127, 184, 199, 0.18), rgba(127, 184, 199, 0.1));
   border-color: rgba(127, 184, 199, 0.28);
@@ -2209,6 +2204,30 @@ body {
     color: var(--text-dim);
     margin-top: 3px;
     letter-spacing: 0.05em;
+  }
+
+  .desktop-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+  }
+  .desktop-brand-text {
+    font-family: 'MedievalSharp', 'Cinzel', serif;
+    font-size: 34px;
+    letter-spacing: 0.06em;
+    color: var(--gold-bright);
+    text-shadow: 0 0 18px rgba(127, 184, 199, 0.45), 0 2px 0 rgba(0,0,0,0.6);
+    text-transform: lowercase;
+    transition: text-shadow 0.18s ease, transform 0.18s ease;
+  }
+  .desktop-brand:hover .desktop-brand-text {
+    text-shadow: 0 0 26px rgba(127, 184, 199, 0.7), 0 2px 0 rgba(0,0,0,0.6);
+    transform: scale(1.02);
   }
 
   .desktop-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }

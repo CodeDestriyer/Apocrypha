@@ -61,9 +61,8 @@ export default function CharacterModel({ src = '/man.glb', className = '' }) {
         scene.add(model);
 
         const fitDist = (targetHeight / 2) / Math.tan((camera.fov * Math.PI) / 360) * 1.4;
-        const offsetX = 0.35;
-        camera.position.set(offsetX, 0, fitDist);
-        controls.target.set(offsetX, 0, 0);
+        camera.position.set(0.5, 0, fitDist);
+        controls.target.set(0, 0, 0);
         controls.update();
       },
       undefined,
