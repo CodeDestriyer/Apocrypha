@@ -1436,12 +1436,53 @@ body {
 .section-body { display: grid; gap: 10px; }
 
 .add-asceza-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.habit-add-toggle {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(127, 184, 199, 0.28);
+  background: rgba(127, 184, 199, 0.06);
+  color: var(--text-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.habit-add-toggle:hover {
+  background: rgba(127, 184, 199, 0.12);
+  border-color: var(--gold-dim);
+  color: var(--text);
+}
+.habit-add-toggle:active { transform: scale(0.94); }
+.add-asceza-inline.open .habit-add-toggle { transform: rotate(45deg); color: var(--text); }
+.habit-add-slot {
+  flex: 1;
   display: grid;
   grid-template-columns: 1fr 64px auto auto;
   gap: 8px;
   align-items: center;
-  margin-bottom: 14px;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+  transition: max-width 0.28s ease, opacity 0.22s ease, transform 0.28s ease;
 }
+.add-asceza-inline.open .habit-add-slot {
+  max-width: 900px;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.habit-add-slot .goal-input { min-width: 0; }
 
 .days-input {
   background: rgba(0, 0, 0, 0.3);

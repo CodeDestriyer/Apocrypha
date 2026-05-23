@@ -192,9 +192,6 @@ export default function CalendarPage() {
         </div>
 
         <div className="day-focus-list">
-          {focusPlans.length === 0 && focusGoals.length === 0 && (
-            <div className="day-focus-empty">{t('cal.dayEmpty')}</div>
-          )}
           {focusPlans.map((p) => (
             <div key={p.id} className="day-focus-row" style={{ borderLeftColor: p.color }}>
               <span className="day-focus-row-name">

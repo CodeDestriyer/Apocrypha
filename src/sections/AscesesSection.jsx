@@ -84,6 +84,7 @@ export default function AscesesSection() {
   const [title, setTitle] = useState('');
   const [targetDays, setTargetDays] = useState(30);
   const [kind, setKind] = useState('good');
+  const [addOpen, setAddOpen] = useState(false);
 
   const setAsceses = (next) => update({ asceses: next });
 
@@ -101,6 +102,7 @@ export default function AscesesSection() {
     }]);
     setTitle('');
     setTargetDays(30);
+    setAddOpen(false);
   };
 
   const patch = (id, p) =>
@@ -117,57 +119,71 @@ export default function AscesesSection() {
         <div className="habit-kind-toggle">
           <button
             className={`habit-kind-btn good ${kind === 'good' ? 'active' : ''}`}
-            onClick={() => setKind('good')}
+            onClick={() => { setKind('good'); setAddOpen(false); setTitle(''); }}
           >{t('habit.good')}</button>
           <button
             className={`habit-kind-btn bad ${kind === 'bad' ? 'active' : ''}`}
-            onClick={() => setKind('bad')}
+            onClick={() => { setKind('bad'); setAddOpen(false); setTitle(''); }}
           >{t('habit.bad')}</button>
         </div>
-        <div className="add-asceza-inline">
-          <input
-            className="goal-input"
-            placeholder={t('asceza.new')}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && add()}
-            maxLength={64}
-          />
-          <input
-            type="number"
-            min="1"
-            className="days-input"
-            value={targetDays}
-            onChange={(e) => setTargetDays(e.target.value)}
-            aria-label={t('asceza.daysLabel')}
-          />
-          <span className="days-label">{t('asceza.daysShort')}</span>
-          <button className="add-btn" onClick={add}>+</button>
+        <div className={`add-asceza-inline ${addOpen ? 'open' : ''}`}>
+          <button
+            type="button"
+            className="habit-add-toggle"
+            onClick={() => setAddOpen((o) => !o)}
+            aria-expanded={addOpen}
+            aria-label={t('asceza.new')}
+          >+</button>
+          <div className="habit-add-slot">
+            <input
+              className="goal-input"
+              placeholder={t('asceza.new')}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') add();
+                if (e.key === 'Escape') { setAddOpen(false); setTitle(''); }
+              }}
+              maxLength={64}
+              ref={(el) => { if (addOpen && el && document.activeElement !== el) el.focus(); }}
+              tabIndex={addOpen ? 0 : -1}
+            />
+            <input
+              type="number"
+              min="1"
+              className="days-input"
+              value={targetDays}
+              onChange={(e) => setTargetDays(e.target.value)}
+              aria-label={t('asceza.daysLabel')}
+              tabIndex={addOpen ? 0 : -1}
+            />
+            <span className="days-label">{t('asceza.daysShort')}</span>
+            <button
+              className="add-btn"
+              onClick={add}
+              disabled={!title.trim()}
+              tabIndex={addOpen ? 0 : -1}
+            >✓</button>
+          </div>
         </div>
       </div>
 
       {asceses.length === 0 && <div className="empty">—</div>}
 
-      {goodList.length > 0 && (
-        <>
-          <h3 className="habit-group-title good">{t('habit.good')}</h3>
-          <ul className="habits">
-            {goodList.map((a) => (
-              <HabitRow key={a.id} habit={a} onPatch={(p) => patch(a.id, p)} onRemove={() => remove(a.id)} t={t} />
-            ))}
-          </ul>
-        </>
+      {kind === 'good' && goodList.length > 0 && (
+        <ul className="habits">
+          {goodList.map((a) => (
+            <HabitRow key={a.id} habit={a} onPatch={(p) => patch(a.id, p)} onRemove={() => remove(a.id)} t={t} />
+          ))}
+        </ul>
       )}
 
-      {badList.length > 0 && (
-        <>
-          <h3 className="habit-group-title bad">{t('habit.bad')}</h3>
-          <ul className="habits">
-            {badList.map((a) => (
-              <HabitRow key={a.id} habit={a} onPatch={(p) => patch(a.id, p)} onRemove={() => remove(a.id)} t={t} />
-            ))}
-          </ul>
-        </>
+      {kind === 'bad' && badList.length > 0 && (
+        <ul className="habits">
+          {badList.map((a) => (
+            <HabitRow key={a.id} habit={a} onPatch={(p) => patch(a.id, p)} onRemove={() => remove(a.id)} t={t} />
+          ))}
+        </ul>
       )}
     </>
   );
