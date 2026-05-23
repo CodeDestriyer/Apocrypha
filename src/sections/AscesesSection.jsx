@@ -21,6 +21,61 @@ const formatDate = (iso) => {
   return `${d}.${m}.${y.slice(2)}`;
 };
 
+const COLOR = {
+  good: '#7fc79b',
+  bad:  '#c97777',
+};
+
+function HabitRing({ days, target, kind }) {
+  const r = 24;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(1, Math.max(0, days / Math.max(1, target)));
+  const offset = c * (1 - pct);
+  return (
+    <svg className="habit-ring" viewBox="0 0 56 56" width="56" height="56" aria-hidden="true">
+      <circle cx="28" cy="28" r={r} stroke="rgba(255,255,255,0.1)" strokeWidth="4" fill="none" />
+      <circle
+        cx="28" cy="28" r={r}
+        stroke={COLOR[kind]} strokeWidth="4" fill="none"
+        strokeDasharray={c} strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform="rotate(-90 28 28)"
+        style={{ transition: 'stroke-dashoffset 0.4s' }}
+      />
+      <text x="28" y="34" textAnchor="middle" fill="currentColor" fontFamily="Cinzel, serif" fontSize="16" fontWeight="700">
+        {days}
+      </text>
+    </svg>
+  );
+}
+
+function HabitRow({ habit, onPatch, onRemove, t }) {
+  const passed = Math.max(0, daysBetween(habit.started_at, todayIso()));
+  const kind = habit.kind ?? 'good';
+  const isActive = habit.status === 'active';
+  return (
+    <li className={`habit habit-${kind} ${habit.status}`}>
+      <HabitRing days={passed} target={habit.target_days} kind={kind} />
+      <div className="habit-body">
+        <div className="habit-head">
+          <span className="habit-title">{habit.title}</span>
+          <span className="habit-target">→ {habit.target_days} {t('asceza.daysShort')}</span>
+        </div>
+        <div className="habit-meta">
+          {t('asceza.from')} {formatDate(habit.started_at)}
+          {habit.status === 'done'   && ' · ' + t('asceza.done')}
+          {habit.status === 'broken' && ' · ' + t('asceza.broken')}
+        </div>
+      </div>
+      <div className="habit-actions">
+        {isActive && <button onClick={() => onPatch({ status: 'done' })} title={t('asceza.complete')}>✓</button>}
+        {isActive && <button className="break" onClick={() => onPatch({ status: 'broken' })} title={t('asceza.break')}>⚠</button>}
+        <button className="remove" onClick={onRemove}>✕</button>
+      </div>
+    </li>
+  );
+}
+
 export default function AscesesSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -28,86 +83,92 @@ export default function AscesesSection() {
 
   const [title, setTitle] = useState('');
   const [targetDays, setTargetDays] = useState(30);
+  const [kind, setKind] = useState('good');
 
   const setAsceses = (next) => update({ asceses: next });
 
   const add = () => {
-    const t = title.trim();
+    const titleTrim = title.trim();
     const days = Math.max(1, parseInt(targetDays) || 1);
-    if (!t) return;
+    if (!titleTrim) return;
     setAsceses([...asceses, {
       id: newId(),
-      title: t,
+      title: titleTrim,
       target_days: days,
       started_at: todayIso(),
       status: 'active',
+      kind,
     }]);
     setTitle('');
     setTargetDays(30);
   };
 
-  const setStatus = (id, status) =>
-    setAsceses(asceses.map((a) => (a.id === id ? { ...a, status } : a)));
+  const patch = (id, p) =>
+    setAsceses(asceses.map((a) => (a.id === id ? { ...a, ...p } : a)));
 
   const remove = (id) => setAsceses(asceses.filter((a) => a.id !== id));
 
+  const goodList = asceses.filter((a) => (a.kind ?? 'good') === 'good');
+  const badList  = asceses.filter((a) => a.kind === 'bad');
+
   return (
     <>
-      <div className="add-asceza-inline">
-        <input
-          className="goal-input"
-          placeholder={t('asceza.new')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && add()}
-          maxLength={64}
-        />
-        <input
-          type="number"
-          min="1"
-          className="days-input"
-          value={targetDays}
-          onChange={(e) => setTargetDays(e.target.value)}
-          aria-label={t('asceza.daysLabel')}
-        />
-        <span className="days-label">{t('asceza.daysShort')}</span>
-        <button className="add-btn" onClick={add}>+</button>
+      <div className="add-habit">
+        <div className="habit-kind-toggle">
+          <button
+            className={`habit-kind-btn good ${kind === 'good' ? 'active' : ''}`}
+            onClick={() => setKind('good')}
+          >{t('habit.good')}</button>
+          <button
+            className={`habit-kind-btn bad ${kind === 'bad' ? 'active' : ''}`}
+            onClick={() => setKind('bad')}
+          >{t('habit.bad')}</button>
+        </div>
+        <div className="add-asceza-inline">
+          <input
+            className="goal-input"
+            placeholder={t('asceza.new')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && add()}
+            maxLength={64}
+          />
+          <input
+            type="number"
+            min="1"
+            className="days-input"
+            value={targetDays}
+            onChange={(e) => setTargetDays(e.target.value)}
+            aria-label={t('asceza.daysLabel')}
+          />
+          <span className="days-label">{t('asceza.daysShort')}</span>
+          <button className="add-btn" onClick={add}>+</button>
+        </div>
       </div>
 
       {asceses.length === 0 && <div className="empty">—</div>}
 
-      <ul className="goals">
-        {asceses.map((a) => {
-          const passed = Math.max(0, daysBetween(a.started_at, todayIso()));
-          const pct = Math.min(100, Math.round((passed / a.target_days) * 100));
-          const isActive = a.status === 'active';
-          return (
-            <li key={a.id} className={`asceza ${a.status}`}>
-              <div className="goal-body">
-                <div className="asceza-head">
-                  <span className="goal-title">{a.title}</span>
-                  <span className="asceza-days">
-                    {passed}/{a.target_days} {t('asceza.daysShort')}
-                  </span>
-                </div>
-                <div className="bar">
-                  <div className="bar-fill" style={{ width: `${pct}%` }} />
-                </div>
-                <div className="asceza-meta">
-                  {t('asceza.from')} {formatDate(a.started_at)}
-                  {a.status === 'done'   && ' · ' + t('asceza.done')}
-                  {a.status === 'broken' && ' · ' + t('asceza.broken')}
-                </div>
-              </div>
-              <div className="asceza-actions">
-                {isActive && <button onClick={() => setStatus(a.id, 'done')} title={t('asceza.complete')}>✓</button>}
-                {isActive && <button className="break" onClick={() => setStatus(a.id, 'broken')} title={t('asceza.break')}>⚠</button>}
-                <button className="remove" onClick={() => remove(a.id)}>✕</button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {goodList.length > 0 && (
+        <>
+          <h3 className="habit-group-title good">{t('habit.good')}</h3>
+          <ul className="habits">
+            {goodList.map((a) => (
+              <HabitRow key={a.id} habit={a} onPatch={(p) => patch(a.id, p)} onRemove={() => remove(a.id)} t={t} />
+            ))}
+          </ul>
+        </>
+      )}
+
+      {badList.length > 0 && (
+        <>
+          <h3 className="habit-group-title bad">{t('habit.bad')}</h3>
+          <ul className="habits">
+            {badList.map((a) => (
+              <HabitRow key={a.id} habit={a} onPatch={(p) => patch(a.id, p)} onRemove={() => remove(a.id)} t={t} />
+            ))}
+          </ul>
+        </>
+      )}
     </>
   );
 }
