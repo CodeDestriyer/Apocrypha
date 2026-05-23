@@ -49,18 +49,19 @@ export default function CharacterModel({ src = '/man.glb', className = '' }) {
       (gltf) => {
         if (disposed) return;
         model = gltf.scene;
-        const box = new THREE.Box3().setFromObject(model);
+        let box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
         const maxDim = Math.max(size.x, size.y, size.z) || 1;
         const targetHeight = 2;
         const scale = targetHeight / maxDim;
         model.scale.setScalar(scale);
+        box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
         scene.add(model);
 
         const fitDist = (targetHeight / 2) / Math.tan((camera.fov * Math.PI) / 360) * 1.4;
-        camera.position.set(0, 0.2, fitDist);
+        camera.position.set(0, 0, fitDist);
         controls.target.set(0, 0, 0);
         controls.update();
       },
