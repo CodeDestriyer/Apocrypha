@@ -39,9 +39,6 @@ export function ProfileProvider({ children }) {
           if (!cancelled) setStatus('unauthenticated');
           return;
         }
-        // Mark that this device/browser has had a real session — used to skip
-        // the marketing landing on subsequent visits when the session has lapsed.
-        try { localStorage.setItem('lr.everLoggedIn', '1'); } catch {}
         if (!cancelled) setStatus('loading');
         const p = await withTimeout(loadProfile(), 6000, 'loadProfile');
         if (cancelled) return;

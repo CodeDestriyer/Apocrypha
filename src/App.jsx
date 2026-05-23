@@ -41,12 +41,10 @@ function Shell() {
   }, [status]);
 
   useEffect(() => {
-    if (status !== 'unauthenticated') return;
-    // Returning users (have logged in before on this browser) skip the
-    // marketing landing and go straight to the sign-in screen.
-    let ever = false;
-    try { ever = localStorage.getItem('lr.everLoggedIn') === '1'; } catch {}
-    setShowLogin(ever);
+    // Whenever we land on the unauthenticated state (fresh visit, expired
+    // session, or explicit sign-out), show the landing first. The user
+    // taps the CTA to go to the sign-in screen.
+    if (status === 'unauthenticated') setShowLogin(false);
   }, [status]);
 
   if (status === 'loading') {
