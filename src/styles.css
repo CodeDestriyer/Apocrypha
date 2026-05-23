@@ -2289,8 +2289,8 @@ body {
   .desktop-nav-item {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
+    gap: 16px;
+    padding: 14px 16px;
     background: transparent;
     border: 1px solid transparent;
     border-left: 3px solid transparent;
@@ -2298,8 +2298,8 @@ body {
     color: var(--text);
     font-family: 'Cinzel', serif;
     font-weight: 600;
-    font-size: 14px;
-    letter-spacing: 0.08em;
+    font-size: 18px;
+    letter-spacing: 0.06em;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
     text-align: left;
@@ -2321,10 +2321,10 @@ body {
     text-shadow: 0 0 10px rgba(240, 246, 250, 0.4);
   }
   .desktop-nav-icon {
-    width: 24px;
+    width: 28px;
     text-align: center;
     color: var(--gold);
-    font-size: 18px;
+    font-size: 22px;
     flex-shrink: 0;
     transition: color 0.15s, text-shadow 0.15s;
   }
@@ -2441,16 +2441,24 @@ body {
 .habit.broken      { opacity: 0.55; }
 
 .habit-ring { display: block; color: var(--gold-bright); }
-.habit-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.habit-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .habit-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
 }
+.habit-since {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-transform: lowercase;
+}
 .habit-title {
   font-family: 'EB Garamond', serif;
-  font-size: 15px;
+  font-size: 22px;
+  line-height: 1.15;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;

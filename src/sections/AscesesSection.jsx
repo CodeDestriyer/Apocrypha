@@ -58,14 +58,16 @@ function HabitRow({ habit, onPatch, onRemove, t }) {
       <HabitRing days={passed} target={habit.target_days} kind={kind} />
       <div className="habit-body">
         <div className="habit-head">
-          <span className="habit-title">{habit.title}</span>
+          <span className="habit-since">{t('asceza.from')} {formatDate(habit.started_at)}</span>
           <span className="habit-target">→ {habit.target_days} {t('asceza.daysShort')}</span>
         </div>
-        <div className="habit-meta">
-          {t('asceza.from')} {formatDate(habit.started_at)}
-          {habit.status === 'done'   && ' · ' + t('asceza.done')}
-          {habit.status === 'broken' && ' · ' + t('asceza.broken')}
-        </div>
+        <span className="habit-title">{habit.title}</span>
+        {(habit.status === 'done' || habit.status === 'broken') && (
+          <div className="habit-meta">
+            {habit.status === 'done'   && t('asceza.done')}
+            {habit.status === 'broken' && t('asceza.broken')}
+          </div>
+        )}
       </div>
       <div className="habit-actions">
         {isActive && <button onClick={() => onPatch({ status: 'done' })} title={t('asceza.complete')}>✓</button>}
