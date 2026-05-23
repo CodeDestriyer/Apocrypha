@@ -41,7 +41,12 @@ function Shell() {
   }, [status]);
 
   useEffect(() => {
-    if (status === 'unauthenticated') setShowLogin(false);
+    if (status !== 'unauthenticated') return;
+    // Returning users (have logged in before on this browser) skip the
+    // marketing landing and go straight to the sign-in screen.
+    let ever = false;
+    try { ever = localStorage.getItem('lr.everLoggedIn') === '1'; } catch {}
+    setShowLogin(ever);
   }, [status]);
 
   if (status === 'loading') {

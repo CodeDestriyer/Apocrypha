@@ -45,7 +45,7 @@ export default function Landing({ onEnter }) {
       </header>
 
       <main className="landing-main">
-        <span className="landing-eyebrow">⚜ Varkanis</span>
+        <span className="landing-eyebrow">{t('landing.beta')}</span>
         <h1 className="landing-title">Varkanis</h1>
         <p className="landing-tagline">{t('landing.tagline')}</p>
 
