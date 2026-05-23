@@ -257,7 +257,7 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   );
 }
 
-export default function CharacterPage({ onNavigate }) {
+export default function CharacterPage({ onNavigate, hideNav = false }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const [prefs, setPrefs] = useModulePrefs();
@@ -306,16 +306,18 @@ export default function CharacterPage({ onNavigate }) {
         </button>
       )}
 
-      <div className="divider" />
+      {!hideNav && <div className="divider" />}
 
-      <NavGrid
-        profile={profile}
-        onNavigate={onNavigate}
-        prefs={prefs}
-        setPrefs={setPrefs}
-        editing={editing}
-        setEditing={setEditing}
-      />
+      {!hideNav && (
+        <NavGrid
+          profile={profile}
+          onNavigate={onNavigate}
+          prefs={prefs}
+          setPrefs={setPrefs}
+          editing={editing}
+          setEditing={setEditing}
+        />
+      )}
     </div>
   );
 }

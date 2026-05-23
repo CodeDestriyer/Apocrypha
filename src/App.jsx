@@ -6,7 +6,8 @@ import NameModal from './NameModal.jsx';
 import LoginScreen from './LoginScreen.jsx';
 import Landing from './Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
-import { LangProvider, useLang } from './i18n.jsx';
+import { LangProvider, useLang, LANGS } from './i18n.jsx';
+import { signOut } from './supabase.js';
 import GoalsSection from './sections/GoalsSection.jsx';
 import SkillsSection from './sections/SkillsSection.jsx';
 import AscesesSection from './sections/AscesesSection.jsx';
@@ -30,7 +31,34 @@ const SUB_TITLE_KEYS = {
   looksmaxing: 'nav.looksmaxing',
 };
 
+const SIDEBAR_MODULES = [
+  { id: 'goals',       icon: '✧', labelKey: 'nav.goals' },
+  { id: 'skills',      icon: '✦', labelKey: 'nav.skills' },
+  { id: 'asceses',     icon: '☥', labelKey: 'nav.asceses' },
+  { id: 'moneymaxing', icon: '❖', labelKey: 'nav.moneymaxing' },
+  { id: 'looksmaxing', icon: '✺', labelKey: 'nav.looksmaxing' },
+];
+
 const SHOW_LOGIN_KEY = 'lr.showLogin';
+
+function useMediaQuery(query) {
+  const [match, setMatch] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia(query).matches;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mql = window.matchMedia(query);
+    const onChange = (e) => setMatch(e.matches);
+    mql.addEventListener?.('change', onChange);
+    mql.addListener?.(onChange);
+    return () => {
+      mql.removeEventListener?.('change', onChange);
+      mql.removeListener?.(onChange);
+    };
+  }, [query]);
+  return match;
+}
 
 function Shell() {
   const { status, error } = useProfile();
@@ -86,6 +114,26 @@ function Shell() {
 
   const subRender = SUB_RENDER[view];
   const subTitle = SUB_TITLE_KEYS[view] && t(SUB_TITLE_KEYS[view]);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  if (isDesktop) {
+    return (
+      <div className="desktop-shell">
+        <DesktopSidebar view={view} setView={setView} />
+        <main className="desktop-content">
+          {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
+          {view === 'calendar' && <CalendarPage />}
+          {subRender && (
+            <div className="card desktop-card">
+              <h1 className="sub-title desktop-sub-title">{subTitle}</h1>
+              <div className="divider" />
+              {subRender()}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -99,6 +147,95 @@ function Shell() {
         )}
       </div>
     </div>
+  );
+}
+
+function DesktopSidebar({ view, setView }) {
+  const { profile } = useProfile();
+  const { t, lang, setLang } = useLang();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const onDoc = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) setSettingsOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [settingsOpen]);
+
+  const avatarIdx = ((profile.avatar_idx ?? 0) % 3 + 3) % 3;
+  const avatars = ['/avatars/ganslanda.jpg', '/avatars/hitler.png', '/avatars/loganpaul.jpg'];
+
+  return (
+    <aside className="desktop-sidebar">
+      <button className="desktop-profile" onClick={() => setView('home')}>
+        <img className="desktop-avatar" src={avatars[avatarIdx]} alt="" />
+        <div className="desktop-profile-text">
+          <div className="desktop-profile-name">{profile.name || '—'}</div>
+          {profile.looks_rating && <div className="desktop-profile-meta">{profile.looks_rating}</div>}
+        </div>
+      </button>
+
+      <nav className="desktop-nav">
+        <div className="desktop-nav-section">{t('tab.character')} / {t('tab.calendar')}</div>
+        <button
+          className={`desktop-nav-item ${view === 'home' ? 'active' : ''}`}
+          onClick={() => setView('home')}
+        >
+          <span className="desktop-nav-icon">⚔</span>
+          <span>{t('tab.character')}</span>
+        </button>
+        <button
+          className={`desktop-nav-item ${view === 'calendar' ? 'active' : ''}`}
+          onClick={() => setView('calendar')}
+        >
+          <span className="desktop-nav-icon">⌛</span>
+          <span>{t('tab.calendar')}</span>
+        </button>
+
+        <div className="desktop-nav-section">{t('settings.modules')}</div>
+        {SIDEBAR_MODULES.map((m) => (
+          <button
+            key={m.id}
+            className={`desktop-nav-item ${view === m.id ? 'active' : ''}`}
+            onClick={() => setView(m.id)}
+          >
+            <span className="desktop-nav-icon">{m.icon}</span>
+            <span>{t(m.labelKey)}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="desktop-sidebar-footer">
+        <div className="desktop-settings" ref={settingsRef}>
+          <button className="desktop-nav-item" onClick={() => setSettingsOpen((o) => !o)}>
+            <span className="desktop-nav-icon">⚙</span>
+            <span>{t('settings.title')}</span>
+          </button>
+          {settingsOpen && (
+            <div className="desktop-settings-pop">
+              <div className="settings-section-title">{t('lang.title')}</div>
+              {LANGS.map((l) => (
+                <button
+                  key={l.code}
+                  className={`settings-option ${lang === l.code ? 'active' : ''}`}
+                  onClick={() => setLang(l.code)}
+                >
+                  <span>{l.flag}</span>
+                  <span>{l.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <button className="desktop-nav-item desktop-logout" onClick={() => signOut()}>
+          <span className="desktop-nav-icon">⎋</span>
+          <span>{t('settings.logout')}</span>
+        </button>
+      </div>
+    </aside>
   );
 }
 
