@@ -1795,16 +1795,18 @@ body {
   border-color: rgba(127, 184, 199, 0.22);
 }
 .day-focus-row-name {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
+  display: block;
   text-align: left;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
-.day-focus-row-name .period-emoji,
+.day-focus-row-name .period-emoji {
+  display: inline;
+  margin-right: 6px;
+}
 .day-focus-row-name .goal-title-text { display: inline; }
+.day-focus-row.habit .day-focus-row-name { font-size: 13px; }
 .day-focus-row-meta {
   color: var(--text-dim);
   font-family: 'Cinzel', serif;
@@ -2265,13 +2267,14 @@ body {
     text-align: left;
   }
   .desktop-brand-text {
-    font-family: 'UnifrakturMaguntia', 'Cinzel', serif;
-    font-size: 64px;
+    font-family: 'Cinzel Decorative', 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 38px;
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.06em;
     color: var(--gold-bright);
     text-shadow: 0 0 22px rgba(127, 184, 199, 0.5), 0 2px 0 rgba(0,0,0,0.6);
-    text-transform: lowercase;
+    text-transform: uppercase;
     transition: text-shadow 0.18s ease, transform 0.18s ease;
   }
   .desktop-brand:hover .desktop-brand-text {
