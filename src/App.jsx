@@ -179,7 +179,6 @@ function DesktopSidebar({ view, setView }) {
       </button>
 
       <nav className="desktop-nav">
-        <div className="desktop-nav-section">{t('tab.character')} / {t('tab.calendar')}</div>
         <button
           className={`desktop-nav-item ${view === 'home' ? 'active' : ''}`}
           onClick={() => setView('home')}

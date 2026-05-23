@@ -2052,48 +2052,49 @@ body {
 
   .desktop-shell {
     display: grid;
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 300px 1fr;
     height: 100vh;
     width: 100vw;
     color: var(--text);
   }
 
   .desktop-sidebar {
-    background: linear-gradient(180deg, rgba(10, 18, 30, 0.96), rgba(6, 10, 18, 0.96));
-    border-right: 1px solid rgba(127, 184, 199, 0.2);
-    padding: 20px 14px;
+    background: linear-gradient(180deg, rgba(14, 22, 36, 0.98), rgba(6, 10, 18, 0.98));
+    border-right: 1px solid rgba(127, 184, 199, 0.25);
+    padding: 22px 16px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
     overflow-y: auto;
   }
 
   .desktop-profile {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px;
-    background: rgba(127, 184, 199, 0.05);
-    border: 1px solid rgba(127, 184, 199, 0.12);
-    border-radius: 10px;
+    gap: 14px;
+    padding: 12px 14px;
+    background: rgba(127, 184, 199, 0.06);
+    border: 1px solid rgba(127, 184, 199, 0.18);
+    border-radius: 12px;
     cursor: pointer;
     text-align: left;
     color: var(--text);
     transition: background 0.15s, border-color 0.15s;
   }
-  .desktop-profile:hover { background: rgba(127, 184, 199, 0.1); border-color: var(--gold-dim); }
+  .desktop-profile:hover { background: rgba(127, 184, 199, 0.12); border-color: var(--gold-dim); }
   .desktop-avatar {
-    width: 44px; height: 44px;
+    width: 52px; height: 52px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--gold-dim);
+    border: 2px solid var(--gold);
     flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(127, 184, 199, 0.18);
   }
   .desktop-profile-text { min-width: 0; flex: 1; }
   .desktop-profile-name {
     font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 800;
+    font-size: 16px;
     letter-spacing: 0.08em;
     color: var(--gold-bright);
     white-space: nowrap;
@@ -2101,77 +2102,92 @@ body {
     text-overflow: ellipsis;
   }
   .desktop-profile-meta {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-dim);
-    margin-top: 2px;
+    margin-top: 3px;
+    letter-spacing: 0.05em;
   }
 
-  .desktop-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .desktop-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
   .desktop-nav-section {
     font-family: 'Cinzel', serif;
-    font-size: 10px;
-    letter-spacing: 0.22em;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: var(--gold-dim);
-    padding: 12px 10px 6px;
+    color: var(--gold);
+    padding: 16px 12px 8px;
+    border-bottom: 1px solid rgba(127, 184, 199, 0.12);
+    margin-bottom: 4px;
   }
   .desktop-nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 9px 12px;
+    gap: 14px;
+    padding: 12px 14px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 7px;
+    border-left: 3px solid transparent;
+    border-radius: 8px;
     color: var(--text);
-    font-family: 'EB Garamond', serif;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
     font-size: 14px;
+    letter-spacing: 0.08em;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
     text-align: left;
   }
   .desktop-nav-item:hover {
-    background: rgba(127, 184, 199, 0.08);
+    background: rgba(127, 184, 199, 0.1);
     color: var(--gold-bright);
+    border-left-color: var(--gold-dim);
   }
   .desktop-nav-item.active {
-    background: rgba(127, 184, 199, 0.14);
-    border-color: rgba(127, 184, 199, 0.3);
+    background: rgba(127, 184, 199, 0.18);
+    border-color: rgba(127, 184, 199, 0.32);
+    border-left-color: var(--gold);
     color: var(--gold-bright);
+    font-weight: 700;
+  }
+  .desktop-nav-item.active .desktop-nav-icon {
+    color: var(--gold-bright);
+    text-shadow: 0 0 10px rgba(240, 246, 250, 0.4);
   }
   .desktop-nav-icon {
-    width: 22px;
+    width: 24px;
     text-align: center;
     color: var(--gold);
-    font-size: 14px;
+    font-size: 18px;
     flex-shrink: 0;
+    transition: color 0.15s, text-shadow 0.15s;
   }
 
   .desktop-sidebar-footer {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    border-top: 1px solid rgba(127, 184, 199, 0.12);
-    padding-top: 10px;
+    gap: 4px;
+    border-top: 1px solid rgba(127, 184, 199, 0.18);
+    padding-top: 14px;
   }
   .desktop-settings { position: relative; }
   .desktop-settings-pop {
     position: absolute;
-    bottom: calc(100% + 6px);
+    bottom: calc(100% + 8px);
     left: 0;
     right: 0;
     background: rgba(10, 14, 18, 0.98);
-    border: 1px solid rgba(127, 184, 199, 0.25);
-    border-radius: 8px;
-    padding: 6px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(127, 184, 199, 0.3);
+    border-radius: 10px;
+    padding: 8px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     z-index: 5;
   }
   .desktop-logout { color: #c87a7a; }
-  .desktop-logout:hover { background: rgba(157, 82, 82, 0.12); color: #e29494; }
+  .desktop-logout:hover { background: rgba(157, 82, 82, 0.15); color: #e29494; border-left-color: #c87a7a; }
 
   .desktop-content {
     overflow-y: auto;
