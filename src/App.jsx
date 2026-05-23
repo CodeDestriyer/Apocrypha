@@ -84,6 +84,7 @@ function Shell() {
     } catch {}
   };
   const prevStatus = useRef(status);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     if (status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
@@ -114,7 +115,6 @@ function Shell() {
 
   const subRender = SUB_RENDER[view];
   const subTitle = SUB_TITLE_KEYS[view] && t(SUB_TITLE_KEYS[view]);
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   if (isDesktop) {
     return (
