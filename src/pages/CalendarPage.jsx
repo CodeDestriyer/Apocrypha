@@ -5,13 +5,6 @@ import { useLang } from '../i18n.jsx';
 const PLANS_KEY = 'lr.plans';
 const LEGACY_KEY = 'lr.periods';
 
-const TEMPLATES = [
-  { id: 'dopamine', emoji: '🧠', name: 'Дофаминовый детокс', color: '#7fb8c7' },
-];
-
-const COLORS = ['#7fb8c7', '#9bd1e5', '#c79b7f', '#a37fc7', '#c7b87f', '#7fc79b', '#c77f9b'];
-const EMOJI_DEFAULT = '✦';
-
 const WD_RU = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const WD_ES = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
@@ -69,10 +62,6 @@ export default function CalendarPage() {
     const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d;
   });
   const plans = Array.isArray(profile?.plans) ? profile.plans : [];
-  const [picking, setPicking] = useState(false);
-  const [customOpen, setCustomOpen] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customColor, setCustomColor] = useState(COLORS[0]);
   const [focusDay, setFocusDay] = useState(() => ymd(new Date()));
   const [quickGoal, setQuickGoal] = useState('');
   const [goalAddOpen, setGoalAddOpen] = useState(false);
@@ -107,14 +96,10 @@ export default function CalendarPage() {
 
   const onDayClick = (d) => {
     setFocusDay(ymd(d));
-    setPicking(false);
-    setCustomOpen(false);
-    setCustomName('');
     setGoalAddOpen(false);
     setQuickGoal('');
   };
 
-  const shiftFocus = (delta) => setFocusDay((k) => ymd(addDays(parseYmd(k), delta)));
   const focusDate = parseYmd(focusDay);
   const focusPlans = plans.filter((p) => focusDate >= parseYmd(p.start) && focusDate <= parseYmd(p.end));
   const focusGoals = (profile.goals ?? []).filter((g) => String(g.deadline ?? '').slice(0, 10) === focusDay);
@@ -135,19 +120,6 @@ export default function CalendarPage() {
       goals: (curr.goals ?? []).map((g) => (g.id === id ? { ...g, done: !g.done } : g)),
     }));
 
-  const startPlanFrom = (tpl) => {
-    updatePlans([
-      ...plans,
-      { id: newId(), name: tpl.name, emoji: tpl.emoji, color: tpl.color, start: focusDay, end: focusDay },
-    ]);
-    setPicking(false);
-    setCustomOpen(false); setCustomName(''); setCustomColor(COLORS[0]);
-  };
-  const saveCustomPlan = () => {
-    const n = customName.trim();
-    if (!n) return;
-    startPlanFrom({ name: n, emoji: EMOJI_DEFAULT, color: customColor });
-  };
   const endPlan = (id) => updatePlans(plans.filter((p) => p.id !== id));
 
   const wd = WD[lang] ?? WD_RU;
@@ -274,63 +246,6 @@ export default function CalendarPage() {
             >✓</button>
           </div>
         </div>
-
-        {!picking ? (
-          <button className="cal-create-btn" onClick={() => setPicking(true)}>
-            + {t('cal.createPlan')}
-          </button>
-        ) : (
-          <div className="period-templates">
-            {TEMPLATES.map((tpl) => (
-              <button key={tpl.id} className="period-template" onClick={() => startPlanFrom(tpl)}>
-                <span className="period-tpl-emoji">{tpl.emoji}</span>
-                <span className="period-tpl-name">{tpl.name}</span>
-                <span className="cal-dot" style={{ background: tpl.color }} />
-              </button>
-            ))}
-            {!customOpen ? (
-              <button className="period-template" onClick={() => setCustomOpen(true)}>
-                <span className="period-tpl-emoji">{EMOJI_DEFAULT}</span>
-                <span className="period-tpl-name">{t('cal.custom')}</span>
-                <span className="period-tpl-days">›</span>
-              </button>
-            ) : (
-              <div className="custom-plan">
-                <input
-                  autoFocus
-                  className="field-input custom-plan-name"
-                  placeholder={t('cal.customPlaceholder')}
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && saveCustomPlan()}
-                  maxLength={48}
-                />
-                <div className="custom-plan-colors">
-                  {COLORS.map((c) => (
-                    <button
-                      key={c}
-                      className={`color-swatch ${customColor === c ? 'active' : ''}`}
-                      style={{ background: c }}
-                      onClick={() => setCustomColor(c)}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
-                <button
-                  className="period-template custom-plan-save"
-                  disabled={!customName.trim()}
-                  onClick={saveCustomPlan}
-                >
-                  <span className="period-tpl-name">{t('cal.saveCustom')}</span>
-                  <span className="cal-dot" style={{ background: customColor }} />
-                </button>
-              </div>
-            )}
-            <button className="add-row" onClick={() => { setPicking(false); setCustomOpen(false); setCustomName(''); }}>
-              {t('cal.cancel')}
-            </button>
-          </div>
-        )}
       </div>
 
     </div>
