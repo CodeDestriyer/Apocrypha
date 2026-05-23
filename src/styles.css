@@ -2069,24 +2069,25 @@ body {
 }
 .cal-cell-num { line-height: 1; }
 .cal-cell-dots {
+  position: absolute;
+  top: 4px;
+  right: 4px;
   display: flex;
   flex-wrap: nowrap;
-  justify-content: center;
   align-items: center;
-  gap: 4px;
-  overflow: hidden;
+  gap: 3px;
   pointer-events: none;
-  margin-top: 2px;
 }
 .cal-dot {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 .cal-dot-more {
-  color: var(--text-dim);
+  color: var(--text);
   font-family: 'Cinzel', serif;
   font-size: 10px;
   line-height: 1;
@@ -2219,10 +2220,10 @@ body {
     text-align: center;
   }
   .desktop-brand-text {
-    font-family: 'Pirata One', 'Cinzel', serif;
-    font-size: 56px;
+    font-family: 'UnifrakturMaguntia', 'Cinzel', serif;
+    font-size: 64px;
     line-height: 1;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
     color: var(--gold-bright);
     text-shadow: 0 0 22px rgba(127, 184, 199, 0.5), 0 2px 0 rgba(0,0,0,0.6);
     text-transform: lowercase;
