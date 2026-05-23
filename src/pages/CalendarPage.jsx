@@ -211,7 +211,9 @@ export default function CalendarPage() {
                 onClick={() => toggleGoal(g.id)}
                 aria-label="toggle"
               >{g.done ? '✓' : ''}</button>
-              <span className="day-focus-row-name">{g.title || t('goal.untitled')}</span>
+              <span className="day-focus-row-name">
+                <span className="goal-title-text">{g.title || t('goal.untitled')}</span>
+              </span>
             </div>
           ))}
         </div>

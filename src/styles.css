@@ -1740,12 +1740,13 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(127, 184, 199, 0.1);
   border-left: 3px solid var(--gold-dim);
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 17px;
+  line-height: 1.25;
   transition: background 0.15s, border-color 0.15s;
 }
 .day-focus-row:hover {
@@ -1765,9 +1766,11 @@ body {
   font-size: 11px;
   letter-spacing: 0.08em;
 }
-.day-focus-row.goal.done .day-focus-row-name {
-  opacity: 0.5;
+.day-focus-row.goal.done { opacity: 0.55; }
+.day-focus-row.goal.done .goal-title-text {
   text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--text);
 }
 .day-focus-add {
   display: flex;
@@ -2066,22 +2069,18 @@ body {
 }
 .cal-cell-num { line-height: 1; }
 .cal-cell-dots {
-  position: absolute;
-  bottom: 3px;
-  left: 2px;
-  right: 2px;
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   overflow: hidden;
   pointer-events: none;
-  max-height: 7px;
+  margin-top: 2px;
 }
 .cal-dot {
-  width: 4px;
-  height: 4px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
@@ -2089,7 +2088,7 @@ body {
 .cal-dot-more {
   color: var(--text-dim);
   font-family: 'Cinzel', serif;
-  font-size: 7px;
+  font-size: 10px;
   line-height: 1;
   margin-left: 1px;
 }
@@ -2220,11 +2219,12 @@ body {
     text-align: center;
   }
   .desktop-brand-text {
-    font-family: 'MedievalSharp', 'Cinzel', serif;
-    font-size: 34px;
-    letter-spacing: 0.06em;
+    font-family: 'Pirata One', 'Cinzel', serif;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: 0.04em;
     color: var(--gold-bright);
-    text-shadow: 0 0 18px rgba(127, 184, 199, 0.45), 0 2px 0 rgba(0,0,0,0.6);
+    text-shadow: 0 0 22px rgba(127, 184, 199, 0.5), 0 2px 0 rgba(0,0,0,0.6);
     text-transform: lowercase;
     transition: text-shadow 0.18s ease, transform 0.18s ease;
   }
