@@ -2419,6 +2419,41 @@ body {
   color: #e3b4b4;
 }
 
+.goal-diff-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.goal-diff-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(127, 184, 199, 0.15);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.goal-diff-btn.easy.active {
+  background: rgba(127, 199, 155, 0.16);
+  border-color: #7fc79b;
+  color: #b4e3c5;
+}
+.goal-diff-btn.medium.active {
+  background: rgba(199, 184, 127, 0.16);
+  border-color: #c7b87f;
+  color: #e3d6a3;
+}
+.goal-diff-btn.hard.active {
+  background: rgba(201, 119, 119, 0.16);
+  border-color: #c97777;
+  color: #e3b4b4;
+}
+
 .habit-group-title {
   font-family: 'Cinzel', serif;
   font-size: 12px;

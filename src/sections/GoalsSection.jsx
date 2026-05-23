@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 
@@ -7,11 +7,18 @@ const newId = () =>
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
+const DIFFICULTIES = [
+  { id: 'easy',   labelKey: 'goal.easy' },
+  { id: 'medium', labelKey: 'goal.medium' },
+  { id: 'hard',   labelKey: 'goal.hard' },
+];
+
 export default function GoalsSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const goals = profile.goals ?? [];
   const newIdRef = useRef(null);
+  const [difficulty, setDifficulty] = useState('easy');
 
   const patchGoal = (id, p) =>
     update((curr) => ({
@@ -27,15 +34,26 @@ export default function GoalsSection() {
     update((curr) => ({
       goals: [
         ...(curr.goals ?? []),
-        { id, title: '', deadline: null, done: false, created_at: new Date().toISOString() },
+        { id, title: '', deadline: null, done: false, difficulty, created_at: new Date().toISOString() },
       ],
     }));
   };
 
+  const visible = goals.filter((g) => (g.difficulty ?? 'easy') === difficulty);
+
   return (
     <>
+      <div className="goal-diff-toggle">
+        {DIFFICULTIES.map((d) => (
+          <button
+            key={d.id}
+            className={`goal-diff-btn ${d.id} ${difficulty === d.id ? 'active' : ''}`}
+            onClick={() => setDifficulty(d.id)}
+          >{t(d.labelKey)}</button>
+        ))}
+      </div>
       <ul className="goal-list">
-        {goals.map((g) => (
+        {visible.map((g) => (
           <GoalRow
             key={g.id}
             goal={g}
