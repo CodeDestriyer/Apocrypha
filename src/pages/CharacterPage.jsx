@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
+import CharacterModel from '../CharacterModel.jsx';
 
 const AVATARS = [
   '/avatars/ganslanda.jpg',
@@ -304,6 +305,12 @@ export default function CharacterPage({ onNavigate, hideNav = false }) {
         <button className="settings-done nav-done" onClick={() => setEditingInfo(false)}>
           {t('settings.done')}
         </button>
+      )}
+
+      {hideNav && (
+        <div className="character-model-stage">
+          <CharacterModel src="/man.glb" />
+        </div>
       )}
 
       {!hideNav && <div className="divider" />}
