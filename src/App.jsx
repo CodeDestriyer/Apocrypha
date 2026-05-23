@@ -30,21 +30,45 @@ const SUB_TITLE_KEYS = {
   looksmaxing: 'nav.looksmaxing',
 };
 
+const SHOW_LOGIN_KEY = 'lr.showLogin';
+
 function Shell() {
   const { status, error } = useProfile();
   const { t } = useLang();
   const [view, setView] = useState('home');
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLoginState] = useState(() => {
+    // Persist "user pressed Sign in" intent across the OAuth redirect.
+    // Also infer it from the URL when Supabase sends us back with ?code/#access_token.
+    try {
+      if (localStorage.getItem(SHOW_LOGIN_KEY) === '1') return true;
+    } catch {}
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.has('code') || window.location.hash.includes('access_token')) return true;
+    }
+    return false;
+  });
+  const setShowLogin = (v) => {
+    setShowLoginState(v);
+    try {
+      if (v) localStorage.setItem(SHOW_LOGIN_KEY, '1');
+      else localStorage.removeItem(SHOW_LOGIN_KEY);
+    } catch {}
+  };
+  const prevStatus = useRef(status);
 
   useEffect(() => {
     if (status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
   }, [status]);
 
   useEffect(() => {
-    // Whenever we land on the unauthenticated state (fresh visit, expired
-    // session, or explicit sign-out), show the landing first. The user
-    // taps the CTA to go to the sign-in screen.
-    if (status === 'unauthenticated') setShowLogin(false);
+    // Only flip back to the landing on an explicit sign-out (ready → unauthenticated).
+    // On fresh loads or while the OAuth callback is being processed, keep the user's
+    // last sign-in intent (so the OAuth redirect doesn't dump them on the landing).
+    if (prevStatus.current === 'ready' && status === 'unauthenticated') {
+      setShowLogin(false);
+    }
+    prevStatus.current = status;
   }, [status]);
 
   if (status === 'loading') {
