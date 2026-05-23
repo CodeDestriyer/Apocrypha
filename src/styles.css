@@ -1807,6 +1807,7 @@ body {
   font-size: 11px;
   letter-spacing: 0.08em;
 }
+.day-focus-row.habit { border-left-color: #7fc79b; }
 .day-focus-row.goal.done { opacity: 0.55; }
 .day-focus-row.goal.done .goal-title-text {
   text-decoration: line-through;

@@ -103,6 +103,15 @@ export default function CalendarPage() {
   const focusDate = parseYmd(focusDay);
   const focusPlans = plans.filter((p) => focusDate >= parseYmd(p.start) && focusDate <= parseYmd(p.end));
   const focusGoals = (profile.goals ?? []).filter((g) => String(g.deadline ?? '').slice(0, 10) === focusDay);
+  const focusHabits = (profile.asceses ?? []).filter((h) => {
+    if ((h.kind ?? 'good') !== 'good') return false;
+    if (h.status !== 'active') return false;
+    if (!h.started_at) return false;
+    const start = parseYmd(String(h.started_at).slice(0, 10));
+    if (focusDate < start) return false;
+    const end = addDays(start, Math.max(0, (h.target_days ?? 1) - 1));
+    return focusDate <= end;
+  });
   const addQuickGoal = () => {
     const title = quickGoal.trim();
     if (!title) return;
@@ -192,6 +201,19 @@ export default function CalendarPage() {
         </div>
 
         <div className="day-focus-list">
+          {focusHabits.map((h) => {
+            const start = parseYmd(String(h.started_at).slice(0, 10));
+            const dayNum = Math.floor((focusDate - start) / 86400000) + 1;
+            return (
+              <div key={h.id} className="day-focus-row habit">
+                <span className="day-focus-row-name">
+                  <span className="period-emoji">✦</span>
+                  {h.title}
+                </span>
+                <span className="day-focus-row-meta">{dayNum}/{h.target_days}</span>
+              </div>
+            );
+          })}
           {focusPlans.map((p) => (
             <div key={p.id} className="day-focus-row" style={{ borderLeftColor: p.color }}>
               <span className="day-focus-row-name">
