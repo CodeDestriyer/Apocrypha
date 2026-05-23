@@ -182,7 +182,7 @@ function DesktopSidebar({ view, setView }) {
           className={`desktop-nav-item ${view === 'calendar' ? 'active' : ''}`}
           onClick={() => setView('calendar')}
         >
-          <span className="desktop-nav-icon">⌛</span>
+          <span className="desktop-nav-icon">📅</span>
           <span>{t('tab.calendar')}</span>
         </button>
 
