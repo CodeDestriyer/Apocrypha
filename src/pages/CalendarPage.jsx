@@ -178,12 +178,14 @@ export default function CalendarPage() {
         }}>›</button>
       </div>
 
-      <div className="cal-month-wd">
-        {wd.map((w) => <span key={w}>{w}</span>)}
-      </div>
+      <div className="cal-body">
+        <div className="cal-grid-col">
+          <div className="cal-month-wd">
+            {wd.map((w) => <span key={w}>{w}</span>)}
+          </div>
 
-      <div className="cal-month">
-        {days.map((d, i) => {
+          <div className="cal-month">
+            {days.map((d, i) => {
           const k = ymd(d);
           const inMonth = d.getMonth() === viewMonth;
           const isToday = k === todayKey;
@@ -218,24 +220,21 @@ export default function CalendarPage() {
             </button>
           );
         })}
-      </div>
+          </div>
+        </div>
 
-      <div className="day-focus">
-        <div className="day-focus-head">
-          <div className="day-focus-date">
-            <div className="day-focus-day">{focusDate.getDate()}</div>
-            <div className="day-focus-meta">
-              <div className="day-focus-weekday">
-                {new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(focusDate)}
-              </div>
+        <div className="day-focus">
+          <div className="day-focus-head">
+            <div className="day-focus-date">
+              <div className="day-focus-day">{focusDate.getDate()}</div>
+              <div className="day-focus-meta">
+                <div className="day-focus-weekday">
+                  {new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(focusDate)}
+                </div>
               <div className="day-focus-month">
                 {new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(focusDate)}
               </div>
             </div>
-          </div>
-          <div className="day-focus-nav">
-            <button className="cal-nav-btn" onClick={() => shiftFocus(-1)} aria-label="prev day">‹</button>
-            <button className="cal-nav-btn" onClick={() => shiftFocus(1)} aria-label="next day">›</button>
           </div>
         </div>
 
@@ -278,6 +277,7 @@ export default function CalendarPage() {
             maxLength={80}
           />
           <button className="cal-nav-btn add" onClick={addQuickGoal} disabled={!quickGoal.trim()} aria-label="add">+</button>
+        </div>
         </div>
       </div>
 

@@ -1637,6 +1637,22 @@ body {
 }
 .cal-nav-btn:hover { border-color: var(--gold); }
 
+.cal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.cal-grid-col { display: flex; flex-direction: column; gap: 0; }
+
+@media (min-width: 720px) {
+  .cal-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    align-items: start;
+  }
+  .cal-body .day-focus { margin-top: 0; }
+}
+
 /* Day focus panel under the month grid */
 .day-focus {
   margin-top: 18px;
@@ -2198,7 +2214,7 @@ body {
   .desktop-content > * { width: 100%; max-width: 880px; }
   .desktop-content .card { width: 100%; max-width: 880px; }
   .desktop-content .character-card { max-width: 720px; }
-  .desktop-content .calendar-card { max-width: 720px; }
+  .desktop-content .calendar-card { max-width: 900px; }
   .desktop-card { padding: 28px 32px; }
   .desktop-sub-title {
     font-family: 'Cinzel', serif;
