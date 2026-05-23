@@ -1806,14 +1806,14 @@ body {
   margin-right: 6px;
 }
 .day-focus-row-name .goal-title-text { display: inline; }
-.day-focus-row.habit .day-focus-row-name { font-size: 13px; }
+.day-focus-row.day-focus-habit .day-focus-row-name { font-size: 13px; }
 .day-focus-row-meta {
   color: var(--text-dim);
   font-family: 'Cinzel', serif;
   font-size: 11px;
   letter-spacing: 0.08em;
 }
-.day-focus-row.habit { border-left-color: #7fc79b; }
+.day-focus-row.day-focus-habit { border-left-color: #7fc79b; }
 .day-focus-row.goal.done { opacity: 0.55; }
 .day-focus-row.goal.done .goal-title-text {
   text-decoration: line-through;

@@ -205,7 +205,7 @@ export default function CalendarPage() {
             const start = parseYmd(String(h.started_at).slice(0, 10));
             const dayNum = Math.floor((focusDate - start) / 86400000) + 1;
             return (
-              <div key={h.id} className="day-focus-row habit">
+              <div key={h.id} className="day-focus-row day-focus-habit">
                 <span className="day-focus-row-name">
                   <span className="period-emoji">✦</span>
                   {h.title}
