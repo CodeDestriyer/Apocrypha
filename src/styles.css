@@ -2069,25 +2069,24 @@ body {
 }
 .cal-cell-num { line-height: 1; }
 .cal-cell-dots {
-  position: absolute;
-  top: 4px;
-  right: 4px;
   display: flex;
   flex-wrap: nowrap;
+  justify-content: center;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  overflow: hidden;
   pointer-events: none;
+  margin-top: 2px;
 }
 .cal-dot {
-  width: 9px;
-  height: 9px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 .cal-dot-more {
-  color: var(--text);
+  color: var(--text-dim);
   font-family: 'Cinzel', serif;
   font-size: 10px;
   line-height: 1;
