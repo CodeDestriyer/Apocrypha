@@ -203,20 +203,14 @@ export default function CalendarPage() {
               onClick={() => onDayClick(d)}
             >
               <span className="cal-cell-num">{d.getDate()}</span>
-              {dayGoals.length > 0 && <span className="cal-cell-goal">✦</span>}
-              {activeOnDay.map(({ p, idx }) => {
-                const isStart = p.start === k;
-                const isEnd = p.end === k;
-                const contLeft = !isStart && col > 0;
-                const contRight = !isEnd && col < 6;
-                return (
-                  <span
-                    key={p.id}
-                    className={`cal-band ${contLeft ? 'cont-l' : ''} ${contRight ? 'cont-r' : ''}`}
-                    style={{ background: p.color, bottom: 4 + idx * 5 }}
-                  />
-                );
-              })}
+              {(activeOnDay.length > 0 || dayGoals.length > 0) && (
+                <span className="cal-cell-dots">
+                  {activeOnDay.slice(0, 4).map(({ p }) => (
+                    <span key={p.id} className="cal-dot" style={{ background: p.color }} />
+                  ))}
+                  {dayGoals.length > 0 && <span className="cal-dot cal-dot-goal" />}
+                </span>
+              )}
             </button>
           );
         })}
