@@ -17,8 +17,10 @@ export default function GoalsSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const goals = profile.goals ?? [];
-  const newIdRef = useRef(null);
   const [difficulty, setDifficulty] = useState('easy');
+  const [addOpen, setAddOpen] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftDeadline, setDraftDeadline] = useState('');
 
   const patchGoal = (id, p) =>
     update((curr) => ({
@@ -29,14 +31,24 @@ export default function GoalsSection() {
     update((curr) => ({ goals: (curr.goals ?? []).filter((g) => g.id !== id) }));
 
   const add = () => {
-    const id = newId();
-    newIdRef.current = id;
+    const title = draftTitle.trim();
+    if (!title) return;
     update((curr) => ({
       goals: [
         ...(curr.goals ?? []),
-        { id, title: '', deadline: null, done: false, difficulty, created_at: new Date().toISOString() },
+        {
+          id: newId(),
+          title,
+          deadline: draftDeadline || null,
+          done: false,
+          difficulty,
+          created_at: new Date().toISOString(),
+        },
       ],
     }));
+    setDraftTitle('');
+    setDraftDeadline('');
+    setAddOpen(false);
   };
 
   const visible = goals.filter((g) => (g.difficulty ?? 'easy') === difficulty);
@@ -48,34 +60,68 @@ export default function GoalsSection() {
           <button
             key={d.id}
             className={`goal-diff-btn ${d.id} ${difficulty === d.id ? 'active' : ''}`}
-            onClick={() => setDifficulty(d.id)}
+            onClick={() => { setDifficulty(d.id); setAddOpen(false); setDraftTitle(''); }}
           >{t(d.labelKey)}</button>
         ))}
       </div>
+
+      <div className={`goal-add ${addOpen ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="goal-add-toggle-btn"
+          onClick={() => setAddOpen((o) => !o)}
+          aria-expanded={addOpen}
+          aria-label={t('goal.placeholder')}
+        >+</button>
+        <div className="goal-add-slot">
+          <input
+            className="goal-title-input"
+            value={draftTitle}
+            placeholder={t('goal.placeholder')}
+            onChange={(e) => setDraftTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') add();
+              if (e.key === 'Escape') { setAddOpen(false); setDraftTitle(''); }
+            }}
+            maxLength={64}
+            ref={(el) => { if (addOpen && el && document.activeElement !== el) el.focus(); }}
+            tabIndex={addOpen ? 0 : -1}
+          />
+          <input
+            type="date"
+            className="goal-add-date"
+            value={draftDeadline}
+            onChange={(e) => setDraftDeadline(e.target.value)}
+            tabIndex={addOpen ? 0 : -1}
+          />
+          <button
+            className="cal-nav-btn add"
+            onClick={add}
+            disabled={!draftTitle.trim()}
+            tabIndex={addOpen ? 0 : -1}
+            aria-label="add"
+          >✓</button>
+        </div>
+      </div>
+
       <ul className="goal-list">
         {visible.map((g) => (
           <GoalRow
             key={g.id}
             goal={g}
-            autoFocus={newIdRef.current === g.id}
             onPatch={(p) => patchGoal(g.id, p)}
             onRemove={() => remove(g.id)}
           />
         ))}
       </ul>
-      <button className="add-row" onClick={add}>{t('goal.add')}</button>
     </>
   );
 }
 
-function GoalRow({ goal, autoFocus, onPatch, onRemove }) {
+function GoalRow({ goal, onPatch, onRemove }) {
   const { t } = useLang();
   const inputRef = useRef(null);
   const dateRef = useRef(null);
-
-  useEffect(() => {
-    if (autoFocus) inputRef.current?.focus();
-  }, [autoFocus]);
 
   const openDate = () => {
     const el = dateRef.current;
