@@ -138,38 +138,51 @@ function computeMetrics(lm) {
 
 function drawMesh(ctx, lm, w, h, metrics) {
   ctx.save();
-  // dots
-  ctx.fillStyle = 'rgba(120, 200, 230, 0.55)';
+  const scale = Math.max(w, h) / 720;
+  const lw = (n) => Math.max(1, n * scale);
+
+  // subtle shadow for legibility on any photo
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+  ctx.shadowBlur = 4 * scale;
+
+  // landmark dots — small, muted, no shadow on each dot
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(190, 210, 230, 0.45)';
   for (const pt of lm) {
     ctx.beginPath();
-    ctx.arc(pt.x * w, pt.y * h, 0.9, 0, Math.PI * 2);
+    ctx.arc(pt.x * w, pt.y * h, Math.max(0.7, scale * 0.9), 0, Math.PI * 2);
     ctx.fill();
   }
-  const p = (i) => ({ x: lm[i].x * w, y: lm[i].y * h });
+  ctx.shadowBlur = 4 * scale;
 
-  // midline
-  ctx.strokeStyle = 'rgba(255, 215, 120, 0.7)';
-  ctx.lineWidth = 1.2;
-  ctx.setLineDash([4, 4]);
+  const p = (i) => ({ x: lm[i].x * w, y: lm[i].y * h });
+  const top = p(IDX.foreheadTop), brow = p(IDX.glabella), sub = p(IDX.subnasale), chin = p(IDX.chin);
+
+  // === symmetry axis: warm amber ===
+  ctx.strokeStyle = 'rgba(214, 168, 92, 0.95)';
+  ctx.lineWidth = lw(2.2);
+  ctx.setLineDash([8 * scale, 6 * scale]);
   ctx.beginPath();
-  ctx.moveTo(metrics.midX * w, 0);
-  ctx.lineTo(metrics.midX * w, h);
+  ctx.moveTo(metrics.midX * w, top.y - 20 * scale);
+  ctx.lineTo(metrics.midX * w, chin.y + 30 * scale);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // thirds
-  const top = p(IDX.foreheadTop), brow = p(IDX.glabella), sub = p(IDX.subnasale), chin = p(IDX.chin);
-  ctx.strokeStyle = 'rgba(180, 220, 255, 0.5)';
-  ctx.lineWidth = 1;
+  // === facial thirds: dusty teal ===
+  ctx.strokeStyle = 'rgba(96, 168, 178, 0.85)';
+  ctx.lineWidth = lw(2);
   for (const yy of [top.y, brow.y, sub.y, chin.y]) {
     ctx.beginPath();
-    ctx.moveTo(0, yy); ctx.lineTo(w, yy);
+    ctx.moveTo(w * 0.05, yy);
+    ctx.lineTo(w * 0.95, yy);
     ctx.stroke();
   }
 
-  // jawline
-  ctx.strokeStyle = 'rgba(255, 120, 120, 0.85)';
-  ctx.lineWidth = 1.6;
+  // === jawline: deep crimson ===
+  ctx.strokeStyle = 'rgba(192, 72, 72, 0.95)';
+  ctx.lineWidth = lw(3);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   ctx.beginPath();
   const r = p(IDX.rZyg), rg = p(IDX.rGonion), lg = p(IDX.lGonion), l = p(IDX.lZyg);
   ctx.moveTo(r.x, r.y);
@@ -179,13 +192,45 @@ function drawMesh(ctx, lm, w, h, metrics) {
   ctx.lineTo(l.x, l.y);
   ctx.stroke();
 
-  // canthal lines
-  ctx.strokeStyle = 'rgba(140, 240, 180, 0.85)';
+  // === bizygomatic width (FWHR numerator): violet ===
+  ctx.strokeStyle = 'rgba(155, 110, 196, 0.95)';
+  ctx.lineWidth = lw(2.4);
+  ctx.beginPath();
+  ctx.moveTo(r.x, r.y);
+  ctx.lineTo(l.x, l.y);
+  ctx.stroke();
+
+  // === canthal tilt lines: emerald ===
+  ctx.strokeStyle = 'rgba(96, 184, 120, 0.95)';
+  ctx.lineWidth = lw(2.6);
   ctx.beginPath();
   const rI = p(IDX.rInner), rO = p(IDX.rOuter), lI = p(IDX.lInner), lO = p(IDX.lOuter);
   ctx.moveTo(rI.x, rI.y); ctx.lineTo(rO.x, rO.y);
   ctx.moveTo(lI.x, lI.y); ctx.lineTo(lO.x, lO.y);
   ctx.stroke();
+
+  // === key landmark accents ===
+  const accent = [
+    [IDX.rZyg, 'rgba(192, 72, 72, 1)'],
+    [IDX.lZyg, 'rgba(192, 72, 72, 1)'],
+    [IDX.rGonion, 'rgba(192, 72, 72, 1)'],
+    [IDX.lGonion, 'rgba(192, 72, 72, 1)'],
+    [IDX.chin, 'rgba(192, 72, 72, 1)'],
+    [IDX.rInner, 'rgba(96, 184, 120, 1)'],
+    [IDX.rOuter, 'rgba(96, 184, 120, 1)'],
+    [IDX.lInner, 'rgba(96, 184, 120, 1)'],
+    [IDX.lOuter, 'rgba(96, 184, 120, 1)'],
+    [IDX.glabella, 'rgba(96, 168, 178, 1)'],
+    [IDX.subnasale, 'rgba(96, 168, 178, 1)'],
+    [IDX.foreheadTop, 'rgba(96, 168, 178, 1)'],
+  ];
+  for (const [idx, color] of accent) {
+    const pt = p(idx);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, lw(3), 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }
