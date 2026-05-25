@@ -21,6 +21,7 @@ const NAV = [
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);
 const DEFAULT_HIDDEN = ['moneymaxing', 'looksmaxing', 'menmaxing'];
+const MAXING_IDS = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
 const PREFS_KEY = 'lr.modulePrefs';
 
@@ -170,10 +171,14 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   const gridRef = useRef(null);
   const dragState = useRef(null);
   const [dragId, setDragId] = useState(null);
+  const [maxingOpen, setMaxingOpen] = useState(false);
 
+  // When editing — flat list (so user can reorder/hide each maxing module).
+  // When browsing — core modules only; maxing collapses into one "maxing" card.
   const renderedIds = editing
     ? prefs.order.filter((id) => NAV_BY_ID[id])
-    : prefs.order.filter((id) => NAV_BY_ID[id] && !prefs.hidden.includes(id));
+    : prefs.order.filter((id) => NAV_BY_ID[id] && !prefs.hidden.includes(id) && !MAXING_IDS.includes(id));
+  const enabledMaxing = MAXING_IDS.filter((id) => !prefs.hidden.includes(id));
 
   const toggleHidden = (id) =>
     setPrefs((p) => {
@@ -257,6 +262,39 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
           );
         })}
       </div>
+
+      {!editing && enabledMaxing.length > 0 && (
+        <div className="maxing-dash">
+          <button
+            data-id="maxing"
+            className={`nav-card maxing-trigger ${maxingOpen ? 'open' : ''}`}
+            onClick={() => setMaxingOpen((o) => !o)}
+            aria-expanded={maxingOpen}
+          >
+            <span className="nav-label">maxing</span>
+            <span className="nav-summary">{enabledMaxing.length} <span className="maxing-chev">{maxingOpen ? '▴' : '▾'}</span></span>
+          </button>
+          {maxingOpen && (
+            <div className="maxing-children">
+              {enabledMaxing.map((id) => {
+                const n = NAV_BY_ID[id];
+                return (
+                  <button
+                    key={id}
+                    data-id={id}
+                    className="nav-card maxing-child"
+                    onClick={() => onNavigate(id)}
+                  >
+                    <span className="nav-label">{t(n.labelKey)}</span>
+                    <span className="nav-summary">{n.summary(profile)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {editing && (
         <button className="settings-done nav-done" onClick={() => setEditing(false)}>
           {t('settings.done')}

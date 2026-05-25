@@ -2896,3 +2896,37 @@ body {
 .desktop-nav-item[data-id="menmaxing"] .desktop-nav-icon {
   display: none;
 }
+
+/* ============ Mobile "maxing" dashboard card ============ */
+.maxing-dash { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.maxing-trigger {
+  /* neutral, ungradient — it's a dashboard, not a module */
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.22) 100%);
+  border: 1px dashed rgba(127, 184, 199, 0.28);
+  grid-template-columns: 1fr auto;
+}
+.maxing-trigger .nav-label {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.12em;
+  color: var(--gold-bright);
+}
+.maxing-trigger::before { background: rgba(127, 184, 199, 0.45); }
+.maxing-chev {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 6px;
+  color: var(--text-dim);
+}
+.maxing-children {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(127, 184, 199, 0.18);
+  margin-left: 6px;
+  animation: maxingDrop 0.18s ease-out;
+}
+@keyframes maxingDrop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
