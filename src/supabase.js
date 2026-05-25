@@ -32,12 +32,7 @@ function reconcileStats(stats) {
   return { stats: next, changed };
 }
 
-const DEFAULT_SKILLS = [
-  { name: 'Чтение',           level: 1, xp: 20 },
-  { name: 'Спорт',            level: 1, xp: 45 },
-  { name: 'Программирование', level: 2, xp: 10 },
-  { name: 'Медитация',        level: 0, xp: 0  },
-];
+const DEFAULT_SKILLS = [];
 
 export async function getSession() {
   const { data: { session } } = await supabase.auth.getSession();

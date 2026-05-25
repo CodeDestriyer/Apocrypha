@@ -5,8 +5,8 @@ import { signOut } from '../supabase.js';
 import CharacterModel from '../CharacterModel.jsx';
 
 const AVATARS = [
-  '/avatars/ganslanda.jpg',
   '/avatars/hitler.png',
+  '/avatars/ganslanda.jpg',
   '/avatars/loganpaul.jpg',
 ];
 
