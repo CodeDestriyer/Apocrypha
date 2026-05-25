@@ -27,12 +27,15 @@ const PREFS_KEY = 'lr.modulePrefs';
 function reconcilePrefs(stored) {
   const knownInOrder = (stored?.order ?? []).filter((id) => NAV_BY_ID[id]);
   const missing = DEFAULT_ORDER.filter((id) => !knownInOrder.includes(id));
-  const hidden = stored?.hidden
+  const baseHidden = stored?.hidden
     ? stored.hidden.filter((id) => NAV_BY_ID[id])
     : [...DEFAULT_HIDDEN];
+  // Newly-introduced modules that ship hidden-by-default get hidden
+  // for existing users too, so they have to opt-in explicitly.
+  const newlyHidden = missing.filter((id) => DEFAULT_HIDDEN.includes(id) && !baseHidden.includes(id));
   return {
     order: [...knownInOrder, ...missing],
-    hidden,
+    hidden: [...baseHidden, ...newlyHidden],
   };
 }
 
