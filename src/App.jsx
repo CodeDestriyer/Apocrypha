@@ -194,6 +194,7 @@ function DesktopSidebar({ view, setView }) {
         {SIDEBAR_MODULES.map((m) => (
           <button
             key={m.id}
+            data-id={m.id}
             className={`desktop-nav-item ${view === m.id ? 'active' : ''}`}
             onClick={() => setView(m.id)}
           >
