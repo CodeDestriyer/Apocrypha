@@ -2836,91 +2836,48 @@ body {
   letter-spacing: 0;
 }
 
-/* ============ Per-module gradients ============ */
-/* Each module gets a subtle directional tint so cards don't blend
-   with non-module buttons. Applied to both mobile nav-cards and
-   desktop sidebar items. */
+/* ============ Per-module gradients (*maxing only) ============ */
+/* Only the *maxing modules get a colored tint so they visually
+   separate from the core (goals/skills/habits), which stay default. */
 
-/* goals — amber/gold */
-.nav-card[data-id="goals"],
-.desktop-nav-item[data-id="goals"] {
-  background: linear-gradient(135deg, rgba(214, 168, 92, 0.16) 0%, rgba(214, 168, 92, 0.04) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(214, 168, 92, 0.22);
-}
-.nav-card[data-id="goals"]::before { background: rgba(214, 168, 92, 0.55); }
-.nav-card[data-id="goals"]:hover { background: linear-gradient(135deg, rgba(214, 168, 92, 0.24) 0%, rgba(214, 168, 92, 0.08) 60%, rgba(10,18,30,0.45) 100%); }
-.desktop-nav-item[data-id="goals"]:hover,
-.desktop-nav-item[data-id="goals"].active {
-  background: linear-gradient(135deg, rgba(214, 168, 92, 0.22) 0%, rgba(214, 168, 92, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(214, 168, 92, 0.9);
-}
-
-/* skills — pale cyan / silver */
-.nav-card[data-id="skills"],
-.desktop-nav-item[data-id="skills"] {
-  background: linear-gradient(135deg, rgba(140, 200, 220, 0.16) 0%, rgba(140, 200, 220, 0.04) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(140, 200, 220, 0.22);
-}
-.nav-card[data-id="skills"]::before { background: rgba(140, 200, 220, 0.55); }
-.nav-card[data-id="skills"]:hover { background: linear-gradient(135deg, rgba(140, 200, 220, 0.24) 0%, rgba(140, 200, 220, 0.08) 60%, rgba(10,18,30,0.45) 100%); }
-.desktop-nav-item[data-id="skills"]:hover,
-.desktop-nav-item[data-id="skills"].active {
-  background: linear-gradient(135deg, rgba(140, 200, 220, 0.22) 0%, rgba(140, 200, 220, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(140, 200, 220, 0.9);
-}
-
-/* asceses (habits) — emerald */
-.nav-card[data-id="asceses"],
-.desktop-nav-item[data-id="asceses"] {
-  background: linear-gradient(135deg, rgba(120, 184, 132, 0.16) 0%, rgba(120, 184, 132, 0.04) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(120, 184, 132, 0.22);
-}
-.nav-card[data-id="asceses"]::before { background: rgba(120, 184, 132, 0.55); }
-.nav-card[data-id="asceses"]:hover { background: linear-gradient(135deg, rgba(120, 184, 132, 0.24) 0%, rgba(120, 184, 132, 0.08) 60%, rgba(10,18,30,0.45) 100%); }
-.desktop-nav-item[data-id="asceses"]:hover,
-.desktop-nav-item[data-id="asceses"].active {
-  background: linear-gradient(135deg, rgba(120, 184, 132, 0.22) 0%, rgba(120, 184, 132, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(120, 184, 132, 0.9);
-}
-
-/* moneymaxing — violet */
+/* moneymaxing — emerald (money green) */
 .nav-card[data-id="moneymaxing"],
 .desktop-nav-item[data-id="moneymaxing"] {
-  background: linear-gradient(135deg, rgba(155, 110, 196, 0.16) 0%, rgba(155, 110, 196, 0.04) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(155, 110, 196, 0.22);
+  background: linear-gradient(135deg, rgba(82, 168, 122, 0.18) 0%, rgba(82, 168, 122, 0.05) 55%, rgba(0,0,0,0.22) 100%);
+  border-color: rgba(82, 168, 122, 0.26);
 }
-.nav-card[data-id="moneymaxing"]::before { background: rgba(155, 110, 196, 0.55); }
-.nav-card[data-id="moneymaxing"]:hover { background: linear-gradient(135deg, rgba(155, 110, 196, 0.24) 0%, rgba(155, 110, 196, 0.08) 60%, rgba(10,18,30,0.45) 100%); }
+.nav-card[data-id="moneymaxing"]::before { background: rgba(82, 168, 122, 0.7); }
+.nav-card[data-id="moneymaxing"]:hover { background: linear-gradient(135deg, rgba(82, 168, 122, 0.28) 0%, rgba(82, 168, 122, 0.1) 60%, rgba(10,18,30,0.45) 100%); }
 .desktop-nav-item[data-id="moneymaxing"]:hover,
 .desktop-nav-item[data-id="moneymaxing"].active {
-  background: linear-gradient(135deg, rgba(155, 110, 196, 0.22) 0%, rgba(155, 110, 196, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(155, 110, 196, 0.9);
+  background: linear-gradient(135deg, rgba(82, 168, 122, 0.24) 0%, rgba(82, 168, 122, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
+  border-left-color: rgba(82, 168, 122, 0.95);
 }
 
-/* looksmaxing — rose */
+/* looksmaxing — magenta */
 .nav-card[data-id="looksmaxing"],
 .desktop-nav-item[data-id="looksmaxing"] {
-  background: linear-gradient(135deg, rgba(204, 122, 142, 0.16) 0%, rgba(204, 122, 142, 0.04) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(204, 122, 142, 0.22);
+  background: linear-gradient(135deg, rgba(199, 92, 142, 0.18) 0%, rgba(199, 92, 142, 0.05) 55%, rgba(0,0,0,0.22) 100%);
+  border-color: rgba(199, 92, 142, 0.26);
 }
-.nav-card[data-id="looksmaxing"]::before { background: rgba(204, 122, 142, 0.55); }
-.nav-card[data-id="looksmaxing"]:hover { background: linear-gradient(135deg, rgba(204, 122, 142, 0.24) 0%, rgba(204, 122, 142, 0.08) 60%, rgba(10,18,30,0.45) 100%); }
+.nav-card[data-id="looksmaxing"]::before { background: rgba(199, 92, 142, 0.7); }
+.nav-card[data-id="looksmaxing"]:hover { background: linear-gradient(135deg, rgba(199, 92, 142, 0.28) 0%, rgba(199, 92, 142, 0.1) 60%, rgba(10,18,30,0.45) 100%); }
 .desktop-nav-item[data-id="looksmaxing"]:hover,
 .desktop-nav-item[data-id="looksmaxing"].active {
-  background: linear-gradient(135deg, rgba(204, 122, 142, 0.22) 0%, rgba(204, 122, 142, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(204, 122, 142, 0.9);
+  background: linear-gradient(135deg, rgba(199, 92, 142, 0.24) 0%, rgba(199, 92, 142, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
+  border-left-color: rgba(199, 92, 142, 0.95);
 }
 
-/* menmaxing — crimson */
+/* menmaxing — copper/bronze */
 .nav-card[data-id="menmaxing"],
 .desktop-nav-item[data-id="menmaxing"] {
-  background: linear-gradient(135deg, rgba(192, 72, 72, 0.16) 0%, rgba(192, 72, 72, 0.04) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(192, 72, 72, 0.22);
+  background: linear-gradient(135deg, rgba(182, 116, 58, 0.18) 0%, rgba(182, 116, 58, 0.05) 55%, rgba(0,0,0,0.22) 100%);
+  border-color: rgba(182, 116, 58, 0.26);
 }
-.nav-card[data-id="menmaxing"]::before { background: rgba(192, 72, 72, 0.6); }
-.nav-card[data-id="menmaxing"]:hover { background: linear-gradient(135deg, rgba(192, 72, 72, 0.24) 0%, rgba(192, 72, 72, 0.08) 60%, rgba(10,18,30,0.45) 100%); }
+.nav-card[data-id="menmaxing"]::before { background: rgba(182, 116, 58, 0.75); }
+.nav-card[data-id="menmaxing"]:hover { background: linear-gradient(135deg, rgba(182, 116, 58, 0.28) 0%, rgba(182, 116, 58, 0.1) 60%, rgba(10,18,30,0.45) 100%); }
 .desktop-nav-item[data-id="menmaxing"]:hover,
 .desktop-nav-item[data-id="menmaxing"].active {
-  background: linear-gradient(135deg, rgba(192, 72, 72, 0.22) 0%, rgba(192, 72, 72, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(192, 72, 72, 0.9);
+  background: linear-gradient(135deg, rgba(182, 116, 58, 0.24) 0%, rgba(182, 116, 58, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
+  border-left-color: rgba(182, 116, 58, 0.95);
 }
