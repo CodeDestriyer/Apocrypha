@@ -3,6 +3,7 @@ import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { uploadLooksPhoto } from '../supabase.js';
 import TrackerSection from './TrackerSection.jsx';
+import FaceAnalyzer from '../FaceAnalyzer.jsx';
 
 const RATINGS = [
   'Truecel',
@@ -21,6 +22,7 @@ export default function LooksmaxingSection() {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState(null);
+  const [faceOpen, setFaceOpen] = useState(false);
 
   const onPick = () => fileRef.current?.click();
 
@@ -42,6 +44,21 @@ export default function LooksmaxingSection() {
   };
 
   const setRating = (r) => update({ looks_rating: r });
+
+  const onCapturedFile = async (file) => {
+    setUploading(true);
+    setErr(null);
+    try {
+      const url = await uploadLooksPhoto(file);
+      update({ looks_photo_url: url });
+      setFaceOpen(false);
+    } catch (x) {
+      console.error(x);
+      setErr(x.message || String(x));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <>
@@ -69,6 +86,9 @@ export default function LooksmaxingSection() {
               {uploading ? t('looks.uploading') : t('looks.replace')}
             </button>
           )}
+          <button className="face-open-btn" onClick={() => setFaceOpen(true)}>
+            {t('face.open')}
+          </button>
           {err && <div className="error-text">{err}</div>}
         </div>
 
@@ -84,6 +104,12 @@ export default function LooksmaxingSection() {
       <div className="divider" />
 
       <TrackerSection field="looksmaxing" placeholder={t('looks.tracker')} />
+
+      <FaceAnalyzer
+        open={faceOpen}
+        onClose={() => setFaceOpen(false)}
+        onSavePhoto={onCapturedFile}
+      />
     </>
   );
 }
