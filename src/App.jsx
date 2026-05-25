@@ -14,6 +14,7 @@ import AscesesSection from './sections/AscesesSection.jsx';
 import TrackerSection from './sections/TrackerSection.jsx';
 import LooksmaxingSection from './sections/LooksmaxingSection.jsx';
 import MoneymaxingSection from './sections/MoneymaxingSection.jsx';
+import MenmaxingSection from './sections/MenmaxingSection.jsx';
 
 const SUB_RENDER = {
   goals:       () => <GoalsSection />,
@@ -21,6 +22,7 @@ const SUB_RENDER = {
   asceses:     () => <AscesesSection />,
   moneymaxing: () => <MoneymaxingSection />,
   looksmaxing: () => <LooksmaxingSection />,
+  menmaxing:   () => <MenmaxingSection />,
 };
 
 const SUB_TITLE_KEYS = {
@@ -29,6 +31,7 @@ const SUB_TITLE_KEYS = {
   asceses: 'nav.asceses',
   moneymaxing: 'nav.moneymaxing',
   looksmaxing: 'nav.looksmaxing',
+  menmaxing: 'nav.menmaxing',
 };
 
 const SIDEBAR_MODULES = [
@@ -37,6 +40,7 @@ const SIDEBAR_MODULES = [
   { id: 'asceses',     icon: '☥', labelKey: 'nav.asceses' },
   { id: 'moneymaxing', icon: '❖', labelKey: 'nav.moneymaxing' },
   { id: 'looksmaxing', icon: '✺', labelKey: 'nav.looksmaxing' },
+  { id: 'menmaxing',   icon: '♂', labelKey: 'nav.menmaxing' },
 ];
 
 const SHOW_LOGIN_KEY = 'lr.showLogin';

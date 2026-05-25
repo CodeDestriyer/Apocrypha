@@ -5,17 +5,6 @@ import { uploadLooksPhoto } from '../supabase.js';
 import TrackerSection from './TrackerSection.jsx';
 import FaceAnalyzer from '../FaceAnalyzer.jsx';
 
-const RATINGS = [
-  'Truecel',
-  'Sub-five',
-  'Normie',
-  'High-tier Normie',
-  'Chadlite',
-  'Sub-chad',
-  'Chad',
-  'Gigachad',
-];
-
 export default function LooksmaxingSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -43,8 +32,6 @@ export default function LooksmaxingSection() {
     }
   };
 
-  const setRating = (r) => update({ looks_rating: r });
-
   const onCapturedFile = async (file) => {
     setUploading(true);
     setErr(null);
@@ -60,32 +47,35 @@ export default function LooksmaxingSection() {
     }
   };
 
+  const scans = Array.isArray(profile.face_scans) ? profile.face_scans : [];
+  const lastScan = scans.length
+    ? [...scans].sort((a, b) => new Date(b.ts) - new Date(a.ts))[0]
+    : null;
+  const autoRating = lastScan ? t(lastScan.tier) : null;
+
   return (
     <>
       <div className="looks-top">
-        <button className="looks-photo" onClick={onPick}>
-          {profile.looks_photo_url ? (
-            <img src={profile.looks_photo_url} alt="" />
-          ) : (
-            <span className="looks-photo-empty">{uploading ? '…' : t('looks.photoEmpty')}</span>
-          )}
-        </button>
-
-        <div className="looks-rating">
-          <label className="looks-rating-label">{t('looks.yourRating')}</label>
-          <select
-            className="period-select looks-rating-select"
-            value={profile.looks_rating ?? ''}
-            onChange={(e) => setRating(e.target.value)}
-          >
-            <option value="">{t('looks.notSelected')}</option>
-            {RATINGS.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
+        <div className="looks-photo-col">
+          <button className="looks-photo" onClick={onPick}>
+            {profile.looks_photo_url ? (
+              <img src={profile.looks_photo_url} alt="" />
+            ) : (
+              <span className="looks-photo-empty">{uploading ? '…' : t('looks.photoEmpty')}</span>
+            )}
+          </button>
           {profile.looks_photo_url && (
             <button className="link-btn" onClick={onPick} disabled={uploading}>
               {uploading ? t('looks.uploading') : t('looks.replace')}
             </button>
           )}
+        </div>
+
+        <div className="looks-rating">
+          <label className="looks-rating-label">{t('looks.yourRating')}</label>
+          <div className="looks-rating-display">
+            {autoRating ?? <span className="looks-rating-empty">{t('looks.noScans')}</span>}
+          </div>
           <button className="face-open-btn" onClick={() => setFaceOpen(true)}>
             {t('face.open')}
           </button>

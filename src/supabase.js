@@ -119,6 +119,7 @@ export async function createProfile(name) {
     asceses: [],
     moneymaxing: [],
     looksmaxing: [],
+    menmaxing: [],
   };
   const { data, error } = await supabase
     .from('profiles')

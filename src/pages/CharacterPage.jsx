@@ -16,10 +16,11 @@ const NAV = [
   { id: 'asceses',     labelKey: 'nav.asceses',     icon: '☥', summary: (p) => (p.asceses ?? []).filter((a) => a.status === 'active').length },
   { id: 'moneymaxing', labelKey: 'nav.moneymaxing', icon: '❖', summary: (p) => (p.moneymaxing ?? []).length },
   { id: 'looksmaxing', labelKey: 'nav.looksmaxing', icon: '✺', summary: (p) => (p.looksmaxing ?? []).length },
+  { id: 'menmaxing',   labelKey: 'nav.menmaxing',   icon: '♂', summary: (p) => (p.menmaxing ?? []).length },
 ];
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);
-const DEFAULT_HIDDEN = ['moneymaxing', 'looksmaxing'];
+const DEFAULT_HIDDEN = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
 const PREFS_KEY = 'lr.modulePrefs';
 

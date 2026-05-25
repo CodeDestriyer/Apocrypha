@@ -2811,3 +2811,27 @@ body {
   color: var(--text-dim, #8b95a3);
 }
 .face-history-last strong { color: var(--gold-bright, #c9a86a); }
+
+.looks-photo-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.looks-rating-display {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  color: var(--gold-bright, #c9a86a);
+  padding: 8px 12px;
+  background: rgba(201, 168, 106, 0.08);
+  border-left: 2px solid rgba(201, 168, 106, 0.5);
+  border-radius: 2px;
+  margin-bottom: 6px;
+}
+.looks-rating-empty {
+  color: var(--text-dim, #8b95a3);
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0;
+}
