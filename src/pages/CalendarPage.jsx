@@ -118,7 +118,7 @@ export default function CalendarPage() {
     update((curr) => ({
       goals: [
         ...(curr.goals ?? []),
-        { id: newId(), title, deadline: focusDay, done: false, created_at: new Date().toISOString() },
+        { id: newId(), title, deadline: focusDay, done: false, created_at: new Date().toISOString(), source: 'calendar' },
       ],
     }));
     setQuickGoal('');

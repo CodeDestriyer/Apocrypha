@@ -16,7 +16,7 @@ const DIFFICULTIES = [
 export default function GoalsSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
-  const goals = profile.goals ?? [];
+  const goals = (profile.goals ?? []).filter((g) => g.source !== 'calendar');
   const [difficulty, setDifficulty] = useState('easy');
   const [addOpen, setAddOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState('');

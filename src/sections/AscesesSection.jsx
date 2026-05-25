@@ -168,8 +168,6 @@ export default function AscesesSection() {
         </div>
       </div>
 
-      {asceses.length === 0 && <div className="empty">—</div>}
-
       {kind === 'good' && goodList.length > 0 && (
         <ul className="habits">
           {goodList.map((a) => (
