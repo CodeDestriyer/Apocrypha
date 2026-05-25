@@ -19,15 +19,19 @@ const NAV = [
 ];
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);
+const DEFAULT_HIDDEN = ['moneymaxing', 'looksmaxing'];
 
 const PREFS_KEY = 'lr.modulePrefs';
 
 function reconcilePrefs(stored) {
   const knownInOrder = (stored?.order ?? []).filter((id) => NAV_BY_ID[id]);
   const missing = DEFAULT_ORDER.filter((id) => !knownInOrder.includes(id));
+  const hidden = stored?.hidden
+    ? stored.hidden.filter((id) => NAV_BY_ID[id])
+    : [...DEFAULT_HIDDEN];
   return {
     order: [...knownInOrder, ...missing],
-    hidden: (stored?.hidden ?? []).filter((id) => NAV_BY_ID[id]),
+    hidden,
   };
 }
 
