@@ -1814,8 +1814,10 @@ body {
   letter-spacing: 0.08em;
 }
 .day-focus-row.day-focus-habit { border-left-color: #7fc79b; }
-.day-focus-row.goal.done { opacity: 0.55; }
-.day-focus-row.goal.done .goal-title-text {
+.day-focus-row.goal.done,
+.day-focus-row.day-plan.done { opacity: 0.55; }
+.day-focus-row.goal.done .goal-title-text,
+.day-focus-row.day-plan.done .goal-title-text {
   text-decoration: line-through;
   text-decoration-thickness: 2px;
   text-decoration-color: var(--text);
