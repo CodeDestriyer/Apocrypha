@@ -40,6 +40,17 @@ const IDX = {
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
+const TIERS = [
+  { max: 0.30, key: 'face.tier.sub3'    },
+  { max: 0.45, key: 'face.tier.sub5'    },
+  { max: 0.55, key: 'face.tier.ltn'     },
+  { max: 0.65, key: 'face.tier.mtn'     },
+  { max: 0.75, key: 'face.tier.htn'     },
+  { max: 0.88, key: 'face.tier.chad'    },
+  { max: 1.01, key: 'face.tier.trueAdam'},
+];
+const tierFor = (v) => TIERS.find((t) => v < t.max) ?? TIERS[TIERS.length - 1];
+
 function computeMetrics(lm) {
   const p = (i) => lm[i];
 
@@ -188,6 +199,8 @@ export default function FaceAnalyzer({ open, onClose, onSavePhoto }) {
   const [error, setError] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [imgDataUrl, setImgDataUrl] = useState(null);
+  const [landmarks, setLandmarks] = useState(null);
+  const imgElRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
@@ -216,6 +229,18 @@ export default function FaceAnalyzer({ open, onClose, onSavePhoto }) {
       }
     };
   }, [open]);
+
+  useEffect(() => {
+    if (stage !== 'result') return;
+    const out = canvasRef.current;
+    const img = imgElRef.current;
+    if (!out || !img || !landmarks || !metrics) return;
+    const w = img.naturalWidth, h = img.naturalHeight;
+    out.width = w; out.height = h;
+    const octx = out.getContext('2d');
+    octx.drawImage(img, 0, 0, w, h);
+    drawMesh(octx, landmarks, w, h, metrics);
+  }, [stage, landmarks, metrics]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -253,16 +278,9 @@ export default function FaceAnalyzer({ open, onClose, onSavePhoto }) {
         return;
       }
       const m = computeMetrics(lm);
+      imgElRef.current = img;
+      setLandmarks(lm);
       setMetrics(m);
-
-      // draw on visible canvas
-      const out = canvasRef.current;
-      if (out) {
-        out.width = w; out.height = h;
-        const octx = out.getContext('2d');
-        octx.drawImage(img, 0, 0, w, h);
-        drawMesh(octx, lm, w, h, m);
-      }
       setStage('result');
     } catch (e) {
       console.error(e);
@@ -274,6 +292,8 @@ export default function FaceAnalyzer({ open, onClose, onSavePhoto }) {
   const retake = async () => {
     setMetrics(null);
     setImgDataUrl(null);
+    setLandmarks(null);
+    imgElRef.current = null;
     setError(null);
     setStage('camera');
     try {
@@ -302,6 +322,8 @@ export default function FaceAnalyzer({ open, onClose, onSavePhoto }) {
     stopCamera();
     setMetrics(null);
     setImgDataUrl(null);
+    setLandmarks(null);
+    imgElRef.current = null;
     setError(null);
     setStage('camera');
     onClose?.();
@@ -354,7 +376,7 @@ export default function FaceAnalyzer({ open, onClose, onSavePhoto }) {
                 <div className="face-metrics">
                   <div className="face-metric face-metric-overall">
                     <span className="face-metric-label">{t('face.overall')}</span>
-                    <span className="face-metric-value">{pct(metrics.overall)}</span>
+                    <span className="face-metric-value">{t(tierFor(metrics.overall).key)}</span>
                   </div>
                   <div className="face-metric">
                     <span className="face-metric-label">{t('face.symmetry')}</span>
