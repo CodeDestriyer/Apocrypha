@@ -78,6 +78,31 @@ export async function loadProfile() {
       console.error('stats reconcile save failed', e);
     }
   }
+
+  const goalsArr = Array.isArray(data.goals) ? data.goals : [];
+  const legacyCal = goalsArr.filter((g) => g?.source === 'calendar');
+  if (legacyCal.length) {
+    const cleanedGoals = goalsArr.filter((g) => g?.source !== 'calendar');
+    const dayPlans = Array.isArray(data.day_plans) ? data.day_plans : [];
+    const moved = legacyCal.map((g) => ({
+      id: g.id,
+      title: g.title,
+      day: String(g.deadline ?? '').slice(0, 10) || null,
+      done: !!g.done,
+      created_at: g.created_at ?? new Date().toISOString(),
+    }));
+    data.goals = cleanedGoals;
+    data.day_plans = [...dayPlans, ...moved];
+    try {
+      await supabase
+        .from('profiles')
+        .update({ goals: data.goals, day_plans: data.day_plans, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+    } catch (e) {
+      console.error('day_plans migration save failed', e);
+    }
+  }
+
   return data;
 }
 

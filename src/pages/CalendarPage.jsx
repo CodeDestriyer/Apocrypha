@@ -85,6 +85,11 @@ export default function CalendarPage() {
     const k = String(g.deadline).slice(0, 10);
     (goalsByDay[k] ||= []).push(g);
   }
+  const dayPlansByDay = {};
+  for (const d of (Array.isArray(profile.day_plans) ? profile.day_plans : [])) {
+    if (!d?.day) continue;
+    (dayPlansByDay[d.day] ||= []).push(d);
+  }
 
   const updatePlans = (next) => update({ plans: next });
 
@@ -103,6 +108,8 @@ export default function CalendarPage() {
   const focusDate = parseYmd(focusDay);
   const focusPlans = plans.filter((p) => focusDate >= parseYmd(p.start) && focusDate <= parseYmd(p.end));
   const focusGoals = (profile.goals ?? []).filter((g) => String(g.deadline ?? '').slice(0, 10) === focusDay);
+  const dayPlans = Array.isArray(profile.day_plans) ? profile.day_plans : [];
+  const focusDayPlans = dayPlans.filter((d) => d.day === focusDay);
   const focusHabits = (profile.asceses ?? []).filter((h) => {
     if ((h.kind ?? 'good') !== 'good') return false;
     if (h.status !== 'active') return false;
@@ -116,9 +123,9 @@ export default function CalendarPage() {
     const title = quickGoal.trim();
     if (!title) return;
     update((curr) => ({
-      goals: [
-        ...(curr.goals ?? []),
-        { id: newId(), title, deadline: focusDay, done: false, created_at: new Date().toISOString(), source: 'calendar' },
+      day_plans: [
+        ...(Array.isArray(curr.day_plans) ? curr.day_plans : []),
+        { id: newId(), title, day: focusDay, done: false, created_at: new Date().toISOString() },
       ],
     }));
     setQuickGoal('');
@@ -127,6 +134,14 @@ export default function CalendarPage() {
   const toggleGoal = (id) =>
     update((curr) => ({
       goals: (curr.goals ?? []).map((g) => (g.id === id ? { ...g, done: !g.done } : g)),
+    }));
+  const toggleDayPlan = (id) =>
+    update((curr) => ({
+      day_plans: (Array.isArray(curr.day_plans) ? curr.day_plans : []).map((d) => (d.id === id ? { ...d, done: !d.done } : d)),
+    }));
+  const removeDayPlan = (id) =>
+    update((curr) => ({
+      day_plans: (Array.isArray(curr.day_plans) ? curr.day_plans : []).filter((d) => d.id !== id),
     }));
 
   const endPlan = (id) => updatePlans(plans.filter((p) => p.id !== id));
@@ -157,6 +172,7 @@ export default function CalendarPage() {
           const inMonth = d.getMonth() === viewMonth;
           const isToday = k === todayKey;
           const dayGoals = goalsByDay[k] ?? [];
+          const dayDayPlans = dayPlansByDay[k] ?? [];
           const activeOnDay = plans
             .map((p, idx) => ({ p, idx }))
             .filter(({ p }) => planOnDay(p, d));
@@ -168,7 +184,7 @@ export default function CalendarPage() {
               onClick={() => onDayClick(d)}
             >
               <span className="cal-cell-num">{d.getDate()}</span>
-              {(activeOnDay.length > 0 || dayGoals.length > 0) && (
+              {(activeOnDay.length > 0 || dayGoals.length > 0 || dayDayPlans.length > 0) && (
                 <span className="cal-cell-dots">
                   {activeOnDay.slice(0, 3).map(({ p }) => (
                     <span key={p.id} className="cal-dot" style={{ background: p.color }} />
@@ -177,6 +193,7 @@ export default function CalendarPage() {
                     <span className="cal-dot-more">+{activeOnDay.length - 3}</span>
                   )}
                   {dayGoals.length > 0 && <span className="cal-dot cal-dot-goal" />}
+                  {dayDayPlans.length > 0 && <span className="cal-dot cal-dot-plan" />}
                 </span>
               )}
             </button>
@@ -233,6 +250,19 @@ export default function CalendarPage() {
               <span className="day-focus-row-name">
                 <span className="goal-title-text">{g.title || t('goal.untitled')}</span>
               </span>
+            </div>
+          ))}
+          {focusDayPlans.map((d) => (
+            <div key={d.id} className={`day-focus-row day-plan ${d.done ? 'done' : ''}`}>
+              <button
+                className={`checkbox ${d.done ? 'checked' : ''}`}
+                onClick={() => toggleDayPlan(d.id)}
+                aria-label="toggle"
+              >{d.done ? '✓' : ''}</button>
+              <span className="day-focus-row-name">
+                <span className="goal-title-text">{d.title}</span>
+              </span>
+              <button className="period-end" onClick={() => removeDayPlan(d.id)} aria-label="remove">✕</button>
             </div>
           ))}
         </div>

@@ -2144,6 +2144,10 @@ body {
   background: var(--gold-bright) !important;
   box-shadow: 0 0 4px rgba(240, 246, 250, 0.5);
 }
+.cal-dot-plan {
+  background: #6fb3d4 !important;
+  box-shadow: 0 0 4px rgba(111, 179, 212, 0.5);
+}
 
 .cal-hint {
   margin-top: 10px;
