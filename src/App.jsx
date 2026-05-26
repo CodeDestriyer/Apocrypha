@@ -51,25 +51,30 @@ const DEFAULT_HIDDEN_MAXING = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
 const BOTTOM_ICONS = {
   menmaxing: (
-    // crossed swords
+    // Spartan/Corinthian helmet — masculine, fits the site's mystical/warrior tone
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 3l9 9"/>
-      <path d="M21 3l-9 9"/>
-      <path d="M12 12l-6 6 -2 -2 6 -6"/>
-      <path d="M12 12l6 6 2 -2 -6 -6"/>
-      <path d="M4 18l-1 3 3 -1"/>
-      <path d="M20 18l1 3 -3 -1"/>
-      <path d="M2 4l3 -1M22 4l-3 -1"/>
+      {/* plume on top */}
+      <path d="M8 4 C 9 2 11 1.5 12 2 C 13 1.5 15 2 16 4"/>
+      {/* helmet shell */}
+      <path d="M5 12 C 5 7 8 5 12 5 C 16 5 19 7 19 12 V 18 C 19 19 18 20 17 20 H 15 V 22 H 9 V 20 H 7 C 6 20 5 19 5 18 Z"/>
+      {/* eye slit */}
+      <path d="M8.5 12 H 15.5"/>
+      {/* nose guard */}
+      <path d="M12 12 V 18"/>
     </svg>
   ),
   looksmaxing: (
-    // skull
+    // Face with strong jawline (looksmaxing aesthetic)
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 3c-4.4 0-8 3.4-8 7.6 0 2.6 1.2 4.7 3 6V19a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2v-2.4c1.8 -1.3 3 -3.4 3 -6C20 6.4 16.4 3 12 3z"/>
-      <circle cx="9" cy="11.5" r="1.6" fill="currentColor"/>
-      <circle cx="15" cy="11.5" r="1.6" fill="currentColor"/>
-      <path d="M12 14l-0.8 2 1.6 0z" fill="currentColor"/>
-      <path d="M9 21v-2.5M12 21v-2.5M15 21v-2.5"/>
+      {/* head + tapered jaw */}
+      <path d="M6 10 C 6 6 9 3 12 3 C 15 3 18 6 18 10 V 12.5 C 18 14.5 17 16.5 16 17.5 L 13 21 H 11 L 8 17.5 C 7 16.5 6 14.5 6 12.5 Z"/>
+      {/* eyes */}
+      <path d="M9 10.5 H 10.5"/>
+      <path d="M13.5 10.5 H 15"/>
+      {/* nose */}
+      <path d="M12 12.5 V 15"/>
+      {/* mouth */}
+      <path d="M10.5 17 H 13.5"/>
     </svg>
   ),
   moneymaxing: (
