@@ -2959,3 +2959,37 @@ body {
   text-transform: uppercase;
   margin-left: 2px;
 }
+
+/* ============ Money capital — big number display ============ */
+.money-capital-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 10px;
+}
+.money-capital-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.money-capital-input {
+  width: 100%;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed rgba(201, 168, 106, 0.25);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 44px;
+  letter-spacing: 0.02em;
+  color: var(--gold-bright);
+  padding: 4px 0;
+  text-shadow: 0 0 18px rgba(214, 168, 92, 0.3);
+  outline: none;
+  caret-color: var(--gold-bright);
+}
+.money-capital-input::placeholder { color: rgba(201, 168, 106, 0.3); }
+.money-capital-input:focus { border-bottom-color: rgba(201, 168, 106, 0.6); }

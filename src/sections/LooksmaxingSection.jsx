@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { uploadLooksPhoto } from '../supabase.js';
-import TrackerSection from './TrackerSection.jsx';
 import FaceAnalyzer from '../FaceAnalyzer.jsx';
 
 export default function LooksmaxingSection() {
@@ -90,10 +89,6 @@ export default function LooksmaxingSection() {
           onChange={onFile}
         />
       </div>
-
-      <div className="divider" />
-
-      <TrackerSection field="looksmaxing" placeholder={t('looks.tracker')} />
 
       <FaceAnalyzer
         open={faceOpen}

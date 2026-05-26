@@ -1,6 +1,5 @@
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
-import TrackerSection from './TrackerSection.jsx';
 
 export default function MoneymaxingSection() {
   const { profile, update } = useProfile();
@@ -8,6 +7,20 @@ export default function MoneymaxingSection() {
 
   return (
     <>
+      <div className="money-capital-block">
+        <label className="field-label money-capital-label">{t('money.capital')}</label>
+        <input
+          className="money-capital-input"
+          value={profile.money_capital ?? ''}
+          onChange={(e) => update({ money_capital: e.target.value })}
+          placeholder="0"
+          maxLength={24}
+          inputMode="text"
+        />
+      </div>
+
+      <div className="divider" />
+
       <div className="field-block">
         <label className="field-label">{t('money.activity')}</label>
         <input
@@ -18,10 +31,6 @@ export default function MoneymaxingSection() {
           maxLength={48}
         />
       </div>
-
-      <div className="divider" />
-
-      <TrackerSection field="moneymaxing" placeholder={t('money.tracker')} />
     </>
   );
 }
