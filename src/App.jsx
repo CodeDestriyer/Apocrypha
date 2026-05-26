@@ -46,6 +46,8 @@ const SIDEBAR_MAXING = [
 ];
 
 const MAXING_IDS = ['menmaxing', 'looksmaxing', 'moneymaxing'];
+// menmaxing routes to the merged Character/home view.
+const VIEW_FOR_MAXING = { menmaxing: 'home', looksmaxing: 'looksmaxing', moneymaxing: 'moneymaxing' };
 const CORE_SUB_IDS = ['goals', 'skills', 'asceses'];
 const DEFAULT_HIDDEN_MAXING = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
@@ -64,17 +66,10 @@ const BOTTOM_ICONS = {
     </svg>
   ),
   looksmaxing: (
-    // Face with strong jawline (looksmaxing aesthetic)
+    // Side profile of a head — communicates face/jawline analysis directly
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {/* head + tapered jaw */}
-      <path d="M6 10 C 6 6 9 3 12 3 C 15 3 18 6 18 10 V 12.5 C 18 14.5 17 16.5 16 17.5 L 13 21 H 11 L 8 17.5 C 7 16.5 6 14.5 6 12.5 Z"/>
-      {/* eyes */}
-      <path d="M9 10.5 H 10.5"/>
-      <path d="M13.5 10.5 H 15"/>
-      {/* nose */}
-      <path d="M12 12.5 V 15"/>
-      {/* mouth */}
-      <path d="M10.5 17 H 13.5"/>
+      <path d="M16 3 C 13 3 11 5 11 8 L 9 11.5 C 8.4 12.2 8.8 13 9.7 13 L 11 13 L 10.5 14.8 C 10.3 15.6 10.9 16.3 11.7 16.3 L 12.5 16.3 L 12.5 18 C 12.5 19.7 13.8 21 15.5 21 L 18 21 L 19 14 L 19 8 C 19 5 17.5 3 16 3 Z"/>
+      <circle cx="13.2" cy="9" r="0.6" fill="currentColor"/>
     </svg>
   ),
   moneymaxing: (
@@ -198,7 +193,7 @@ function Shell() {
     <div className="app">
       <div className="single-page">
         {isCoreSub ? (
-          <SubPage title={subTitle} onBack={() => setView('menmaxing')}>
+          <SubPage title={subTitle} onBack={() => setView('home')}>
             {subRender()}
           </SubPage>
         ) : (
@@ -306,9 +301,9 @@ function MobileShell({ view, setView, t }) {
   const { profile } = useProfile();
   const startX = useRef(null);
   const startY = useRef(null);
-  // Top tabs + their Character/Calendar swipe live only on the Menmaxing hub.
-  const showTopTabs = view === 'menmaxing' || view === 'home' || view === 'calendar';
-  const isSwipable = view === 'menmaxing';
+  // Top tabs + Character/Calendar swipe live on the merged Character/Menmaxing hub.
+  const showTopTabs = view === 'home' || view === 'calendar';
+  const isSwipable = view === 'home';
   const prevView = useRef(view);
   const direction = 'none';
   prevView.current = view;
@@ -348,24 +343,24 @@ function MobileShell({ view, setView, t }) {
         </div>
       )}
       <div key={view} className={`page-slide page-slide-${direction}`}>
-        {view === 'home' && <CharacterPage onNavigate={setView} showNav={false} />}
+        {view === 'home' && <MenmaxingMobile setView={setView} />}
         {view === 'calendar' && <CalendarPage />}
         {view === 'looksmaxing' && <MaxingScreen titleKey="nav.looksmaxing" Section={LooksmaxingSection} />}
         {view === 'moneymaxing' && <MaxingScreen titleKey="nav.moneymaxing" Section={MoneymaxingSection} />}
-        {view === 'menmaxing' && <MenmaxingMobile setView={setView} />}
       </div>
 
       {enabledMaxing.length > 0 && (
         <nav className="bottom-bar" role="navigation">
           {enabledMaxing.map((id) => {
             const m = SIDEBAR_MAXING.find((x) => x.id === id);
+            const target = VIEW_FOR_MAXING[id] ?? id;
             return (
               <button
                 key={id}
                 data-id={id}
                 aria-label={t(m.labelKey)}
-                className={`bottom-bar-item ${view === id ? 'active' : ''}`}
-                onClick={() => setView(id)}
+                className={`bottom-bar-item ${view === target ? 'active' : ''}`}
+                onClick={() => setView(target)}
               >
                 <span className="bottom-bar-icon">{BOTTOM_ICONS[id]}</span>
               </button>
@@ -389,32 +384,17 @@ function MaxingScreen({ titleKey, Section }) {
 }
 
 function MenmaxingMobile({ setView }) {
-  const { profile } = useProfile();
-  const { t } = useLang();
   return (
-    <div className="card maxing-card">
-      <h1 className="sub-title">{t('nav.menmaxing')}</h1>
-      <div className="divider" />
-      <div className="nav-grid">
-        {CORE_SUB_IDS.map((id) => {
-          const meta = CORE_MODULES_META[id];
-          return (
-            <button
-              key={id}
-              data-id={id}
-              className="nav-card"
-              onClick={() => setView(id)}
-            >
-              <span className="nav-icon">{meta.icon}</span>
-              <span className="nav-label">{t(meta.labelKey)}</span>
-              <span className="nav-summary">{meta.summary(profile)}</span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="divider" />
-      <MenmaxingSection />
-    </div>
+    <CharacterPage
+      onNavigate={setView}
+      showNav={true}
+      extra={
+        <>
+          <div className="divider" />
+          <MenmaxingSection />
+        </>
+      }
+    />
   );
 }
 

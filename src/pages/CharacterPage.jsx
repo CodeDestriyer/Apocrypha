@@ -262,28 +262,6 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
         })}
       </div>
 
-      {!editing && enabledMaxing.length > 0 && (
-        <>
-          <div className="nav-section-divider">maxing</div>
-          <div className="nav-grid">
-            {enabledMaxing.map((id) => {
-              const n = NAV_BY_ID[id];
-              return (
-                <button
-                  key={id}
-                  data-id={id}
-                  className="nav-card"
-                  onClick={() => onNavigate(id)}
-                >
-                  <span className="nav-label">{t(n.labelKey)}</span>
-                  <span className="nav-summary">{n.summary(profile)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-
       {editing && (
         <button className="settings-done nav-done" onClick={() => setEditing(false)}>
           {t('settings.done')}
@@ -293,7 +271,7 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   );
 }
 
-export default function CharacterPage({ onNavigate, hideNav = false, showNav = true }) {
+export default function CharacterPage({ onNavigate, hideNav = false, showNav = true, extra = null }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const [prefs, setPrefs] = useModulePrefs();
@@ -360,6 +338,8 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
           setEditing={setEditing}
         />
       )}
+
+      {extra}
     </div>
   );
 }
