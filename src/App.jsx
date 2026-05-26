@@ -49,6 +49,39 @@ const MAXING_IDS = ['menmaxing', 'looksmaxing', 'moneymaxing'];
 const CORE_SUB_IDS = ['goals', 'skills', 'asceses'];
 const DEFAULT_HIDDEN_MAXING = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
+const BOTTOM_ICONS = {
+  menmaxing: (
+    // crossed swords
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 3l9 9"/>
+      <path d="M21 3l-9 9"/>
+      <path d="M12 12l-6 6 -2 -2 6 -6"/>
+      <path d="M12 12l6 6 2 -2 -6 -6"/>
+      <path d="M4 18l-1 3 3 -1"/>
+      <path d="M20 18l1 3 -3 -1"/>
+      <path d="M2 4l3 -1M22 4l-3 -1"/>
+    </svg>
+  ),
+  looksmaxing: (
+    // skull
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3c-4.4 0-8 3.4-8 7.6 0 2.6 1.2 4.7 3 6V19a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2v-2.4c1.8 -1.3 3 -3.4 3 -6C20 6.4 16.4 3 12 3z"/>
+      <circle cx="9" cy="11.5" r="1.6" fill="currentColor"/>
+      <circle cx="15" cy="11.5" r="1.6" fill="currentColor"/>
+      <path d="M12 14l-0.8 2 1.6 0z" fill="currentColor"/>
+      <path d="M9 21v-2.5M12 21v-2.5M15 21v-2.5"/>
+    </svg>
+  ),
+  moneymaxing: (
+    // coin with $
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 6.5v11"/>
+      <path d="M15 9.2c-0.5 -1 -1.7 -1.7 -3 -1.7 -1.7 0 -3 1 -3 2.3 0 1.4 1.3 1.8 3 2.2 1.7 0.4 3 0.8 3 2.2 0 1.3 -1.3 2.3 -3 2.3 -1.3 0 -2.5 -0.7 -3 -1.7"/>
+    </svg>
+  ),
+};
+
 const CORE_MODULES_META = {
   goals:   { icon: '✧', labelKey: 'nav.goals',   summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
   skills:  { icon: '✦', labelKey: 'nav.skills',  summary: (p) => (p.skills ?? []).reduce((s, v) => s + (typeof v.rank === 'number' ? v.rank : (v.level ?? 0)), 0) },
@@ -329,7 +362,7 @@ function MobileShell({ view, setView, t }) {
                 className={`bottom-bar-item ${view === id ? 'active' : ''}`}
                 onClick={() => setView(id)}
               >
-                <span className="bottom-bar-icon">{m.icon}</span>
+                <span className="bottom-bar-icon">{BOTTOM_ICONS[id]}</span>
               </button>
             );
           })}
