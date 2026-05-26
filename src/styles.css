@@ -2294,7 +2294,7 @@ body {
     gap: 4px;
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
   }
   .desktop-nav-section {
     font-family: 'Cinzel', serif;
@@ -2348,6 +2348,22 @@ body {
     font-size: 18px;
     flex-shrink: 0;
     transition: color 0.15s, text-shadow 0.15s;
+  }
+
+  /* Maxing items are secondary — compact them so the sidebar fits without scroll */
+  .desktop-nav-section + .desktop-nav-item,
+  .desktop-nav-item[data-id="moneymaxing"],
+  .desktop-nav-item[data-id="looksmaxing"],
+  .desktop-nav-item[data-id="menmaxing"] {
+    padding: 8px 14px;
+    font-size: 13.5px;
+    letter-spacing: 0.06em;
+  }
+  .desktop-nav-section:last-of-type {
+    padding-top: 10px;
+    padding-bottom: 6px;
+    font-size: 10px;
+    border-bottom-color: rgba(127, 184, 199, 0.08);
   }
 
   .desktop-sidebar-footer {
