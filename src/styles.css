@@ -2937,20 +2937,23 @@ body {
   margin: 0 auto;
 }
 
-/* ============ XP badge (inline next to nickname) ============ */
-.name { display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+/* ============ XP inline next to nickname ============ */
+.name { display: inline-flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .name-text { display: inline-block; }
+.name-sep {
+  color: rgba(201, 168, 106, 0.5);
+  font-size: 10px;
+  line-height: 1;
+  align-self: center;
+}
 .xp-badge {
   font-family: 'Cinzel', serif;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--gold-bright);
-  padding: 2px 8px;
-  background: rgba(201, 168, 106, 0.1);
-  border: 1px solid rgba(201, 168, 106, 0.35);
-  border-radius: 3px;
   white-space: nowrap;
+  text-shadow: 0 0 10px rgba(214, 168, 92, 0.35);
 }
 .xp-badge-suffix {
   font-size: 10px;
@@ -2958,6 +2961,7 @@ body {
   color: var(--text-dim);
   text-transform: uppercase;
   margin-left: 2px;
+  text-shadow: none;
 }
 
 /* ============ Money capital — big number display ============ */
@@ -2993,3 +2997,66 @@ body {
 }
 .money-capital-input::placeholder { color: rgba(201, 168, 106, 0.3); }
 .money-capital-input:focus { border-bottom-color: rgba(201, 168, 106, 0.6); }
+
+/* ============ Skill add (collapsible like habits) ============ */
+.skill-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.skill-add-toggle {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(127, 184, 199, 0.28);
+  background: rgba(127, 184, 199, 0.06);
+  color: var(--text-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.skill-add-toggle:hover { background: rgba(127, 184, 199, 0.12); border-color: var(--gold-dim); color: var(--text); }
+.skill-add-toggle:active { transform: scale(0.94); }
+.skill-add.open .skill-add-toggle { transform: rotate(45deg); color: var(--text); }
+.skill-add-slot {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+  transition: max-width 0.28s ease, opacity 0.22s ease, transform 0.28s ease;
+}
+.skill-add.open .skill-add-slot {
+  max-width: 900px;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.skill-add-input {
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--gold-dim);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.skill-add-input:focus { outline: none; border-color: var(--gold); }
+
+/* ============ Calendar day list: separate habits from tasks ============ */
+.day-focus-row.day-focus-habit + .day-focus-row:not(.day-focus-habit) {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(127, 184, 199, 0.18);
+}

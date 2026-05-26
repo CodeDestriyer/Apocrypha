@@ -16,6 +16,7 @@ export default function SkillsSection() {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const [newSkill, setNewSkill] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
 
   const setSkills = (skills) => update({ skills });
 
@@ -28,11 +29,43 @@ export default function SkillsSection() {
     if (!n) return;
     setSkills([...profile.skills, { name: n, rank: 0 }]);
     setNewSkill('');
+    setAddOpen(false);
   };
   const removeSkill = (i) => setSkills(profile.skills.filter((_, idx) => idx !== i));
 
   return (
     <>
+      <div className={`skill-add ${addOpen ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="skill-add-toggle"
+          onClick={() => setAddOpen((o) => !o)}
+          aria-expanded={addOpen}
+          aria-label={t('skill.new')}
+        >+</button>
+        <div className="skill-add-slot">
+          <input
+            className="skill-add-input"
+            placeholder={t('skill.new')}
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') addSkill();
+              if (e.key === 'Escape') { setAddOpen(false); setNewSkill(''); }
+            }}
+            maxLength={32}
+            ref={(el) => { if (addOpen && el && document.activeElement !== el) el.focus(); }}
+            tabIndex={addOpen ? 0 : -1}
+          />
+          <button
+            className="add-btn"
+            onClick={addSkill}
+            disabled={!newSkill.trim()}
+            tabIndex={addOpen ? 0 : -1}
+          >✓</button>
+        </div>
+      </div>
+
       <ul className="skills">
         {profile.skills.map((s, i) => {
           const r = rankOf(s);
@@ -54,16 +87,6 @@ export default function SkillsSection() {
           );
         })}
       </ul>
-      <div className="add-skill">
-        <input
-          placeholder={t('skill.new')}
-          value={newSkill}
-          onChange={(e) => setNewSkill(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && addSkill()}
-          maxLength={32}
-        />
-        <button onClick={addSkill}>+</button>
-      </div>
     </>
   );
 }
