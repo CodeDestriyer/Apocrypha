@@ -2887,3 +2887,43 @@ body {
   display: none;
 }
 
+
+/* ============ Mobile bottom bar (maxings) ============ */
+.main-shell.with-bottom-bar { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+.bottom-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  z-index: 50;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(8, 14, 22, 0.92), rgba(4, 8, 14, 0.98));
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(127, 184, 199, 0.18);
+}
+.bottom-bar-item {
+  flex: 1;
+  padding: 10px 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.bottom-bar-item:hover { color: var(--text); }
+.bottom-bar-item.active {
+  color: var(--gold-bright);
+  background: rgba(127, 184, 199, 0.08);
+  border-color: rgba(127, 184, 199, 0.2);
+}
+
+.maxing-card {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+}

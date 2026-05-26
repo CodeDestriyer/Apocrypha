@@ -45,6 +45,16 @@ const SIDEBAR_MAXING = [
   { id: 'menmaxing',   icon: '♂', labelKey: 'nav.menmaxing' },
 ];
 
+const MAXING_IDS = ['moneymaxing', 'looksmaxing', 'menmaxing'];
+const CORE_SUB_IDS = ['goals', 'skills', 'asceses'];
+const DEFAULT_HIDDEN_MAXING = ['moneymaxing', 'looksmaxing', 'menmaxing'];
+
+const CORE_MODULES_META = {
+  goals:   { icon: '✧', labelKey: 'nav.goals',   summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
+  skills:  { icon: '✦', labelKey: 'nav.skills',  summary: (p) => (p.skills ?? []).reduce((s, v) => s + (typeof v.rank === 'number' ? v.rank : (v.level ?? 0)), 0) },
+  asceses: { icon: '☥', labelKey: 'nav.asceses', summary: (p) => (p.asceses ?? []).filter((a) => a.status === 'active').length },
+};
+
 const SHOW_LOGIN_KEY = 'lr.showLogin';
 
 function useMediaQuery(query) {
@@ -141,15 +151,20 @@ function Shell() {
     );
   }
 
+  // Mobile: top tabs (Character/Calendar) + content + bottom bar (maxings).
+  // Core sub-views (goals/skills/asceses) are opened from inside Menmaxing
+  // and render as SubPages whose back returns to Menmaxing.
+  const isCoreSub = CORE_SUB_IDS.includes(view);
+
   return (
     <div className="app">
       <div className="single-page">
-        {subRender ? (
-          <SubPage title={subTitle} onBack={() => setView('home')}>
+        {isCoreSub ? (
+          <SubPage title={subTitle} onBack={() => setView('menmaxing')}>
             {subRender()}
           </SubPage>
         ) : (
-          <MainView view={view} setView={setView} t={t} />
+          <MobileShell view={view} setView={setView} t={t} />
         )}
       </div>
     </div>
@@ -249,15 +264,16 @@ function DesktopSidebar({ view, setView }) {
   );
 }
 
-function MainView({ view, setView, t }) {
-  const mainView = view === 'calendar' ? 'calendar' : 'home';
+function MobileShell({ view, setView, t }) {
+  const { profile } = useProfile();
   const startX = useRef(null);
   const startY = useRef(null);
-  const prevView = useRef(mainView);
-  const direction = mainView === prevView.current
-    ? 'none'
-    : (prevView.current === 'home' ? 'left' : 'right');
-  prevView.current = mainView;
+  const isTopTab = view === 'home' || view === 'calendar';
+  const prevView = useRef(isTopTab ? view : 'home');
+  const direction = isTopTab && view !== prevView.current
+    ? (prevView.current === 'home' ? 'left' : 'right')
+    : 'none';
+  if (isTopTab) prevView.current = view;
 
   const onTouchStart = (e) => {
     if (e.touches.length !== 1) return;
@@ -270,28 +286,93 @@ function MainView({ view, setView, t }) {
     const dy = e.changedTouches[0].clientY - startY.current;
     startX.current = null;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx)) return;
-    if (dx < 0 && mainView === 'home') setView('calendar');
-    if (dx > 0 && mainView === 'calendar') setView('home');
+    if (!isTopTab) return;
+    if (dx < 0 && view === 'home') setView('calendar');
+    if (dx > 0 && view === 'calendar') setView('home');
   };
 
+  const hidden = profile?.module_prefs?.hidden ?? DEFAULT_HIDDEN_MAXING;
+  const enabledMaxing = MAXING_IDS.filter((id) => !hidden.includes(id));
+
   return (
-    <div className="main-shell" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <div className="main-shell with-bottom-bar" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div className="top-tabs">
         <button
-          className={`top-tab ${mainView === 'home' ? 'active' : ''}`}
+          className={`top-tab ${view === 'home' ? 'active' : ''}`}
           onClick={() => setView('home')}
         >{t('tab.character')}</button>
         <span className="top-tabs-sep">✦</span>
         <button
-          className={`top-tab ${mainView === 'calendar' ? 'active' : ''}`}
+          className={`top-tab ${view === 'calendar' ? 'active' : ''}`}
           onClick={() => setView('calendar')}
         >{t('tab.calendar')}</button>
       </div>
-      <div key={mainView} className={`page-slide page-slide-${direction}`}>
-        {mainView === 'home'
-          ? <CharacterPage onNavigate={setView} />
-          : <CalendarPage />}
+      <div key={view} className={`page-slide page-slide-${direction}`}>
+        {view === 'home' && <CharacterPage onNavigate={setView} showNav={false} />}
+        {view === 'calendar' && <CalendarPage />}
+        {view === 'looksmaxing' && <MaxingScreen titleKey="nav.looksmaxing" Section={LooksmaxingSection} />}
+        {view === 'moneymaxing' && <MaxingScreen titleKey="nav.moneymaxing" Section={MoneymaxingSection} />}
+        {view === 'menmaxing' && <MenmaxingMobile setView={setView} />}
       </div>
+
+      {enabledMaxing.length > 0 && (
+        <nav className="bottom-bar" role="navigation">
+          {enabledMaxing.map((id) => {
+            const m = SIDEBAR_MAXING.find((x) => x.id === id);
+            return (
+              <button
+                key={id}
+                data-id={id}
+                className={`bottom-bar-item ${view === id ? 'active' : ''}`}
+                onClick={() => setView(id)}
+              >
+                <span>{t(m.labelKey)}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
+    </div>
+  );
+}
+
+function MaxingScreen({ titleKey, Section }) {
+  const { t } = useLang();
+  return (
+    <div className="card maxing-card">
+      <h1 className="sub-title">{t(titleKey)}</h1>
+      <div className="divider" />
+      <Section />
+    </div>
+  );
+}
+
+function MenmaxingMobile({ setView }) {
+  const { profile } = useProfile();
+  const { t } = useLang();
+  return (
+    <div className="card maxing-card">
+      <h1 className="sub-title">{t('nav.menmaxing')}</h1>
+      <div className="divider" />
+      <div className="nav-grid">
+        {CORE_SUB_IDS.map((id) => {
+          const meta = CORE_MODULES_META[id];
+          return (
+            <button
+              key={id}
+              data-id={id}
+              className="nav-card"
+              onClick={() => setView(id)}
+            >
+              <span className="nav-icon">{meta.icon}</span>
+              <span className="nav-label">{t(meta.labelKey)}</span>
+              <span className="nav-summary">{meta.summary(profile)}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="divider" />
+      <MenmaxingSection />
     </div>
   );
 }
