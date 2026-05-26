@@ -45,7 +45,7 @@ const SIDEBAR_MAXING = [
   { id: 'menmaxing',   icon: '♂', labelKey: 'nav.menmaxing' },
 ];
 
-const MAXING_IDS = ['moneymaxing', 'looksmaxing', 'menmaxing'];
+const MAXING_IDS = ['menmaxing', 'looksmaxing', 'moneymaxing'];
 const CORE_SUB_IDS = ['goals', 'skills', 'asceses'];
 const DEFAULT_HIDDEN_MAXING = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
@@ -268,12 +268,12 @@ function MobileShell({ view, setView, t }) {
   const { profile } = useProfile();
   const startX = useRef(null);
   const startY = useRef(null);
-  const isTopTab = view === 'home' || view === 'calendar';
-  const prevView = useRef(isTopTab ? view : 'home');
-  const direction = isTopTab && view !== prevView.current
-    ? (prevView.current === 'home' ? 'left' : 'right')
-    : 'none';
-  if (isTopTab) prevView.current = view;
+  // Top tabs + their Character/Calendar swipe live only on the Menmaxing hub.
+  const showTopTabs = view === 'menmaxing' || view === 'home' || view === 'calendar';
+  const isSwipable = view === 'menmaxing';
+  const prevView = useRef(view);
+  const direction = 'none';
+  prevView.current = view;
 
   const onTouchStart = (e) => {
     if (e.touches.length !== 1) return;
@@ -286,9 +286,9 @@ function MobileShell({ view, setView, t }) {
     const dy = e.changedTouches[0].clientY - startY.current;
     startX.current = null;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx)) return;
-    if (!isTopTab) return;
-    if (dx < 0 && view === 'home') setView('calendar');
-    if (dx > 0 && view === 'calendar') setView('home');
+    if (!isSwipable) return;
+    if (dx > 0) setView('home');
+    if (dx < 0) setView('calendar');
   };
 
   const hidden = profile?.module_prefs?.hidden ?? DEFAULT_HIDDEN_MAXING;
@@ -296,17 +296,19 @@ function MobileShell({ view, setView, t }) {
 
   return (
     <div className="main-shell with-bottom-bar" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="top-tabs">
-        <button
-          className={`top-tab ${view === 'home' ? 'active' : ''}`}
-          onClick={() => setView('home')}
-        >{t('tab.character')}</button>
-        <span className="top-tabs-sep">✦</span>
-        <button
-          className={`top-tab ${view === 'calendar' ? 'active' : ''}`}
-          onClick={() => setView('calendar')}
-        >{t('tab.calendar')}</button>
-      </div>
+      {showTopTabs && (
+        <div className="top-tabs">
+          <button
+            className={`top-tab ${view === 'home' ? 'active' : ''}`}
+            onClick={() => setView('home')}
+          >{t('tab.character')}</button>
+          <span className="top-tabs-sep">✦</span>
+          <button
+            className={`top-tab ${view === 'calendar' ? 'active' : ''}`}
+            onClick={() => setView('calendar')}
+          >{t('tab.calendar')}</button>
+        </div>
+      )}
       <div key={view} className={`page-slide page-slide-${direction}`}>
         {view === 'home' && <CharacterPage onNavigate={setView} showNav={false} />}
         {view === 'calendar' && <CalendarPage />}
@@ -323,10 +325,11 @@ function MobileShell({ view, setView, t }) {
               <button
                 key={id}
                 data-id={id}
+                aria-label={t(m.labelKey)}
                 className={`bottom-bar-item ${view === id ? 'active' : ''}`}
                 onClick={() => setView(id)}
               >
-                <span>{t(m.labelKey)}</span>
+                <span className="bottom-bar-icon">{m.icon}</span>
               </button>
             );
           })}
