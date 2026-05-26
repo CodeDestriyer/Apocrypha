@@ -2937,28 +2937,25 @@ body {
   margin: 0 auto;
 }
 
-/* ============ XP bar (character header) ============ */
-.xp-bar { margin-top: 8px; max-width: 280px; }
-.xp-bar-head {
-  display: flex;
-  justify-content: space-between;
+/* ============ XP badge (inline next to nickname) ============ */
+.name { display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.name-text { display: inline-block; }
+.xp-badge {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-  margin-bottom: 4px;
-}
-.xp-level { color: var(--gold-bright); font-weight: 700; }
-.xp-bar-track {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(201, 168, 106, 0.18);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  padding: 2px 8px;
+  background: rgba(201, 168, 106, 0.1);
+  border: 1px solid rgba(201, 168, 106, 0.35);
   border-radius: 3px;
-  overflow: hidden;
+  white-space: nowrap;
 }
-.xp-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, rgba(201, 168, 106, 0.85), rgba(240, 200, 140, 1));
-  box-shadow: 0 0 8px rgba(214, 168, 92, 0.5);
-  transition: width 0.3s;
+.xp-badge-suffix {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-left: 2px;
 }
