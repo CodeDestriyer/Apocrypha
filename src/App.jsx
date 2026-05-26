@@ -38,6 +38,8 @@ const SIDEBAR_MODULES = [
   { id: 'goals',       icon: '✧', labelKey: 'nav.goals' },
   { id: 'skills',      icon: '✦', labelKey: 'nav.skills' },
   { id: 'asceses',     icon: '☥', labelKey: 'nav.asceses' },
+];
+const SIDEBAR_MAXING = [
   { id: 'moneymaxing', icon: '❖', labelKey: 'nav.moneymaxing' },
   { id: 'looksmaxing', icon: '✺', labelKey: 'nav.looksmaxing' },
   { id: 'menmaxing',   icon: '♂', labelKey: 'nav.menmaxing' },
@@ -199,6 +201,18 @@ function DesktopSidebar({ view, setView }) {
             onClick={() => setView(m.id)}
           >
             <span className="desktop-nav-icon">{m.icon}</span>
+            <span>{t(m.labelKey)}</span>
+          </button>
+        ))}
+
+        <div className="desktop-nav-section">maxing</div>
+        {SIDEBAR_MAXING.map((m) => (
+          <button
+            key={m.id}
+            data-id={m.id}
+            className={`desktop-nav-item ${view === m.id ? 'active' : ''}`}
+            onClick={() => setView(m.id)}
+          >
             <span>{t(m.labelKey)}</span>
           </button>
         ))}

@@ -171,7 +171,6 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   const gridRef = useRef(null);
   const dragState = useRef(null);
   const [dragId, setDragId] = useState(null);
-  const [maxingOpen, setMaxingOpen] = useState(false);
 
   // When editing — flat list (so user can reorder/hide each maxing module).
   // When browsing — core modules only; maxing collapses into one "maxing" card.
@@ -264,35 +263,25 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
       </div>
 
       {!editing && enabledMaxing.length > 0 && (
-        <div className="maxing-dash">
-          <button
-            data-id="maxing"
-            className={`nav-card maxing-trigger ${maxingOpen ? 'open' : ''}`}
-            onClick={() => setMaxingOpen((o) => !o)}
-            aria-expanded={maxingOpen}
-          >
-            <span className="nav-label">maxing</span>
-            <span className="nav-summary">{enabledMaxing.length} <span className="maxing-chev">{maxingOpen ? '▴' : '▾'}</span></span>
-          </button>
-          {maxingOpen && (
-            <div className="maxing-children">
-              {enabledMaxing.map((id) => {
-                const n = NAV_BY_ID[id];
-                return (
-                  <button
-                    key={id}
-                    data-id={id}
-                    className="nav-card maxing-child"
-                    onClick={() => onNavigate(id)}
-                  >
-                    <span className="nav-label">{t(n.labelKey)}</span>
-                    <span className="nav-summary">{n.summary(profile)}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <>
+          <div className="nav-section-divider">maxing</div>
+          <div className="nav-grid">
+            {enabledMaxing.map((id) => {
+              const n = NAV_BY_ID[id];
+              return (
+                <button
+                  key={id}
+                  data-id={id}
+                  className="nav-card"
+                  onClick={() => onNavigate(id)}
+                >
+                  <span className="nav-label">{t(n.labelKey)}</span>
+                  <span className="nav-summary">{n.summary(profile)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {editing && (

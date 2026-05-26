@@ -2836,50 +2836,24 @@ body {
   letter-spacing: 0;
 }
 
-/* ============ Per-module gradients (*maxing only) ============ */
-/* Only the *maxing modules get a colored tint so they visually
-   separate from the core (goals/skills/habits), which stay default. */
-
-/* moneymaxing — emerald (money green) */
-.nav-card[data-id="moneymaxing"],
-.desktop-nav-item[data-id="moneymaxing"] {
-  background: linear-gradient(135deg, rgba(82, 168, 122, 0.18) 0%, rgba(82, 168, 122, 0.05) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(82, 168, 122, 0.26);
+/* ============ Maxing section divider (mobile) ============ */
+.nav-section-divider {
+  margin: 18px 0 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.nav-card[data-id="moneymaxing"]::before { background: rgba(82, 168, 122, 0.7); }
-.nav-card[data-id="moneymaxing"]:hover { background: linear-gradient(135deg, rgba(82, 168, 122, 0.28) 0%, rgba(82, 168, 122, 0.1) 60%, rgba(10,18,30,0.45) 100%); }
-.desktop-nav-item[data-id="moneymaxing"]:hover,
-.desktop-nav-item[data-id="moneymaxing"].active {
-  background: linear-gradient(135deg, rgba(82, 168, 122, 0.24) 0%, rgba(82, 168, 122, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(82, 168, 122, 0.95);
-}
-
-/* looksmaxing — magenta */
-.nav-card[data-id="looksmaxing"],
-.desktop-nav-item[data-id="looksmaxing"] {
-  background: linear-gradient(135deg, rgba(199, 92, 142, 0.18) 0%, rgba(199, 92, 142, 0.05) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(199, 92, 142, 0.26);
-}
-.nav-card[data-id="looksmaxing"]::before { background: rgba(199, 92, 142, 0.7); }
-.nav-card[data-id="looksmaxing"]:hover { background: linear-gradient(135deg, rgba(199, 92, 142, 0.28) 0%, rgba(199, 92, 142, 0.1) 60%, rgba(10,18,30,0.45) 100%); }
-.desktop-nav-item[data-id="looksmaxing"]:hover,
-.desktop-nav-item[data-id="looksmaxing"].active {
-  background: linear-gradient(135deg, rgba(199, 92, 142, 0.24) 0%, rgba(199, 92, 142, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(199, 92, 142, 0.95);
-}
-
-/* menmaxing — copper/bronze */
-.nav-card[data-id="menmaxing"],
-.desktop-nav-item[data-id="menmaxing"] {
-  background: linear-gradient(135deg, rgba(182, 116, 58, 0.18) 0%, rgba(182, 116, 58, 0.05) 55%, rgba(0,0,0,0.22) 100%);
-  border-color: rgba(182, 116, 58, 0.26);
-}
-.nav-card[data-id="menmaxing"]::before { background: rgba(182, 116, 58, 0.75); }
-.nav-card[data-id="menmaxing"]:hover { background: linear-gradient(135deg, rgba(182, 116, 58, 0.28) 0%, rgba(182, 116, 58, 0.1) 60%, rgba(10,18,30,0.45) 100%); }
-.desktop-nav-item[data-id="menmaxing"]:hover,
-.desktop-nav-item[data-id="menmaxing"].active {
-  background: linear-gradient(135deg, rgba(182, 116, 58, 0.24) 0%, rgba(182, 116, 58, 0.08) 60%, rgba(127, 184, 199, 0.12) 100%);
-  border-left-color: rgba(182, 116, 58, 0.95);
+.nav-section-divider::before,
+.nav-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(127, 184, 199, 0.22), transparent);
 }
 
 /* *maxing modules: no icon, just label + summary */
@@ -2897,36 +2871,3 @@ body {
   display: none;
 }
 
-/* ============ Mobile "maxing" dashboard card ============ */
-.maxing-dash { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-.maxing-trigger {
-  /* neutral, ungradient — it's a dashboard, not a module */
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.22) 100%);
-  border: 1px dashed rgba(127, 184, 199, 0.28);
-  grid-template-columns: 1fr auto;
-}
-.maxing-trigger .nav-label {
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.12em;
-  color: var(--gold-bright);
-}
-.maxing-trigger::before { background: rgba(127, 184, 199, 0.45); }
-.maxing-chev {
-  font-size: 11px;
-  opacity: 0.7;
-  margin-left: 6px;
-  color: var(--text-dim);
-}
-.maxing-children {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-left: 16px;
-  border-left: 1px solid rgba(127, 184, 199, 0.18);
-  margin-left: 6px;
-  animation: maxingDrop 0.18s ease-out;
-}
-@keyframes maxingDrop {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
