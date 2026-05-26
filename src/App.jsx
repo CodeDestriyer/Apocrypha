@@ -387,12 +387,6 @@ function MenmaxingMobile({ setView }) {
     <CharacterPage
       onNavigate={setView}
       showNav={true}
-      extra={
-        <>
-          <div className="divider" />
-          <MenmaxingSection />
-        </>
-      }
     />
   );
 }

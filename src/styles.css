@@ -1426,9 +1426,7 @@ body {
 @media (max-width: 420px) {
   .looks-top { grid-template-columns: 110px 1fr; gap: 12px; }
   .looks-photo { width: 110px; height: 140px; }
-  .char-layout { flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-  .char-info .name, .char-info .subtitle { text-align: center; }
-  .avatar-big { width: 120px; height: 120px; font-size: 60px; }
+  .avatar-big { width: 92px; height: 92px; font-size: 46px; }
 }
 
 .sections { display: grid; gap: 10px; }
