@@ -1815,9 +1815,11 @@ body {
 }
 .day-focus-row.day-focus-habit { border-left-color: #7fc79b; }
 .day-focus-row.goal.done,
-.day-focus-row.day-plan.done { opacity: 0.55; }
+.day-focus-row.day-plan.done,
+.day-focus-row.day-focus-habit.done { opacity: 0.55; }
 .day-focus-row.goal.done .goal-title-text,
-.day-focus-row.day-plan.done .goal-title-text {
+.day-focus-row.day-plan.done .goal-title-text,
+.day-focus-row.day-focus-habit.done .day-focus-row-name {
   text-decoration: line-through;
   text-decoration-thickness: 2px;
   text-decoration-color: var(--text);
@@ -2935,4 +2937,30 @@ body {
   width: 100%;
   max-width: 540px;
   margin: 0 auto;
+}
+
+/* ============ XP bar (character header) ============ */
+.xp-bar { margin-top: 8px; max-width: 280px; }
+.xp-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.xp-level { color: var(--gold-bright); font-weight: 700; }
+.xp-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(201, 168, 106, 0.18);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(201, 168, 106, 0.85), rgba(240, 200, 140, 1));
+  box-shadow: 0 0 8px rgba(214, 168, 92, 0.5);
+  transition: width 0.3s;
 }

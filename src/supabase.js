@@ -120,6 +120,7 @@ export async function createProfile(name) {
     moneymaxing: [],
     looksmaxing: [],
     menmaxing: [],
+    xp: 0,
   };
   const { data, error } = await supabase
     .from('profiles')

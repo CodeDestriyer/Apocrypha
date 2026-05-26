@@ -5,6 +5,9 @@ import { useLang } from '../i18n.jsx';
 const PLANS_KEY = 'lr.plans';
 const LEGACY_KEY = 'lr.periods';
 
+// XP awarded per completion type. Toggling off subtracts the same amount.
+const XP = { habit: 2, goal: 5, dayPlan: 1 };
+
 const WD_RU = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WD_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const WD_ES = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
@@ -132,17 +135,50 @@ export default function CalendarPage() {
     setGoalAddOpen(false);
   };
   const toggleGoal = (id) =>
-    update((curr) => ({
-      goals: (curr.goals ?? []).map((g) => (g.id === id ? { ...g, done: !g.done } : g)),
-    }));
+    update((curr) => {
+      const goals = curr.goals ?? [];
+      const target = goals.find((g) => g.id === id);
+      const delta = target ? (target.done ? -XP.goal : XP.goal) : 0;
+      return {
+        goals: goals.map((g) => (g.id === id ? { ...g, done: !g.done } : g)),
+        xp: Math.max(0, (curr.xp ?? 0) + delta),
+      };
+    });
   const toggleDayPlan = (id) =>
-    update((curr) => ({
-      day_plans: (Array.isArray(curr.day_plans) ? curr.day_plans : []).map((d) => (d.id === id ? { ...d, done: !d.done } : d)),
-    }));
+    update((curr) => {
+      const arr = Array.isArray(curr.day_plans) ? curr.day_plans : [];
+      const target = arr.find((d) => d.id === id);
+      const delta = target ? (target.done ? -XP.dayPlan : XP.dayPlan) : 0;
+      return {
+        day_plans: arr.map((d) => (d.id === id ? { ...d, done: !d.done } : d)),
+        xp: Math.max(0, (curr.xp ?? 0) + delta),
+      };
+    });
   const removeDayPlan = (id) =>
     update((curr) => ({
       day_plans: (Array.isArray(curr.day_plans) ? curr.day_plans : []).filter((d) => d.id !== id),
     }));
+  const toggleHabitDay = (habitId) =>
+    update((curr) => {
+      const asceses = curr.asceses ?? [];
+      let delta = 0;
+      const nextAsceses = asceses.map((h) => {
+        if (h.id !== habitId) return h;
+        const completions = Array.isArray(h.completions) ? h.completions : [];
+        const has = completions.includes(focusDay);
+        delta = has ? -XP.habit : XP.habit;
+        return {
+          ...h,
+          completions: has
+            ? completions.filter((d) => d !== focusDay)
+            : [...completions, focusDay],
+        };
+      });
+      return {
+        asceses: nextAsceses,
+        xp: Math.max(0, (curr.xp ?? 0) + delta),
+      };
+    });
 
   const endPlan = (id) => updatePlans(plans.filter((p) => p.id !== id));
 
@@ -221,8 +257,14 @@ export default function CalendarPage() {
           {focusHabits.map((h) => {
             const start = parseYmd(String(h.started_at).slice(0, 10));
             const dayNum = Math.floor((focusDate - start) / 86400000) + 1;
+            const doneToday = Array.isArray(h.completions) && h.completions.includes(focusDay);
             return (
-              <div key={h.id} className="day-focus-row day-focus-habit">
+              <div key={h.id} className={`day-focus-row day-focus-habit ${doneToday ? 'done' : ''}`}>
+                <button
+                  className={`checkbox ${doneToday ? 'checked' : ''}`}
+                  onClick={() => toggleHabitDay(h.id)}
+                  aria-label="toggle"
+                >{doneToday ? '✓' : ''}</button>
                 <span className="day-focus-row-name">
                   <span className="period-emoji">✦</span>
                   {h.title}

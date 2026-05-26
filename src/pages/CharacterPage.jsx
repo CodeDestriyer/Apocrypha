@@ -152,6 +152,29 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
   );
 }
 
+// Stub level curve: 100 XP per level, linearly. Tweak later when we tune balance.
+function levelFromXp(xp) {
+  const level = 1 + Math.floor(xp / 100);
+  const into = xp % 100;
+  return { level, into, need: 100 };
+}
+
+function XpBar({ xp }) {
+  const { level, into, need } = levelFromXp(xp);
+  const pct = Math.min(100, (into / need) * 100);
+  return (
+    <div className="xp-bar" title={`${xp} XP`}>
+      <div className="xp-bar-head">
+        <span className="xp-level">Lv {level}</span>
+        <span className="xp-amount">{into} / {need} xp</span>
+      </div>
+      <div className="xp-bar-track">
+        <div className="xp-bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function TagRow({ profile }) {
   const tags = [];
   if (profile.looks_rating)  tags.push({ key: 'looks', label: profile.looks_rating });
@@ -312,6 +335,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
             <h1 className="name">{profile.name || '—'}</h1>
           )}
           <TagRow profile={profile} />
+          <XpBar xp={profile.xp ?? 0} />
         </div>
       </div>
       {editingInfo && (
