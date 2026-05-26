@@ -316,7 +316,6 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
           ) : (
             <h1 className="name">
               <span className="name-text">{profile.name || '—'}</span>
-              <span className="name-sep" aria-hidden="true">✦</span>
               <XpBadge xp={profile.xp ?? 0} />
             </h1>
           )}
