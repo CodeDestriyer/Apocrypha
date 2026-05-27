@@ -38,6 +38,30 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Varkanis" />
 
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Varkanis",
+      "url": "https://www.varkanis.com/",
+      "description": "Веб-приложение для саморазвития в эстетике средневекового пергамента: цели, навыки, привычки, календарь, looksmaxing с анализом лица, moneymaxing и menmaxing.",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "inLanguage": ["ru", "en", "es"],
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Goals tracker with deadlines and progress bars",
+        "Skills with rank system (Novice to Master)",
+        "Habits with daily check-ins and streak rings",
+        "Calendar with day plans, periods and XP",
+        "Face analysis: symmetry, FWHR, jaw angle, canthal tilt, facial thirds, lip metrics",
+        "Looksmaxing tiers (Sub-3, Sub-5, LTN, MTN, HTN, Chad, True Adam)",
+        "Capital field for moneymaxing",
+        "PWA — installable on iOS, Android and desktop"
+      ]
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Cinzel+Decorative:wght@700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
@@ -50,7 +74,66 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Pre-rendered landing markup for crawlers (Google, Gemini, GPT, Claude, etc.).
+        React mounts into #root via createRoot and replaces this content client-side.
+        Keep in sync with src/Landing.jsx + landing.* keys in src/i18n.jsx.
+      -->
+      <div class="landing">
+        <header class="landing-nav">
+          <span class="landing-brand">Varkanis</span>
+        </header>
+        <main class="landing-main">
+          <span class="landing-eyebrow">Бесплатное бета-тестирование</span>
+          <h1 class="landing-title">Varkanis</h1>
+          <p class="landing-tagline">Геймификация жизни. Возьми свой путь под контроль.</p>
+
+          <p>
+            Varkanis — веб-приложение для саморазвития в эстетике средневекового пергамента.
+            Один свиток, в котором ты ведёшь свои цели, прокачиваешь навыки, отслеживаешь привычки
+            и работаешь над собой как над персонажем. Бесплатно, без рекламы.
+          </p>
+
+          <h2>Что внутри</h2>
+          <ul class="landing-features">
+            <li><span class="landing-bullet">✧</span><span><strong>Цели</strong> с делением по сложности (easy / medium / hard), дедлайнами и прогресс-баром по времени.</span></li>
+            <li><span class="landing-bullet">✦</span><span><strong>Навыки</strong> с системой рангов от новичка до мастера.</span></li>
+            <li><span class="landing-bullet">☥</span><span><strong>Привычки</strong> (полезные и вредные) с прогрессом по дням и кольцом достижений.</span></li>
+            <li><span class="landing-bullet">📅</span><span><strong>Календарь</strong>: периоды, планы дня и галочки выполнения. За каждое выполненное действие — XP.</span></li>
+            <li><span class="landing-bullet">♂</span><span><strong>Menmaxing</strong> — единая страница персонажа с аватаром, статами, XP и модулями развития.</span></li>
+            <li><span class="landing-bullet">𓀀</span><span><strong>Looksmaxing</strong> — анализ лица по 478 точкам в браузере: симметрия, FWHR, угол челюсти, кантальный наклон, трети лица, метрики губ. История сканов и подсказки по слабым местам. Тиры: Sub-3, Sub-5, LTN, MTN, HTN, Chad, True Adam.</span></li>
+            <li><span class="landing-bullet">❖</span><span><strong>Moneymaxing</strong> — поле капитала большой цифрой и описание твоей деятельности.</span></li>
+          </ul>
+
+          <h2>Для кого</h2>
+          <p>
+            Для тех, кто хочет относиться к жизни как к долгой игре: ставить ясные цели,
+            считать прогресс, прокачивать конкретные навыки и держать дисциплину через привычки.
+            Прежде всего — для парней, которым близок looksmaxing / menmaxing / moneymaxing-подход
+            к развитию: измеряемые метрики, прозрачные цифры, последовательная работа над собой.
+          </p>
+
+          <h2>Технологии</h2>
+          <p>
+            Анализ лица — на устройстве через MediaPipe FaceLandmarker, фото не покидает браузер.
+            Данные профиля — в Supabase, синхронизация между устройствами. Поддерживаются три языка:
+            русский, английский, испанский. Работает как PWA — можно установить как приложение
+            на iOS, Android и десктоп.
+          </p>
+
+          <a class="landing-cta" href="/" rel="nofollow">Войти в систему</a>
+        </main>
+        <footer class="landing-foot">
+          <span>© Varkanis</span>
+        </footer>
+      </div>
+    </div>
+    <noscript>
+      <p style="color:#e8eef5;background:#060a12;padding:24px;font-family:serif">
+        Varkanis работает в браузере с включённым JavaScript. Включите JS, чтобы войти в личный кабинет.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
