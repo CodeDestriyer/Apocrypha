@@ -36,13 +36,33 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      reg.update().catch(() => {});
+      const reg = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+
+      const promote = (worker) => {
+        if (!worker) return;
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+            worker.postMessage('SKIP_WAITING');
+          }
+        });
+      };
+      promote(reg.installing);
+      reg.addEventListener('updatefound', () => promote(reg.installing));
+
       let reloaded = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (reloaded) return;
         reloaded = true;
         window.location.reload();
+      });
+
+      const check = () => reg.update().catch(() => {});
+      check();
+      // Poll for updates every 30 minutes while open.
+      setInterval(check, 30 * 60 * 1000);
+      // And check whenever the user brings the tab/PWA back into focus.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') check();
       });
     } catch {}
   });

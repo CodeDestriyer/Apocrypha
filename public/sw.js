@@ -1,8 +1,9 @@
 // Minimal SW: required for PWA install prompt eligibility.
-// Strategy: pass-through to network. Cache only the app shell as offline fallback for navigations.
-// Never cache hashed JS/CSS chunks — they become stale across deploys.
+// Strategy: network-first for navigations (so users get fresh HTML referencing the
+// latest hashed JS/CSS). Cached /index.html serves only as offline fallback.
+// Never cache hashed JS/CSS chunks — they're immutable and content-addressed.
 
-const CACHE = 'varkanis-shell-v1';
+const CACHE = 'varkanis-shell-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -19,14 +20,26 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', (e) => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // Only intervene for navigations (HTML). Everything else (JS/CSS/API) goes straight to network.
+  // Navigations: network-first, fall back to cached shell when offline,
+  // and refresh the cached shell on every successful fetch so the offline
+  // fallback also moves forward over time.
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req).catch(() => caches.match('/index.html'))
+      fetch(req)
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE).then((c) => c.put('/index.html', clone)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match('/index.html'))
     );
   }
 });
