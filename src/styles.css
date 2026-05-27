@@ -3060,3 +3060,12 @@ body {
   padding-top: 14px;
   border-top: 1px dashed rgba(127, 184, 199, 0.18);
 }
+
+/* ============ Capital chart (promo, random walk to target) ============ */
+.capital-chart {
+  width: 100%;
+  max-width: 540px;
+  height: 130px;
+  display: block;
+  margin: 10px auto 0;
+}
