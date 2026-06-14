@@ -383,7 +383,7 @@ function StudyView({ deck, onGrade, onExit, t }) {
       >
         <div
           className={`study-card-inner ${shown ? 'flipped' : ''}`}
-          onClick={() => { if (Math.abs(dragX) < 6) setShown(true); }}
+          onClick={() => { if (Math.abs(dragX) < 6) setShown((s) => !s); }}
         >
           <div className="study-card-face study-card-front">{card.front}</div>
           <div className="study-card-face study-card-back">{card.back}</div>
