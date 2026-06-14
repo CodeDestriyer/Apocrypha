@@ -3965,3 +3965,24 @@ body {
   background: transparent; border: 1px solid rgba(190, 158, 92, 0.35); color: #8a7d63;
 }
 .cards-secondary-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ─── Cards: editable deck title in SubPage header ───── */
+.sub-title-deck {
+  cursor: pointer;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sub-title-input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  padding: 2px 8px;
+}
+.sub-header .cards-gear { margin-left: 4px; }
+.sub-header .cards-gear-btn { width: 34px; height: 34px; }

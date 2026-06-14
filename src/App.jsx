@@ -176,11 +176,15 @@ function Shell() {
           {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
           {view === 'calendar' && <CalendarPage />}
           {subRender && (
-            <div className="card desktop-card">
-              <h1 className="sub-title desktop-sub-title">{subTitle}</h1>
-              <div className="divider" />
-              {subRender()}
-            </div>
+            view === 'cards' ? (
+              <CardsSection rootOnBack={() => setView('home')} />
+            ) : (
+              <div className="card desktop-card">
+                <h1 className="sub-title desktop-sub-title">{subTitle}</h1>
+                <div className="divider" />
+                {subRender()}
+              </div>
+            )
           )}
         </main>
       </div>
@@ -196,9 +200,13 @@ function Shell() {
     <div className="app">
       <div className="single-page">
         {isCoreSub ? (
-          <SubPage title={subTitle} onBack={() => setView('home')}>
-            {subRender()}
-          </SubPage>
+          view === 'cards' ? (
+            <CardsSection rootOnBack={() => setView('home')} />
+          ) : (
+            <SubPage title={subTitle} onBack={() => setView('home')}>
+              {subRender()}
+            </SubPage>
+          )
         ) : (
           <MobileShell view={view} setView={setView} t={t} />
         )}

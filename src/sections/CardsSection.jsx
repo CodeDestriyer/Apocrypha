@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
+import SubPage from '../pages/SubPage.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -16,7 +17,6 @@ const addDaysISO = (days) => {
 
 // Minimal SM-2-lite. Enough for a prototype; we can swap in full SM-2 / FSRS later.
 const reviewCard = (card, grade) => {
-  // grade: 'again' | 'good' | 'easy'
   const ease = Math.max(1.3, Math.min(3.0, (card.ease ?? 2.5) + (grade === 'again' ? -0.2 : grade === 'easy' ? 0.15 : 0)));
   let interval;
   if (grade === 'again') interval = 0;
@@ -35,13 +35,26 @@ const reviewCard = (card, grade) => {
 
 const isDue = (card) => !card.due || card.due <= todayISO();
 
-export default function CardsSection() {
+const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
+
+export default function CardsSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const decks = profile.decks ?? [];
 
   const [openDeckId, setOpenDeckId] = useState(null);
   const [studyDeckId, setStudyDeckId] = useState(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [deckMenuOpen, setDeckMenuOpen] = useState(false);
+  const deckMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!deckMenuOpen) return;
+    const onDoc = (e) => { if (deckMenuRef.current && !deckMenuRef.current.contains(e.target)) setDeckMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [deckMenuOpen]);
 
   const setDecks = (updater) =>
     update((curr) => ({ decks: updater(curr.decks ?? []) }));
@@ -71,44 +84,98 @@ export default function CardsSection() {
       ? { ...x, cards: x.cards.map((c) => c.id === cardId ? { ...c, ...patch } : c) }
       : x));
 
-  if (studyDeckId) {
-    const deck = decks.find((d) => d.id === studyDeckId);
-    if (!deck) { setStudyDeckId(null); return null; }
-    return (
+  // Compute SubPage header dynamically
+  const currentDeck = decks.find((d) => d.id === (studyDeckId || openDeckId));
+  let title, onBack, headerRight;
+  if (studyDeckId && currentDeck) {
+    title = <span className="sub-title-deck">{currentDeck.name}</span>;
+    onBack = () => setStudyDeckId(null);
+  } else if (openDeckId && currentDeck) {
+    if (editingName) {
+      title = (
+        <input
+          className="sub-title-input"
+          value={nameDraft}
+          autoFocus
+          onChange={(e) => setNameDraft(e.target.value)}
+          onBlur={() => { renameDeck(currentDeck.id, nameDraft.trim() || currentDeck.name); setEditingName(false); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { renameDeck(currentDeck.id, nameDraft.trim() || currentDeck.name); setEditingName(false); }
+            if (e.key === 'Escape') { setEditingName(false); }
+          }}
+        />
+      );
+    } else {
+      title = (
+        <span className="sub-title-deck" onClick={() => { setNameDraft(currentDeck.name); setEditingName(true); }}>
+          {currentDeck.name}
+        </span>
+      );
+    }
+    onBack = () => { setOpenDeckId(null); setEditingName(false); };
+    headerRight = (
+      <div className="cards-gear" ref={deckMenuRef}>
+        <button className="cards-gear-btn" onClick={() => setDeckMenuOpen((o) => !o)} aria-label={t('cards.deckSettings')}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d={GEAR_PATH}/>
+          </svg>
+        </button>
+        {deckMenuOpen && (
+          <div className="cards-gear-menu cards-gear-menu--right">
+            <button className="cards-gear-item" onClick={() => { setDeckMenuOpen(false); setNameDraft(currentDeck.name); setEditingName(true); }}>
+              {t('cards.renameDeck')}
+            </button>
+            <button
+              className="cards-gear-item cards-gear-item--danger"
+              onClick={() => { setDeckMenuOpen(false); removeDeck(currentDeck.id); setOpenDeckId(null); }}
+            >
+              {t('cards.deleteDeck')}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  } else {
+    title = t('nav.cards');
+    onBack = rootOnBack;
+  }
+
+  let body;
+  if (studyDeckId && currentDeck) {
+    body = (
       <StudyView
-        deck={deck}
-        onGrade={(cardId, grade) => updateCard(deck.id, cardId, reviewCard(deck.cards.find((c) => c.id === cardId), grade))}
-        onExit={() => setStudyDeckId(null)}
+        deck={currentDeck}
+        onGrade={(cardId, grade) => updateCard(currentDeck.id, cardId, reviewCard(currentDeck.cards.find((c) => c.id === cardId), grade))}
         t={t}
       />
     );
-  }
-
-  if (openDeckId) {
-    const deck = decks.find((d) => d.id === openDeckId);
-    if (!deck) { setOpenDeckId(null); return null; }
-    return (
+  } else if (openDeckId && currentDeck) {
+    body = (
       <DeckView
-        deck={deck}
-        onBack={() => setOpenDeckId(null)}
-        onStudy={() => setStudyDeckId(deck.id)}
-        onAddCard={(f, b) => addCard(deck.id, f, b)}
-        onRemoveCard={(cardId) => removeCard(deck.id, cardId)}
-        onEditCard={(cardId, patch) => updateCard(deck.id, cardId, patch)}
-        onRename={(name) => renameDeck(deck.id, name)}
-        onDelete={() => { removeDeck(deck.id); setOpenDeckId(null); }}
+        deck={currentDeck}
+        onStudy={() => setStudyDeckId(currentDeck.id)}
+        onAddCard={(f, b) => addCard(currentDeck.id, f, b)}
+        onRemoveCard={(cardId) => removeCard(currentDeck.id, cardId)}
+        onEditCard={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
+        t={t}
+      />
+    );
+  } else {
+    body = (
+      <DeckList
+        decks={decks}
+        onOpen={(id) => setOpenDeckId(id)}
+        onAdd={addDeck}
         t={t}
       />
     );
   }
 
   return (
-    <DeckList
-      decks={decks}
-      onOpen={(id) => setOpenDeckId(id)}
-      onAdd={addDeck}
-      t={t}
-    />
+    <SubPage title={title} onBack={onBack} headerRight={headerRight}>
+      {body}
+    </SubPage>
   );
 }
 
@@ -180,22 +247,11 @@ function DeckList({ decks, onOpen, onAdd, t }) {
   );
 }
 
-function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onEditCard, onRename, onDelete, t }) {
+function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
   const [adding, setAdding] = useState(false);
-  const [editingName, setEditingName] = useState(false);
-  const [nameDraft, setNameDraft] = useState(deck.name);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
   const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [menuOpen]);
 
   const submitCard = () => {
     if (!front.trim() || !back.trim()) return;
@@ -207,46 +263,6 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onEditCard, 
 
   return (
     <div className="cards-deck">
-      <div className="cards-deck-head">
-        <button className="cards-back-btn" onClick={onBack} aria-label={t('cards.back')}>
-          <span className="cards-back-chevron">‹</span>
-          <span>{t('cards.back')}</span>
-        </button>
-        {editingName ? (
-          <input
-            className="cards-name-input"
-            value={nameDraft}
-            autoFocus
-            onChange={(e) => setNameDraft(e.target.value)}
-            onBlur={() => { onRename(nameDraft.trim() || deck.name); setEditingName(false); }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') { onRename(nameDraft.trim() || deck.name); setEditingName(false); }
-              if (e.key === 'Escape') { setNameDraft(deck.name); setEditingName(false); }
-            }}
-          />
-        ) : (
-          <h2 className="cards-deck-name" onClick={() => setEditingName(true)}>{deck.name}</h2>
-        )}
-        <div className="cards-gear" ref={menuRef}>
-          <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('cards.deckSettings')}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="cards-gear-menu">
-              <button className="cards-gear-item" onClick={() => { setMenuOpen(false); setEditingName(true); }}>
-                {t('cards.renameDeck')}
-              </button>
-              <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); onDelete(); }}>
-                {t('cards.deleteDeck')}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       <button
         className="cards-study-btn"
         onClick={onStudy}
@@ -307,8 +323,6 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onEditCard, 
     </div>
   );
 }
-
-const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
 function CardRow({ card, onRemove, onUpdate, t }) {
   const [editing, setEditing] = useState(false);
@@ -385,20 +399,19 @@ function CardRow({ card, onRemove, onUpdate, t }) {
   );
 }
 
-function StudyView({ deck, onGrade, onExit, t }) {
+function StudyView({ deck, onGrade, t }) {
   const queue = useMemo(() => {
     const arr = deck.cards.filter(isDue);
-    // Fisher-Yates shuffle for random study order
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
-  }, [deck.id]); // freeze queue at session start
+  }, [deck.id]);
   const [idx, setIdx] = useState(0);
   const [shown, setShown] = useState(false);
   const [dragX, setDragX] = useState(0);
-  const [animDir, setAnimDir] = useState(0); // -1 leaving left, +1 leaving right, 0 idle
+  const [animDir, setAnimDir] = useState(0);
   const touch = useRef({ x: 0, y: 0, active: false });
   const card = queue[idx];
 
@@ -406,16 +419,9 @@ function StudyView({ deck, onGrade, onExit, t }) {
     return (
       <div className="cards-study">
         <div className="cards-study-done">{t('cards.allDone')}</div>
-        <button className="cards-study-btn" onClick={onExit}>{t('cards.back')}</button>
       </div>
     );
   }
-
-  const grade = (g) => {
-    onGrade(card.id, g);
-    setShown(false);
-    setIdx((i) => i + 1);
-  };
 
   const goNext = () => { if (idx < queue.length - 1) { setShown(false); setIdx(idx + 1); } };
   const goPrev = () => { if (idx > 0) { setShown(false); setIdx(idx - 1); } };
@@ -493,11 +499,6 @@ function StudyView({ deck, onGrade, onExit, t }) {
           aria-label={t('cards.next')}
         >›</button>
       </div>
-
-      <button className="cards-back-btn cards-study-exit" onClick={onExit}>
-        <span className="cards-back-chevron">‹</span>
-        <span>{t('cards.back')}</span>
-      </button>
     </div>
   );
 }
