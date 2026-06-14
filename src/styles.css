@@ -1475,7 +1475,7 @@ body {
   letter-spacing: 0.04em;
 }
 
-.sub-page { width: min(480px, 100%); }
+.sub-page { width: min(480px, 100%); max-width: 100%; min-width: 0; }
 
 .sub-header {
   display: grid;
@@ -3610,9 +3610,9 @@ body {
 .deck-total { color: #8a7d63; margin-left: 2px; }
 .empty-hint { text-align: center; color: #8a7d63; padding: 24px 8px; font-style: italic; }
 
-.cards-deck { display: flex; flex-direction: column; gap: 14px; }
-.cards-deck-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-.cards-deck-name { flex: 1; margin: 0; font-family: 'Cinzel', serif; font-size: 28px; line-height: 1.15; color: #f5f0e1; letter-spacing: 0.03em; cursor: pointer; text-align: center; }
+.cards-deck { display: flex; flex-direction: column; gap: 14px; min-width: 0; max-width: 100%; }
+.cards-deck-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; min-width: 0; }
+.cards-deck-name { flex: 1; min-width: 0; margin: 0; font-family: 'Cinzel', serif; font-size: 28px; line-height: 1.15; color: #f5f0e1; letter-spacing: 0.03em; cursor: pointer; text-align: center; overflow-wrap: anywhere; }
 .cards-name-input { flex: 1; background: transparent; border: 1px solid var(--gold); color: #f5f0e1; font-family: 'Cinzel', serif; font-size: 28px; padding: 4px 10px; text-align: center; }
 .cards-back-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3671,8 +3671,23 @@ body {
 .cards-add-form { display: flex; flex-direction: column; gap: 6px; }
 .cards-add-form .skill-add-input { padding: 8px 10px; }
 
-.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.card-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; padding: 8px 10px; border: 1px solid rgba(190, 158, 92, 0.25); align-items: center; }
+.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.card-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(190, 158, 92, 0.25);
+  align-items: center;
+  min-width: 0;
+}
+.card-row-front,
+.card-row-back {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
 .card-row-front { font-weight: 500; color: #f5f0e1; }
 .card-row-back { color: #cbbf9f; }
 
