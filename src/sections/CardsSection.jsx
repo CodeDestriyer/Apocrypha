@@ -390,15 +390,7 @@ function StudyView({ deck, onGrade, onExit, t }) {
         </div>
       </div>
 
-      {!shown ? (
-        <button className="cards-study-btn" onClick={() => setShown(true)}>{t('cards.show')}</button>
-      ) : (
-        <div className="cards-grade-row">
-          <button className="cards-grade again" onClick={() => grade('again')}>{t('cards.again')}</button>
-          <button className="cards-grade good"  onClick={() => grade('good')}>{t('cards.good')}</button>
-          <button className="cards-grade easy"  onClick={() => grade('easy')}>{t('cards.easy')}</button>
-        </div>
-      )}
+      <div className="cards-study-hint">{t('cards.swipeHint')}</div>
 
       <button className="cards-back-btn cards-study-exit" onClick={onExit}>
         <span className="cards-back-chevron">‹</span>
