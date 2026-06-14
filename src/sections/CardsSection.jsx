@@ -329,14 +329,15 @@ function StudyView({ deck, onGrade, onExit, t }) {
   return (
     <div className="cards-study">
       <div className="cards-progress">{idx + 1} / {queue.length}</div>
-      <div className="study-card" onClick={() => setShown(true)}>
-        <div className="study-card-front">{card.front}</div>
-        {shown && (
-          <>
-            <div className="divider" />
-            <div className="study-card-back">{card.back}</div>
-          </>
-        )}
+
+      <div className="study-card-stage">
+        <div
+          className={`study-card-inner ${shown ? 'flipped' : ''}`}
+          onClick={() => setShown(true)}
+        >
+          <div className="study-card-face study-card-front">{card.front}</div>
+          <div className="study-card-face study-card-back">{card.back}</div>
+        </div>
       </div>
 
       {!shown ? (
@@ -349,7 +350,10 @@ function StudyView({ deck, onGrade, onExit, t }) {
         </div>
       )}
 
-      <button className="cards-back" onClick={onExit}>‹ {t('cards.back')}</button>
+      <button className="cards-back-btn cards-study-exit" onClick={onExit}>
+        <span className="cards-back-chevron">‹</span>
+        <span>{t('cards.back')}</span>
+      </button>
     </div>
   );
 }
