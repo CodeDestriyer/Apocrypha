@@ -3,6 +3,8 @@ import { useLang, LANGS } from './i18n.jsx';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 
+const COURSE_URL = '#';
+
 function LangPicker() {
   const { lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
@@ -41,52 +43,38 @@ function tx(obj, lang) {
   return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
 }
 
-function TestsTab({ onStart }) {
+function TestsModal({ onStart, onClose }) {
   const { lang, t } = useLang();
   return (
-    <div className="landing-tests">
-      <p className="landing-tests-intro">{t('landing.testsIntro')}</p>
-      <ul className="landing-test-list">
-        {TESTS.map((test) => (
-          <li key={test.id} className="landing-test-card">
-            <div className="landing-test-meta">
-              <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
-              <p className="landing-test-short">{tx(test.short, lang)}</p>
-              <span className="landing-test-count">
-                {test.items.length} {t('landing.questions')}
-              </span>
-            </div>
-            <button className="landing-test-go" onClick={() => onStart(test)}>
-              {t('landing.takeTest')}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <p className="landing-tests-disclaimer">{t('test.disclaimer')}</p>
+    <div className="landing-modal-backdrop" onClick={onClose}>
+      <div className="landing-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="landing-modal-close" onClick={onClose} aria-label={t('test.close')}>×</button>
+        <p className="landing-tests-intro">{t('landing.testsIntro')}</p>
+        <ul className="landing-test-list">
+          {TESTS.map((test) => (
+            <li key={test.id} className="landing-test-card">
+              <div className="landing-test-meta">
+                <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
+                <p className="landing-test-short">{tx(test.short, lang)}</p>
+                <span className="landing-test-count">
+                  {test.items.length} {t('landing.questions')}
+                </span>
+              </div>
+              <button className="landing-test-go" onClick={() => onStart(test)}>
+                {t('landing.takeTest')}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p className="landing-tests-disclaimer">{t('test.disclaimer')}</p>
+      </div>
     </div>
   );
 }
 
-function AboutTab() {
+export default function Landing({ onLogin }) {
   const { t } = useLang();
-  return (
-    <>
-      <span className="landing-eyebrow">{t('landing.beta')}</span>
-      <h1 className="landing-title">Varkanis</h1>
-      <p className="landing-tagline">{t('landing.tagline')}</p>
-
-      <ul className="landing-features">
-        <li><span className="landing-bullet">✦</span><span>{t('landing.f1')}</span></li>
-        <li><span className="landing-bullet">✧</span><span>{t('landing.f2')}</span></li>
-        <li><span className="landing-bullet">☥</span><span>{t('landing.f3')}</span></li>
-      </ul>
-    </>
-  );
-}
-
-export default function Landing() {
-  const { t } = useLang();
-  const [tab, setTab] = useState('about');
+  const [showTests, setShowTests] = useState(false);
   const [activeTest, setActiveTest] = useState(null);
 
   return (
@@ -96,34 +84,35 @@ export default function Landing() {
         <LangPicker />
       </header>
 
-      <nav className="landing-tabs" role="tablist">
-        <button
-          role="tab"
-          aria-selected={tab === 'about'}
-          className={`landing-tab ${tab === 'about' ? 'active' : ''}`}
-          onClick={() => setTab('about')}
-        >
-          {t('landing.tab.about')}
-        </button>
-        <button
-          role="tab"
-          aria-selected={tab === 'tests'}
-          className={`landing-tab ${tab === 'tests' ? 'active' : ''}`}
-          onClick={() => setTab('tests')}
-        >
-          {t('landing.tab.tests')}
-        </button>
-      </nav>
+      <main className="landing-main landing-tree">
+        <h1 className="landing-title">Varkanis</h1>
 
-      <main className="landing-main">
-        {tab === 'about' ? <AboutTab /> : <TestsTab onStart={setActiveTest} />}
+        <div className="landing-links">
+          <button className="landing-link" onClick={() => setShowTests(true)}>
+            {t('landing.btn.test')}
+          </button>
+          <a className="landing-link" href={COURSE_URL} target="_blank" rel="noopener noreferrer">
+            {t('landing.btn.course')}
+          </a>
+          <button className="landing-link" onClick={onLogin}>
+            {t('landing.btn.app')}
+          </button>
+        </div>
       </main>
 
       <footer className="landing-foot">
         <span>© Varkanis</span>
       </footer>
 
-      {activeTest && <TestRunner test={activeTest} onClose={() => setActiveTest(null)} />}
+      {showTests && !activeTest && (
+        <TestsModal onStart={setActiveTest} onClose={() => setShowTests(false)} />
+      )}
+      {activeTest && (
+        <TestRunner
+          test={activeTest}
+          onClose={() => { setActiveTest(null); setShowTests(false); }}
+        />
+      )}
     </div>
   );
 }

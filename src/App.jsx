@@ -155,7 +155,7 @@ function Shell() {
     return <div className="splash"><div className="ornament">⚠</div><div className="error-text">{error}</div></div>;
   }
   if (status === 'unauthenticated') {
-    return showLogin ? <LoginScreen /> : <Landing />;
+    return showLogin ? <LoginScreen /> : <Landing onLogin={() => setShowLogin(true)} />;
   }
   if (status === 'need-name') {
     return <NameModal />;

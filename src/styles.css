@@ -904,6 +904,91 @@ body {
   .landing-features li:nth-child(3) { grid-column: 1 / -1; }
 }
 
+.landing-tree {
+  justify-content: center;
+  gap: 32px;
+  max-width: 480px;
+  padding-top: 8vh;
+}
+.landing-tree .landing-title {
+  font-size: clamp(48px, 11vw, 88px);
+  margin-bottom: 4px;
+}
+.landing-links {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.landing-link {
+  display: block;
+  width: 100%;
+  padding: 20px 24px;
+  background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
+  color: #fff8e6;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(14px, 2.4vw, 17px);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.22),
+    0 2px 0 rgba(255, 255, 255, 0.55) inset,
+    0 0 0 1px #d4b87a inset;
+  transition: transform 0.15s, filter 0.2s, box-shadow 0.2s;
+}
+.landing-link:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.3),
+    0 2px 0 rgba(255, 255, 255, 0.6) inset,
+    0 0 0 1px #e8c98a inset;
+}
+.landing-link:active { transform: translateY(0); }
+
+.landing-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 10, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6vh 16px;
+  z-index: 50;
+  overflow-y: auto;
+}
+.landing-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  background: #fffaee;
+  border: 1px solid #d6c9a8;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  padding: 28px 24px 24px;
+}
+.landing-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  color: #1b1814;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.landing-modal-close:hover { background: #ece4d2; }
+
 /* Settings logout */
 .settings-sep {
   height: 1px;
