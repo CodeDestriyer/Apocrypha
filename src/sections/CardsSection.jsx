@@ -390,8 +390,6 @@ function StudyView({ deck, onGrade, onExit, t }) {
         </div>
       </div>
 
-      <div className="cards-study-hint">{t('cards.swipeHint')}</div>
-
       <button className="cards-back-btn cards-study-exit" onClick={onExit}>
         <span className="cards-back-chevron">‹</span>
         <span>{t('cards.back')}</span>
