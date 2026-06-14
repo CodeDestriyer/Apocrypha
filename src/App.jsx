@@ -15,11 +15,13 @@ import TrackerSection from './sections/TrackerSection.jsx';
 import LooksmaxingSection from './sections/LooksmaxingSection.jsx';
 import MoneymaxingSection from './sections/MoneymaxingSection.jsx';
 import MenmaxingSection from './sections/MenmaxingSection.jsx';
+import CardsSection from './sections/CardsSection.jsx';
 
 const SUB_RENDER = {
   goals:       () => <GoalsSection />,
   skills:      () => <SkillsSection />,
   asceses:     () => <AscesesSection />,
+  cards:       () => <CardsSection />,
   moneymaxing: () => <MoneymaxingSection />,
   looksmaxing: () => <LooksmaxingSection />,
   menmaxing:   () => <MenmaxingSection />,
@@ -29,6 +31,7 @@ const SUB_TITLE_KEYS = {
   goals: 'nav.goals',
   skills: 'nav.skills',
   asceses: 'nav.asceses',
+  cards: 'nav.cards',
   moneymaxing: 'nav.moneymaxing',
   looksmaxing: 'nav.looksmaxing',
   menmaxing: 'nav.menmaxing',
@@ -38,6 +41,7 @@ const SIDEBAR_MODULES = [
   { id: 'goals',       icon: '✧', labelKey: 'nav.goals' },
   { id: 'skills',      icon: '✦', labelKey: 'nav.skills' },
   { id: 'asceses',     icon: '☥', labelKey: 'nav.asceses' },
+  { id: 'cards',       icon: '⌘', labelKey: 'nav.cards' },
 ];
 const SIDEBAR_MAXING = [
   { id: 'moneymaxing', icon: '❖', labelKey: 'nav.moneymaxing' },
@@ -48,7 +52,7 @@ const SIDEBAR_MAXING = [
 const MAXING_IDS = ['menmaxing', 'looksmaxing', 'moneymaxing'];
 // menmaxing routes to the merged Character/home view.
 const VIEW_FOR_MAXING = { menmaxing: 'home', looksmaxing: 'looksmaxing', moneymaxing: 'moneymaxing' };
-const CORE_SUB_IDS = ['goals', 'skills', 'asceses'];
+const CORE_SUB_IDS = ['goals', 'skills', 'asceses', 'cards'];
 const DEFAULT_HIDDEN_MAXING = ['moneymaxing', 'looksmaxing', 'menmaxing'];
 
 const BOTTOM_ICONS = {
