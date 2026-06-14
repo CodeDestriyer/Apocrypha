@@ -73,7 +73,13 @@ export function ProfileProvider({ children }) {
       }
     })();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Skip events that don't change identity — TOKEN_REFRESHED fires on tab
+      // refocus and would otherwise flip us through 'loading' → 'ready', which
+      // remounts the whole tree and wipes in-progress UI state (study session
+      // index, open deck, etc). USER_UPDATED and INITIAL_SESSION are also
+      // already handled by the getSession() bootstrap above.
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') return;
       handleSession(session);
     });
 
