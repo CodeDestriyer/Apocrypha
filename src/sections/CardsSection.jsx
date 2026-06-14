@@ -390,6 +390,22 @@ function StudyView({ deck, onGrade, onExit, t }) {
         </div>
       </div>
 
+      <div className="cards-nav-row">
+        <button
+          className="cards-nav-btn"
+          onClick={goPrev}
+          disabled={idx === 0}
+          aria-label={t('cards.prev')}
+        >‹</button>
+        <div className="cards-nav-counter">{idx + 1} / {queue.length}</div>
+        <button
+          className="cards-nav-btn"
+          onClick={goNext}
+          disabled={idx >= queue.length - 1}
+          aria-label={t('cards.next')}
+        >›</button>
+      </div>
+
       <button className="cards-back-btn cards-study-exit" onClick={onExit}>
         <span className="cards-back-chevron">‹</span>
         <span>{t('cards.back')}</span>

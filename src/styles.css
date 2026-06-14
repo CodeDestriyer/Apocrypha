@@ -3738,7 +3738,7 @@ body {
   width: 100%;
   min-height: 360px;
   transform-style: preserve-3d;
-  transition: transform 0.85s cubic-bezier(0.55, -0.25, 0.35, 1.25);
+  transition: transform 0.45s cubic-bezier(0.55, -0.2, 0.35, 1.2);
   cursor: pointer;
 }
 .study-card-inner.flipped { transform: rotateY(180deg) scale(1.02); }
@@ -3804,8 +3804,43 @@ body {
 
 .cards-study-exit { align-self: center; margin-top: 4px; }
 
+.cards-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 4px;
+}
+.cards-nav-btn {
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  background: rgba(245, 240, 225, 0.05);
+  border: 1px solid rgba(245, 240, 225, 0.22);
+  color: #f5f0e1;
+  font-family: serif;
+  font-size: 32px; line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  padding-bottom: 4px;
+}
+.cards-nav-btn:hover:not(:disabled) { background: rgba(245, 240, 225, 0.12); border-color: #f5f0e1; }
+.cards-nav-btn:active:not(:disabled) { transform: scale(0.94); }
+.cards-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.cards-nav-counter {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  color: #cbbf9f;
+  min-width: 64px;
+  text-align: center;
+}
+
 @media (max-width: 640px) {
   .cards-study { gap: 12px; min-height: 65vh; }
+  .cards-progress { display: none; }
+  .cards-nav-btn { width: 48px; height: 48px; font-size: 26px; }
+  .cards-nav-counter { font-size: 12px; }
   .study-card-inner { min-height: 280px; }
   .study-card-face {
     font-size: 20px;
