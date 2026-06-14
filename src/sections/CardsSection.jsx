@@ -309,6 +309,9 @@ function StudyView({ deck, onGrade, onExit, t }) {
   const queue = useMemo(() => deck.cards.filter(isDue), [deck.id]); // freeze queue at session start
   const [idx, setIdx] = useState(0);
   const [shown, setShown] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [animDir, setAnimDir] = useState(0); // -1 leaving left, +1 leaving right, 0 idle
+  const touch = useRef({ x: 0, y: 0, active: false });
   const card = queue[idx];
 
   if (!card) {
@@ -326,14 +329,61 @@ function StudyView({ deck, onGrade, onExit, t }) {
     setIdx((i) => i + 1);
   };
 
+  const goNext = () => { if (idx < queue.length - 1) { setShown(false); setIdx(idx + 1); } };
+  const goPrev = () => { if (idx > 0) { setShown(false); setIdx(idx - 1); } };
+
+  const onTouchStart = (e) => {
+    if (e.touches.length !== 1) return;
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true, locked: null };
+  };
+  const onTouchMove = (e) => {
+    if (!touch.current.active) return;
+    const dx = e.touches[0].clientX - touch.current.x;
+    const dy = e.touches[0].clientY - touch.current.y;
+    if (touch.current.locked == null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      touch.current.locked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+    if (touch.current.locked !== 'x') return;
+    setDragX(dx);
+  };
+  const onTouchEnd = () => {
+    if (!touch.current.active) return;
+    const dx = dragX;
+    touch.current.active = false;
+    const T = 60;
+    if (dx > T && idx < queue.length - 1) {
+      setAnimDir(1);
+      setTimeout(() => { setDragX(0); setAnimDir(0); goNext(); }, 180);
+    } else if (dx < -T && idx > 0) {
+      setAnimDir(-1);
+      setTimeout(() => { setDragX(0); setAnimDir(0); goPrev(); }, 180);
+    } else {
+      setDragX(0);
+    }
+  };
+
+  const stageStyle = animDir !== 0
+    ? { transform: `translateX(${animDir > 0 ? 110 : -110}%)`, opacity: 0, transition: 'transform 0.18s ease-out, opacity 0.18s ease-out' }
+    : dragX !== 0
+      ? { transform: `translateX(${dragX}px) rotate(${dragX * 0.02}deg)`, opacity: Math.max(0.3, 1 - Math.abs(dragX) / 350) }
+      : { transition: 'transform 0.25s ease-out, opacity 0.25s ease-out' };
+
   return (
     <div className="cards-study">
       <div className="cards-progress">{idx + 1} / {queue.length}</div>
 
-      <div className="study-card-stage">
+      <div
+        className="study-card-stage"
+        style={stageStyle}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
+      >
         <div
           className={`study-card-inner ${shown ? 'flipped' : ''}`}
-          onClick={() => setShown(true)}
+          onClick={() => { if (Math.abs(dragX) < 6) setShown(true); }}
         >
           <div className="study-card-face study-card-front">{card.front}</div>
           <div className="study-card-face study-card-back">{card.back}</div>
