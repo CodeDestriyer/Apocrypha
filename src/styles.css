@@ -3612,7 +3612,22 @@ body {
 
 .cards-deck { display: flex; flex-direction: column; gap: 14px; min-width: 0; max-width: 100%; }
 .cards-deck-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; min-width: 0; }
-.cards-deck-name { flex: 1; min-width: 0; margin: 0; font-family: 'Cinzel', serif; font-size: 28px; line-height: 1.15; color: #f5f0e1; letter-spacing: 0.03em; cursor: pointer; text-align: center; overflow-wrap: anywhere; }
+.cards-deck-name {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(16px, 6.2vw, 28px);
+  line-height: 1.15;
+  color: #f5f0e1;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cards-name-input { font-size: clamp(16px, 6.2vw, 28px) !important; }
 .cards-name-input { flex: 1; background: transparent; border: 1px solid var(--gold); color: #f5f0e1; font-family: 'Cinzel', serif; font-size: 28px; padding: 4px 10px; text-align: center; }
 .cards-back-btn {
   display: inline-flex; align-items: center; gap: 6px;

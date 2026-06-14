@@ -352,11 +352,11 @@ function StudyView({ deck, onGrade, onExit, t }) {
     const dx = dragX;
     touch.current.active = false;
     const T = 60;
-    if (dx > T && idx < queue.length - 1) {
-      setAnimDir(1);
-      setTimeout(() => { setDragX(0); setAnimDir(0); goNext(); }, 180);
-    } else if (dx < -T && idx > 0) {
+    if (dx < -T && idx < queue.length - 1) {
       setAnimDir(-1);
+      setTimeout(() => { setDragX(0); setAnimDir(0); goNext(); }, 180);
+    } else if (dx > T && idx > 0) {
+      setAnimDir(1);
       setTimeout(() => { setDragX(0); setAnimDir(0); goPrev(); }, 180);
     } else {
       setDragX(0);
