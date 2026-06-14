@@ -253,8 +253,14 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const [adding, setAdding] = useState(false);
   const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
 
+  const duplicate = useMemo(() => {
+    const f = front.trim().toLowerCase();
+    if (!f) return null;
+    return deck.cards.find((c) => (c.front ?? '').trim().toLowerCase() === f) ?? null;
+  }, [front, deck.cards]);
+
   const submitCard = () => {
-    if (!front.trim() || !back.trim()) return;
+    if (!front.trim() || !back.trim() || duplicate) return;
     onAddCard(front, back);
     setFront('');
     setBack('');
@@ -287,13 +293,19 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
         <div className="cards-panel">
           <label className="cards-field-label">{t('cards.frontSide')}</label>
           <textarea
-            className="cards-field-textarea"
+            className={`cards-field-textarea ${duplicate ? 'cards-field-textarea--error' : ''}`}
             value={front}
             autoFocus
             placeholder={t('cards.frontPlaceholder')}
             onChange={(e) => setFront(e.target.value)}
             rows={3}
           />
+          {duplicate && (
+            <div className="cards-dup-warn">
+              <span className="cards-dup-warn-title">{t('cards.dupTitle')}</span>
+              <span className="cards-dup-warn-back">{duplicate.back}</span>
+            </div>
+          )}
           <label className="cards-field-label">{t('cards.backSide')}</label>
           <textarea
             className="cards-field-textarea"
@@ -309,7 +321,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
             <button className="cards-secondary-btn" onClick={() => { setAdding(false); setFront(''); setBack(''); }}>
               {t('cards.cancel')}
             </button>
-            <button className="cards-primary-btn" onClick={submitCard} disabled={!front.trim() || !back.trim()}>
+            <button className="cards-primary-btn" onClick={submitCard} disabled={!front.trim() || !back.trim() || !!duplicate}>
               {t('cards.addCard')}
             </button>
           </div>

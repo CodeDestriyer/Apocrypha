@@ -3986,3 +3986,16 @@ body {
 }
 .sub-header .cards-gear { margin-left: 4px; }
 .sub-header .cards-gear-btn { width: 34px; height: 34px; }
+
+/* Duplicate card warning */
+.cards-field-textarea--error { border-color: #d97a7a !important; background: rgba(217, 122, 122, 0.06) !important; }
+.cards-dup-warn {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: -4px;
+  padding: 8px 10px;
+  border-left: 2px solid #d97a7a;
+  background: rgba(217, 122, 122, 0.08);
+  font-size: 13px;
+}
+.cards-dup-warn-title { color: #d97a7a; font-family: 'Cinzel', serif; letter-spacing: 0.04em; }
+.cards-dup-warn-back { color: #f5f0e1; font-weight: 500; }
