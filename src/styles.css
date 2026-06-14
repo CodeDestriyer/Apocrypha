@@ -3706,6 +3706,15 @@ body {
 .card-row-front { font-weight: 500; color: #f5f0e1; }
 .card-row-back { color: #cbbf9f; }
 
+.card-row-gear { display: flex; align-items: center; }
+.cards-gear-btn--sm { width: 28px; height: 28px; border-radius: 6px; padding: 0; color: #8a7d63; background: transparent; border-color: transparent; }
+.cards-gear-btn--sm:hover { background: rgba(245, 240, 225, 0.08); color: #f5f0e1; transform: none; }
+.cards-gear-menu--right { right: 0; left: auto; min-width: 150px; }
+
+.card-row-editing { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: rgba(245, 240, 225, 0.04); }
+.card-row-editing .cards-field-textarea { font-size: 14px; padding: 8px 10px; }
+.card-row-editing .cards-panel-actions { margin-top: 2px; }
+
 @media (max-width: 640px) {
   /* tighter outer frame for the Cards subpage so the section doesn't
      hog the screen edges */

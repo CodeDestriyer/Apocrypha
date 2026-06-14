@@ -94,6 +94,7 @@ export default function CardsSection() {
         onStudy={() => setStudyDeckId(deck.id)}
         onAddCard={(f, b) => addCard(deck.id, f, b)}
         onRemoveCard={(cardId) => removeCard(deck.id, cardId)}
+        onEditCard={(cardId, patch) => updateCard(deck.id, cardId, patch)}
         onRename={(name) => renameDeck(deck.id, name)}
         onDelete={() => { removeDeck(deck.id); setOpenDeckId(null); }}
         t={t}
@@ -179,7 +180,7 @@ function DeckList({ decks, onOpen, onAdd, t }) {
   );
 }
 
-function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, onDelete, t }) {
+function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onEditCard, onRename, onDelete, t }) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
   const [adding, setAdding] = useState(false);
@@ -256,11 +257,13 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
 
       <ul className="cards-list">
         {deck.cards.map((c) => (
-          <li key={c.id} className="card-row">
-            <div className="card-row-front">{c.front}</div>
-            <div className="card-row-back">{c.back}</div>
-            <button className="remove" onClick={() => onRemoveCard(c.id)}>✕</button>
-          </li>
+          <CardRow
+            key={c.id}
+            card={c}
+            onRemove={() => onRemoveCard(c.id)}
+            onUpdate={(patch) => onEditCard(c.id, patch)}
+            t={t}
+          />
         ))}
       </ul>
 
@@ -305,8 +308,93 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
   );
 }
 
+const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
+
+function CardRow({ card, onRemove, onUpdate, t }) {
+  const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [front, setFront] = useState(card.front);
+  const [back, setBack] = useState(card.back);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
+
+  const startEdit = () => { setFront(card.front); setBack(card.back); setEditing(true); };
+  const save = () => {
+    if (!front.trim() || !back.trim()) return;
+    onUpdate({ front: front.trim(), back: back.trim() });
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <li className="card-row card-row-editing">
+        <textarea
+          className="cards-field-textarea"
+          value={front}
+          autoFocus
+          onChange={(e) => setFront(e.target.value)}
+          rows={2}
+        />
+        <textarea
+          className="cards-field-textarea"
+          value={back}
+          onChange={(e) => setBack(e.target.value)}
+          rows={2}
+        />
+        <div className="cards-panel-actions">
+          <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
+          <button className="cards-primary-btn" onClick={save} disabled={!front.trim() || !back.trim()}>{t('cards.save')}</button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="card-row">
+      <div className="card-row-front">{card.front}</div>
+      <div className="card-row-back">{card.back}</div>
+      <div className="cards-gear card-row-gear" ref={menuRef}>
+        <button
+          className="cards-gear-btn cards-gear-btn--sm"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label={t('cards.cardSettings')}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d={GEAR_PATH}/>
+          </svg>
+        </button>
+        {menuOpen && (
+          <div className="cards-gear-menu cards-gear-menu--right">
+            <button className="cards-gear-item" onClick={() => { setMenuOpen(false); startEdit(); }}>
+              {t('cards.editCard')}
+            </button>
+            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); onRemove(); }}>
+              {t('cards.deleteCard')}
+            </button>
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function StudyView({ deck, onGrade, onExit, t }) {
-  const queue = useMemo(() => deck.cards.filter(isDue), [deck.id]); // freeze queue at session start
+  const queue = useMemo(() => {
+    const arr = deck.cards.filter(isDue);
+    // Fisher-Yates shuffle for random study order
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [deck.id]); // freeze queue at session start
   const [idx, setIdx] = useState(0);
   const [shown, setShown] = useState(false);
   const [dragX, setDragX] = useState(0);
