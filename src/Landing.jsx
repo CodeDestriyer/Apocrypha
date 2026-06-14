@@ -89,13 +89,16 @@ export default function Landing({ onLogin }) {
 
         <div className="landing-links">
           <button className="landing-link" onClick={() => setShowTests(true)}>
-            {t('landing.btn.test')}
+            <img className="landing-link-icon" src="/testlogo.jpg" alt="" aria-hidden="true" />
+            <span className="landing-link-text">{t('landing.btn.test')}</span>
           </button>
           <a className="landing-link" href={COURSE_URL} target="_blank" rel="noopener noreferrer">
-            {t('landing.btn.course')}
+            <img className="landing-link-icon" src="/courcelogo.jpg" alt="" aria-hidden="true" />
+            <span className="landing-link-text">{t('landing.btn.course')}</span>
           </a>
           <button className="landing-link" onClick={onLogin}>
-            {t('landing.btn.app')}
+            <img className="landing-link-icon" src="/applogo.jpg" alt="" aria-hidden="true" />
+            <span className="landing-link-text">{t('landing.btn.app')}</span>
           </button>
         </div>
       </main>
