@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 
@@ -185,7 +185,16 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
   const [adding, setAdding] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(deck.name);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
 
   const submitCard = () => {
     if (!front.trim() || !back.trim()) return;
@@ -198,7 +207,10 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
   return (
     <div className="cards-deck">
       <div className="cards-deck-head">
-        <button className="cards-back" onClick={onBack}>‹ {t('cards.back')}</button>
+        <button className="cards-back-btn" onClick={onBack} aria-label={t('cards.back')}>
+          <span className="cards-back-chevron">‹</span>
+          <span>{t('cards.back')}</span>
+        </button>
         {editingName ? (
           <input
             className="cards-name-input"
@@ -214,7 +226,24 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
         ) : (
           <h2 className="cards-deck-name" onClick={() => setEditingName(true)}>{deck.name}</h2>
         )}
-        <button className="remove cards-delete" onClick={onDelete} title={t('cards.deleteDeck')}>✕</button>
+        <div className="cards-gear" ref={menuRef}>
+          <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('cards.deckSettings')}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="cards-gear-menu">
+              <button className="cards-gear-item" onClick={() => { setMenuOpen(false); setEditingName(true); }}>
+                {t('cards.renameDeck')}
+              </button>
+              <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); onDelete(); }}>
+                {t('cards.deleteDeck')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <button
