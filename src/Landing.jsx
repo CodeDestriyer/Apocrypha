@@ -3,7 +3,14 @@ import { useLang, LANGS } from './i18n.jsx';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 
-const COURSE_URL = '#';
+const COURSES = [
+  {
+    id: 'mentes-bajo-control',
+    title: 'Mentes Bajo Control: Manipulación Social',
+    short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
+    url: null,
+  },
+];
 
 const FLAG_SVG = {
   ru: (
@@ -73,11 +80,10 @@ function tx(obj, lang) {
   return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
 }
 
-function TestsPage({ onStart, onBack }) {
+function TestsPage({ onStart }) {
   const { lang, t } = useLang();
   return (
     <main className="landing-main landing-tests-page">
-      <button className="landing-back" onClick={onBack}>{t('landing.back')}</button>
       <p className="landing-tests-intro">{t('landing.testsIntro')}</p>
       <ul className="landing-test-list">
         {TESTS.map((test) => (
@@ -100,19 +106,49 @@ function TestsPage({ onStart, onBack }) {
   );
 }
 
+function CoursesPage() {
+  const { lang, t } = useLang();
+  return (
+    <main className="landing-main landing-tests-page">
+      <p className="landing-tests-intro">{t('landing.coursesIntro')}</p>
+      <ul className="landing-test-list">
+        {COURSES.map((course) => (
+          <li key={course.id} className="landing-test-card">
+            <div className="landing-test-meta">
+              <h3 className="landing-test-title">{course.title}</h3>
+              <p className="landing-test-short">{tx(course.short, lang)}</p>
+            </div>
+            <button className="landing-test-go" disabled>
+              {t('landing.courseSoon')}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+
 export default function Landing({ onLogin }) {
   const { t } = useLang();
   const [view, setView] = useState('home');
   const [activeTest, setActiveTest] = useState(null);
 
+  const isHome = view === 'home';
+
   return (
     <div className="landing">
       <header className="landing-nav">
-        <span className="landing-brand">Varkanis</span>
+        {isHome ? (
+          <span className="landing-brand">Varkanis</span>
+        ) : (
+          <button className="landing-back" onClick={() => setView('home')}>
+            {t('landing.back')}
+          </button>
+        )}
         <LangPicker />
       </header>
 
-      {view === 'home' ? (
+      {isHome && (
         <main className="landing-main landing-tree">
           <h1 className="landing-title">Varkanis</h1>
 
@@ -121,19 +157,19 @@ export default function Landing({ onLogin }) {
               <span className="landing-link-text">{t('landing.btn.test')}</span>
               <img className="landing-link-icon" src="/testlogo.jpg" alt="" aria-hidden="true" />
             </button>
-            <a className="landing-link" href={COURSE_URL} target="_blank" rel="noopener noreferrer">
+            <button className="landing-link" onClick={() => setView('courses')}>
               <span className="landing-link-text">{t('landing.btn.course')}</span>
               <img className="landing-link-icon" src="/courcelogo.jpg" alt="" aria-hidden="true" />
-            </a>
+            </button>
             <button className="landing-link" onClick={onLogin}>
               <span className="landing-link-text">{t('landing.btn.app')}</span>
               <img className="landing-link-icon" src="/applogo.jpg" alt="" aria-hidden="true" />
             </button>
           </div>
         </main>
-      ) : (
-        <TestsPage onStart={setActiveTest} onBack={() => setView('home')} />
       )}
+      {view === 'tests' && <TestsPage onStart={setActiveTest} />}
+      {view === 'courses' && <CoursesPage />}
 
       <footer className="landing-foot">
         <span>© Varkanis</span>
