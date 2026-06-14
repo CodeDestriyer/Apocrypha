@@ -3599,3 +3599,78 @@ body {
 .cards-grade:hover { filter: brightness(1.15); }
 
 .cards-study-done { text-align: center; padding: 32px; font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold); }
+
+/* ─── Cards: big add buttons + add-panel ─────────────── */
+.cards-big-add {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; margin: 18px 0 4px;
+  padding: 18px 24px;
+  background: transparent;
+  border: 1.5px dashed var(--gold);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+}
+.cards-big-add:hover { background: rgba(190, 158, 92, 0.08); border-style: solid; }
+.cards-big-add:active { transform: scale(0.99); }
+.cards-big-add-plus {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px;
+  border: 1.5px solid var(--gold);
+  border-radius: 50%;
+  font-family: serif; font-size: 22px; line-height: 1;
+  padding-bottom: 2px;
+}
+
+.cards-panel {
+  display: flex; flex-direction: column; gap: 10px;
+  margin: 18px 0 4px;
+  padding: 18px 18px 20px;
+  border: 1px solid var(--gold);
+  background: rgba(190, 158, 92, 0.04);
+}
+.cards-field-label {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a7d63;
+}
+.cards-field-input,
+.cards-field-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(190, 158, 92, 0.35);
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  resize: vertical;
+}
+.cards-field-input:focus,
+.cards-field-textarea:focus { outline: none; border-color: var(--gold); }
+
+.cards-panel-actions {
+  display: flex; gap: 10px; justify-content: center; margin-top: 6px;
+}
+.cards-primary-btn,
+.cards-secondary-btn {
+  flex: 1; max-width: 220px;
+  padding: 12px 18px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cards-primary-btn {
+  background: var(--gold); border: 1px solid var(--gold); color: #1a140a;
+  font-weight: 600;
+}
+.cards-primary-btn:hover { filter: brightness(1.1); }
+.cards-primary-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+.cards-secondary-btn {
+  background: transparent; border: 1px solid rgba(190, 158, 92, 0.35); color: #8a7d63;
+}
+.cards-secondary-btn:hover { border-color: var(--gold); color: var(--gold); }

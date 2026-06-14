@@ -114,38 +114,16 @@ export default function CardsSection() {
 function DeckList({ decks, onOpen, onAdd, t }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onAdd(name);
+    setName('');
+    setAdding(false);
+  };
+
   return (
     <>
-      <div className={`skill-add ${adding ? 'open' : ''}`}>
-        <button
-          type="button"
-          className="skill-add-toggle"
-          onClick={() => setAdding((o) => !o)}
-          aria-label={t('cards.newDeck')}
-        >+</button>
-        <div className="skill-add-slot">
-          <input
-            className="skill-add-input"
-            placeholder={t('cards.newDeck')}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') { onAdd(name); setName(''); setAdding(false); }
-              if (e.key === 'Escape') { setAdding(false); setName(''); }
-            }}
-            maxLength={48}
-            ref={(el) => { if (adding && el && document.activeElement !== el) el.focus(); }}
-            tabIndex={adding ? 0 : -1}
-          />
-          <button
-            className="add-btn"
-            onClick={() => { onAdd(name); setName(''); setAdding(false); }}
-            disabled={!name.trim()}
-            tabIndex={adding ? 0 : -1}
-          >✓</button>
-        </div>
-      </div>
-
       {decks.length === 0 && (
         <div className="empty-hint">{t('cards.empty')}</div>
       )}
@@ -166,6 +144,37 @@ function DeckList({ decks, onOpen, onAdd, t }) {
           );
         })}
       </ul>
+
+      {adding ? (
+        <div className="cards-panel">
+          <label className="cards-field-label">{t('cards.newDeck')}</label>
+          <input
+            className="cards-field-input"
+            value={name}
+            autoFocus
+            placeholder={t('cards.deckNamePlaceholder')}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submit();
+              if (e.key === 'Escape') { setAdding(false); setName(''); }
+            }}
+            maxLength={48}
+          />
+          <div className="cards-panel-actions">
+            <button className="cards-secondary-btn" onClick={() => { setAdding(false); setName(''); }}>
+              {t('cards.cancel')}
+            </button>
+            <button className="cards-primary-btn" onClick={submit} disabled={!name.trim()}>
+              {t('cards.create')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button className="cards-big-add" onClick={() => setAdding(true)}>
+          <span className="cards-big-add-plus">+</span>
+          <span>{t('cards.newDeck')}</span>
+        </button>
+      )}
     </>
   );
 }
@@ -173,9 +182,18 @@ function DeckList({ decks, onOpen, onAdd, t }) {
 function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, onDelete, t }) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const [adding, setAdding] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(deck.name);
   const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
+
+  const submitCard = () => {
+    if (!front.trim() || !back.trim()) return;
+    onAddCard(front, back);
+    setFront('');
+    setBack('');
+    setAdding(false);
+  };
 
   return (
     <div className="cards-deck">
@@ -207,31 +225,6 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
         {t('cards.study')} · {dueCount}
       </button>
 
-      <div className="cards-add-form">
-        <input
-          className="skill-add-input"
-          placeholder={t('cards.frontSide')}
-          value={front}
-          onChange={(e) => setFront(e.target.value)}
-        />
-        <input
-          className="skill-add-input"
-          placeholder={t('cards.backSide')}
-          value={back}
-          onChange={(e) => setBack(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && front.trim() && back.trim()) {
-              onAddCard(front, back); setFront(''); setBack('');
-            }
-          }}
-        />
-        <button
-          className="add-btn"
-          onClick={() => { onAddCard(front, back); setFront(''); setBack(''); }}
-          disabled={!front.trim() || !back.trim()}
-        >+ {t('cards.addCard')}</button>
-      </div>
-
       <ul className="cards-list">
         {deck.cards.map((c) => (
           <li key={c.id} className="card-row">
@@ -241,6 +234,44 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
           </li>
         ))}
       </ul>
+
+      {adding ? (
+        <div className="cards-panel">
+          <label className="cards-field-label">{t('cards.frontSide')}</label>
+          <textarea
+            className="cards-field-textarea"
+            value={front}
+            autoFocus
+            placeholder={t('cards.frontPlaceholder')}
+            onChange={(e) => setFront(e.target.value)}
+            rows={3}
+          />
+          <label className="cards-field-label">{t('cards.backSide')}</label>
+          <textarea
+            className="cards-field-textarea"
+            value={back}
+            placeholder={t('cards.backPlaceholder')}
+            onChange={(e) => setBack(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitCard();
+            }}
+            rows={3}
+          />
+          <div className="cards-panel-actions">
+            <button className="cards-secondary-btn" onClick={() => { setAdding(false); setFront(''); setBack(''); }}>
+              {t('cards.cancel')}
+            </button>
+            <button className="cards-primary-btn" onClick={submitCard} disabled={!front.trim() || !back.trim()}>
+              {t('cards.addCard')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button className="cards-big-add" onClick={() => setAdding(true)}>
+          <span className="cards-big-add-plus">+</span>
+          <span>{t('cards.newCard')}</span>
+        </button>
+      )}
     </div>
   );
 }
