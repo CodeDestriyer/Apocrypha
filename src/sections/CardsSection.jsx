@@ -170,7 +170,7 @@ function DeckList({ decks, onOpen, onAdd, t }) {
           </div>
         </div>
       ) : (
-        <button className="cards-big-add" onClick={() => setAdding(true)}>
+        <button className="cards-big-add cards-big-add--deck" onClick={() => setAdding(true)}>
           <span className="cards-big-add-plus">+</span>
           <span>{t('cards.newDeck')}</span>
         </button>
@@ -267,7 +267,7 @@ function DeckView({ deck, onBack, onStudy, onAddCard, onRemoveCard, onRename, on
           </div>
         </div>
       ) : (
-        <button className="cards-big-add" onClick={() => setAdding(true)}>
+        <button className="cards-big-add cards-big-add--card" onClick={() => setAdding(true)}>
           <span className="cards-big-add-plus">+</span>
           <span>{t('cards.newCard')}</span>
         </button>

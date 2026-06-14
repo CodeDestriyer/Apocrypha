@@ -3584,10 +3584,18 @@ body {
 }
 
 /* ─── Cards (Anki-like) ─────────────────────────────── */
-.deck-row { cursor: pointer; }
-.deck-row:hover { background: rgba(127, 184, 199, 0.06); }
-.deck-counts { font-family: 'Cinzel', serif; font-size: 14px; color: #8a7d63; }
+.deck-row {
+  cursor: pointer;
+  padding: 18px 20px !important;
+  border: 1px solid rgba(245, 240, 225, 0.18) !important;
+  background: linear-gradient(180deg, rgba(245, 240, 225, 0.04), rgba(245, 240, 225, 0.01)) !important;
+  transition: background 0.15s, border-color 0.15s;
+}
+.deck-row:hover { background: rgba(245, 240, 225, 0.08) !important; border-color: rgba(245, 240, 225, 0.45) !important; }
+.deck-row .skill-name { color: #f5f0e1; font-size: 17px; letter-spacing: 0.04em; }
+.deck-counts { font-family: 'Cinzel', serif; font-size: 15px; color: #cbbf9f; }
 .deck-due { color: var(--gold); font-weight: 600; }
+.deck-total { color: #8a7d63; margin-left: 2px; }
 .empty-hint { text-align: center; color: #8a7d63; padding: 24px 8px; font-style: italic; }
 
 .cards-deck { display: flex; flex-direction: column; gap: 14px; }
@@ -3634,29 +3642,45 @@ body {
 
 .cards-study-done { text-align: center; padding: 32px; font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold); }
 
-/* ─── Cards: big add buttons + add-panel ─────────────── */
+/* ─── Cards: add buttons + add-panel ─────────────── */
 .cards-big-add {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  width: 100%; margin: 18px 0 4px;
-  padding: 18px 24px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  margin: 14px auto 4px;
+  padding: 10px 22px;
   background: transparent;
-  border: 1.5px dashed var(--gold);
-  color: var(--gold);
   font-family: 'Cinzel', serif;
-  font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.05s;
 }
-.cards-big-add:hover { background: rgba(190, 158, 92, 0.08); border-style: solid; }
 .cards-big-add:active { transform: scale(0.99); }
 .cards-big-add-plus {
   display: inline-grid; place-items: center;
-  width: 28px; height: 28px;
-  border: 1.5px solid var(--gold);
+  width: 22px; height: 22px;
   border-radius: 50%;
-  font-family: serif; font-size: 22px; line-height: 1;
+  font-family: serif; font-size: 18px; line-height: 1;
   padding-bottom: 2px;
 }
+/* deck button: outlined, gold, dashed */
+.cards-big-add--deck {
+  display: flex; width: 100%;
+  border: 1.5px dashed var(--gold);
+  color: var(--gold);
+  padding: 14px 22px;
+}
+.cards-big-add--deck:hover { background: rgba(190, 158, 92, 0.08); border-style: solid; }
+.cards-big-add--deck .cards-big-add-plus { border: 1.5px solid var(--gold); }
+/* card button: ghost text, white, compact, no border */
+.cards-big-add--card {
+  display: flex; width: fit-content;
+  color: #f5f0e1;
+  border: 1px solid rgba(245, 240, 225, 0.25);
+  background: rgba(245, 240, 225, 0.03);
+}
+.cards-big-add--card:hover { border-color: #f5f0e1; background: rgba(245, 240, 225, 0.08); }
+.cards-big-add--card .cards-big-add-plus { border: 1px solid currentColor; }
+.cards-deck { align-items: stretch; }
+.cards-deck .cards-big-add--card { align-self: center; }
 
 .cards-panel {
   display: flex; flex-direction: column; gap: 10px;
