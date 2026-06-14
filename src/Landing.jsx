@@ -94,6 +94,7 @@ export default function Landing({ onLogin }) {
           </button>
           <a className="landing-link" href={COURSE_URL} target="_blank" rel="noopener noreferrer">
             <span className="landing-link-text">{t('landing.btn.course')}</span>
+            <img className="landing-link-icon" src="/courcelogo.jpg" alt="" aria-hidden="true" />
           </a>
           <button className="landing-link" onClick={onLogin}>
             <span className="landing-link-text">{t('landing.btn.app')}</span>
