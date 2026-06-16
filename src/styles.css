@@ -4071,3 +4071,61 @@ body {
   .study-card-note { font-size: 14px; bottom: 20px; left: 16px; right: 16px; padding-top: 10px; }
   .study-card-note::before { width: 44px; margin-bottom: 10px; }
 }
+
+/* ─── Cards: search in deck ─────────────────────────── */
+.cards-search { display: flex; justify-content: flex-end; }
+.cards-search-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(245, 240, 225, 0.18);
+  color: #8a7d63;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.cards-search-btn:hover { color: #f5f0e1; border-color: rgba(245, 240, 225, 0.5); background: rgba(245, 240, 225, 0.04); }
+.cards-search.open {
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(245, 240, 225, 0.28);
+  background: rgba(245, 240, 225, 0.04);
+  justify-content: flex-start;
+}
+.cards-search-glyph { color: #cbbf9f; flex-shrink: 0; }
+.cards-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f5f0e1;
+  font: inherit;
+  font-size: 14px;
+  padding: 4px 0;
+}
+.cards-search-input::placeholder { color: #8a7d63; font-style: italic; }
+.cards-search-close {
+  background: transparent;
+  border: none;
+  color: #8a7d63;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.cards-search-close:hover { color: #f5f0e1; }
+.cards-search-empty {
+  list-style: none;
+  text-align: center;
+  color: #8a7d63;
+  font-style: italic;
+  padding: 18px;
+  border: 1px dashed rgba(245, 240, 225, 0.12);
+}
