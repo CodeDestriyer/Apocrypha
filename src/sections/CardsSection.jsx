@@ -68,11 +68,13 @@ export default function CardsSection({ rootOnBack }) {
   const renameDeck = (id, name) =>
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, name } : x)));
 
-  const addCard = (deckId, front, back) => {
+  const addCard = (deckId, front, back, note) => {
     const f = front.trim(); const b = back.trim();
     if (!f || !b) return;
+    const card = { id: newId(), front: f, back: b, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 };
+    if (note && note.trim()) card.note = note.trim();
     setDecks((d) => d.map((x) => x.id === deckId
-      ? { ...x, cards: [...x.cards, { id: newId(), front: f, back: b, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 }] }
+      ? { ...x, cards: [...x.cards, card] }
       : x));
   };
   const removeCard = (deckId, cardId) =>
@@ -155,7 +157,7 @@ export default function CardsSection({ rootOnBack }) {
       <DeckView
         deck={currentDeck}
         onStudy={() => setStudyDeckId(currentDeck.id)}
-        onAddCard={(f, b) => addCard(currentDeck.id, f, b)}
+        onAddCard={(f, b, n) => addCard(currentDeck.id, f, b, n)}
         onRemoveCard={(cardId) => removeCard(currentDeck.id, cardId)}
         onEditCard={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
         t={t}
@@ -250,6 +252,8 @@ function DeckList({ decks, onOpen, onAdd, t }) {
 function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const [note, setNote] = useState('');
+  const [noteOpen, setNoteOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
 
@@ -259,12 +263,15 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
     return deck.cards.find((c) => (c.front ?? '').trim().toLowerCase() === f) ?? null;
   }, [front, deck.cards]);
 
+  const closeAdd = () => {
+    setAdding(false);
+    setFront(''); setBack(''); setNote(''); setNoteOpen(false);
+  };
+
   const submitCard = () => {
     if (!front.trim() || !back.trim() || duplicate) return;
-    onAddCard(front, back);
-    setFront('');
-    setBack('');
-    setAdding(false);
+    onAddCard(front, back, note.trim() || undefined);
+    closeAdd();
   };
 
   return (
@@ -317,8 +324,28 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
             }}
             rows={3}
           />
+
+          {noteOpen ? (
+            <>
+              <div className="cards-note-head">
+                <label className="cards-field-label">{t('cards.note')}</label>
+                <button className="cards-note-collapse" onClick={() => setNoteOpen(false)}>{t('cards.hide')}</button>
+              </div>
+              <textarea
+                className="cards-field-textarea cards-field-textarea--note"
+                value={note}
+                placeholder={t('cards.notePlaceholder')}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                autoFocus
+              />
+            </>
+          ) : (
+            <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
+          )}
+
           <div className="cards-panel-actions">
-            <button className="cards-secondary-btn" onClick={() => { setAdding(false); setFront(''); setBack(''); }}>
+            <button className="cards-secondary-btn" onClick={closeAdd}>
               {t('cards.cancel')}
             </button>
             <button className="cards-primary-btn" onClick={submitCard} disabled={!front.trim() || !back.trim() || !!duplicate}>
@@ -341,6 +368,8 @@ function CardRow({ card, onRemove, onUpdate, t }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [front, setFront] = useState(card.front);
   const [back, setBack] = useState(card.back);
+  const [note, setNote] = useState(card.note ?? '');
+  const [noteOpen, setNoteOpen] = useState(!!card.note);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -350,10 +379,14 @@ function CardRow({ card, onRemove, onUpdate, t }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
 
-  const startEdit = () => { setFront(card.front); setBack(card.back); setEditing(true); };
+  const startEdit = () => {
+    setFront(card.front); setBack(card.back);
+    setNote(card.note ?? ''); setNoteOpen(!!card.note);
+    setEditing(true);
+  };
   const save = () => {
     if (!front.trim() || !back.trim()) return;
-    onUpdate({ front: front.trim(), back: back.trim() });
+    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null });
     setEditing(false);
   };
 
@@ -373,6 +406,23 @@ function CardRow({ card, onRemove, onUpdate, t }) {
           onChange={(e) => setBack(e.target.value)}
           rows={2}
         />
+        {noteOpen ? (
+          <>
+            <div className="cards-note-head">
+              <label className="cards-field-label">{t('cards.note')}</label>
+              <button className="cards-note-collapse" onClick={() => { setNoteOpen(false); setNote(''); }}>{t('cards.hide')}</button>
+            </div>
+            <textarea
+              className="cards-field-textarea cards-field-textarea--note"
+              value={note}
+              placeholder={t('cards.notePlaceholder')}
+              onChange={(e) => setNote(e.target.value)}
+              rows={2}
+            />
+          </>
+        ) : (
+          <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
+        )}
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={save} disabled={!front.trim() || !back.trim()}>{t('cards.save')}</button>
@@ -492,7 +542,10 @@ function StudyView({ deck, onGrade, t }) {
           onClick={() => { if (Math.abs(dragX) < 6) setShown((s) => !s); }}
         >
           <div className="study-card-face study-card-front">{card.front}</div>
-          <div className="study-card-face study-card-back">{card.back}</div>
+          <div className="study-card-face study-card-back">
+            <div className="study-card-back-main">{card.back}</div>
+            {card.note && <div className="study-card-note">{card.note}</div>}
+          </div>
         </div>
       </div>
 
