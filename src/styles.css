@@ -1475,7 +1475,19 @@ body {
   letter-spacing: 0.04em;
 }
 
-.sub-page { width: min(480px, 100%); max-width: 100%; min-width: 0; }
+.sub-page {
+  width: min(480px, 100%);
+  max-width: 100%;
+  min-width: 0;
+  /* Be content-sized in any layout context. In .desktop-content (flex row with
+     align-items: stretch) the default would stretch us to viewport height,
+     which on long deck/card lists shows the blue board ending mid-list while
+     overflowed children sit on the page background below. */
+  align-self: flex-start;
+  height: auto;
+  min-height: 0;
+  flex: 0 0 auto;
+}
 
 .sub-header {
   display: grid;
