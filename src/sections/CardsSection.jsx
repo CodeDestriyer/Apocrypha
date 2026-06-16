@@ -37,13 +37,21 @@ const isDue = (card) => !card.due || card.due <= todayISO();
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
+// Module-level cache so the in-progress deck/study screen and the unsaved
+// add-card draft survive when the user switches to another sidebar tab and
+// comes back (which unmounts/remounts CardsSection).
+const _nav = { openDeckId: null, studyDeckId: null };
+const _drafts = new Map(); // deckId -> { front, back, note, adding, noteOpen }
+
 export default function CardsSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const decks = profile.decks ?? [];
 
-  const [openDeckId, setOpenDeckId] = useState(null);
-  const [studyDeckId, setStudyDeckId] = useState(null);
+  const [openDeckId, _setOpenDeckId] = useState(_nav.openDeckId);
+  const [studyDeckId, _setStudyDeckId] = useState(_nav.studyDeckId);
+  const setOpenDeckId = (v) => { _nav.openDeckId = v; _setOpenDeckId(v); };
+  const setStudyDeckId = (v) => { _nav.studyDeckId = v; _setStudyDeckId(v); };
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
@@ -250,11 +258,21 @@ function DeckList({ decks, onOpen, onAdd, t }) {
 }
 
 function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
-  const [front, setFront] = useState('');
-  const [back, setBack] = useState('');
-  const [note, setNote] = useState('');
-  const [noteOpen, setNoteOpen] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const draft = _drafts.get(deck.id) ?? { front: '', back: '', note: '', adding: false, noteOpen: false };
+  const [front, _setFront] = useState(draft.front);
+  const [back, _setBack] = useState(draft.back);
+  const [note, _setNote] = useState(draft.note);
+  const [noteOpen, _setNoteOpen] = useState(draft.noteOpen);
+  const [adding, _setAdding] = useState(draft.adding);
+  const persist = (patch) => {
+    const cur = _drafts.get(deck.id) ?? { front: '', back: '', note: '', adding: false, noteOpen: false };
+    _drafts.set(deck.id, { ...cur, ...patch });
+  };
+  const setFront = (v) => { persist({ front: v }); _setFront(v); };
+  const setBack = (v) => { persist({ back: v }); _setBack(v); };
+  const setNote = (v) => { persist({ note: v }); _setNote(v); };
+  const setNoteOpen = (v) => { persist({ noteOpen: v }); _setNoteOpen(v); };
+  const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
 
   const duplicate = useMemo(() => {
@@ -266,6 +284,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const closeAdd = () => {
     setAdding(false);
     setFront(''); setBack(''); setNote(''); setNoteOpen(false);
+    _drafts.delete(deck.id);
   };
 
   const submitCard = () => {
