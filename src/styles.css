@@ -4040,21 +4040,34 @@ body {
 .cards-note-collapse:hover { color: #cbbf9f; }
 .cards-field-textarea--note { font-size: 13px; font-style: italic; }
 
-/* Note shown under back side during study */
-.study-card-face .study-card-back-main { margin-bottom: 14px; }
+/* Note shown under back side during study — pinned to bottom so the main
+   translation stays geometrically centered on the card regardless of note. */
+.study-card-back { position: relative; }
+.study-card-face .study-card-back-main { margin: 0; }
 .study-card-note {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 28px;
+  padding-top: 16px;
   font-family: 'Cinzel', serif;
-  font-size: 14px;
+  font-size: 17px;
   font-style: italic;
   font-weight: 400;
   line-height: 1.45;
-  color: rgba(245, 240, 225, 0.62);
+  color: rgba(245, 240, 225, 0.72);
   letter-spacing: 0.01em;
-  border-top: 1px solid rgba(245, 240, 225, 0.18);
-  padding-top: 12px;
-  margin-top: 6px;
-  max-width: 90%;
+  text-align: center;
+}
+.study-card-note::before {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 1px;
+  margin: 0 auto 14px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim, rgba(190, 158, 92, 0.6)), transparent);
 }
 @media (max-width: 640px) {
-  .study-card-note { font-size: 12px; padding-top: 8px; }
+  .study-card-note { font-size: 14px; bottom: 20px; left: 16px; right: 16px; padding-top: 10px; }
+  .study-card-note::before { width: 44px; margin-bottom: 10px; }
 }
