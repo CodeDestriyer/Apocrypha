@@ -15,21 +15,34 @@ const addDaysISO = (days) => {
   return d.toISOString().slice(0, 10);
 };
 
-// Minimal SM-2-lite. Enough for a prototype; we can swap in full SM-2 / FSRS later.
+// Two-grade SRS-lite: Hard → due tomorrow + ease drop + lapse;
+// Easy → interval grows by ease * 1.3, ease climbs.
 const reviewCard = (card, grade) => {
-  const ease = Math.max(1.3, Math.min(3.0, (card.ease ?? 2.5) + (grade === 'again' ? -0.2 : grade === 'easy' ? 0.15 : 0)));
-  let interval;
-  if (grade === 'again') interval = 0;
-  else if ((card.interval ?? 0) === 0) interval = grade === 'easy' ? 3 : 1;
-  else interval = Math.max(1, Math.round((card.interval ?? 1) * ease * (grade === 'easy' ? 1.3 : 1)));
+  const prevEase = card.ease ?? 2.5;
+  const reps = (card.reps ?? 0) + 1;
+  const now = new Date().toISOString();
+  if (grade === 'hard') {
+    return {
+      ...card,
+      ease: Math.max(1.3, prevEase - 0.2),
+      interval: 1,
+      reps,
+      lapses: (card.lapses ?? 0) + 1,
+      due: addDaysISO(1),
+      last_review: now,
+    };
+  }
+  const ease = Math.min(3.0, prevEase + 0.15);
+  const prev = card.interval ?? 0;
+  const interval = prev === 0 ? 3 : Math.max(3, Math.round(prev * ease * 1.3));
   return {
     ...card,
     ease,
     interval,
-    reps: (card.reps ?? 0) + 1,
-    lapses: (card.lapses ?? 0) + (grade === 'again' ? 1 : 0),
+    reps,
+    lapses: card.lapses ?? 0,
     due: addDaysISO(interval),
-    last_review: new Date().toISOString(),
+    last_review: now,
   };
 };
 
@@ -99,6 +112,10 @@ export default function CardsSection({ rootOnBack }) {
   const removeDeck = (id) => setDecks((d) => d.filter((x) => x.id !== id));
   const renameDeck = (id, name) =>
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, name } : x)));
+  const setDeckMode = (id, mode) => {
+    _study.delete(id); _saveSS();
+    setDecks((d) => d.map((x) => (x.id === id ? { ...x, mode } : x)));
+  };
 
   const addCard = (deckId, front, back, note) => {
     const f = front.trim(); const b = back.trim();
@@ -124,6 +141,27 @@ export default function CardsSection({ rootOnBack }) {
   if (studyDeckId && currentDeck) {
     title = <span className="sub-title-deck">{currentDeck.name}</span>;
     onBack = () => { _study.delete(currentDeck.id); _saveSS(); setStudyDeckId(null); };
+    const isRandom = currentDeck.mode === 'random';
+    headerRight = (
+      <div className="cards-gear" ref={deckMenuRef}>
+        <button className="cards-gear-btn" onClick={() => setDeckMenuOpen((o) => !o)} aria-label={t('cards.deckSettings')}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d={GEAR_PATH}/>
+          </svg>
+        </button>
+        {deckMenuOpen && (
+          <div className="cards-gear-menu cards-gear-menu--right">
+            <button
+              className="cards-gear-item"
+              onClick={() => { setDeckMenuOpen(false); setDeckMode(currentDeck.id, isRandom ? 'srs' : 'random'); }}
+            >
+              {isRandom ? t('cards.switchToSmart') : t('cards.switchToRandom')}
+            </button>
+          </div>
+        )}
+      </div>
+    );
   } else if (openDeckId && currentDeck) {
     if (editingName) {
       title = (
@@ -563,56 +601,58 @@ function CardRow({ card, onRemove, onUpdate, t }) {
 }
 
 function StudyView({ deck, onGrade, t }) {
+  const mode = deck.mode === 'random' ? 'random' : 'srs';
   const queue = useMemo(() => {
     const saved = _study.get(deck.id);
     const byId = new Map(deck.cards.map((c) => [c.id, c]));
-    if (saved && Array.isArray(saved.queueIds)) {
+    if (saved && saved.mode === mode && Array.isArray(saved.queueIds)) {
       const restored = saved.queueIds.map((id) => byId.get(id)).filter(Boolean);
       if (restored.length > 0) return restored;
     }
-    const arr = deck.cards.filter(isDue);
+    const arr = mode === 'random' ? [...deck.cards] : deck.cards.filter(isDue);
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
-  }, [deck.id]);
+  }, [deck.id, mode]);
   const savedStudy = _study.get(deck.id);
   const [idx, _setIdx] = useState(() => {
-    const i = savedStudy?.idx ?? 0;
+    const i = savedStudy?.mode === mode ? (savedStudy.idx ?? 0) : 0;
     return Math.min(Math.max(0, i), Math.max(0, queue.length - 1));
   });
-  const [shown, _setShown] = useState(savedStudy?.shown ?? false);
+  const [shown, _setShown] = useState(savedStudy?.mode === mode ? !!savedStudy.shown : false);
   const persistStudy = (patch) => {
-    const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false };
-    _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), ...patch });
+    const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false, mode };
+    _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), mode, ...patch });
     _saveSS();
   };
   const setIdx = (v) => { persistStudy({ idx: typeof v === 'function' ? v(idx) : v }); _setIdx(v); };
   const setShown = (v) => { persistStudy({ shown: typeof v === 'function' ? v(shown) : v }); _setShown(v); };
-  useEffect(() => { persistStudy({}); }, [deck.id, queue]);
+  useEffect(() => { persistStudy({}); }, [deck.id, queue, mode]);
   const [dragX, setDragX] = useState(0);
   const [animDir, setAnimDir] = useState(0);
   const touch = useRef({ x: 0, y: 0, active: false });
   const card = queue[idx];
 
   if (!card) {
-    return (
-      <div className="cards-study">
-        <div className="cards-study-done">{t('cards.allDone')}</div>
-      </div>
-    );
+    return <StudyDone deckId={deck.id} t={t} />;
   }
 
-  const goNext = () => { if (idx < queue.length - 1) { setShown(false); setIdx(idx + 1); } };
+  const advance = () => { setShown(false); setIdx(idx + 1); };
+  const grade = (g) => { onGrade(card.id, g); advance(); };
+
+  const goNext = () => { if (idx < queue.length - 1) advance(); };
   const goPrev = () => { if (idx > 0) { setShown(false); setIdx(idx - 1); } };
 
+  const swipeEnabled = mode === 'random';
+
   const onTouchStart = (e) => {
-    if (e.touches.length !== 1) return;
+    if (!swipeEnabled || e.touches.length !== 1) return;
     touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true, locked: null };
   };
   const onTouchMove = (e) => {
-    if (!touch.current.active) return;
+    if (!swipeEnabled || !touch.current.active) return;
     const dx = e.touches[0].clientX - touch.current.x;
     const dy = e.touches[0].clientY - touch.current.y;
     if (touch.current.locked == null) {
@@ -623,7 +663,7 @@ function StudyView({ deck, onGrade, t }) {
     setDragX(dx);
   };
   const onTouchEnd = () => {
-    if (!touch.current.active) return;
+    if (!swipeEnabled || !touch.current.active) return;
     const dx = dragX;
     touch.current.active = false;
     const T = 60;
@@ -668,21 +708,44 @@ function StudyView({ deck, onGrade, t }) {
         </div>
       </div>
 
-      <div className="cards-nav-row">
-        <button
-          className="cards-nav-btn"
-          onClick={goPrev}
-          disabled={idx === 0}
-          aria-label={t('cards.prev')}
-        >‹</button>
-        <div className="cards-nav-counter">{idx + 1} / {queue.length}</div>
-        <button
-          className="cards-nav-btn"
-          onClick={goNext}
-          disabled={idx >= queue.length - 1}
-          aria-label={t('cards.next')}
-        >›</button>
-      </div>
+      {mode === 'srs' ? (
+        <div className="cards-grade-row cards-grade-row--two">
+          <button className="cards-grade cards-grade--hard" onClick={() => grade('hard')}>
+            {t('cards.hard')}
+          </button>
+          <button className="cards-grade cards-grade--easy" onClick={() => grade('easy')}>
+            {t('cards.easy')}
+          </button>
+        </div>
+      ) : (
+        <div className="cards-nav-row">
+          <button
+            className="cards-nav-btn"
+            onClick={goPrev}
+            disabled={idx === 0}
+            aria-label={t('cards.prev')}
+          >‹</button>
+          <div className="cards-nav-counter">{idx + 1} / {queue.length}</div>
+          <button
+            className="cards-nav-btn"
+            onClick={goNext}
+            disabled={idx >= queue.length - 1}
+            aria-label={t('cards.next')}
+          >›</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StudyDone({ deckId, t }) {
+  useEffect(() => {
+    _study.delete(deckId);
+    _saveSS();
+  }, [deckId]);
+  return (
+    <div className="cards-study">
+      <div className="cards-study-done">{t('cards.allDone')}</div>
     </div>
   );
 }
