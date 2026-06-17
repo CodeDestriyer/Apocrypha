@@ -15,31 +15,38 @@ const addDaysISO = (days) => {
   return d.toISOString().slice(0, 10);
 };
 
-// Two-grade SRS-lite: Hard → due tomorrow + ease drop + lapse;
-// Easy → interval grows by ease * 1.3, ease climbs.
+// SM-2 (Wozniak 1985), mapped onto two grades:
+//   Hard  ≈ q=2 → reps reset, ease −0.32, due tomorrow, lapse++.
+//   Easy  ≈ q=5 → ease +0.1, interval follows SM-2 ladder:
+//                 rep 1 → 1 day, rep 2 → 6 days, rep N → round(prev·ease).
+// Ease clamped to [1.3, 3.0]. The 1d→6d graduating ladder is the key fix
+// vs. naive SM-2-lite: a brand new card you "know" still gets re-shown
+// the next day, not 3 days later when memory has already decayed.
 const reviewCard = (card, grade) => {
   const prevEase = card.ease ?? 2.5;
-  const reps = (card.reps ?? 0) + 1;
   const now = new Date().toISOString();
   if (grade === 'hard') {
     return {
       ...card,
-      ease: Math.max(1.3, prevEase - 0.2),
+      ease: Math.max(1.3, prevEase - 0.32),
       interval: 1,
-      reps,
+      reps: 0,
       lapses: (card.lapses ?? 0) + 1,
       due: addDaysISO(1),
       last_review: now,
     };
   }
-  const ease = Math.min(3.0, prevEase + 0.15);
-  const prev = card.interval ?? 0;
-  const interval = prev === 0 ? 3 : Math.max(3, Math.round(prev * ease * 1.3));
+  const ease = Math.min(3.0, prevEase + 0.1);
+  const prevReps = card.reps ?? 0;
+  let interval;
+  if (prevReps === 0) interval = 1;
+  else if (prevReps === 1) interval = 6;
+  else interval = Math.max(1, Math.round((card.interval ?? 1) * ease));
   return {
     ...card,
     ease,
     interval,
-    reps,
+    reps: prevReps + 1,
     lapses: card.lapses ?? 0,
     due: addDaysISO(interval),
     last_review: now,
