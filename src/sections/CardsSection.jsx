@@ -41,7 +41,15 @@ const reviewCard = (card, grade) => {
   let interval;
   if (prevReps === 0) interval = 1;
   else if (prevReps === 1) interval = 6;
-  else interval = Math.max(1, Math.round((card.interval ?? 1) * ease));
+  else {
+    const raw = Math.max(1, Math.round((card.interval ?? 1) * ease));
+    // Fuzz ±5% (≥1 day) so a batch reviewed together doesn't all
+    // come due on the exact same future day, which otherwise causes
+    // spiky review loads.
+    const range = Math.max(1, Math.round(raw * 0.05));
+    interval = raw + Math.floor(Math.random() * (range * 2 + 1)) - range;
+    if (interval < 1) interval = 1;
+  }
   return {
     ...card,
     ease,
@@ -54,6 +62,27 @@ const reviewCard = (card, grade) => {
 };
 
 const isDue = (card) => !card.due || card.due <= todayISO();
+const isNew = (card) => (card.reps ?? 0) === 0;
+
+const DEFAULT_NEW_PER_DAY = 20;
+
+// SRS queue = all due reviews + up to N brand-new cards, where N is the
+// daily new-card cap minus however many were already graduated today.
+// Without a cap, plowing through a 500-card deck on day 1 buries you
+// under 500 reviews on day 8 — classic Anki burnout.
+const buildSrsQueue = (deck) => {
+  const todayStr = todayISO();
+  const cap = deck.newPerDay ?? DEFAULT_NEW_PER_DAY;
+  const graduatedToday = deck.cards.filter(
+    (c) => (c.reps ?? 0) >= 1 && (c.interval ?? 0) === 1 && c.last_review?.slice(0, 10) === todayStr
+  ).length;
+  const remaining = Math.max(0, cap - graduatedToday);
+  const reviews = deck.cards.filter((c) => !isNew(c) && isDue(c));
+  const news = deck.cards.filter((c) => isNew(c) && isDue(c)).slice(0, remaining);
+  return [...reviews, ...news];
+};
+
+const dueCountFor = (deck) => buildSrsQueue(deck).length;
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
@@ -277,7 +306,7 @@ function DeckList({ decks, onOpen, onAdd, t }) {
 
       <ul className="skills">
         {decks.map((d) => {
-          const due = d.cards.filter(isDue).length;
+          const due = dueCountFor(d);
           return (
             <li key={d.id} className="skill deck-row" onClick={() => onOpen(d.id)} role="button">
               <div className="skill-head">
@@ -343,7 +372,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const setNote = (v) => { persist({ note: v }); _setNote(v); };
   const setNoteOpen = (v) => { persist({ noteOpen: v }); _setNoteOpen(v); };
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
-  const dueCount = useMemo(() => deck.cards.filter(isDue).length, [deck.cards]);
+  const dueCount = useMemo(() => dueCountFor(deck), [deck]);
 
   const duplicate = useMemo(() => {
     const f = front.trim().toLowerCase();
@@ -616,7 +645,7 @@ function StudyView({ deck, onGrade, t }) {
       const restored = saved.queueIds.map((id) => byId.get(id)).filter(Boolean);
       if (restored.length > 0) return restored;
     }
-    const arr = mode === 'random' ? [...deck.cards] : deck.cards.filter(isDue);
+    const arr = mode === 'random' ? [...deck.cards] : buildSrsQueue(deck);
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
