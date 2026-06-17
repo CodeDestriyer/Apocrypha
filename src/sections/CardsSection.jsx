@@ -42,6 +42,7 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 // comes back (which unmounts/remounts CardsSection).
 const _nav = { openDeckId: null, studyDeckId: null };
 const _drafts = new Map(); // deckId -> { front, back, note, adding, noteOpen }
+const _study = new Map(); // deckId -> { queueIds: string[], idx: number, shown: boolean }
 
 export default function CardsSection({ rootOnBack }) {
   const { profile, update } = useProfile();
@@ -99,7 +100,7 @@ export default function CardsSection({ rootOnBack }) {
   let title, onBack, headerRight;
   if (studyDeckId && currentDeck) {
     title = <span className="sub-title-deck">{currentDeck.name}</span>;
-    onBack = () => setStudyDeckId(null);
+    onBack = () => { _study.delete(currentDeck.id); setStudyDeckId(null); };
   } else if (openDeckId && currentDeck) {
     if (editingName) {
       title = (
@@ -538,6 +539,12 @@ function CardRow({ card, onRemove, onUpdate, t }) {
 
 function StudyView({ deck, onGrade, t }) {
   const queue = useMemo(() => {
+    const saved = _study.get(deck.id);
+    const byId = new Map(deck.cards.map((c) => [c.id, c]));
+    if (saved && Array.isArray(saved.queueIds)) {
+      const restored = saved.queueIds.map((id) => byId.get(id)).filter(Boolean);
+      if (restored.length > 0) return restored;
+    }
     const arr = deck.cards.filter(isDue);
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -545,8 +552,19 @@ function StudyView({ deck, onGrade, t }) {
     }
     return arr;
   }, [deck.id]);
-  const [idx, setIdx] = useState(0);
-  const [shown, setShown] = useState(false);
+  const savedStudy = _study.get(deck.id);
+  const [idx, _setIdx] = useState(() => {
+    const i = savedStudy?.idx ?? 0;
+    return Math.min(Math.max(0, i), Math.max(0, queue.length - 1));
+  });
+  const [shown, _setShown] = useState(savedStudy?.shown ?? false);
+  const persistStudy = (patch) => {
+    const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false };
+    _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), ...patch });
+  };
+  const setIdx = (v) => { persistStudy({ idx: typeof v === 'function' ? v(idx) : v }); _setIdx(v); };
+  const setShown = (v) => { persistStudy({ shown: typeof v === 'function' ? v(shown) : v }); _setShown(v); };
+  useEffect(() => { persistStudy({}); }, [deck.id, queue]);
   const [dragX, setDragX] = useState(0);
   const [animDir, setAnimDir] = useState(0);
   const touch = useRef({ x: 0, y: 0, active: false });
