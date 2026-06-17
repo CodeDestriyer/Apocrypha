@@ -39,10 +39,33 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 
 // Module-level cache so the in-progress deck/study screen and the unsaved
 // add-card draft survive when the user switches to another sidebar tab and
-// comes back (which unmounts/remounts CardsSection).
-const _nav = { openDeckId: null, studyDeckId: null };
-const _drafts = new Map(); // deckId -> { front, back, note, adding, noteOpen }
-const _study = new Map(); // deckId -> { queueIds: string[], idx: number, shown: boolean }
+// comes back (which unmounts/remounts CardsSection). Persisted to
+// sessionStorage so it also survives full page reloads (e.g. the SW
+// controllerchange reload that fires on tab refocus after a deploy).
+const _SS_KEY = 'lr.cards.cache.v1';
+const _loadSS = () => {
+  try {
+    const raw = sessionStorage.getItem(_SS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+};
+const _ssInit = _loadSS() ?? {};
+const _nav = {
+  openDeckId: _ssInit.nav?.openDeckId ?? null,
+  studyDeckId: _ssInit.nav?.studyDeckId ?? null,
+};
+const _drafts = new Map(Object.entries(_ssInit.drafts ?? {}));
+const _study = new Map(Object.entries(_ssInit.study ?? {}));
+const _saveSS = () => {
+  try {
+    sessionStorage.setItem(_SS_KEY, JSON.stringify({
+      nav: _nav,
+      drafts: Object.fromEntries(_drafts),
+      study: Object.fromEntries(_study),
+    }));
+  } catch {}
+};
 
 export default function CardsSection({ rootOnBack }) {
   const { profile, update } = useProfile();
@@ -51,8 +74,8 @@ export default function CardsSection({ rootOnBack }) {
 
   const [openDeckId, _setOpenDeckId] = useState(_nav.openDeckId);
   const [studyDeckId, _setStudyDeckId] = useState(_nav.studyDeckId);
-  const setOpenDeckId = (v) => { _nav.openDeckId = v; _setOpenDeckId(v); };
-  const setStudyDeckId = (v) => { _nav.studyDeckId = v; _setStudyDeckId(v); };
+  const setOpenDeckId = (v) => { _nav.openDeckId = v; _saveSS(); _setOpenDeckId(v); };
+  const setStudyDeckId = (v) => { _nav.studyDeckId = v; _saveSS(); _setStudyDeckId(v); };
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
@@ -100,7 +123,7 @@ export default function CardsSection({ rootOnBack }) {
   let title, onBack, headerRight;
   if (studyDeckId && currentDeck) {
     title = <span className="sub-title-deck">{currentDeck.name}</span>;
-    onBack = () => { _study.delete(currentDeck.id); setStudyDeckId(null); };
+    onBack = () => { _study.delete(currentDeck.id); _saveSS(); setStudyDeckId(null); };
   } else if (openDeckId && currentDeck) {
     if (editingName) {
       title = (
@@ -268,6 +291,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const persist = (patch) => {
     const cur = _drafts.get(deck.id) ?? { front: '', back: '', note: '', adding: false, noteOpen: false };
     _drafts.set(deck.id, { ...cur, ...patch });
+    _saveSS();
   };
   const setFront = (v) => { persist({ front: v }); _setFront(v); };
   const setBack = (v) => { persist({ back: v }); _setBack(v); };
@@ -286,6 +310,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
     setAdding(false);
     setFront(''); setBack(''); setNote(''); setNoteOpen(false);
     _drafts.delete(deck.id);
+    _saveSS();
   };
 
   const submitCard = () => {
@@ -561,6 +586,7 @@ function StudyView({ deck, onGrade, t }) {
   const persistStudy = (patch) => {
     const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false };
     _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), ...patch });
+    _saveSS();
   };
   const setIdx = (v) => { persistStudy({ idx: typeof v === 'function' ? v(idx) : v }); _setIdx(v); };
   const setShown = (v) => { persistStudy({ shown: typeof v === 'function' ? v(shown) : v }); _setShown(v); };
