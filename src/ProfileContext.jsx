@@ -16,6 +16,7 @@ export function ProfileProvider({ children }) {
   const [defaultName, setDefaultName] = useState('');
   const saveTimer = useRef(null);
   const pendingPatch = useRef({});
+  const currentUserId = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +37,7 @@ export function ProfileProvider({ children }) {
     const handleSession = async (session) => {
       try {
         if (!session) {
+          currentUserId.current = null;
           if (!cancelled) setStatus('unauthenticated');
           return;
         }
@@ -43,6 +45,7 @@ export function ProfileProvider({ children }) {
         const p = await withTimeout(loadProfile(), 6000, 'loadProfile');
         if (cancelled) return;
         if (p) {
+          currentUserId.current = session.user?.id ?? null;
           setProfile(p);
           setStatus('ready');
         } else {
@@ -78,8 +81,11 @@ export function ProfileProvider({ children }) {
       // refocus and would otherwise flip us through 'loading' → 'ready', which
       // remounts the whole tree and wipes in-progress UI state (study session
       // index, open deck, etc). USER_UPDATED and INITIAL_SESSION are also
-      // already handled by the getSession() bootstrap above.
+      // already handled by the getSession() bootstrap above. SIGNED_IN also
+      // fires on tab refocus when Supabase re-validates the cached session;
+      // ignore it when the session is for the same user we already loaded.
       if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') return;
+      if (event === 'SIGNED_IN' && session?.user?.id && session.user.id === currentUserId.current) return;
       handleSession(session);
     });
 
