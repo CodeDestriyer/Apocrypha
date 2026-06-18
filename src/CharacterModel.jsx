@@ -22,7 +22,7 @@ export default function CharacterModel({ src = '/man.glb', className = '' }) {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(w, h, false);
+    renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
@@ -61,9 +61,8 @@ export default function CharacterModel({ src = '/man.glb', className = '' }) {
         scene.add(model);
 
         const fitDist = (targetHeight / 2) / Math.tan((camera.fov * Math.PI) / 360) * 1.4;
-        const lookY = 0.35;
-        camera.position.set(0.5, lookY, fitDist);
-        controls.target.set(0, lookY, 0);
+        camera.position.set(0.5, 0, fitDist);
+        controls.target.set(0, 0, 0);
         controls.update();
       },
       undefined,
@@ -81,7 +80,7 @@ export default function CharacterModel({ src = '/man.glb', className = '' }) {
     const ro = new ResizeObserver(() => {
       const s = getSize();
       w = s.w; h = s.h;
-      renderer.setSize(w, h, false);
+      renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     });
