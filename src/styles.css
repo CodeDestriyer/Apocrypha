@@ -3629,7 +3629,7 @@ body {
   min-width: 0;
   margin: 0;
   font-family: 'Cinzel', serif;
-  font-size: clamp(16px, 6.2vw, 28px);
+  font-size: clamp(20px, 7.4vw, 34px);
   line-height: 1.15;
   color: #f5f0e1;
   letter-spacing: 0.02em;
@@ -3639,7 +3639,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cards-name-input { font-size: clamp(16px, 6.2vw, 28px) !important; }
+.cards-name-input { font-size: clamp(20px, 7.4vw, 34px) !important; }
 .cards-name-input { flex: 1; background: transparent; border: 1px solid var(--gold); color: #f5f0e1; font-family: 'Cinzel', serif; font-size: 28px; padding: 4px 10px; text-align: center; }
 .cards-back-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3687,9 +3687,9 @@ body {
 .cards-gear-item--danger:hover { background: rgba(217, 122, 122, 0.12); }
 
 .cards-study-btn {
-  width: 100%; padding: 12px; border: 1px solid var(--gold);
+  width: 100%; padding: 14px; border: 1px solid var(--gold);
   background: rgba(190, 158, 92, 0.08); color: var(--gold);
-  font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: 0.1em;
+  font-family: 'Cinzel', serif; font-size: 19px; font-weight: 700; letter-spacing: 0.12em;
   cursor: pointer; text-transform: uppercase;
 }
 .cards-study-btn:hover { background: rgba(190, 158, 92, 0.16); }
@@ -3910,8 +3910,7 @@ body {
   display: inline-grid; place-items: center;
   width: 22px; height: 22px;
   border-radius: 50%;
-  font-family: serif; font-size: 18px; line-height: 1;
-  padding-bottom: 2px;
+  font-family: serif; font-size: 16px; line-height: 1;
 }
 /* deck button: outlined, gold, dashed */
 .cards-big-add--deck {
