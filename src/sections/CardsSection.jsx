@@ -64,22 +64,23 @@ const reviewCard = (card, grade) => {
 const isDue = (card) => !card.due || card.due <= todayISO();
 const isNew = (card) => (card.reps ?? 0) === 0;
 
-const DEFAULT_NEW_PER_DAY = 20;
+const DEFAULT_NEW_PER_DAY = 50;
 
 // SRS queue = all due reviews + up to N brand-new cards, where N is the
 // daily new-card cap minus however many were already graduated today.
-// Without a cap, plowing through a 500-card deck on day 1 buries you
-// under 500 reviews on day 8 — classic Anki burnout.
+// Cap = 0 means unlimited. Default 50; users who plan to study less can
+// lower it, those drilling for an exam can crank it up.
 const buildSrsQueue = (deck) => {
   const todayStr = todayISO();
   const cap = deck.newPerDay ?? DEFAULT_NEW_PER_DAY;
+  const reviews = deck.cards.filter((c) => !isNew(c) && isDue(c));
+  const newDue = deck.cards.filter((c) => isNew(c) && isDue(c));
+  if (cap === 0) return [...reviews, ...newDue];
   const graduatedToday = deck.cards.filter(
     (c) => (c.reps ?? 0) >= 1 && (c.interval ?? 0) === 1 && c.last_review?.slice(0, 10) === todayStr
   ).length;
   const remaining = Math.max(0, cap - graduatedToday);
-  const reviews = deck.cards.filter((c) => !isNew(c) && isDue(c));
-  const news = deck.cards.filter((c) => isNew(c) && isDue(c)).slice(0, remaining);
-  return [...reviews, ...news];
+  return [...reviews, ...newDue.slice(0, remaining)];
 };
 
 const dueCountFor = (deck) => buildSrsQueue(deck).length;
@@ -152,6 +153,10 @@ export default function CardsSection({ rootOnBack }) {
     _study.delete(id); _saveSS();
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, mode } : x)));
   };
+  const setDeckNewPerDay = (id, n) => {
+    _study.delete(id); _saveSS();
+    setDecks((d) => d.map((x) => (x.id === id ? { ...x, newPerDay: n } : x)));
+  };
 
   const addCard = (deckId, front, back, note) => {
     const f = front.trim(); const b = back.trim();
@@ -187,13 +192,20 @@ export default function CardsSection({ rootOnBack }) {
           </svg>
         </button>
         {deckMenuOpen && (
-          <div className="cards-gear-menu cards-gear-menu--right">
+          <div className="cards-gear-menu cards-gear-menu--right cards-gear-menu--wide">
             <button
               className="cards-gear-item"
               onClick={() => { setDeckMenuOpen(false); setDeckMode(currentDeck.id, isRandom ? 'srs' : 'random'); }}
             >
               {isRandom ? t('cards.switchToSmart') : t('cards.switchToRandom')}
             </button>
+            {!isRandom && (
+              <NewPerDayRow
+                value={currentDeck.newPerDay ?? DEFAULT_NEW_PER_DAY}
+                onChange={(n) => setDeckNewPerDay(currentDeck.id, n)}
+                t={t}
+              />
+            )}
           </div>
         )}
       </div>
@@ -633,6 +645,33 @@ function CardRow({ card, onRemove, onUpdate, t }) {
         )}
       </div>
     </li>
+  );
+}
+
+function NewPerDayRow({ value, onChange, t }) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+  const commit = () => {
+    const trimmed = draft.trim();
+    const n = trimmed === '' ? 0 : Math.max(0, Math.min(9999, Math.floor(Number(trimmed) || 0)));
+    if (n !== value) onChange(n);
+    setDraft(String(n));
+  };
+  return (
+    <div className="cards-gear-row">
+      <span className="cards-gear-row-label">{t('cards.newPerDay')}</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        min="0"
+        max="9999"
+        className="cards-gear-row-input"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+      />
+    </div>
   );
 }
 
