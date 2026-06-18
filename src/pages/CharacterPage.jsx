@@ -4,7 +4,7 @@ import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import CharacterModel from '../CharacterModel.jsx';
 
-const AVATARS = [
+const BASE_AVATARS = [
   '/avatars/hitler.png',
   '/avatars/ganslanda.jpg',
   '/avatars/loganpaul.jpg',
@@ -281,16 +281,18 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 }
 
 export default function CharacterPage({ onNavigate, hideNav = false, showNav = true, extra = null }) {
-  const { profile, update } = useProfile();
+  const { profile, update, googleAvatar } = useProfile();
   const { t } = useLang();
   const [prefs, setPrefs] = useModulePrefs();
   const [editing, setEditing] = useState(false);
   const [editingInfo, setEditingInfo] = useState(false);
 
+  const AVATARS = googleAvatar ? [googleAvatar, ...BASE_AVATARS] : BASE_AVATARS;
+  const avatarIdx = ((profile.avatar_idx ?? 0) % AVATARS.length + AVATARS.length) % AVATARS.length;
+
   const cycleAvatar = () => {
     if (!editingInfo) return;
-    const idx = ((profile.avatar_idx ?? 0) % AVATARS.length + AVATARS.length) % AVATARS.length;
-    update({ avatar_idx: (idx + 1) % AVATARS.length });
+    update({ avatar_idx: (avatarIdx + 1) % AVATARS.length });
   };
   const setName = (name) => update({ name });
 
@@ -304,7 +306,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         >
           <img
             className="avatar-img"
-            src={AVATARS[((profile.avatar_idx ?? 0) % AVATARS.length + AVATARS.length) % AVATARS.length]}
+            src={AVATARS[avatarIdx]}
             alt=""
           />
         </button>

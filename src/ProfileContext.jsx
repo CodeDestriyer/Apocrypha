@@ -14,6 +14,7 @@ export function ProfileProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState(null);
   const [defaultName, setDefaultName] = useState('');
+  const [googleAvatar, setGoogleAvatar] = useState(null);
   const saveTimer = useRef(null);
   const pendingPatch = useRef({});
   const currentUserId = useRef(null);
@@ -38,10 +39,15 @@ export function ProfileProvider({ children }) {
       try {
         if (!session) {
           currentUserId.current = null;
-          if (!cancelled) setStatus('unauthenticated');
+          if (!cancelled) {
+            setGoogleAvatar(null);
+            setStatus('unauthenticated');
+          }
           return;
         }
         if (!cancelled) setStatus('loading');
+        const meta = session.user?.user_metadata ?? {};
+        if (!cancelled) setGoogleAvatar(meta.avatar_url || meta.picture || null);
         const p = await withTimeout(loadProfile(), 6000, 'loadProfile');
         if (cancelled) return;
         if (p) {
@@ -49,7 +55,6 @@ export function ProfileProvider({ children }) {
           setProfile(p);
           setStatus('ready');
         } else {
-          const meta = session.user?.user_metadata ?? {};
           const suggested = meta.full_name || meta.name || (session.user?.email?.split('@')[0]) || '';
           setDefaultName(suggested);
           setStatus('need-name');
@@ -124,7 +129,7 @@ export function ProfileProvider({ children }) {
   };
 
   return (
-    <ProfileContext.Provider value={{ status, profile, error, defaultName, submitName, update }}>
+    <ProfileContext.Provider value={{ status, profile, error, defaultName, googleAvatar, submitName, update }}>
       {children}
     </ProfileContext.Provider>
   );
