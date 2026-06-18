@@ -446,21 +446,6 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
         )}
       </div>
 
-      <ul className="cards-list">
-        {visibleCards.length === 0 && query && (
-          <li className="cards-search-empty">{t('cards.searchEmpty')}</li>
-        )}
-        {visibleCards.map((c) => (
-          <CardRow
-            key={c.id}
-            card={c}
-            onRemove={() => onRemoveCard(c.id)}
-            onUpdate={(patch) => onEditCard(c.id, patch)}
-            t={t}
-          />
-        ))}
-      </ul>
-
       {adding ? (
         <div className="cards-panel">
           <label className="cards-field-label">{t('cards.frontSide')}</label>
@@ -524,6 +509,21 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
           <span>{t('cards.newCard')}</span>
         </button>
       )}
+
+      <ul className="cards-list">
+        {visibleCards.length === 0 && query && (
+          <li className="cards-search-empty">{t('cards.searchEmpty')}</li>
+        )}
+        {visibleCards.map((c) => (
+          <CardRow
+            key={c.id}
+            card={c}
+            onRemove={() => onRemoveCard(c.id)}
+            onUpdate={(patch) => onEditCard(c.id, patch)}
+            t={t}
+          />
+        ))}
+      </ul>
     </div>
   );
 }
