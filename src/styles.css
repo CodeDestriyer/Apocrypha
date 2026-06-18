@@ -3722,20 +3722,6 @@ body {
 .cards-gear-btn--sm { width: 28px; height: 28px; border-radius: 6px; padding: 0; color: #8a7d63; background: transparent; border-color: transparent; }
 .cards-gear-btn--sm:hover { background: rgba(245, 240, 225, 0.08); color: #f5f0e1; transform: none; }
 .cards-gear-menu--right { right: 0; left: auto; min-width: 150px; }
-.cards-gear-menu--wide { min-width: 220px; }
-.cards-gear-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; }
-.cards-gear-row-label { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.08em; color: #cbbf9f; flex: 1; }
-.cards-gear-row-input {
-  width: 56px; padding: 4px 6px;
-  background: rgba(245, 240, 225, 0.06);
-  border: 1px solid rgba(245, 240, 225, 0.18);
-  color: #f5f0e1;
-  font-family: 'Cinzel', serif;
-  font-size: 13px;
-  text-align: center;
-  border-radius: 4px;
-}
-.cards-gear-row-input:focus { outline: none; border-color: var(--gold); }
 
 .card-row-editing { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: rgba(245, 240, 225, 0.04); }
 .card-row-editing .cards-field-textarea { font-size: 14px; padding: 8px 10px; }
