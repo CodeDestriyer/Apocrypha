@@ -112,7 +112,6 @@ export async function createProfile(name) {
   const row = {
     id: user.id,
     name,
-    avatar_idx: 0,
     stats: DEFAULT_STATS,
     skills: DEFAULT_SKILLS,
     goals: [],

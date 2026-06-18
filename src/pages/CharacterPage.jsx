@@ -4,12 +4,6 @@ import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import CharacterModel from '../CharacterModel.jsx';
 
-const BASE_AVATARS = [
-  '/avatars/hitler.png',
-  '/avatars/ganslanda.jpg',
-  '/avatars/loganpaul.jpg',
-];
-
 const NAV = [
   { id: 'goals',       labelKey: 'nav.goals',       icon: '✧', summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
   { id: 'skills',      labelKey: 'nav.skills',      icon: '✦', summary: (p) => (p.skills ?? []).reduce((s, v) => s + (typeof v.rank === 'number' ? v.rank : (v.level ?? 0)), 0) },
@@ -287,29 +281,19 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
   const [editing, setEditing] = useState(false);
   const [editingInfo, setEditingInfo] = useState(false);
 
-  const AVATARS = googleAvatar ? [googleAvatar, ...BASE_AVATARS] : BASE_AVATARS;
-  const avatarIdx = ((profile.avatar_idx ?? 0) % AVATARS.length + AVATARS.length) % AVATARS.length;
-
-  const cycleAvatar = () => {
-    if (!editingInfo) return;
-    update({ avatar_idx: (avatarIdx + 1) % AVATARS.length });
-  };
   const setName = (name) => update({ name });
 
   return (
     <div className="card character-card">
       <SettingsMenu setEditing={setEditing} setEditingInfo={setEditingInfo} />
       <div className="char-layout">
-        <button
-          className={`avatar avatar-big ${editingInfo ? 'editable' : ''}`}
-          onClick={cycleAvatar}
-        >
-          <img
-            className="avatar-img"
-            src={AVATARS[avatarIdx]}
-            alt=""
-          />
-        </button>
+        <div className="avatar avatar-big">
+          {googleAvatar ? (
+            <img className="avatar-img" src={googleAvatar} alt="" referrerPolicy="no-referrer" />
+          ) : (
+            <span className="avatar-fallback">{(profile.name || '?').trim().charAt(0).toUpperCase()}</span>
+          )}
+        </div>
         <div className="char-info">
           {editingInfo ? (
             <input
