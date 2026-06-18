@@ -383,10 +383,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
     closeAdd();
   };
 
-  const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const searchInputRef = useRef(null);
-  useEffect(() => { if (searchOpen) searchInputRef.current?.focus(); }, [searchOpen]);
 
   const visibleCards = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -408,41 +405,24 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
         {t('cards.study')} · {dueCount}
       </button>
 
-      <div className={`cards-search ${searchOpen ? 'open' : ''}`}>
-        {searchOpen ? (
-          <>
-            <svg className="cards-search-glyph" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m20 20-3.5-3.5"/>
-            </svg>
-            <input
-              ref={searchInputRef}
-              className="cards-search-input"
-              placeholder={t('cards.searchPlaceholder')}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') { setQuery(''); setSearchOpen(false); }
-              }}
-            />
-            <button
-              className="cards-search-close"
-              onClick={() => { setQuery(''); setSearchOpen(false); }}
-              aria-label={t('cards.close')}
-            >×</button>
-          </>
-        ) : (
+      <div className="cards-search open">
+        <svg className="cards-search-glyph" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input
+          className="cards-search-input"
+          placeholder={t('cards.searchPlaceholder')}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
+        />
+        {query && (
           <button
-            className="cards-search-btn"
-            onClick={() => setSearchOpen(true)}
-            aria-label={t('cards.search')}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m20 20-3.5-3.5"/>
-            </svg>
-            <span>{t('cards.search')}</span>
-          </button>
+            className="cards-search-close"
+            onClick={() => setQuery('')}
+            aria-label={t('cards.close')}
+          >×</button>
         )}
       </div>
 
