@@ -161,10 +161,12 @@ export default function Landing({ onLogin }) {
               <span className="landing-link-text">{t('landing.btn.course')}</span>
               <img className="landing-link-icon" src="/courcelogo.jpg" alt="" aria-hidden="true" />
             </button>
+            {false && (
             <button className="landing-link" onClick={onLogin}>
               <span className="landing-link-text">{t('landing.btn.app')}</span>
               <img className="landing-link-icon" src="/applogo.jpg" alt="" aria-hidden="true" />
             </button>
+            )}
           </div>
         </main>
       )}
