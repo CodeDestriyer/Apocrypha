@@ -3859,7 +3859,6 @@ body {
 
 @media (max-width: 640px) {
   .cards-study { gap: 12px; min-height: 65vh; }
-  .cards-progress { display: none; }
   .cards-nav-btn { width: 48px; height: 48px; font-size: 26px; }
   .cards-nav-counter { font-size: 12px; }
   .study-card-inner { min-height: 280px; }
