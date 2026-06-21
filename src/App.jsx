@@ -124,6 +124,7 @@ function Shell() {
     } catch {}
     if (typeof window !== 'undefined') {
       const sp = new URLSearchParams(window.location.search);
+      if (sp.has('app')) return true;
       if (sp.has('code') || window.location.hash.includes('access_token')) return true;
     }
     return false;
