@@ -9,70 +9,8 @@ const newId = () =>
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
-const addDaysISO = (days) => {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-};
 
-// SM-2 (Wozniak 1985), mapped onto two grades:
-//   Hard  ≈ q=2 → reps reset, ease −0.32, due tomorrow, lapse++.
-//   Easy  ≈ q=5 → ease +0.1, interval follows SM-2 ladder:
-//                 rep 1 → 1 day, rep 2 → 6 days, rep N → round(prev·ease).
-// Ease clamped to [1.3, 3.0]. The 1d→6d graduating ladder is the key fix
-// vs. naive SM-2-lite: a brand new card you "know" still gets re-shown
-// the next day, not 3 days later when memory has already decayed.
-const reviewCard = (card, grade) => {
-  const prevEase = card.ease ?? 2.5;
-  const now = new Date().toISOString();
-  if (grade === 'hard') {
-    return {
-      ...card,
-      ease: Math.max(1.3, prevEase - 0.32),
-      interval: 1,
-      reps: 0,
-      lapses: (card.lapses ?? 0) + 1,
-      due: addDaysISO(1),
-      last_review: now,
-    };
-  }
-  const ease = Math.min(3.0, prevEase + 0.1);
-  const prevReps = card.reps ?? 0;
-  let interval;
-  if (prevReps === 0) interval = 1;
-  else if (prevReps === 1) interval = 6;
-  else {
-    const raw = Math.max(1, Math.round((card.interval ?? 1) * ease));
-    // Fuzz ±5% (≥1 day) so a batch reviewed together doesn't all
-    // come due on the exact same future day, which otherwise causes
-    // spiky review loads.
-    const range = Math.max(1, Math.round(raw * 0.05));
-    interval = raw + Math.floor(Math.random() * (range * 2 + 1)) - range;
-    if (interval < 1) interval = 1;
-  }
-  return {
-    ...card,
-    ease,
-    interval,
-    reps: prevReps + 1,
-    lapses: card.lapses ?? 0,
-    due: addDaysISO(interval),
-    last_review: now,
-  };
-};
-
-const isDue = (card) => !card.due || card.due <= todayISO();
-const isNew = (card) => (card.reps ?? 0) === 0;
-
-// SRS queue = all due reviews + all due-today new cards. Reviews first
-// so re-encounters happen before drilling into the unknown.
-const buildSrsQueue = (deck) => {
-  const reviews = deck.cards.filter((c) => !isNew(c) && isDue(c));
-  const news = deck.cards.filter((c) => isNew(c) && isDue(c));
-  return [...reviews, ...news];
-};
-
-const dueCountFor = (deck) => buildSrsQueue(deck).length;
+const dueCountFor = (deck) => deck.cards.length;
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
@@ -93,7 +31,6 @@ const _ssInit = _loadSS() ?? {};
 const _nav = {
   openDeckId: _ssInit.nav?.openDeckId ?? null,
   studyDeckId: _ssInit.nav?.studyDeckId ?? null,
-  studyCram: _ssInit.nav?.studyCram ?? false,
 };
 const _drafts = new Map(Object.entries(_ssInit.drafts ?? {}));
 const _study = new Map(Object.entries(_ssInit.study ?? {}));
@@ -114,12 +51,10 @@ export default function CardsSection({ rootOnBack }) {
 
   const [openDeckId, _setOpenDeckId] = useState(_nav.openDeckId);
   const [studyDeckId, _setStudyDeckId] = useState(_nav.studyDeckId);
-  const [studyCram, _setStudyCram] = useState(_nav.studyCram);
   const setOpenDeckId = (v) => { _nav.openDeckId = v; _saveSS(); _setOpenDeckId(v); };
   const setStudyDeckId = (v) => { _nav.studyDeckId = v; _saveSS(); _setStudyDeckId(v); };
-  const setStudyCram = (v) => { _nav.studyCram = v; _saveSS(); _setStudyCram(v); };
-  const startStudy = (id, cram = false) => { setStudyCram(cram); setStudyDeckId(id); };
-  const endStudy = () => { setStudyCram(false); setStudyDeckId(null); };
+  const startStudy = (id) => { setStudyDeckId(id); };
+  const endStudy = () => { setStudyDeckId(null); };
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
@@ -143,10 +78,6 @@ export default function CardsSection({ rootOnBack }) {
   const removeDeck = (id) => setDecks((d) => d.filter((x) => x.id !== id));
   const renameDeck = (id, name) =>
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, name } : x)));
-  const setDeckMode = (id, mode) => {
-    _study.delete(id); _saveSS();
-    setDecks((d) => d.map((x) => (x.id === id ? { ...x, mode } : x)));
-  };
 
   const addCard = (deckId, front, back, note) => {
     const f = front.trim(); const b = back.trim();
@@ -172,27 +103,7 @@ export default function CardsSection({ rootOnBack }) {
   if (studyDeckId && currentDeck) {
     title = <span className="sub-title-deck">{currentDeck.name}</span>;
     onBack = () => { _study.delete(currentDeck.id); _saveSS(); endStudy(); };
-    const isRandom = currentDeck.mode === 'random';
-    headerRight = studyCram ? null : (
-      <div className="cards-gear" ref={deckMenuRef}>
-        <button className="cards-gear-btn" onClick={() => setDeckMenuOpen((o) => !o)} aria-label={t('cards.deckSettings')}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"/>
-            <path d={GEAR_PATH}/>
-          </svg>
-        </button>
-        {deckMenuOpen && (
-          <div className="cards-gear-menu cards-gear-menu--right">
-            <button
-              className="cards-gear-item"
-              onClick={() => { setDeckMenuOpen(false); setDeckMode(currentDeck.id, isRandom ? 'srs' : 'random'); }}
-            >
-              {isRandom ? t('cards.switchToSmart') : t('cards.switchToRandom')}
-            </button>
-          </div>
-        )}
-      </div>
-    );
+    headerRight = null;
   } else if (openDeckId && currentDeck) {
     if (editingName) {
       title = (
@@ -230,13 +141,6 @@ export default function CardsSection({ rootOnBack }) {
               {t('cards.renameDeck')}
             </button>
             <button
-              className="cards-gear-item"
-              onClick={() => { setDeckMenuOpen(false); startStudy(currentDeck.id, true); }}
-              disabled={currentDeck.cards.length === 0}
-            >
-              {t('cards.studyAll')}
-            </button>
-            <button
               className="cards-gear-item cards-gear-item--danger"
               onClick={() => { setDeckMenuOpen(false); removeDeck(currentDeck.id); setOpenDeckId(null); }}
             >
@@ -256,8 +160,6 @@ export default function CardsSection({ rootOnBack }) {
     body = (
       <StudyView
         deck={currentDeck}
-        cram={studyCram}
-        onGrade={(cardId, grade) => updateCard(currentDeck.id, cardId, reviewCard(currentDeck.cards.find((c) => c.id === cardId), grade))}
         t={t}
       />
     );
@@ -265,7 +167,7 @@ export default function CardsSection({ rootOnBack }) {
     body = (
       <DeckView
         deck={currentDeck}
-        onStudy={() => startStudy(currentDeck.id, false)}
+        onStudy={() => startStudy(currentDeck.id)}
         onAddCard={(f, b, n) => addCard(currentDeck.id, f, b, n)}
         onRemoveCard={(cardId) => removeCard(currentDeck.id, cardId)}
         onEditCard={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
@@ -619,37 +521,35 @@ function CardRow({ card, onRemove, onUpdate, t }) {
   );
 }
 
-function StudyView({ deck, onGrade, cram, t }) {
-  const mode = cram ? 'cram' : (deck.mode === 'random' ? 'random' : 'srs');
+function StudyView({ deck, t }) {
   const queue = useMemo(() => {
-    const saved = cram ? null : _study.get(deck.id);
+    const saved = _study.get(deck.id);
     const byId = new Map(deck.cards.map((c) => [c.id, c]));
-    if (saved && saved.mode === mode && Array.isArray(saved.queueIds)) {
+    if (saved && Array.isArray(saved.queueIds)) {
       const restored = saved.queueIds.map((id) => byId.get(id)).filter(Boolean);
       if (restored.length > 0) return restored;
     }
-    const arr = mode === 'srs' ? buildSrsQueue(deck) : [...deck.cards];
+    const arr = [...deck.cards];
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
-  }, [deck.id, mode, cram]);
-  const savedStudy = cram ? null : _study.get(deck.id);
+  }, [deck.id]);
+  const savedStudy = _study.get(deck.id);
   const [idx, _setIdx] = useState(() => {
-    const i = savedStudy?.mode === mode ? (savedStudy.idx ?? 0) : 0;
+    const i = savedStudy?.idx ?? 0;
     return Math.min(Math.max(0, i), Math.max(0, queue.length - 1));
   });
-  const [shown, _setShown] = useState(savedStudy?.mode === mode ? !!savedStudy.shown : false);
+  const [shown, _setShown] = useState(!!savedStudy?.shown);
   const persistStudy = (patch) => {
-    if (cram) return;
-    const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false, mode };
-    _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), mode, ...patch });
+    const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false };
+    _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), ...patch });
     _saveSS();
   };
   const setIdx = (v) => { persistStudy({ idx: typeof v === 'function' ? v(idx) : v }); _setIdx(v); };
   const setShown = (v) => { persistStudy({ shown: typeof v === 'function' ? v(shown) : v }); _setShown(v); };
-  useEffect(() => { persistStudy({}); }, [deck.id, queue, mode]);
+  useEffect(() => { persistStudy({}); }, [deck.id, queue]);
   const [dragX, setDragX] = useState(0);
   const [animDir, setAnimDir] = useState(0);
   const touch = useRef({ x: 0, y: 0, active: false });
@@ -660,19 +560,16 @@ function StudyView({ deck, onGrade, cram, t }) {
   }
 
   const advance = () => { setShown(false); setIdx(idx + 1); };
-  const grade = (g) => { onGrade(card.id, g); advance(); };
 
   const goNext = () => { if (idx < queue.length - 1) advance(); };
   const goPrev = () => { if (idx > 0) { setShown(false); setIdx(idx - 1); } };
 
-  const swipeEnabled = mode !== 'srs';
-
   const onTouchStart = (e) => {
-    if (!swipeEnabled || e.touches.length !== 1) return;
+    if (e.touches.length !== 1) return;
     touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true, locked: null };
   };
   const onTouchMove = (e) => {
-    if (!swipeEnabled || !touch.current.active) return;
+    if (!touch.current.active) return;
     const dx = e.touches[0].clientX - touch.current.x;
     const dy = e.touches[0].clientY - touch.current.y;
     if (touch.current.locked == null) {
@@ -683,7 +580,7 @@ function StudyView({ deck, onGrade, cram, t }) {
     setDragX(dx);
   };
   const onTouchEnd = () => {
-    if (!swipeEnabled || !touch.current.active) return;
+    if (!touch.current.active) return;
     const dx = dragX;
     touch.current.active = false;
     const T = 60;
@@ -728,32 +625,21 @@ function StudyView({ deck, onGrade, cram, t }) {
         </div>
       </div>
 
-      {mode === 'srs' ? (
-        <div className="cards-grade-row cards-grade-row--two">
-          <button className="cards-grade cards-grade--hard" onClick={() => grade('hard')}>
-            {t('cards.hard')}
-          </button>
-          <button className="cards-grade cards-grade--easy" onClick={() => grade('easy')}>
-            {t('cards.easy')}
-          </button>
-        </div>
-      ) : (
-        <div className="cards-nav-row">
-          <button
-            className="cards-nav-btn"
-            onClick={goPrev}
-            disabled={idx === 0}
-            aria-label={t('cards.prev')}
-          >‹</button>
-          <div className="cards-nav-counter">{idx + 1} / {queue.length}</div>
-          <button
-            className="cards-nav-btn"
-            onClick={goNext}
-            disabled={idx >= queue.length - 1}
-            aria-label={t('cards.next')}
-          >›</button>
-        </div>
-      )}
+      <div className="cards-nav-row">
+        <button
+          className="cards-nav-btn"
+          onClick={goPrev}
+          disabled={idx === 0}
+          aria-label={t('cards.prev')}
+        >‹</button>
+        <div className="cards-nav-counter">{idx + 1} / {queue.length}</div>
+        <button
+          className="cards-nav-btn"
+          onClick={goNext}
+          disabled={idx >= queue.length - 1}
+          aria-label={t('cards.next')}
+        >›</button>
+      </div>
     </div>
   );
 }
