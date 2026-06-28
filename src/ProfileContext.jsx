@@ -82,14 +82,6 @@ export function ProfileProvider({ children }) {
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      // Capture Google refresh_token whenever the OAuth callback hands one
-      // over — it only arrives on a fresh consent (prompt=consent + offline),
-      // so persist it so the sync engine can refresh access tokens later.
-      if (session?.provider_refresh_token && session?.user?.id) {
-        supabase.from('google_sync')
-          .upsert({ user_id: session.user.id, refresh_token: session.provider_refresh_token, updated_at: new Date().toISOString() })
-          .then(({ error }) => { if (error) console.error('google_sync upsert failed', error); });
-      }
       // Skip events that don't change identity — TOKEN_REFRESHED fires on tab
       // refocus and would otherwise flip us through 'loading' → 'ready', which
       // remounts the whole tree and wipes in-progress UI state (study session

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import CharacterPage from './pages/CharacterPage.jsx';
-import CalendarPage from './pages/CalendarPage.jsx';
 import NameModal from './NameModal.jsx';
 import LoginScreen from './LoginScreen.jsx';
 import Landing from './Landing.jsx';
@@ -32,7 +31,6 @@ function useMediaQuery(query) {
 
 function Shell() {
   const { status, error } = useProfile();
-  const { t } = useLang();
   const [view, setView] = useState('home');
   const [showLogin, setShowLoginState] = useState(() => {
     try {
@@ -85,7 +83,6 @@ function Shell() {
         <DesktopSidebar view={view} setView={setView} />
         <main className="desktop-content">
           {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
-          {view === 'calendar' && <CalendarPage />}
           {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
         </main>
       </div>
@@ -95,11 +92,10 @@ function Shell() {
   return (
     <div className="app">
       <div className="single-page">
-        {view === 'cards' ? (
-          <CardsSection rootOnBack={() => setView('home')} />
-        ) : (
-          <MobileShell view={view} setView={setView} t={t} />
-        )}
+        {view === 'cards'
+          ? <CardsSection rootOnBack={() => setView('home')} />
+          : <CharacterPage onNavigate={setView} showNav={true} />
+        }
       </div>
     </div>
   );
@@ -132,13 +128,6 @@ function DesktopSidebar({ view, setView }) {
         >
           <span className="desktop-nav-icon">⚔</span>
           <span>{t('tab.character')}</span>
-        </button>
-        <button
-          className={`desktop-nav-item ${view === 'calendar' ? 'active' : ''}`}
-          onClick={() => setView('calendar')}
-        >
-          <span className="desktop-nav-icon">📅</span>
-          <span>{t('tab.calendar')}</span>
         </button>
         <button
           className={`desktop-nav-item ${view === 'cards' ? 'active' : ''}`}
@@ -177,51 +166,6 @@ function DesktopSidebar({ view, setView }) {
         </button>
       </div>
     </aside>
-  );
-}
-
-function MobileShell({ view, setView, t }) {
-  const startX = useRef(null);
-  const startY = useRef(null);
-  const showTopTabs = view === 'home' || view === 'calendar';
-  const isSwipable = view === 'home';
-
-  const onTouchStart = (e) => {
-    if (e.touches.length !== 1) return;
-    startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
-  };
-  const onTouchEnd = (e) => {
-    if (startX.current == null) return;
-    const dx = e.changedTouches[0].clientX - startX.current;
-    const dy = e.changedTouches[0].clientY - startY.current;
-    startX.current = null;
-    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx)) return;
-    if (!isSwipable) return;
-    if (dx > 0) setView('home');
-    if (dx < 0) setView('calendar');
-  };
-
-  return (
-    <div className="main-shell" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      {showTopTabs && (
-        <div className="top-tabs">
-          <button
-            className={`top-tab ${view === 'home' ? 'active' : ''}`}
-            onClick={() => setView('home')}
-          >{t('tab.character')}</button>
-          <span className="top-tabs-sep">✦</span>
-          <button
-            className={`top-tab ${view === 'calendar' ? 'active' : ''}`}
-            onClick={() => setView('calendar')}
-          >{t('tab.calendar')}</button>
-        </div>
-      )}
-      <div key={view} className="page-slide page-slide-none">
-        {view === 'home' && <CharacterPage onNavigate={setView} showNav={true} />}
-        {view === 'calendar' && <CalendarPage />}
-      </div>
-    </div>
   );
 }
 
