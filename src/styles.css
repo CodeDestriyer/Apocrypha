@@ -1856,6 +1856,27 @@ body {
 }
 .cal-nav-btn:active { transform: scale(0.94); }
 
+.cal-sync-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+  font-family: 'Cinzel', serif;
+}
+.cal-sync-btn {
+  background: rgba(127, 184, 199, 0.06);
+  border: 1px solid rgba(127, 184, 199, 0.28);
+  color: var(--gold-bright);
+  padding: 6px 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cal-sync-btn:hover { background: rgba(127, 184, 199, 0.16); border-color: var(--gold); }
+.cal-sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cal-sync-err { color: #d97a7a; font-size: 11px; }
+
 .cal-shell {
   display: flex;
   flex-direction: column;

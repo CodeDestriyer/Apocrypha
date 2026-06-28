@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
+import { syncDayPlans, pushDeletedDayPlan } from '../calendarSync.js';
 
 const PLANS_KEY = 'lr.plans';
 const LEGACY_KEY = 'lr.periods';
@@ -68,6 +69,37 @@ export default function CalendarPage() {
   const [focusDay, setFocusDay] = useState(() => ymd(new Date()));
   const [quickGoal, setQuickGoal] = useState('');
   const [goalAddOpen, setGoalAddOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | ok | error
+  const [syncError, setSyncError] = useState(null);
+  const syncBusy = useRef(false);
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
+
+  const runSync = async () => {
+    if (syncBusy.current) return;
+    syncBusy.current = true;
+    setSyncStatus('syncing');
+    setSyncError(null);
+    try {
+      const patch = await syncDayPlans(profileRef.current);
+      if (patch) update(() => patch);
+      setSyncStatus('ok');
+    } catch (e) {
+      console.warn('calendar sync error', e);
+      setSyncError(String(e.message || e));
+      setSyncStatus('error');
+    } finally {
+      syncBusy.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (!profile) return;
+    runSync();
+    const id = setInterval(runSync, 60_000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (profile?.plans !== null && profile?.plans !== undefined) return;
@@ -125,10 +157,11 @@ export default function CalendarPage() {
   const addQuickGoal = () => {
     const title = quickGoal.trim();
     if (!title) return;
+    const now = new Date().toISOString();
     update((curr) => ({
       day_plans: [
         ...(Array.isArray(curr.day_plans) ? curr.day_plans : []),
-        { id: newId(), title, day: focusDay, done: false, created_at: new Date().toISOString() },
+        { id: newId(), title, day: focusDay, done: false, created_at: now, updated_at: now },
       ],
     }));
     setQuickGoal('');
@@ -149,15 +182,21 @@ export default function CalendarPage() {
       const arr = Array.isArray(curr.day_plans) ? curr.day_plans : [];
       const target = arr.find((d) => d.id === id);
       const delta = target ? (target.done ? -XP.dayPlan : XP.dayPlan) : 0;
+      const now = new Date().toISOString();
       return {
-        day_plans: arr.map((d) => (d.id === id ? { ...d, done: !d.done } : d)),
+        day_plans: arr.map((d) => (d.id === id ? { ...d, done: !d.done, updated_at: now } : d)),
         xp: Math.max(0, (curr.xp ?? 0) + delta),
       };
     });
   const removeDayPlan = (id) =>
-    update((curr) => ({
-      day_plans: (Array.isArray(curr.day_plans) ? curr.day_plans : []).filter((d) => d.id !== id),
-    }));
+    update((curr) => {
+      const arr = Array.isArray(curr.day_plans) ? curr.day_plans : [];
+      const target = arr.find((d) => d.id === id);
+      if (target?.google_event_id) {
+        pushDeletedDayPlan(target.google_event_id).catch((e) => console.warn('Google delete failed', e));
+      }
+      return { day_plans: arr.filter((d) => d.id !== id) };
+    });
   const toggleHabitDay = (habitId) =>
     update((curr) => {
       const asceses = curr.asceses ?? [];
@@ -196,6 +235,20 @@ export default function CalendarPage() {
           <button className="cal-nav-btn" onClick={() => {
             const d = new Date(viewDate); d.setMonth(d.getMonth() + 1); setViewDate(d);
           }}>›</button>
+        </div>
+
+        <div className="cal-sync-row">
+          <button
+            className="cal-sync-btn"
+            onClick={runSync}
+            disabled={syncStatus === 'syncing'}
+            title={syncError ?? ''}
+          >
+            {syncStatus === 'syncing' ? '⟳ …' : syncStatus === 'error' ? '⚠ Sync' : '⟳ Sync'}
+          </button>
+          {syncStatus === 'error' && (
+            <span className="cal-sync-err">{syncError === 'no_google_token' || syncError === 'google_token_expired' ? 'Переподключи Google (выйди → войди)' : 'sync error'}</span>
+          )}
         </div>
 
         <div className="cal-month-wd">

@@ -47,7 +47,11 @@ export async function signInAnonymous() {
 export async function signInWithGoogle() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin },
+    options: {
+      redirectTo: window.location.origin,
+      scopes: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly',
+      queryParams: { access_type: 'offline', prompt: 'consent' },
+    },
   });
   if (error) throw error;
 }
