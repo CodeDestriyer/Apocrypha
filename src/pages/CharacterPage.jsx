@@ -5,21 +5,12 @@ import { signOut } from '../supabase.js';
 import CharacterModel from '../CharacterModel.jsx';
 
 const NAV = [
-  { id: 'goals',       labelKey: 'nav.goals',       icon: '✧', summary: (p) => (p.goals ?? []).filter((g) => !g.done).length },
-  { id: 'skills',      labelKey: 'nav.skills',      icon: '✦', summary: (p) => (p.skills ?? []).reduce((s, v) => s + (typeof v.rank === 'number' ? v.rank : (v.level ?? 0)), 0) },
-  { id: 'asceses',     labelKey: 'nav.asceses',     icon: '☥', summary: (p) => (p.asceses ?? []).filter((a) => a.status === 'active').length },
-  { id: 'cards',       labelKey: 'nav.cards',       icon: '⌘', summary: (p) => {
-      const today = new Date().toISOString().slice(0, 10);
-      return (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).filter((c) => !c.due || c.due <= today).length, 0);
-    } },
-  { id: 'moneymaxing', labelKey: 'nav.moneymaxing', icon: '❖', summary: (p) => (p.moneymaxing ?? []).length },
-  { id: 'looksmaxing', labelKey: 'nav.looksmaxing', icon: '✺', summary: (p) => (p.looksmaxing ?? []).length },
-  { id: 'menmaxing',   labelKey: 'nav.menmaxing',   icon: '♂', summary: (p) => (p.menmaxing ?? []).length },
+  { id: 'cards', labelKey: 'nav.cards', icon: '⌘', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
 ];
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);
-const DEFAULT_HIDDEN = ['moneymaxing', 'looksmaxing', 'menmaxing'];
-const MAXING_IDS = ['moneymaxing', 'looksmaxing', 'menmaxing'];
+const DEFAULT_HIDDEN = [];
+const MAXING_IDS = [];
 
 const PREFS_KEY = 'lr.modulePrefs';
 
