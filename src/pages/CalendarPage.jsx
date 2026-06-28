@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { syncDayPlans, pushDeletedDayPlan } from '../calendarSync.js';
+import { supabase, connectGoogleCalendar } from '../supabase.js';
 
 const PLANS_KEY = 'lr.plans';
 const LEGACY_KEY = 'lr.periods';
@@ -69,14 +70,21 @@ export default function CalendarPage() {
   const [focusDay, setFocusDay] = useState(() => ymd(new Date()));
   const [quickGoal, setQuickGoal] = useState('');
   const [goalAddOpen, setGoalAddOpen] = useState(false);
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | ok | error
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | ok | error | disconnected
   const [syncError, setSyncError] = useState(null);
+  const [connecting, setConnecting] = useState(false);
   const syncBusy = useRef(false);
   const profileRef = useRef(profile);
   profileRef.current = profile;
 
+  const hasGoogleSync = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session?.provider_token;
+  };
+
   const runSync = async () => {
     if (syncBusy.current) return;
+    if (!(await hasGoogleSync())) { setSyncStatus('disconnected'); return; }
     syncBusy.current = true;
     setSyncStatus('syncing');
     setSyncError(null);
@@ -87,7 +95,7 @@ export default function CalendarPage() {
     } catch (e) {
       console.warn('calendar sync error', e);
       setSyncError(String(e.message || e));
-      setSyncStatus('error');
+      setSyncStatus(e.message === 'no_google_token' || e.message === 'google_token_expired' ? 'disconnected' : 'error');
     } finally {
       syncBusy.current = false;
     }
@@ -100,6 +108,12 @@ export default function CalendarPage() {
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const onConnect = async () => {
+    setConnecting(true);
+    try { await connectGoogleCalendar(); }
+    catch (e) { setConnecting(false); setSyncError(String(e.message || e)); }
+  };
 
   useEffect(() => {
     if (profile?.plans !== null && profile?.plans !== undefined) return;
@@ -238,16 +252,24 @@ export default function CalendarPage() {
         </div>
 
         <div className="cal-sync-row">
-          <button
-            className="cal-sync-btn"
-            onClick={runSync}
-            disabled={syncStatus === 'syncing'}
-            title={syncError ?? ''}
-          >
-            {syncStatus === 'syncing' ? '⟳ …' : syncStatus === 'error' ? '⚠ Sync' : '⟳ Sync'}
-          </button>
-          {syncStatus === 'error' && (
-            <span className="cal-sync-err">{syncError === 'no_google_token' || syncError === 'google_token_expired' ? 'Переподключи Google (выйди → войди)' : 'sync error'}</span>
+          {syncStatus === 'disconnected' ? (
+            <button className="cal-sync-btn cal-sync-btn--connect" onClick={onConnect} disabled={connecting}>
+              {connecting ? '…' : 'Подключить Google Calendar'}
+            </button>
+          ) : (
+            <>
+              <button
+                className="cal-sync-btn"
+                onClick={runSync}
+                disabled={syncStatus === 'syncing'}
+                title={syncError ?? ''}
+              >
+                {syncStatus === 'syncing' ? '⟳ …' : syncStatus === 'error' ? '⚠ Sync' : '⟳ Sync'}
+              </button>
+              {syncStatus === 'error' && (
+                <span className="cal-sync-err">sync error</span>
+              )}
+            </>
           )}
         </div>
 

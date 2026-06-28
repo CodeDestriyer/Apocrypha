@@ -47,8 +47,19 @@ export async function signInAnonymous() {
 export async function signInWithGoogle() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  if (error) throw error;
+}
+
+// Separate opt-in flow for users who want Google Calendar sync. Requesting
+// calendar scopes requires Google verification or test-user enrollment; we
+// keep it off the default sign-in so non-test friends can still log in.
+export async function connectGoogleCalendar() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: window.location.origin + '?app',
       scopes: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly',
       queryParams: { access_type: 'offline', prompt: 'consent' },
     },

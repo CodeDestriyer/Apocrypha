@@ -1875,6 +1875,12 @@ body {
 }
 .cal-sync-btn:hover { background: rgba(127, 184, 199, 0.16); border-color: var(--gold); }
 .cal-sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cal-sync-btn--connect {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(190, 158, 92, 0.08);
+}
+.cal-sync-btn--connect:hover { background: rgba(190, 158, 92, 0.18); }
 .cal-sync-err { color: #d97a7a; font-size: 11px; }
 
 .cal-shell {
