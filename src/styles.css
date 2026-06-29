@@ -3797,6 +3797,117 @@ body {
   color: #4a4135;
   font-style: italic;
 }
+
+/* Archetype result: Core + Shadow duo, then the ranked rest */
+.archetype-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.archetype-card {
+  position: relative;
+  padding: 18px 16px 16px;
+  border-radius: 12px;
+  border: 1px solid #d6c9a8;
+  background: linear-gradient(180deg, #fffdf5 0%, #f5ecd2 100%);
+  box-shadow: 0 4px 14px rgba(40, 28, 8, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.archetype-core {
+  border: 1px solid #b8924a;
+  background: linear-gradient(180deg, #fff8e1 0%, #efd8a0 100%);
+  box-shadow: 0 8px 24px rgba(184, 146, 74, 0.22);
+}
+.archetype-shadow {
+  background: linear-gradient(180deg, #f0ead4 0%, #d8cdac 100%);
+  border-color: #a89570;
+}
+.archetype-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #8a5a1a;
+}
+.archetype-shadow .archetype-tag { color: #6b5a3a; }
+.archetype-name {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  margin: 0;
+  color: #1b1814;
+  letter-spacing: 0.04em;
+}
+.archetype-desc {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #3a342b;
+}
+.archetype-score {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #8a7d63;
+}
+.archetype-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.archetype-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 1.4fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+}
+.archetype-row-rank {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: #b8924a;
+  text-align: right;
+}
+.archetype-row-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: #1b1814;
+  letter-spacing: 0.04em;
+}
+.archetype-row-bar {
+  display: block;
+  height: 6px;
+  background: #ece4d2;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #e0d3b0;
+}
+.archetype-row-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #b8924a, #e8c98a);
+  transition: width 0.5s;
+}
+.archetype-row-score {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: #8a7d63;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 520px) {
+  .archetype-duo { grid-template-columns: 1fr; }
+  .archetype-row { grid-template-columns: 22px 1fr auto; }
+  .archetype-row-bar { display: none; }
+}
 .card-stage {
   margin: 16px 0 14px;
   min-height: 360px;

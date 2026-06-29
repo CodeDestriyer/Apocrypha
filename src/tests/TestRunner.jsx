@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
-import { ADHD, DARK_TRIAD, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad } from './data.js';
+import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes } from './data.js';
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5 };
 
@@ -150,6 +150,55 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
   );
 }
 
+function ArchetypeResult({ test, answers, onClose, onRestart }) {
+  const { lang, t } = useLang();
+  const { ranked, core, shadow } = useMemo(() => scoreArchetypes(test, answers), [test, answers]);
+  const rest = ranked.slice(2);
+  return (
+    <div className="test-result">
+      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+
+      <div className="archetype-duo">
+        <div className="archetype-card archetype-core">
+          <span className="archetype-tag">{tx(test.coreLabel, lang)}</span>
+          <h4 className="archetype-name">{tx(test.archetypes[core.key], lang)}</h4>
+          <p className="archetype-desc">{tx(test.descriptions[core.key], lang)}</p>
+          <span className="archetype-score">{core.sum}/{core.max}</span>
+        </div>
+        <div className="archetype-card archetype-shadow">
+          <span className="archetype-tag">{tx(test.shadowLabel, lang)}</span>
+          <h4 className="archetype-name">{tx(test.archetypes[shadow.key], lang)}</h4>
+          <p className="archetype-desc">{tx(test.descriptions[shadow.key], lang)}</p>
+          <span className="archetype-score">{shadow.sum}/{shadow.max}</span>
+        </div>
+      </div>
+
+      <ul className="archetype-list">
+        {rest.map((r, i) => (
+          <li key={r.key} className="archetype-row">
+            <span className="archetype-row-rank">{i + 3}</span>
+            <span className="archetype-row-name">{tx(test.archetypes[r.key], lang)}</span>
+            <span className="archetype-row-bar"><span style={{ width: `${r.pct}%` }} /></span>
+            <span className="archetype-row-score">{r.sum}/{r.max}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="test-actions">
+        <button className="test-secondary" onClick={onRestart}>
+          {t('test.restart') || 'Restart'}
+        </button>
+        <button className="test-submit" onClick={onClose}>
+          {t('test.done') || 'Done'}
+        </button>
+      </div>
+      <p className="test-disclaimer">
+        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
+      </p>
+    </div>
+  );
+}
+
 export default function TestRunner({ test, onClose }) {
   const { lang, t } = useLang();
   const scaleSet = SCALE_LABELS[test.scale] ?? FREQ5;
@@ -266,6 +315,9 @@ export default function TestRunner({ test, onClose }) {
             )}
             {test.id === DARK_TRIAD.id && (
               <DarkTriadResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+            )}
+            {test.id === ARCHETYPE_TEST.id && (
+              <ArchetypeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
           </>
         )}

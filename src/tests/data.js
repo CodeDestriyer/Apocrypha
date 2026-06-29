@@ -142,7 +142,147 @@ export const DARK_TRIAD = {
   },
 };
 
-export const TESTS = [ADHD, DARK_TRIAD];
+// Personality archetypes — 24 items, 5-point agree scale (0..4), grouped into
+// 12 archetype pairs (max 8 per archetype). Top archetype is the Core, second
+// is the Shadow. Inventory-style, not a clinical instrument.
+export const ARCHETYPES = {
+  warrior:    { ru: 'Воин',         en: 'The Warrior',    es: 'El Guerrero' },
+  iconoclast: { ru: 'Иконоборец',   en: 'The Iconoclast', es: 'El Iconoclasta' },
+  alchemist:  { ru: 'Алхимик',      en: 'The Alchemist',  es: 'El Alquimista' },
+  sovereign:  { ru: 'Властитель',   en: 'The Sovereign',  es: 'El Soberano' },
+  visionary:  { ru: 'Визионер',     en: 'The Visionary',  es: 'El Visionario' },
+  protector:  { ru: 'Защитник',     en: 'The Protector',  es: 'El Protector' },
+  analyst:    { ru: 'Аналитик',     en: 'The Analyst',    es: 'El Analista' },
+  seeker:     { ru: 'Искатель',     en: 'The Seeker',     es: 'El Buscador' },
+  idealist:   { ru: 'Идеалист',     en: 'The Idealist',   es: 'El Idealista' },
+  realist:    { ru: 'Реалист',      en: 'The Realist',    es: 'El Realista' },
+  aesthetic:  { ru: 'Эстет',        en: 'The Aesthetic',  es: 'El Estético' },
+  trickster:  { ru: 'Трикстер',     en: 'The Trickster',  es: 'El Embaucador' },
+};
+
+export const ARCHETYPE_DESC = {
+  warrior: {
+    ru: 'Дисциплина, выносливость, борьба как образ жизни. Силу куёт через сопротивление.',
+    en: 'Discipline, endurance, struggle as a way of life. Forges strength through resistance.',
+    es: 'Disciplina, resistencia, la lucha como modo de vida. Forja la fuerza a través de la resistencia.',
+  },
+  iconoclast: {
+    ru: 'Ломает устаревшие догмы и системы. Прогресс через разрушение.',
+    en: 'Breaks obsolete dogmas and systems. Progress through destruction.',
+    es: 'Rompe dogmas y sistemas obsoletos. Progreso mediante la destrucción.',
+  },
+  alchemist: {
+    ru: 'Превращает хаос в функцию. Меняет реальность через знание скрытых законов.',
+    en: 'Turns chaos into function. Changes reality through knowledge of hidden laws.',
+    es: 'Transforma el caos en función. Cambia la realidad mediante el conocimiento de leyes ocultas.',
+  },
+  sovereign: {
+    ru: 'Строит системы, держит структуру. Берёт на себя бремя сложных решений.',
+    en: 'Builds systems, holds structure. Takes the burden of hard decisions.',
+    es: 'Construye sistemas, mantiene la estructura. Asume la carga de decisiones difíciles.',
+  },
+  visionary: {
+    ru: 'Создаёт принципиально новое. Видит будущее раньше остальных.',
+    en: 'Creates the fundamentally new. Sees the future before others.',
+    es: 'Crea lo fundamentalmente nuevo. Ve el futuro antes que los demás.',
+  },
+  protector: {
+    ru: 'Сила ради безопасности своих. Прагматичный страж ресурсов и стабильности.',
+    en: 'Strength for the safety of one\'s own. A pragmatic guardian of resources and stability.',
+    es: 'Fuerza para la seguridad de los suyos. Guardián pragmático de recursos y estabilidad.',
+  },
+  analyst: {
+    ru: 'Логика, данные, истинная суть. Чувства — шум, факты — сигнал.',
+    en: 'Logic, data, true essence. Feelings are noise, facts are signal.',
+    es: 'Lógica, datos, esencia verdadera. Los sentimientos son ruido, los hechos son señal.',
+  },
+  seeker: {
+    ru: 'Свобода и новые горизонты. Не выносит жёстких рамок и оседлости.',
+    en: 'Freedom and new horizons. Can\'t stand rigid frames or settling down.',
+    es: 'Libertad y nuevos horizontes. No soporta los marcos rígidos ni quedarse en un sitio.',
+  },
+  idealist: {
+    ru: 'Чистота концепции, верность принципам. Простота как высшая форма.',
+    en: 'Purity of concept, loyalty to principles. Simplicity as the highest form.',
+    es: 'Pureza del concepto, lealtad a los principios. La simplicidad como forma superior.',
+  },
+  realist: {
+    ru: 'Холодный расчёт, без иллюзий. Опирается на работающие системы и сообщества.',
+    en: 'Cold calculation, no illusions. Relies on systems and communities that actually work.',
+    es: 'Cálculo frío, sin ilusiones. Se apoya en sistemas y comunidades que funcionan.',
+  },
+  aesthetic: {
+    ru: 'Качество, глубина и красота. Презирает дешёвое и фальшивое.',
+    en: 'Quality, depth, and beauty. Despises the cheap and the fake.',
+    es: 'Calidad, profundidad y belleza. Desprecia lo barato y lo falso.',
+  },
+  trickster: {
+    ru: 'Юмор, ирония, провокация. Видит игру там, где другие — правила.',
+    en: 'Humor, irony, provocation. Sees a game where others see rules.',
+    es: 'Humor, ironía, provocación. Ve un juego donde otros ven reglas.',
+  },
+};
+
+export const ARCHETYPE_TEST = {
+  id: 'archetypes',
+  scale: 'agree5',
+  max: 5,
+  logo: '/cards.jpg',
+  author: 'Varkanis',
+  title: { ru: 'Архетипы личности', en: 'Personality Archetypes', es: 'Arquetipos de personalidad' },
+  short: {
+    ru: '24 утверждения, ~3 минуты. Найди свой Архетип-ядро и Тень.',
+    en: '24 statements, ~3 minutes. Find your Core archetype and your Shadow.',
+    es: '24 afirmaciones, ~3 minutos. Encuentra tu Arquetipo-Núcleo y tu Sombra.',
+  },
+  coreLabel:   { ru: 'Ядро',  en: 'Core',   es: 'Núcleo' },
+  shadowLabel: { ru: 'Тень',  en: 'Shadow', es: 'Sombra' },
+  items: [
+    { archetype: 'warrior',    ru: 'Я готов терпеть сильнейший дискомфорт и боль ради своих целей.',                                en: "I'm willing to endure extreme discomfort and pain to reach my goals.",                          es: 'Estoy dispuesto a soportar la incomodidad extrema y el dolor para alcanzar mis objetivos.' },
+    { archetype: 'iconoclast', ru: 'Правила и традиции созданы, чтобы их ломать, если они тормозят прогресс.',                       en: 'Rules and traditions are made to be broken if they hold back progress.',                        es: 'Las reglas y tradiciones están hechas para romperse si frenan el progreso.' },
+    { archetype: 'alchemist',  ru: 'Я верю, что понимание фундаментальных законов природы и разума даёт безграничную силу.',         en: 'I believe that understanding the fundamental laws of nature and the mind grants unlimited power.', es: 'Creo que entender las leyes fundamentales de la naturaleza y la mente otorga un poder ilimitado.' },
+    { archetype: 'sovereign',  ru: 'Контроль, структура и иерархия необходимы для эффективного управления любым процессом.',         en: 'Control, structure, and hierarchy are necessary to manage any process effectively.',            es: 'El control, la estructura y la jerarquía son necesarios para gestionar cualquier proceso con eficacia.' },
+    { archetype: 'visionary',  ru: 'Для меня важнее всего создать что-то принципиально новое и осязаемое, чего раньше не было.',     en: "For me, the most important thing is to create something fundamentally new and tangible that didn't exist before.", es: 'Para mí lo más importante es crear algo fundamentalmente nuevo y tangible que no existiera antes.' },
+    { archetype: 'protector',  ru: 'Сила нужна, чтобы защищать свои ресурсы и обеспечивать безопасность близких.',                  en: "Strength is needed to protect one's resources and ensure the safety of those close to you.",    es: 'La fuerza es necesaria para proteger los recursos propios y garantizar la seguridad de los cercanos.' },
+    { archetype: 'analyst',    ru: 'Объективные факты, данные и логика всегда важнее субъективных чувств.',                          en: 'Objective facts, data, and logic are always more important than subjective feelings.',          es: 'Los hechos objetivos, los datos y la lógica siempre son más importantes que los sentimientos subjetivos.' },
+    { archetype: 'seeker',     ru: 'Ограничения и жёсткие рамки меня душат — мне жизненно нужна автономия.',                          en: 'Restrictions and rigid frameworks suffocate me; I vitally need autonomy.',                       es: 'Las limitaciones y los marcos rígidos me asfixian; necesito autonomía de forma vital.' },
+    { archetype: 'idealist',   ru: 'Я верю, что всё в мире можно свести к абсолютной чистоте, простоте и идеальной эффективности.',  en: 'I believe everything in the world can be reduced to absolute purity, simplicity, and perfect efficiency.', es: 'Creo que todo en el mundo se puede reducir a la pureza absoluta, la simplicidad y la eficiencia perfecta.' },
+    { archetype: 'realist',    ru: 'Я твёрдо стою на земле и оцениваю мир без иллюзий, опираясь на холодный расчёт.',                en: 'I have my feet on the ground and assess the world without illusions, relying on cold calculation.', es: 'Tengo los pies en la tierra y evalúo el mundo sin ilusiones, apoyándome en el cálculo frío.' },
+    { archetype: 'aesthetic',  ru: 'Эстетика, качество и глубина восприятия определяют ценность жизни и любого продукта.',           en: 'Aesthetics, quality, and depth of perception define the value of life and of any product.',      es: 'La estética, la calidad y la profundidad de percepción definen el valor de la vida y de cualquier producto.' },
+    { archetype: 'trickster',  ru: 'Юмор, ирония и социальная провокация — лучшие инструменты для разоблачения чужой глупости.',     en: "Humor, irony, and social provocation are the best tools for deconstructing other people's stupidity.", es: 'El humor, la ironía y la provocación social son las mejores herramientas para deconstruir la estupidez ajena.' },
+
+    { archetype: 'warrior',    ru: 'Борьба и преодоление препятствий мотивируют меня больше, чем тихий триумф.',                     en: 'Struggle and overcoming obstacles motivate me more than a quiet victory.',                       es: 'La lucha y superar obstáculos me motivan más que un triunfo tranquilo.' },
+    { archetype: 'iconoclast', ru: 'Я искренне рад разрушать устаревшие и неэффективные социальные догмы.',                          en: 'I sincerely enjoy destroying obsolete and inefficient social dogmas.',                          es: 'Me alegra sinceramente destruir dogmas sociales obsoletos e ineficientes.' },
+    { archetype: 'alchemist',  ru: 'Мне нравится превращать хаос в функциональные концепции и менять реальность вокруг.',            en: 'I like to turn chaos into functional concepts and reshape the reality around me.',              es: 'Me gusta transformar el caos en conceptos funcionales y cambiar la realidad a mi alrededor.' },
+    { archetype: 'sovereign',  ru: 'Я без колебаний беру на себя ответственность за сложные решения, когда другие пасуют.',           en: 'I unhesitatingly take responsibility for hard decisions when others falter.',                    es: 'Asumo sin dudar la responsabilidad de tomar decisiones difíciles cuando otros se acobardan.' },
+    { archetype: 'visionary',  ru: 'Я постоянно изобретаю новые системы, инструменты или алгоритмы, оптимизируя мир.',               en: 'I constantly invent new systems, tools, or algorithms, optimizing the world.',                   es: 'Constantemente invento nuevos sistemas, herramientas o algoritmos, optimizando el mundo.' },
+    { archetype: 'protector',  ru: 'Я подхожу к рискам прагматично и всегда забочусь о стабильности своей "системы".',               en: 'I approach risks pragmatically and always look after the stability of my "system".',            es: 'Enfoco los riesgos de manera pragmática y siempre cuido la estabilidad de mi "sistema".' },
+    { archetype: 'analyst',    ru: 'Я провожу много времени, анализируя детали, чтобы понять истинную суть вещей.',                  en: 'I spend a lot of time analyzing details to grasp the true essence of things.',                   es: 'Paso mucho tiempo analizando los detalles para comprender la verdadera esencia de las cosas.' },
+    { archetype: 'seeker',     ru: 'Я постоянно ищу новые горизонты, знания и опыт, не задерживаясь надолго на одном месте.',         en: 'I constantly seek new horizons, knowledge, and experiences, without staying in one place for long.', es: 'Busco constantemente nuevos horizontes, conocimientos y experiencias, sin quedarme mucho tiempo en un solo lugar.' },
+    { archetype: 'idealist',   ru: 'Верность базовым принципам и чистота концепта важнее сиюминутной выгоды.',                       en: 'Staying true to my core principles and the purity of the concept matter more than immediate gain.', es: 'Ser fiel a mis principios básicos y la pureza del concepto son más importantes que el beneficio inmediato.' },
+    { archetype: 'realist',    ru: 'Быть частью функционального сообщества и понимать его законы — ключ к стабильному выживанию.',   en: 'Being part of a functional community and understanding its laws is the key to stable survival.', es: 'Formar parte de una comunidad funcional y entender sus leyes es la clave para una supervivencia estable.' },
+    { archetype: 'aesthetic',  ru: 'Я ищу эксклюзивные связи с людьми и вещами, презирая дешёвое и фальшивое.',                       en: 'I seek exclusive connections with people and things, scorning the cheap and the fake.',         es: 'Busco conexiones exclusivas con personas y cosas, despreciando lo barato y lo falso.' },
+    { archetype: 'trickster',  ru: 'Жизнь — это игра, и нужно уметь использовать слабости других ради забавы или выгоды.',           en: "Life is a game, and you need to know how to use other people's weaknesses for fun or profit.",    es: 'La vida es un juego, y hay que saber usar las debilidades de los demás por diversión o beneficio.' },
+  ],
+  archetypes: ARCHETYPES,
+  descriptions: ARCHETYPE_DESC,
+};
+
+export const TESTS = [ADHD, DARK_TRIAD, ARCHETYPE_TEST];
+
+export function scoreArchetypes(test, answers) {
+  const sums = {};
+  Object.keys(test.archetypes).forEach((k) => { sums[k] = 0; });
+  test.items.forEach((item, i) => {
+    const raw = answers[i];
+    if (raw == null) return;
+    sums[item.archetype] += raw - 1; // 1..5 → 0..4
+  });
+  const ranked = Object.entries(sums)
+    .map(([key, sum]) => ({ key, sum, max: 8, pct: Math.round((sum / 8) * 100) }))
+    .sort((a, b) => b.sum - a.sum || a.key.localeCompare(b.key));
+  return { ranked, core: ranked[0], shadow: ranked[1] };
+}
 
 export function scoreDarkTriad(test, answers) {
   const sums = { M: 0, N: 0, P: 0 };
