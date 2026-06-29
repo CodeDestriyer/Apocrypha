@@ -88,6 +88,9 @@ function TestsPage({ onStart }) {
       <ul className="landing-test-list">
         {TESTS.map((test) => (
           <li key={test.id} className="landing-test-card">
+            {test.logo && (
+              <img className="landing-test-logo" src={test.logo} alt="" aria-hidden="true" />
+            )}
             <div className="landing-test-meta">
               <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
               <p className="landing-test-short">{tx(test.short, lang)}</p>

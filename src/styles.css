@@ -3626,12 +3626,131 @@ body {
   color: #6e5b30;
 }
 
+.landing-test-logo {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #f1ead4;
+  border: 1px solid #e0d3b0;
+  padding: 4px;
+}
+
+/* ─── ADHD test cards ─────────────────────────────── */
+.test-modal-card {
+  max-width: 560px;
+}
+.card-stage {
+  margin: 18px 0 14px;
+  min-height: 360px;
+  position: relative;
+  perspective: 1200px;
+}
+.card {
+  background: linear-gradient(180deg, #fffdf5 0%, #f7efd9 100%);
+  border: 1px solid #d6c9a8;
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 6px 18px rgba(40, 28, 8, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: transform 180ms ease, opacity 180ms ease;
+  transform: translateX(0) scale(1);
+  opacity: 1;
+}
+.card-out-left  { transform: translateX(-30%) scale(0.96); opacity: 0; }
+.card-out-right { transform: translateX(30%)  scale(0.96); opacity: 0; }
+.card-in-right  { transform: translateX(30%)  scale(0.96); opacity: 0; }
+.card-in-left   { transform: translateX(-30%) scale(0.96); opacity: 0; }
+.card-num {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: #8a7d63;
+  text-transform: uppercase;
+}
+.card-question {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  line-height: 1.45;
+  color: #1b1814;
+  min-height: 80px;
+}
+.card-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  background: #fff;
+  border: 1px solid #e0d3b0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1b1814;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 80ms ease, background 120ms ease, border-color 120ms ease;
+}
+.card-option:hover { background: #fbf6e8; border-color: #b8924a; }
+.card-option:active { transform: translateY(1px); }
+.card-option.active {
+  background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
+  color: #fff8e6;
+  border-color: #0d0b08;
+}
+.card-option.active .card-option-dot { background: #e8c98a; border-color: #e8c98a; }
+.card-option-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #b8924a;
+  background: transparent;
+  flex-shrink: 0;
+}
+.opt-0 .card-option-dot { border-color: #6b8a5a; }
+.opt-1 .card-option-dot { border-color: #8aa46a; }
+.opt-2 .card-option-dot { border-color: #c9a04a; }
+.opt-3 .card-option-dot { border-color: #c97a3a; }
+.opt-4 .card-option-dot { border-color: #b04a3a; }
+.card-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.card-nav-btn {
+  flex: 1;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid #d6c9a8;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #4a4135;
+  cursor: pointer;
+}
+.card-nav-btn:hover:not(:disabled) { background: #f1ead4; }
+.card-nav-btn:disabled { opacity: 0.4; cursor: default; }
+.card-nav-result { flex: 1.4; }
+
 @media (max-width: 520px) {
   .landing-test-card { flex-direction: column; align-items: stretch; }
+  .landing-test-logo { width: 96px; height: 96px; align-self: center; }
   .landing-test-go { width: 100%; }
   .likert-dot { height: 36px; }
   .likert-dot-inner { width: 22px; height: 22px; }
   .test-modal { padding: 18px 14px 22px; }
+  .card { padding: 18px 16px; }
+  .card-question { font-size: 16px; min-height: 64px; }
 }
 
 /* ─── Cards (Anki-like) ─────────────────────────────── */
