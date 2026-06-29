@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useLang } from '../i18n.jsx';
-import { BIG_FIVE, ROSENBERG, LIKERT4, LIKERT5, scoreBigFive, scoreRosenberg } from './data.js';
+import { BIG_FIVE, ROSENBERG, ADHD, LIKERT4, LIKERT5, FREQ5, scoreBigFive, scoreRosenberg, scoreAdhd } from './data.js';
+
+const SCALE_LABELS = { likert4: LIKERT4, likert5: LIKERT5, freq5: FREQ5 };
 
 function tx(obj, lang) {
   return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
@@ -81,9 +83,46 @@ function RosenbergResult({ test, answers }) {
   );
 }
 
+function AdhdResult({ test, answers }) {
+  const { lang } = useLang();
+  const { total, max, band, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
+  const pct = Math.round((total / max) * 100);
+  const order = ['I', 'H', 'P'];
+  return (
+    <div className="test-result">
+      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <div className="rosenberg-score">
+        <div className="rosenberg-score-num">{total}<span>/{max}</span></div>
+        <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
+      </div>
+      <div className="big5-bar-track" style={{ marginTop: 12 }}>
+        <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      <div className="big5-bars" style={{ marginTop: 18 }}>
+        {order.map((k) => {
+          const s = subscales[k];
+          return (
+            <div key={k} className="big5-bar">
+              <div className="big5-bar-head">
+                <span className="big5-bar-name">{tx(test.subscales[k], lang)}</span>
+                <span className="big5-bar-pct">{s.sum}/{s.max}</span>
+              </div>
+              <div className="big5-bar-track">
+                <div className="big5-bar-fill" style={{ width: `${s.pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function TestRunner({ test, onClose }) {
   const { lang, t } = useLang();
-  const labels = (test.scale === 'likert4' ? LIKERT4 : LIKERT5)[lang] ?? (test.scale === 'likert4' ? LIKERT4.en : LIKERT5.en);
+  const scaleSet = SCALE_LABELS[test.scale] ?? LIKERT5;
+  const labels = scaleSet[lang] ?? scaleSet.en;
   const [answers, setAnswers] = useState(() => new Array(test.items.length).fill(null));
   const [submitted, setSubmitted] = useState(false);
 
@@ -151,6 +190,7 @@ export default function TestRunner({ test, onClose }) {
           <>
             {test.id === BIG_FIVE.id && <BigFiveResult test={test} answers={answers} />}
             {test.id === ROSENBERG.id && <RosenbergResult test={test} answers={answers} />}
+            {test.id === ADHD.id && <AdhdResult test={test} answers={answers} />}
             <div className="test-actions">
               <button className="test-secondary" onClick={() => setSubmitted(false)}>
                 {t('test.review') || 'Review answers'}
