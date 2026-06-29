@@ -109,9 +109,9 @@ export default function TestRunner({ test, onClose }) {
 
   return (
     <div className="test-overlay" role="dialog" aria-modal="true">
-      <div className="test-modal test-modal-card">
+      <div className={`test-modal test-modal-card ${submitted ? 'test-modal-result' : ''}`}>
         <header className="test-header">
-          <h2 className="test-title">{tx(test.title, lang)}</h2>
+          {!submitted && <h2 className="test-title">{tx(test.title, lang)}</h2>}
           <button className="test-close" onClick={onClose} aria-label={t('test.close') || 'Close'}>×</button>
         </header>
 

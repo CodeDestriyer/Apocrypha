@@ -3310,20 +3310,21 @@ body {
 .landing-test-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 18px;
+  padding: 18px 20px;
   background: #fff;
   border: 1px solid #e5dcc4;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 .landing-test-meta { flex: 1; min-width: 0; }
 .landing-test-title {
   font-family: 'Cinzel', serif;
-  font-size: 16px;
-  margin: 0 0 4px;
+  font-size: 19px;
+  margin: 0 0 8px;
   color: #1b1814;
   letter-spacing: 0.04em;
+  line-height: 1.25;
 }
 .landing-test-short {
   margin: 0;
@@ -3339,15 +3340,15 @@ body {
 }
 .landing-test-count {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 12px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #8a7d63;
 }
 .landing-test-author {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
-  letter-spacing: 0.22em;
+  font-size: 12px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #b8924a;
   padding-left: 10px;
@@ -3355,14 +3356,14 @@ body {
 }
 .landing-test-go {
   flex-shrink: 0;
-  padding: 12px 20px;
+  padding: 10px 16px;
   background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
   color: #fff8e6;
   border: none;
   border-radius: 6px;
   font-family: 'Cinzel', serif;
-  font-size: 12px;
-  letter-spacing: 0.22em;
+  font-size: 11px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 0 0 1px #d4b87a inset;
@@ -3642,10 +3643,10 @@ body {
 
 .landing-test-logo {
   flex-shrink: 0;
-  width: 112px;
-  height: 112px;
+  width: 88px;
+  height: 88px;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 /* ─── ADHD test cards ─────────────────────────────── */
@@ -3673,6 +3674,30 @@ body {
 .test-modal-card .test-progress-bar {
   background: rgba(255, 248, 230, 0.18);
 }
+
+/* Result panel: opaque paper inside the otherwise-transparent test modal */
+.test-modal-result .test-header {
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.test-modal-result .test-result {
+  background: #fbf6e8;
+  border: 1px solid #d6c9a8;
+  border-radius: 16px;
+  padding: 26px 24px 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  color: #1b1814;
+}
+.test-modal-result .test-result-title {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.test-modal-result .rosenberg-score {
+  justify-content: center;
+  text-align: center;
+}
+.test-modal-result .test-actions { justify-content: center; }
+.test-modal-result .test-disclaimer { color: #8a7d63; }
 .card-stage {
   margin: 16px 0 14px;
   min-height: 360px;
