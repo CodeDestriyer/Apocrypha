@@ -88,7 +88,7 @@ export const DARK_TRIAD = {
   max: 5,
   logo: '/DARKTRIAD.jpg',
   author: 'Varkanis',
-  title: { ru: 'Тёмные черты личности', en: 'Dark personality traits', es: 'Rasgos oscuros de la personalidad' },
+  title: { ru: 'Тёмная триада', en: 'Dark Triad', es: 'Tríada Oscura' },
   short: {
     ru: '18 вопросов, ~3 минуты. Три черты: макиавеллизм, нарциссизм, субклиническая психопатия.',
     en: '18 questions, ~3 minutes. Three traits: Machiavellianism, narcissism, subclinical psychopathy.',
