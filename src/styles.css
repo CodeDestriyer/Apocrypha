@@ -57,13 +57,16 @@ body {
 
 .card {
   width: min(420px, 100%);
-  background: linear-gradient(160deg, rgba(22, 32, 48, 0.95), rgba(10, 18, 30, 0.95));
+  background: linear-gradient(160deg, rgb(22, 32, 48), rgb(10, 18, 30)) !important;
+  background-color: rgb(10, 18, 30) !important;
+  color: var(--text);
   border: 1px solid rgba(127, 184, 199, 0.3);
   border-radius: 14px;
   padding: 28px 24px 22px;
   box-shadow: var(--shadow);
   text-align: center;
   position: relative;
+  forced-color-adjust: none;
 }
 
 .card::before, .card::after {

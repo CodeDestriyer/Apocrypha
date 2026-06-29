@@ -27,7 +27,14 @@ function scheduleStuckRecovery() {
 }
 scheduleStuckRecovery();
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// Strip the pre-rendered SEO landing markup before React mounts. createRoot()
+// is supposed to replace children on first commit but if a CSS class from the
+// fallback (e.g. .landing) is somehow still in the DOM it can bleed styles
+// into the live app — clearing explicitly removes that risk.
+const _rootEl = document.getElementById('root');
+while (_rootEl?.firstChild) _rootEl.removeChild(_rootEl.firstChild);
+
+ReactDOM.createRoot(_rootEl).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
