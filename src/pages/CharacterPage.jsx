@@ -265,6 +265,98 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   );
 }
 
+function fmtNum(n) {
+  if (n == null) return '—';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(n >= 10_000 ? 0 : 1) + 'K';
+  return String(n);
+}
+
+function TikTokPanel({ username, onUsernameChange }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(username);
+
+  const fetchStats = async (u) => {
+    if (!u) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await fetch(`/api/tt-stats?u=${encodeURIComponent(u)}`);
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'fetch_failed');
+      setData(j);
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { if (username) fetchStats(username); }, [username]);
+
+  if (!username && !editing) {
+    return (
+      <div className="tt-panel tt-panel--empty">
+        <button className="tt-connect-btn" onClick={() => { setDraft(''); setEditing(true); }}>
+          + Подключить TikTok
+        </button>
+      </div>
+    );
+  }
+
+  if (editing) {
+    const save = () => {
+      const v = draft.replace(/^@/, '').trim();
+      onUsernameChange(v);
+      setEditing(false);
+    };
+    return (
+      <div className="tt-panel">
+        <div className="tt-edit-row">
+          <span className="tt-at">@</span>
+          <input
+            className="tt-input"
+            value={draft}
+            autoFocus
+            placeholder="username"
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
+            maxLength={30}
+          />
+          <button className="tt-save" onClick={save} disabled={!draft.trim()}>✓</button>
+          <button className="tt-cancel" onClick={() => setEditing(false)}>×</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="tt-panel">
+      <div className="tt-header">
+        <span className="tt-label">TikTok</span>
+        <button className="tt-username" onClick={() => { setDraft(username); setEditing(true); }}>
+          @{username}
+        </button>
+        <button className="tt-refresh" onClick={() => fetchStats(username)} disabled={loading} aria-label="refresh">
+          {loading ? '⟳' : '↻'}
+        </button>
+      </div>
+      {error ? (
+        <div className="tt-error">не удалось получить ({error})</div>
+      ) : (
+        <div className="tt-stats">
+          <div className="tt-stat"><div className="tt-stat-num">{fmtNum(data?.followers)}</div><div className="tt-stat-label">подписчики</div></div>
+          <div className="tt-stat"><div className="tt-stat-num">{fmtNum(data?.likes)}</div><div className="tt-stat-label">лайки</div></div>
+          <div className="tt-stat"><div className="tt-stat-num">{fmtNum(data?.videos)}</div><div className="tt-stat-label">видео</div></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CharacterPage({ onNavigate, hideNav = false, showNav = true, extra = null }) {
   const { profile, update, googleAvatar } = useProfile();
   const { t } = useLang();
@@ -314,6 +406,11 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
           <CharacterModel src="/man.glb" />
         </div>
       )}
+
+      <TikTokPanel
+        username={profile.tiktok_username ?? ''}
+        onUsernameChange={(u) => update({ tiktok_username: u })}
+      />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 
