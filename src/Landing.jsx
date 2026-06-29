@@ -84,7 +84,6 @@ function TestsPage({ onStart }) {
   const { lang, t } = useLang();
   return (
     <main className="landing-main landing-tests-page">
-      <p className="landing-tests-intro">{t('landing.testsIntro')}</p>
       <ul className="landing-test-list">
         {TESTS.map((test) => (
           <li key={test.id} className="landing-test-card">
@@ -93,10 +92,14 @@ function TestsPage({ onStart }) {
             )}
             <div className="landing-test-meta">
               <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
-              <p className="landing-test-short">{tx(test.short, lang)}</p>
-              <span className="landing-test-count">
-                {test.items.length} {t('landing.questions')}
-              </span>
+              <div className="landing-test-byline">
+                <span className="landing-test-count">
+                  {test.items.length} {t('landing.questions')}
+                </span>
+                {test.author && (
+                  <span className="landing-test-author">{test.author}</span>
+                )}
+              </div>
             </div>
             <button className="landing-test-go" onClick={() => onStart(test)}>
               {t('landing.takeTest')}
@@ -104,7 +107,6 @@ function TestsPage({ onStart }) {
           </li>
         ))}
       </ul>
-      <p className="landing-tests-disclaimer">{t('test.disclaimer')}</p>
     </main>
   );
 }

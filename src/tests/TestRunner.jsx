@@ -111,12 +111,7 @@ export default function TestRunner({ test, onClose }) {
     <div className="test-overlay" role="dialog" aria-modal="true">
       <div className="test-modal test-modal-card">
         <header className="test-header">
-          <div>
-            <h2 className="test-title">{tx(test.title, lang)}</h2>
-            {!submitted && index === 0 && answers[0] == null && (
-              <p className="test-sub">{tx(test.short, lang)}</p>
-            )}
-          </div>
+          <h2 className="test-title">{tx(test.title, lang)}</h2>
           <button className="test-close" onClick={onClose} aria-label={t('test.close') || 'Close'}>×</button>
         </header>
 
@@ -167,13 +162,6 @@ export default function TestRunner({ test, onClose }) {
                   {t('test.result') || 'Show result'}
                 </button>
               )}
-              <button
-                className="card-nav-btn"
-                onClick={() => goTo(index + 1, 'forward')}
-                disabled={index === total - 1 && answers[index] == null}
-              >
-                {t('test.skip') || 'Skip →'}
-              </button>
             </div>
           </>
         ) : (

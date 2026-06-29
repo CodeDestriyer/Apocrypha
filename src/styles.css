@@ -3331,14 +3331,27 @@ body {
   color: #4a4135;
   line-height: 1.4;
 }
+.landing-test-byline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
 .landing-test-count {
-  display: inline-block;
-  margin-top: 8px;
   font-family: 'Cinzel', serif;
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #8a7d63;
+}
+.landing-test-author {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #b8924a;
+  padding-left: 10px;
+  border-left: 1px solid #e0d3b0;
 }
 .landing-test-go {
   flex-shrink: 0;
@@ -3369,14 +3382,15 @@ body {
 .test-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 16, 10, 0.55);
+  background: rgba(20, 16, 10, 0.35);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   z-index: 100;
   overflow-y: auto;
-  padding: 24px 12px;
-  backdrop-filter: blur(2px);
+  padding: 24px 16px;
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
 }
 .test-modal {
   width: 100%;
@@ -3628,31 +3642,54 @@ body {
 
 .landing-test-logo {
   flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 112px;
+  height: 112px;
   object-fit: contain;
-  border-radius: 10px;
-  background: #f1ead4;
-  border: 1px solid #e0d3b0;
-  padding: 4px;
+  border-radius: 12px;
 }
 
 /* ─── ADHD test cards ─────────────────────────────── */
 .test-modal-card {
-  max-width: 560px;
+  max-width: 540px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 16px 4px 22px;
+}
+.test-modal-card .test-title {
+  color: #fbf6e8;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  width: 100%;
+}
+.test-modal-card .test-header { align-items: center; }
+.test-modal-card .test-close {
+  color: #fbf6e8;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  font-size: 32px;
+}
+.test-modal-card .test-close:hover { color: #fff; }
+.test-modal-card .test-progress { color: #f1e6c8; }
+.test-modal-card .test-progress-bar {
+  background: rgba(255, 248, 230, 0.18);
 }
 .card-stage {
-  margin: 18px 0 14px;
+  margin: 16px 0 14px;
   min-height: 360px;
   position: relative;
-  perspective: 1200px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
 }
 .card {
-  background: linear-gradient(180deg, #fffdf5 0%, #f7efd9 100%);
-  border: 1px solid #d6c9a8;
-  border-radius: 14px;
-  padding: 22px 22px 18px;
-  box-shadow: 0 6px 18px rgba(40, 28, 8, 0.08);
+  width: 100%;
+  background: rgba(255, 253, 245, 0.92);
+  border: 1px solid rgba(214, 201, 168, 0.6);
+  border-radius: 16px;
+  padding: 24px 22px 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -3725,22 +3762,25 @@ body {
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: center;
+  margin-top: 6px;
 }
 .card-nav-btn {
-  flex: 1;
-  padding: 10px 14px;
-  background: transparent;
-  border: 1px solid #d6c9a8;
-  border-radius: 8px;
+  padding: 10px 22px;
+  background: rgba(255, 248, 230, 0.12);
+  border: 1px solid rgba(255, 248, 230, 0.28);
+  border-radius: 999px;
   font-family: 'Cinzel', serif;
   font-size: 12px;
-  letter-spacing: 0.08em;
-  color: #4a4135;
+  letter-spacing: 0.12em;
+  color: #fbf6e8;
   cursor: pointer;
+  text-transform: uppercase;
+  transition: background 120ms ease, opacity 120ms ease;
 }
-.card-nav-btn:hover:not(:disabled) { background: #f1ead4; }
-.card-nav-btn:disabled { opacity: 0.4; cursor: default; }
-.card-nav-result { flex: 1.4; }
+.card-nav-btn:hover:not(:disabled) { background: rgba(255, 248, 230, 0.22); }
+.card-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.card-nav-result { padding: 12px 26px; }
 
 @media (max-width: 520px) {
   .landing-test-card { flex-direction: column; align-items: stretch; }

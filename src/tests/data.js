@@ -11,7 +11,8 @@ export const ADHD = {
   id: 'adhd',
   scale: 'freq5',
   max: 5,
-  logo: '/FDAH1.gif',
+  logo: '/FDAH1.png',
+  author: 'Varkanis',
   title: { ru: 'Скрининг СДВГ', en: 'ADHD Screening', es: 'Cribado de TDAH' },
   short: {
     ru: '20 вопросов, ~3 минуты. Оцени, как часто это происходило за последние 6 месяцев.',
