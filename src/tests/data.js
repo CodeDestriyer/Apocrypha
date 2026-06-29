@@ -7,6 +7,12 @@ export const FREQ5 = {
   es: ['Nunca', 'Rara vez', 'A veces', 'Con frecuencia', 'Muy a menudo'],
 };
 
+export const AGREE5 = {
+  ru: ['Полностью не согласен', 'Не согласен', 'Нейтрально', 'Согласен', 'Полностью согласен'],
+  en: ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'],
+  es: ['Totalmente en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Totalmente de acuerdo'],
+};
+
 export const ADHD = {
   id: 'adhd',
   scale: 'freq5',
@@ -73,7 +79,88 @@ export const ADHD = {
   },
 };
 
-export const TESTS = [ADHD];
+// Dark Triad self-report. 18 items, 5-point agree-disagree scale (0..4),
+// three subscales (Machiavellianism, Narcissism, Psychopathy), max 24 each.
+// Items adapted from SD3 / Dirty Dozen-style inventories. Educational use only.
+export const DARK_TRIAD = {
+  id: 'dark-triad',
+  scale: 'agree5',
+  max: 5,
+  logo: '/DARKTRIAD.jpg',
+  author: 'Varkanis',
+  title: { ru: 'Тёмная триада', en: 'Dark Triad', es: 'Tríada Oscura' },
+  short: {
+    ru: '18 вопросов, ~3 минуты. Три черты: макиавеллизм, нарциссизм, субклиническая психопатия.',
+    en: '18 questions, ~3 minutes. Three traits: Machiavellianism, narcissism, subclinical psychopathy.',
+    es: '18 preguntas, ~3 minutos. Tres rasgos: maquiavelismo, narcisismo y psicopatía subclínica.',
+  },
+  // subscale codes: M=Machiavellianism, N=Narcissism, P=Psychopathy
+  items: [
+    { subscale: 'M', ru: 'Сотрудничать с людьми разумно только когда тебе это лично выгодно.',                 en: "It's smart to cooperate with people only when it personally benefits you.",                 es: 'Es inteligente colaborar con la gente solo cuando te conviene a ti personalmente.' },
+    { subscale: 'M', ru: 'Ради важной цели можно и нужно манипулировать другими.',                              en: 'To achieve an important goal, you can and should manipulate others.',                       es: 'Para lograr un objetivo importante, se puede y se debe manipular a los demás.' },
+    { subscale: 'M', ru: 'Лучше не раскрывать настоящие мотивы и секреты даже самым близким.',                  en: "It's better not to reveal your true motives or secrets, even to those closest to you.",     es: 'Es mejor no revelar tus verdaderos motivos ni tus secretos, incluso a los más cercanos.' },
+    { subscale: 'M', ru: 'Большинство людей по природе наивны — ими легко управлять.',                          en: "Most people are naive by nature, so they're easy to steer.",                                es: 'La mayoría de la gente es ingenua por naturaleza, por lo que es fácil de dirigir.' },
+    { subscale: 'M', ru: 'Я тщательно планирую каждый шаг ради максимальной выгоды в будущем.',                 en: 'I carefully plan every step to gain maximum benefit later.',                                es: 'Planifico cada paso con cuidado para obtener el máximo beneficio en el futuro.' },
+    { subscale: 'M', ru: 'Говорить правду стоит только если это не вредит твоим интересам.',                    en: "Telling the truth is only worth it if it doesn't hurt your own interests.",                 es: 'Solo vale la pena decir la verdad si esto no perjudica tus propios intereses.' },
+
+    { subscale: 'N', ru: 'Я знаю, что я особенный и заслуживаю большего, чем обычные люди.',                    en: "I know I'm a special person and deserve more than ordinary people.",                        es: 'Sé que soy una persona especial y merezco más que la gente común.' },
+    { subscale: 'N', ru: 'Мне нужно быть в центре внимания и получать признание от окружающих.',                en: 'I need to be the center of attention and get recognition from others.',                    es: 'Necesito ser el centro de atención y recibir el reconocimiento de los demás.' },
+    { subscale: 'N', ru: 'Я рождён, чтобы вести за собой и управлять процессами.',                              en: 'I was born to lead others and control how things go.',                                      es: 'He nacido para liderar a los demás y controlar los procesos.' },
+    { subscale: 'N', ru: 'Меня сильно задевает, когда не замечают мои таланты или успехи.',                     en: "It deeply bothers me when people don't notice my talents or successes.",                    es: 'Me molesta profundamente cuando la gente no nota mis talentos o mis éxitos.' },
+    { subscale: 'N', ru: 'Мне приятна мысль, что другие завидуют моему статусу или достижениям.',               en: 'I like the idea that other people envy my status or achievements.',                         es: 'Me agrada la idea de que otras personas envidien mi estatus o mis logros.' },
+    { subscale: 'N', ru: 'Я заслуживаю особого отношения и не должен никому ничего объяснять.',                 en: 'I deserve preferential treatment without having to explain myself to anyone.',              es: 'Merezco un trato preferencial sin tener que dar explicaciones a nadie.' },
+
+    { subscale: 'P', ru: 'Чужие проблемы, слёзы и драмы меня почти не трогают.',                                en: "Other people's problems, tears, and dramas barely affect me.",                              es: 'Los problemas, las lágrimas y los dramas de los demás casi no me importan.' },
+    { subscale: 'P', ru: 'Я быстро скучаю, поэтому часто ищу риск и сильные эмоции.',                           en: 'I get bored very quickly, so I tend to seek risk and strong emotions.',                     es: 'Me aburro muy rápido, por lo que suelo buscar el riesgo y las emociones fuertes.' },
+    { subscale: 'P', ru: 'Если кто-то встаёт у меня на пути, я могу быть совершенно беспощадным.',              en: 'If someone gets in my way, I can become completely ruthless.',                              es: 'Si alguien se interpone en mi camino, puedo llegar a ser completamente despiadado.' },
+    { subscale: 'P', ru: 'Я редко испытываю вину или раскаяние, если мои действия кому-то навредили.',          en: 'I rarely feel guilt or remorse if my actions have hurt someone.',                           es: 'Rara vez siento culpa o remordimiento si mis acciones han perjudicado a alguien.' },
+    { subscale: 'P', ru: 'Правила, законы и социальные нормы — для толпы, а не для меня.',                      en: 'Rules, laws, and social norms are made for the masses, not for me.',                        es: 'Las reglas, las leyes y las normas sociales están hechas para la masa, no para mí.' },
+    { subscale: 'P', ru: 'Я могу убедительно соврать в лицо, не испытывая никакого дискомфорта.',               en: "I can lie to someone's face very convincingly without feeling any discomfort.",             es: 'Puedo mentirle a alguien a la cara de forma muy convincente sin sentir ningún malestar.' },
+  ],
+  subscales: {
+    M: { ru: 'Макиавеллизм',  en: 'Machiavellianism', es: 'Maquiavelismo' },
+    N: { ru: 'Нарциссизм',    en: 'Narcissism',       es: 'Narcisismo' },
+    P: { ru: 'Психопатия',    en: 'Psychopathy',      es: 'Psicopatía' },
+  },
+  // Per-subscale interpretation (0..24): low ≤8, mid 9-16, high ≥17
+  subscaleBands: {
+    M: {
+      low:  { ru: 'Прямолинейный, доверчивый',           en: 'Straightforward, trusting',         es: 'Directo, confiado' },
+      mid:  { ru: 'Прагматичный',                        en: 'Pragmatic',                          es: 'Pragmático' },
+      high: { ru: 'Циничный манипулятор, стратег',       en: 'Cynical manipulator, strategist',    es: 'Manipulador cínico, estratega' },
+    },
+    N: {
+      low:  { ru: 'Скромный, неуверенный',               en: 'Modest, uncertain',                  es: 'Modesto, inseguro' },
+      mid:  { ru: 'Здоровая самооценка',                 en: 'Healthy self-regard',                es: 'Autoestima saludable' },
+      high: { ru: 'Эгоцентричный, грандиозный',          en: 'Egocentric, grandiose',              es: 'Egocéntrico, grandioso' },
+    },
+    P: {
+      low:  { ru: 'Высокая эмпатия, осторожный',         en: 'High empathy, cautious',             es: 'Alta empatía, prudente' },
+      mid:  { ru: 'Хладнокровный',                       en: 'Cool-headed',                        es: 'Sangre fría' },
+      high: { ru: 'Импульсивный, бесстрашный, жёсткий',  en: 'Impulsive, fearless, harsh',         es: 'Impulsivo, audaz, duro' },
+    },
+  },
+};
+
+export const TESTS = [ADHD, DARK_TRIAD];
+
+export function scoreDarkTriad(test, answers) {
+  const sums = { M: 0, N: 0, P: 0 };
+  const counts = { M: 0, N: 0, P: 0 };
+  test.items.forEach((item, i) => {
+    const raw = answers[i];
+    if (raw == null) return;
+    sums[item.subscale] += raw - 1; // 1..5 → 0..4
+    counts[item.subscale] += 1;
+  });
+  const bandOf = (v) => (v <= 8 ? 'low' : v >= 17 ? 'high' : 'mid');
+  const subscales = Object.fromEntries(Object.entries(sums).map(([k, s]) => {
+    const c = counts[k] || 1;
+    const m = c * 4;
+    return [k, { sum: s, max: m, pct: Math.round((s / m) * 100), band: bandOf(s) }];
+  }));
+  return { subscales };
+}
 
 export function scoreAdhd(test, answers) {
   const sums = { I: 0, H: 0, P: 0 };
