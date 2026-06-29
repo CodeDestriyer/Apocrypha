@@ -891,13 +891,28 @@ body {
   flex-shrink: 0;
 }
 .landing-foot {
+  position: relative;
+  padding: 0;
   text-align: center;
-  padding: 18px;
   font-family: 'Cinzel', serif;
   font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #8a7d63;
+}
+.landing-foot-copy {
+  display: block;
+  padding: 14px 18px 18px;
+}
+.landing-angels {
+  width: 100%;
+  height: clamp(110px, 14vw, 170px);
+  background: url('/angels.jpg') center 32% / cover no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 55%, #000 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, #000 55%, #000 100%);
+  pointer-events: none;
+  filter: saturate(0.92) brightness(1.02);
+  opacity: 0.95;
 }
 @media (min-width: 720px) {
   .landing-features { grid-template-columns: 1fr 1fr; }

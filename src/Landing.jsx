@@ -179,7 +179,8 @@ export default function Landing({ onLogin }) {
       {view === 'courses' && <CoursesPage />}
 
       <footer className="landing-foot">
-        <span>© Varkanis</span>
+        <div className="landing-angels" aria-hidden="true" />
+        <span className="landing-foot-copy">© Varkanis</span>
       </footer>
 
       {activeTest && (
