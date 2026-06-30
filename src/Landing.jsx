@@ -180,7 +180,6 @@ export default function Landing({ onLogin }) {
 
       <footer className="landing-foot">
         <div className="landing-angels" aria-hidden="true" />
-        <span className="landing-foot-copy">© Varkanis</span>
       </footer>
 
       {activeTest && (

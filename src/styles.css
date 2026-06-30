@@ -1014,14 +1014,10 @@ body {
   text-transform: uppercase;
   color: #8a7d63;
 }
-.landing-foot-copy {
-  display: block;
-  padding: 14px 18px 18px;
-}
 .landing-angels {
   width: 100%;
-  height: clamp(110px, 14vw, 170px);
-  background: url('/angels.jpg') center 32% / cover no-repeat;
+  height: clamp(80px, 12vw, 160px);
+  background: url('/angels2.jpg') center 45% / cover no-repeat;
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 55%, #000 100%);
           mask-image: linear-gradient(180deg, transparent 0%, #000 55%, #000 100%);
   pointer-events: none;
