@@ -178,9 +178,7 @@ export default function Landing({ onLogin }) {
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
       {view === 'courses' && <CoursesPage />}
 
-      <footer className="landing-foot">
-        <div className="landing-angels" aria-hidden="true" />
-      </footer>
+      <footer className="landing-foot" />
 
       {activeTest && (
         <TestRunner
