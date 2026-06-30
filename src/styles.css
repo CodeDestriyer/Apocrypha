@@ -4018,7 +4018,7 @@ body {
   .archetype-row { grid-template-columns: 22px 1fr auto; }
   .archetype-row-bar { display: none; }
 }
-.card-stage {
+.qcard-stage {
   margin: 16px 0 14px;
   min-height: 360px;
   position: relative;
@@ -4026,7 +4026,7 @@ body {
   align-items: stretch;
   justify-content: center;
 }
-.card {
+.qcard {
   width: 100%;
   background: rgba(255, 253, 245, 0.92);
   border: 1px solid rgba(214, 201, 168, 0.6);
@@ -4042,18 +4042,18 @@ body {
   transform: translateX(0) scale(1);
   opacity: 1;
 }
-.card-out-left  { transform: translateX(-30%) scale(0.96); opacity: 0; }
-.card-out-right { transform: translateX(30%)  scale(0.96); opacity: 0; }
-.card-in-right  { transform: translateX(30%)  scale(0.96); opacity: 0; }
-.card-in-left   { transform: translateX(-30%) scale(0.96); opacity: 0; }
-.card-num {
+.qcard-out-left  { transform: translateX(-30%) scale(0.96); opacity: 0; }
+.qcard-out-right { transform: translateX(30%)  scale(0.96); opacity: 0; }
+.qcard-in-right  { transform: translateX(30%)  scale(0.96); opacity: 0; }
+.qcard-in-left   { transform: translateX(-30%) scale(0.96); opacity: 0; }
+.qcard-num {
   font-family: 'Cinzel', serif;
   font-size: 11px;
   letter-spacing: 0.22em;
   color: #8a7d63;
   text-transform: uppercase;
 }
-.card-question {
+.qcard-question {
   margin: 0;
   font-family: 'Cinzel', serif;
   font-size: 18px;
@@ -4061,12 +4061,12 @@ body {
   color: #1b1814;
   min-height: 80px;
 }
-.card-options {
+.qcard-options {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.card-option {
+.qcard-option {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -4082,15 +4082,15 @@ body {
   text-align: left;
   transition: transform 80ms ease, background 120ms ease, border-color 120ms ease;
 }
-.card-option:hover { background: #fbf6e8; border-color: #b8924a; }
-.card-option:active { transform: translateY(1px); }
-.card-option.active {
+.qcard-option:hover { background: #fbf6e8; border-color: #b8924a; }
+.qcard-option:active { transform: translateY(1px); }
+.qcard-option.active {
   background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
   color: #fff8e6;
   border-color: #0d0b08;
 }
-.card-option.active .card-option-dot { background: #e8c98a; border-color: #e8c98a; }
-.card-option-dot {
+.qcard-option.active .qcard-option-dot { background: #e8c98a; border-color: #e8c98a; }
+.qcard-option-dot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -4098,19 +4098,19 @@ body {
   background: transparent;
   flex-shrink: 0;
 }
-.opt-0 .card-option-dot { border-color: #6b8a5a; }
-.opt-1 .card-option-dot { border-color: #8aa46a; }
-.opt-2 .card-option-dot { border-color: #c9a04a; }
-.opt-3 .card-option-dot { border-color: #c97a3a; }
-.opt-4 .card-option-dot { border-color: #b04a3a; }
-.card-nav {
+.opt-0 .qcard-option-dot { border-color: #6b8a5a; }
+.opt-1 .qcard-option-dot { border-color: #8aa46a; }
+.opt-2 .qcard-option-dot { border-color: #c9a04a; }
+.opt-3 .qcard-option-dot { border-color: #c97a3a; }
+.opt-4 .qcard-option-dot { border-color: #b04a3a; }
+.qcard-nav {
   display: flex;
   gap: 10px;
   align-items: center;
   justify-content: center;
   margin-top: 6px;
 }
-.card-nav-btn {
+.qcard-nav-btn {
   padding: 10px 22px;
   background: rgba(255, 248, 230, 0.12);
   border: 1px solid rgba(255, 248, 230, 0.28);
@@ -4123,9 +4123,9 @@ body {
   text-transform: uppercase;
   transition: background 120ms ease, opacity 120ms ease;
 }
-.card-nav-btn:hover:not(:disabled) { background: rgba(255, 248, 230, 0.22); }
-.card-nav-btn:disabled { opacity: 0.3; cursor: default; }
-.card-nav-result { padding: 12px 26px; }
+.qcard-nav-btn:hover:not(:disabled) { background: rgba(255, 248, 230, 0.22); }
+.qcard-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.qcard-nav-result { padding: 12px 26px; }
 
 @media (max-width: 520px) {
   .landing-test-card { flex-direction: column; align-items: stretch; }
@@ -4134,8 +4134,8 @@ body {
   .likert-dot { height: 36px; }
   .likert-dot-inner { width: 22px; height: 22px; }
   .test-modal { padding: 18px 14px 22px; }
-  .card { padding: 18px 16px; }
-  .card-question { font-size: 16px; min-height: 64px; }
+  .qcard { padding: 18px 16px; }
+  .qcard-question { font-size: 16px; min-height: 64px; }
 }
 
 /* ─── Cards (Anki-like) ─────────────────────────────── */

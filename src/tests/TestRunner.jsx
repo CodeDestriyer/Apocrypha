@@ -266,11 +266,11 @@ export default function TestRunner({ test, onClose }) {
               <span>{index + 1} / {total}</span>
             </div>
 
-            <div className="card-stage">
-              <div className={`card ${transition ? `card-${transition}` : ''}`}>
-                <div className="card-num">{index + 1}</div>
-                <p className="card-question">{tx(item, lang)}</p>
-                <div className="card-options">
+            <div className="qcard-stage">
+              <div className={`qcard ${transition ? `qcard-${transition}` : ''}`}>
+                <div className="qcard-num">{index + 1}</div>
+                <p className="qcard-question">{tx(item, lang)}</p>
+                <div className="qcard-options">
                   {labels.map((label, i) => {
                     const val = i + 1;
                     const active = answers[index] === val;
@@ -278,11 +278,11 @@ export default function TestRunner({ test, onClose }) {
                       <button
                         key={val}
                         type="button"
-                        className={`card-option opt-${i} ${active ? 'active' : ''}`}
+                        className={`qcard-option opt-${i} ${active ? 'active' : ''}`}
                         onClick={() => pick(val)}
                       >
-                        <span className="card-option-dot" />
-                        <span className="card-option-label">{label}</span>
+                        <span className="qcard-option-dot" />
+                        <span className="qcard-option-label">{label}</span>
                       </button>
                     );
                   })}
@@ -290,9 +290,9 @@ export default function TestRunner({ test, onClose }) {
               </div>
             </div>
 
-            <div className="card-nav">
+            <div className="qcard-nav">
               <button
-                className="card-nav-btn"
+                className="qcard-nav-btn"
                 onClick={() => goTo(index - 1, 'back')}
                 disabled={index === 0}
               >
@@ -300,7 +300,7 @@ export default function TestRunner({ test, onClose }) {
               </button>
               {complete && (
                 <button
-                  className="test-submit card-nav-result"
+                  className="test-submit qcard-nav-result"
                   onClick={() => setSubmitted(true)}
                 >
                   {t('test.result') || 'Show result'}
