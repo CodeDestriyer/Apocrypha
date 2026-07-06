@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 import App from './App.jsx';
 import './styles.css';
 
@@ -37,6 +38,7 @@ while (_rootEl?.firstChild) _rootEl.removeChild(_rootEl.firstChild);
 ReactDOM.createRoot(_rootEl).render(
   <React.StrictMode>
     <App />
+    <Analytics />
   </React.StrictMode>
 );
 
