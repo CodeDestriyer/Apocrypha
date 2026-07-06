@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLang, LANGS } from './i18n.jsx';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
-import CoursePreview from './CoursePreview.jsx';
 
 const COURSES = [
   {
@@ -11,7 +10,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    preview: '/MENTESBAJOCONTROL-PROMO.pdf',
+    preview: '/MENTESBAJOCONTROL-PROMO_FINAL.pdf',
     hotmartUrl: 'https://hotmart.com/es/marketplace/productos/mentes-bajo-control-manipulacion-social-nivel-1/L106624559K?sck=HOTMART_SITE&search=10103c75-a40b-4598-a331-04850e1475da&hotfeature=33',
     url: null,
   },
@@ -151,7 +150,7 @@ function TestsPage({ onStart }) {
   );
 }
 
-function CoursesPage({ onPreview }) {
+function CoursesPage() {
   const { lang, t } = useLang();
   return (
     <main className="landing-main landing-tests-page">
@@ -175,9 +174,14 @@ function CoursesPage({ onPreview }) {
               )}
             </div>
             {course.preview ? (
-              <button className="landing-test-go" onClick={() => onPreview(course)}>
+              <a
+                className="landing-test-go"
+                href={course.preview}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {t('landing.preview')}
-              </button>
+              </a>
             ) : (
               <button className="landing-test-go" disabled>
                 {t('landing.courseSoon')}
@@ -194,7 +198,6 @@ export default function Landing({ onLogin }) {
   const { t } = useLang();
   const [view, setView] = useState('home');
   const [activeTest, setActiveTest] = useState(null);
-  const [previewCourse, setPreviewCourse] = useState(null);
 
   const isHome = view === 'home';
 
@@ -246,7 +249,7 @@ export default function Landing({ onLogin }) {
         </main>
       )}
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
-      {view === 'courses' && <CoursesPage onPreview={setPreviewCourse} />}
+      {view === 'courses' && <CoursesPage />}
 
       <footer className="landing-foot" />
 
@@ -254,13 +257,6 @@ export default function Landing({ onLogin }) {
         <TestRunner
           test={activeTest}
           onClose={() => setActiveTest(null)}
-        />
-      )}
-
-      {previewCourse && (
-        <CoursePreview
-          course={previewCourse}
-          onClose={() => setPreviewCourse(null)}
         />
       )}
     </div>
