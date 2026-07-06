@@ -3421,17 +3421,23 @@ body {
   gap: 10px;
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 12px;
-  padding: 16px 20px;
-  background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
-  border: 1px solid #0d0b08;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22), 0 0 0 1px #d4b87a inset;
+  margin-bottom: 16px;
+  padding: 11px 15px;
+  background: #fff;
+  border: 1px solid #e2d8bf;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.landing-test-search:focus-within {
+  border-color: #c8a86a;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(200, 168, 106, 0.18);
 }
 .landing-test-search-icon {
-  font-size: 20px;
-  color: #d4b87a;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  color: #b09a6a;
+  flex-shrink: 0;
 }
 .landing-test-search-input {
   flex: 1;
@@ -3441,20 +3447,21 @@ body {
   background: transparent;
   font-family: 'EB Garamond', serif;
   font-size: 16px;
-  color: #fff8e6;
+  color: #1b1814;
 }
-.landing-test-search-input::placeholder { color: rgba(255, 248, 230, 0.55); font-style: italic; }
+.landing-test-search-input::placeholder { color: #9a8f78; font-style: italic; }
 .landing-test-search-input::-webkit-search-cancel-button { display: none; }
 .landing-test-search-clear {
   background: transparent;
   border: none;
   font-size: 22px;
   line-height: 1;
-  color: #d4b87a;
+  color: #b09a6a;
   cursor: pointer;
   padding: 0 4px;
+  flex-shrink: 0;
 }
-.landing-test-search-clear:hover { color: #fff8e6; }
+.landing-test-search-clear:hover { color: #1b1814; }
 .landing-test-empty {
   text-align: center;
   padding: 32px 12px;
@@ -3482,6 +3489,13 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
+.landing-test-body {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
 .landing-test-meta { flex: 1; min-width: 0; }
 .landing-test-title {
   font-family: 'Cinzel', serif;
@@ -3500,11 +3514,13 @@ body {
 .landing-test-byline {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   margin-top: 6px;
 }
 .landing-test-count {
   font-family: 'Cinzel', serif;
+  white-space: nowrap;
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -4239,7 +4255,9 @@ body {
 
 @media (max-width: 520px) {
   .landing-test-card { flex-direction: column; align-items: stretch; }
-  .landing-test-logo { width: 96px; height: 96px; align-self: center; }
+  /* Test card on mobile: photo small & left, info right, button below */
+  .landing-test-body { flex-direction: row; align-items: center; gap: 14px; }
+  .landing-test-logo { width: 76px; height: 76px; align-self: center; }
   .landing-course-card { padding: 18px; gap: 16px; min-height: 0; }
   .landing-course-card .landing-test-title { font-size: 20px; }
   .landing-test-go { width: 100%; }

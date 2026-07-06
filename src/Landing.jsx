@@ -97,7 +97,12 @@ function TestsPage({ onStart }) {
   return (
     <main className="landing-main landing-tests-page">
       <div className="landing-test-search">
-        <span className="landing-test-search-icon" aria-hidden="true">⌕</span>
+        <span className="landing-test-search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" />
+          </svg>
+        </span>
         <input
           type="search"
           className="landing-test-search-input"
@@ -121,22 +126,24 @@ function TestsPage({ onStart }) {
         <ul className="landing-test-list">
           {filtered.map((test) => (
             <li key={test.id} className="landing-test-card">
-              {test.logo && (
-                <img
-                  className="landing-test-logo"
-                  src={test.logo}
-                  alt={`${tx(test.title, lang)} — Varkanis, comunidad de psicología y desarrollo personal`}
-                />
-              )}
-              <div className="landing-test-meta">
-                <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
-                <div className="landing-test-byline">
-                  <span className="landing-test-count">
-                    {test.items.length} {t('landing.questions')}
-                  </span>
-                  {test.author && (
-                    <span className="landing-test-author">{test.author}</span>
-                  )}
+              <div className="landing-test-body">
+                {test.logo && (
+                  <img
+                    className="landing-test-logo"
+                    src={test.logo}
+                    alt={`${tx(test.title, lang)} — Varkanis, comunidad de psicología y desarrollo personal`}
+                  />
+                )}
+                <div className="landing-test-meta">
+                  <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
+                  <div className="landing-test-byline">
+                    <span className="landing-test-count">
+                      {test.items.length} {t('landing.questions')}
+                    </span>
+                    {test.author && (
+                      <span className="landing-test-author">{test.author}</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <button className="landing-test-go" onClick={() => onStart(test)}>
