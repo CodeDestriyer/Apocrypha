@@ -17,7 +17,7 @@ export const ADHD = {
   id: 'adhd',
   scale: 'freq5',
   max: 5,
-  logo: '/FDAH1.png',
+  logo: '/varkanis-test-tdah.png',
   author: 'Varkanis',
   title: { ru: 'Скрининг СДВГ', en: 'ADHD Screening', es: 'Cribado de TDAH' },
   short: {
@@ -86,7 +86,7 @@ export const DARK_TRIAD = {
   id: 'dark-triad',
   scale: 'agree5',
   max: 5,
-  logo: '/DARKTRIAD.jpg',
+  logo: '/varkanis-test-triada-oscura.jpg',
   author: 'Varkanis',
   title: { ru: 'Тёмная триада', en: 'Dark Triad', es: 'Tríada Oscura' },
   short: {
@@ -227,7 +227,7 @@ export const ARCHETYPE_TEST = {
   id: 'archetypes',
   scale: 'agree5',
   max: 5,
-  logo: '/cards.jpg',
+  logo: '/varkanis-test-arquetipos.jpg',
   author: 'Varkanis',
   title: { ru: 'Архетипы личности', en: 'Personality Archetypes', es: 'Arquetipos de personalidad' },
   short: {

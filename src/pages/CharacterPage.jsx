@@ -372,7 +372,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
       <div className="char-layout">
         <div className="avatar avatar-big">
           {googleAvatar ? (
-            <img className="avatar-img" src={googleAvatar} alt="" referrerPolicy="no-referrer" />
+            <img className="avatar-img" src={googleAvatar} alt="Avatar de usuario — Varkanis" referrerPolicy="no-referrer" />
           ) : (
             <span className="avatar-fallback">{(profile.name || '?').trim().charAt(0).toUpperCase()}</span>
           )}

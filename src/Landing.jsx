@@ -9,7 +9,7 @@ const COURSES = [
     id: 'mentes-bajo-control',
     title: 'Mentes Bajo Control: Manipulación Social',
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
-    logo: '/bookpreview.jpg',
+    logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
     preview: '/MENTESBAJOCONTROL-PROMO.pdf',
     hotmartUrl: 'https://hotmart.com/es/marketplace/productos/mentes-bajo-control-manipulacion-social-nivel-1/L106624559K?sck=HOTMART_SITE&search=10103c75-a40b-4598-a331-04850e1475da&hotfeature=33',
@@ -123,7 +123,11 @@ function TestsPage({ onStart }) {
           {filtered.map((test) => (
             <li key={test.id} className="landing-test-card">
               {test.logo && (
-                <img className="landing-test-logo" src={test.logo} alt="" aria-hidden="true" />
+                <img
+                  className="landing-test-logo"
+                  src={test.logo}
+                  alt={`${tx(test.title, lang)} — Varkanis, comunidad de psicología y desarrollo personal`}
+                />
               )}
               <div className="landing-test-meta">
                 <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
@@ -155,7 +159,11 @@ function CoursesPage({ onPreview }) {
         {COURSES.map((course) => (
           <li key={course.id} className="landing-test-card landing-course-card">
             {course.logo && (
-              <img className="landing-course-logo" src={course.logo} alt="" aria-hidden="true" />
+              <img
+                className="landing-course-logo"
+                src={course.logo}
+                alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
+              />
             )}
             <div className="landing-test-meta">
               <h3 className="landing-test-title">{course.title}</h3>
@@ -210,16 +218,28 @@ export default function Landing({ onLogin }) {
           <div className="landing-links">
             <button className="landing-link" onClick={() => setView('tests')}>
               <span className="landing-link-text">{t('landing.btn.test')}</span>
-              <img className="landing-link-icon" src="/testlogo.jpg" alt="" aria-hidden="true" />
+              <img
+                className="landing-link-icon"
+                src="/varkanis-comunidad-psicologia.jpg"
+                alt="Varkanis — Comunidad de psicología y tests de análisis del comportamiento"
+              />
             </button>
             <button className="landing-link" onClick={() => setView('courses')}>
               <span className="landing-link-text">{t('landing.btn.course')}</span>
-              <img className="landing-link-icon" src="/courcelogo.jpg" alt="" aria-hidden="true" />
+              <img
+                className="landing-link-icon"
+                src="/varkanis-academia.jpg"
+                alt="Varkanis — Academia de manipulación social y leyes de la influencia"
+              />
             </button>
             {false && (
             <button className="landing-link" onClick={onLogin}>
               <span className="landing-link-text">{t('landing.btn.app')}</span>
-              <img className="landing-link-icon" src="/applogo.jpg" alt="" aria-hidden="true" />
+              <img
+                className="landing-link-icon"
+                src="/applogo.jpg"
+                alt="Varkanis — Aplicación de psicología aplicada"
+              />
             </button>
             )}
           </div>
