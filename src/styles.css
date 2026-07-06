@@ -3850,6 +3850,39 @@ body {
     0 1px 0 rgba(255, 255, 255, 0.4) inset,
     0 0 0 1px #d4b87a;
 }
+.landing-course-body {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+  min-width: 0;
+}
+.landing-course-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+.landing-course-buy {
+  display: inline-block;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #b52a1c 0%, #8a1a12 100%);
+  color: #fff8e6;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px #e0a091 inset;
+  transition: filter 0.15s, transform 0.1s;
+}
+.landing-course-buy:hover { filter: brightness(1.1); }
+.landing-course-buy:active { transform: translateY(1px); }
 
 /* ─── ADHD test cards ─────────────────────────────── */
 .test-modal-card {
@@ -4207,10 +4240,13 @@ body {
 @media (max-width: 520px) {
   .landing-test-card { flex-direction: column; align-items: stretch; }
   .landing-test-logo { width: 96px; height: 96px; align-self: center; }
-  .landing-course-logo { width: 62%; max-width: 220px; }
   .landing-course-card { padding: 18px; gap: 16px; min-height: 0; }
   .landing-course-card .landing-test-title { font-size: 20px; }
   .landing-test-go { width: 100%; }
+  /* Course card on mobile: photo small & left, info right, buttons below */
+  .landing-course-body { flex-direction: row; align-items: center; gap: 14px; }
+  .landing-course-logo { width: 88px; max-width: 88px; align-self: center; }
+  .landing-course-buy { width: 100%; }
   .likert-dot { height: 36px; }
   .likert-dot-inner { width: 22px; height: 22px; }
   .test-modal { padding: 18px 14px 22px; }

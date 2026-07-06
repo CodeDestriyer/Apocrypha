@@ -157,36 +157,57 @@ function CoursesPage() {
       <ul className="landing-test-list">
         {COURSES.map((course) => (
           <li key={course.id} className="landing-test-card landing-course-card">
-            {course.logo && (
-              <img
-                className="landing-course-logo"
-                src={course.logo}
-                alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
-              />
-            )}
-            <div className="landing-test-meta">
-              <h3 className="landing-test-title">{course.title}</h3>
-              <p className="landing-test-short">{tx(course.short, lang)}</p>
-              {course.author && (
-                <div className="landing-test-byline">
-                  <span className="landing-test-author">{course.author}</span>
-                </div>
+            <div className="landing-course-body">
+              {course.logo && (
+                <img
+                  className="landing-course-logo"
+                  src={course.logo}
+                  alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
+                />
+              )}
+              <div className="landing-test-meta">
+                <h3 className="landing-test-title">{course.title}</h3>
+                <p className="landing-test-short">{tx(course.short, lang)}</p>
+                {course.author && (
+                  <div className="landing-test-byline">
+                    <span className="landing-test-author">{course.author}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="landing-course-actions">
+              {course.preview ? (
+                <a
+                  className="landing-test-go"
+                  href={course.preview}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('landing.preview')}
+                </a>
+              ) : (
+                <button className="landing-test-go" disabled>
+                  {t('landing.courseSoon')}
+                </button>
+              )}
+              {course.hotmartUrl && (
+                <a
+                  className="landing-course-buy"
+                  href={course.hotmartUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {tx(
+                    {
+                      ru: 'Продолжить в Hotmart →',
+                      en: 'Continue on Hotmart →',
+                      es: 'Continuar en Hotmart →',
+                    },
+                    lang
+                  )}
+                </a>
               )}
             </div>
-            {course.preview ? (
-              <a
-                className="landing-test-go"
-                href={course.preview}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t('landing.preview')}
-              </a>
-            ) : (
-              <button className="landing-test-go" disabled>
-                {t('landing.courseSoon')}
-              </button>
-            )}
           </li>
         ))}
       </ul>
