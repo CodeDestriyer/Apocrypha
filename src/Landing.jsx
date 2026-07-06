@@ -87,31 +87,62 @@ function tx(obj, lang) {
 
 function TestsPage({ onStart }) {
   const { lang, t } = useLang();
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? TESTS.filter((test) => {
+        const hay = `${tx(test.title, lang)} ${tx(test.short, lang)} ${test.author ?? ''}`.toLowerCase();
+        return hay.includes(q);
+      })
+    : TESTS;
   return (
     <main className="landing-main landing-tests-page">
-      <ul className="landing-test-list">
-        {TESTS.map((test) => (
-          <li key={test.id} className="landing-test-card">
-            {test.logo && (
-              <img className="landing-test-logo" src={test.logo} alt="" aria-hidden="true" />
-            )}
-            <div className="landing-test-meta">
-              <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
-              <div className="landing-test-byline">
-                <span className="landing-test-count">
-                  {test.items.length} {t('landing.questions')}
-                </span>
-                {test.author && (
-                  <span className="landing-test-author">{test.author}</span>
-                )}
+      <div className="landing-test-search">
+        <span className="landing-test-search-icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          className="landing-test-search-input"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('landing.searchPlaceholder')}
+          aria-label={t('landing.searchPlaceholder')}
+        />
+        {query && (
+          <button
+            type="button"
+            className="landing-test-search-clear"
+            onClick={() => setQuery('')}
+            aria-label={t('cards.close') || 'Close'}
+          >×</button>
+        )}
+      </div>
+      {filtered.length === 0 ? (
+        <p className="landing-test-empty">{t('landing.searchEmpty')}</p>
+      ) : (
+        <ul className="landing-test-list">
+          {filtered.map((test) => (
+            <li key={test.id} className="landing-test-card">
+              {test.logo && (
+                <img className="landing-test-logo" src={test.logo} alt="" aria-hidden="true" />
+              )}
+              <div className="landing-test-meta">
+                <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
+                <div className="landing-test-byline">
+                  <span className="landing-test-count">
+                    {test.items.length} {t('landing.questions')}
+                  </span>
+                  {test.author && (
+                    <span className="landing-test-author">{test.author}</span>
+                  )}
+                </div>
               </div>
-            </div>
-            <button className="landing-test-go" onClick={() => onStart(test)}>
-              {t('landing.takeTest')}
-            </button>
-          </li>
-        ))}
-      </ul>
+              <button className="landing-test-go" onClick={() => onStart(test)}>
+                {t('landing.takeTest')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

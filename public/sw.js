@@ -3,8 +3,8 @@
 // latest hashed JS/CSS). Cached /index.html serves only as offline fallback.
 // Never cache hashed JS/CSS chunks — they're immutable and content-addressed.
 
-const CACHE = 'varkanis-shell-v3';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
+const CACHE = 'varkanis-shell-v4';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/varkanis-icon-192.png', '/varkanis-icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
