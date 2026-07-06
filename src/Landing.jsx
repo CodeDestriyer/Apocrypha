@@ -8,6 +8,8 @@ const COURSES = [
     id: 'mentes-bajo-control',
     title: 'Mentes Bajo Control: Manipulación Social',
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
+    logo: '/bookpreview.jpg',
+    author: 'Varkanis',
     url: null,
   },
 ];
@@ -115,13 +117,20 @@ function CoursesPage() {
   const { lang, t } = useLang();
   return (
     <main className="landing-main landing-tests-page">
-      <p className="landing-tests-intro">{t('landing.coursesIntro')}</p>
       <ul className="landing-test-list">
         {COURSES.map((course) => (
-          <li key={course.id} className="landing-test-card">
+          <li key={course.id} className="landing-test-card landing-course-card">
+            {course.logo && (
+              <img className="landing-course-logo" src={course.logo} alt="" aria-hidden="true" />
+            )}
             <div className="landing-test-meta">
               <h3 className="landing-test-title">{course.title}</h3>
               <p className="landing-test-short">{tx(course.short, lang)}</p>
+              {course.author && (
+                <div className="landing-test-byline">
+                  <span className="landing-test-author">{course.author}</span>
+                </div>
+              )}
             </div>
             <button className="landing-test-go" disabled>
               {t('landing.courseSoon')}
