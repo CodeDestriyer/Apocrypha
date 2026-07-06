@@ -3471,6 +3471,7 @@ body {
 }
 .landing-test-go {
   flex-shrink: 0;
+  display: inline-block;
   padding: 10px 16px;
   background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
   color: #fff8e6;
@@ -3480,6 +3481,7 @@ body {
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
   box-shadow: 0 0 0 1px #d4b87a inset;
   transition: filter 0.15s, transform 0.1s;

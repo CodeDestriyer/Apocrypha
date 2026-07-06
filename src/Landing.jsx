@@ -10,6 +10,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/bookpreview.jpg',
     author: 'Varkanis',
+    preview: '/MENTESBAJOCONTROL.pdf',
     url: null,
   },
 ];
@@ -132,9 +133,20 @@ function CoursesPage() {
                 </div>
               )}
             </div>
-            <button className="landing-test-go" disabled>
-              {t('landing.courseSoon')}
-            </button>
+            {course.preview ? (
+              <a
+                className="landing-test-go"
+                href={course.preview}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('landing.preview')}
+              </a>
+            ) : (
+              <button className="landing-test-go" disabled>
+                {t('landing.courseSoon')}
+              </button>
+            )}
           </li>
         ))}
       </ul>
