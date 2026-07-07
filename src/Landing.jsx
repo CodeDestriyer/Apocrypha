@@ -60,7 +60,7 @@ function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile }) {
         <div className="landing-account-menu">
           <div className="landing-account-head">
             <span className="landing-account-name">{name || 'Tu cuenta'}</span>
-            <span className="landing-plan-badge">FREE</span>
+            <span className="landing-plan-badge">Gratis</span>
           </div>
           <button
             className="landing-account-menu-item"
@@ -105,7 +105,7 @@ function ProfileModal({ onClose }) {
           </span>
           <div className="prof-id">
             <span className="prof-name">{name}</span>
-            <span className="landing-plan-badge">FREE</span>
+            <span className="landing-plan-badge">Gratis</span>
           </div>
         </div>
 

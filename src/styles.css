@@ -923,14 +923,14 @@ body {
 }
 .landing-plan-badge {
   flex-shrink: 0;
-  padding: 2px 8px;
-  border-radius: 5px;
-  background: #f6efdd;
-  border: 1px solid #e0cf9f;
-  color: #967833;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eceae4;
+  border: 1px solid #dbd8d0;
+  color: #7c7669;
   font-family: 'Cinzel', serif;
   font-size: 9.5px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   font-weight: 600;
   text-transform: uppercase;
 }
