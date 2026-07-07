@@ -4007,15 +4007,17 @@ body {
 }
 .big5-bar-name {
   font-family: 'Cinzel', serif;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  color: #1b1814;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #14110d;
 }
 .big5-bar-pct {
   font-family: 'Cinzel', serif;
-  font-size: 12px;
-  color: #8a7d63;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a4135;
+  letter-spacing: 0.06em;
 }
 .big5-bar-track {
   height: 10px;
@@ -4031,14 +4033,17 @@ body {
 }
 .big5-bar-desc {
   margin: 6px 0 0;
-  font-size: 13px;
-  color: #4a4135;
-  line-height: 1.4;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2a2419;
+  line-height: 1.45;
 }
 .rosenberg-score {
   display: flex;
-  align-items: baseline;
-  gap: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   padding: 8px 0;
 }
 .rosenberg-score-num {
@@ -4056,11 +4061,11 @@ body {
 }
 .rosenberg-score-band {
   font-family: 'Cinzel', serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #5a4a25;
+  color: #2a2419;
 }
 
 .landing-test-logo {
@@ -4183,8 +4188,8 @@ body {
   margin-bottom: 18px;
 }
 .test-modal-result .rosenberg-score {
-  justify-content: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
 }
 .test-modal-result .test-actions { justify-content: center; }
 .test-modal-result .test-disclaimer { color: #8a7d63; }
@@ -4409,16 +4414,19 @@ body {
 .archetype-shadow .archetype-tag { color: #6b5a3a; }
 .archetype-name {
   font-family: 'Cinzel', serif;
-  font-size: 18px;
+  font-size: 19px;
+  font-weight: 800;
   margin: 0;
-  color: #1b1814;
-  letter-spacing: 0.04em;
+  color: #14110d;
+  letter-spacing: 0.03em;
 }
 .archetype-desc {
-  margin: 2px 0 0;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #3a342b;
+  margin: 3px 0 0;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #2a2419;
 }
 .archetype-score {
   position: absolute;
@@ -4598,11 +4606,13 @@ body {
 }
 .qcard-option--choice .qcard-option-dot { margin-top: 3px; }
 .psychage-caption {
-  font-family: 'EB Garamond', serif;
-  font-size: 14px;
-  letter-spacing: 0.02em;
-  color: #8a7d63;
-  margin: 2px 0 -2px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a6f34;
+  margin: 2px 0 0;
 }
 .psychage-num { font-size: 58px; }
 .opt-0 .qcard-option-dot { border-color: #6f8f5e; }
