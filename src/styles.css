@@ -3806,10 +3806,12 @@ body {
   inset: 0;
   background: rgba(20, 16, 10, 0.35);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   z-index: 100;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 24px 16px;
   backdrop-filter: blur(14px) saturate(120%);
   -webkit-backdrop-filter: blur(14px) saturate(120%);
@@ -3817,6 +3819,10 @@ body {
 .test-modal {
   width: 100%;
   max-width: 640px;
+  /* auto vertical margins center the modal when it fits, but keep BOTH ends
+     reachable when the content is taller than the viewport (fixes the
+     blocked-swipe issue when the register CTA makes the result tall). */
+  margin: auto 0;
   background: #fbf6e8;
   border: 1px solid #d6c9a8;
   border-radius: 12px;
@@ -4170,18 +4176,26 @@ body {
   background: rgba(255, 248, 230, 0.18);
 }
 
-/* Result panel: opaque paper inside the otherwise-transparent test modal */
+/* Result panel: opaque paper inside the otherwise-transparent test modal.
+   The panel is the single card; the result and the register CTA live inside it. */
 .test-modal-result .test-header {
   justify-content: flex-end;
   margin-bottom: 8px;
 }
-.test-modal-result .test-result {
+.test-modal-result .test-result-panel {
   background: #fbf6e8;
   border: 1px solid #d6c9a8;
   border-radius: 16px;
   padding: 26px 24px 22px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   color: #1b1814;
+}
+.test-modal-result .test-result {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 .test-modal-result .test-result-title {
   text-align: center;
@@ -4194,17 +4208,15 @@ body {
 .test-modal-result .test-actions { justify-content: center; }
 .test-modal-result .test-disclaimer { color: #8a7d63; }
 
-/* "Register to save your result" CTA under a finished test */
+/* "Register to save your result" CTA — a compact section at the bottom of the
+   result card, separated from the buttons by a divider (not its own card). */
 .test-register {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-top: 14px;
-  padding: 16px 18px;
-  background: linear-gradient(180deg, #fff8ea 0%, #f5ead0 100%);
-  border: 1px solid #e2c98f;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(40, 28, 8, 0.16);
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e6dcc4;
 }
 .test-register-icon {
   display: flex;

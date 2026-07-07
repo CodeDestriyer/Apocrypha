@@ -424,7 +424,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
             </div>
           </>
         ) : (
-          <>
+          <div className="test-result-panel">
             {test.id === ADHD.id && (
               <AdhdResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
@@ -441,7 +441,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
               <SiliconResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
             <RegisterCta onRegister={onRegister} />
-          </>
+          </div>
         )}
       </div>
     </div>
