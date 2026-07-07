@@ -55,9 +55,32 @@ export function ProfileProvider({ children }) {
           setProfile(p);
           setStatus('ready');
         } else {
-          const suggested = meta.full_name || meta.name || (session.user?.email?.split('@')[0]) || '';
+          // No "hero name" step: create the profile silently with a name
+          // derived from the Google/email identity and land the user as ready.
+          const suggested =
+            meta.full_name || meta.name || (session.user?.email?.split('@')[0]) || 'Usuario';
           setDefaultName(suggested);
-          setStatus('need-name');
+          try {
+            const created = await withTimeout(createProfile(suggested), 6000, 'createProfile');
+            if (cancelled) return;
+            currentUserId.current = session.user?.id ?? null;
+            setProfile(created);
+            setStatus('ready');
+          } catch (e) {
+            console.error('auto profile create failed', e);
+            // Possibly created concurrently by a duplicate auth event — try once more.
+            try {
+              const again = await loadProfile();
+              if (cancelled) return;
+              if (again) {
+                currentUserId.current = session.user?.id ?? null;
+                setProfile(again);
+                setStatus('ready');
+                return;
+              }
+            } catch {}
+            if (!cancelled) setStatus('unauthenticated');
+          }
         }
       } catch (e) {
         console.error(e);

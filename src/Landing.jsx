@@ -1,7 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang } from './i18n.jsx';
+import { useProfile } from './ProfileContext.jsx';
+import { signInWithGoogle, signOut } from './supabase.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
+
+function PersonIcon({ size = 21 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.7" />
+      <path d="M4.6 20c0-4 3.3-6.6 7.4-6.6S19.4 16 19.4 20" />
+    </svg>
+  );
+}
 
 const COURSES = [
   {
@@ -16,14 +27,75 @@ const COURSES = [
   },
 ];
 
-function AccountButton({ onClick }) {
+function AccountButton({ authed, avatarUrl, onRegister }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  if (!authed) {
+    return (
+      <button className="landing-account" onClick={onRegister} aria-label="Cuenta">
+        <PersonIcon />
+      </button>
+    );
+  }
+
   return (
-    <button className="landing-account" onClick={onClick} aria-label="Cuenta">
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="8" r="3.7" />
-        <path d="M4.6 20c0-4 3.3-6.6 7.4-6.6S19.4 16 19.4 20" />
-      </svg>
-    </button>
+    <div className="landing-account-wrap" ref={ref}>
+      <button
+        className="landing-account landing-account-authed"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Cuenta"
+      >
+        {avatarUrl
+          ? <img className="landing-account-img" src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+          : <PersonIcon />}
+      </button>
+      {open && (
+        <div className="landing-account-menu">
+          <button
+            className="landing-account-menu-item"
+            onClick={() => { setOpen(false); signOut(); }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RegisterModal({ onClose }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const onGoogle = async () => {
+    setBusy(true);
+    setErr(null);
+    try { await signInWithGoogle(); }
+    catch (e) { setErr(e.message); setBusy(false); }
+  };
+
+  return (
+    <div className="reg-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="reg-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="reg-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <span className="reg-icon" aria-hidden="true"><PersonIcon size={26} /></span>
+        <h2 className="reg-title">Crea tu cuenta</h2>
+        <p className="reg-sub">Regístrate para guardar tus resultados y seguir tu evolución.</p>
+        <button className="reg-google" onClick={onGoogle} disabled={busy}>
+          <span className="reg-google-g">G</span>
+          <span>{busy ? '…' : 'Continuar con Google'}</span>
+        </button>
+        {err && <p className="reg-err">{err}</p>}
+        <p className="reg-fine">Al continuar, tu progreso se guardará en tu cuenta.</p>
+      </div>
+    </div>
   );
 }
 
@@ -169,10 +241,13 @@ function CoursesPage() {
   );
 }
 
-export default function Landing({ onLogin }) {
+export default function Landing() {
   const { t, setLang } = useLang();
+  const { status, googleAvatar } = useProfile();
+  const authed = status === 'ready';
   const [view, setView] = useState('home');
   const [activeTest, setActiveTest] = useState(null);
+  const [showRegister, setShowRegister] = useState(false);
 
   // Public site is Spanish-only.
   useEffect(() => { setLang('es'); }, [setLang]);
@@ -189,7 +264,11 @@ export default function Landing({ onLogin }) {
             {t('landing.back')}
           </button>
         )}
-        <AccountButton onClick={onLogin} />
+        <AccountButton
+          authed={authed}
+          avatarUrl={googleAvatar}
+          onRegister={() => setShowRegister(true)}
+        />
       </header>
 
       {isHome && (
@@ -213,16 +292,6 @@ export default function Landing({ onLogin }) {
                 alt="Varkanis — Academia de manipulación social y leyes de la influencia"
               />
             </button>
-            {false && (
-            <button className="landing-link" onClick={onLogin}>
-              <span className="landing-link-text">{t('landing.btn.app')}</span>
-              <img
-                className="landing-link-icon"
-                src="/applogo.jpg"
-                alt="Varkanis — Aplicación de psicología aplicada"
-              />
-            </button>
-            )}
           </div>
         </main>
       )}
@@ -235,9 +304,11 @@ export default function Landing({ onLogin }) {
         <TestRunner
           test={activeTest}
           onClose={() => setActiveTest(null)}
-          onRegister={onLogin}
+          onRegister={authed ? null : () => setShowRegister(true)}
         />
       )}
+
+      {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
     </div>
   );
 }
