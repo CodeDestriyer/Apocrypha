@@ -4043,23 +4043,24 @@ body {
 }
 .rosenberg-score-num {
   font-family: 'Cinzel', serif;
-  font-size: 42px;
-  font-weight: 800;
-  color: #1b1814;
+  font-size: 46px;
+  font-weight: 900;
+  color: #14110d;
   line-height: 1;
 }
 .rosenberg-score-num span {
   font-size: 18px;
   color: #8a7d63;
-  font-weight: 400;
+  font-weight: 600;
   margin-left: 4px;
 }
 .rosenberg-score-band {
   font-family: 'Cinzel', serif;
   font-size: 14px;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6e5b30;
+  color: #5a4a25;
 }
 
 .landing-test-logo {
@@ -4548,11 +4549,12 @@ body {
 }
 .test-result-image {
   display: block;
-  width: 100%;
-  max-height: 340px;
-  object-fit: cover;
+  width: auto;
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
   border-radius: 14px;
-  margin-top: 20px;
+  margin: 6px auto 16px;
   border: 1px solid #e6dcc4;
   box-shadow: 0 8px 24px rgba(23, 19, 13, 0.14);
 }
@@ -4568,7 +4570,7 @@ body {
   color: #8a7d63;
   margin: 2px 0 -2px;
 }
-.psychage-num { font-size: 52px; }
+.psychage-num { font-size: 58px; }
 .opt-0 .qcard-option-dot { border-color: #6f8f5e; }
 .opt-1 .qcard-option-dot { border-color: #97a660; }
 .opt-2 .qcard-option-dot { border-color: #c39a44; }

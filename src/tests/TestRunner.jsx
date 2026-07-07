@@ -63,6 +63,9 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
   return (
     <div className="test-result">
       <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      {test.images?.[band] && (
+        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+      )}
       <div className="rosenberg-score">
         <div className="rosenberg-score-num">{total}<span>/{max}</span></div>
         <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
@@ -87,9 +90,6 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
           );
         })}
       </div>
-      {test.images?.[band] && (
-        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
-      )}
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}
@@ -249,6 +249,9 @@ function PsychAgeResult({ test, answers, onClose, onRestart }) {
   return (
     <div className="test-result">
       <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      {test.images?.[band] && (
+        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+      )}
       <p className="psychage-caption">{tx(caption, lang)}</p>
       <div className="rosenberg-score">
         <div className="rosenberg-score-num psychage-num">{age}<span>{tx(yearsWord, lang)}</span></div>
@@ -258,9 +261,6 @@ function PsychAgeResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
-      {test.images?.[band] && (
-        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
-      )}
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}
@@ -280,6 +280,9 @@ function SiliconResult({ test, answers, onClose, onRestart }) {
   return (
     <div className="test-result">
       <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      {test.images?.[band] && (
+        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+      )}
       <p className="psychage-caption">{tx(caption, lang)}</p>
       <div className="rosenberg-score">
         <div className="rosenberg-score-num psychage-num">{pct}<span>%</span></div>
@@ -289,9 +292,6 @@ function SiliconResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
-      {test.images?.[band] && (
-        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
-      )}
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}
