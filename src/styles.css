@@ -899,6 +899,8 @@ body {
   transition: background 0.12s ease;
 }
 .landing-account-menu-item:hover { background: #f5efde; }
+.landing-account-logout { color: #b23a2c; }
+.landing-account-logout:hover { background: #f7e6e1; color: #8f2c20; }
 .landing-account-head {
   display: flex;
   align-items: center;
@@ -911,6 +913,9 @@ body {
 .landing-account-name {
   font-family: 'EB Garamond', serif;
   font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: #1b1814;
   overflow: hidden;
   text-overflow: ellipsis;

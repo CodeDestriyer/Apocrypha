@@ -69,7 +69,7 @@ function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile }) {
             Mi perfil
           </button>
           <button
-            className="landing-account-menu-item"
+            className="landing-account-menu-item landing-account-logout"
             onClick={() => { setOpen(false); signOut(); }}
           >
             Cerrar sesión
