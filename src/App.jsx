@@ -1,10 +1,67 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CharacterPage from './pages/CharacterPage.jsx';
 import Landing from './Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import { LangProvider, useLang, LANGS } from './i18n.jsx';
 import { signOut } from './supabase.js';
 import CardsSection from './sections/CardsSection.jsx';
+
+// In-app browsers (TikTok, Instagram, Facebook…) run in embedded webviews where
+// Google sign-in is blocked (Error 403: disallowed_useragent) and behaviour is
+// unreliable. Detect them and stop the site with a "open in your browser" gate.
+function isInAppBrowser() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /(TikTok|musical_ly|BytedanceWebview|Bytedance|trill|Instagram|FBAN|FBAV|FB_IAB|FBIOS|Snapchat|Pinterest|Line\/|Twitter|WhatsApp|OKApp|VKClient)/i.test(ua);
+}
+
+function BrowserGate({ onBypass }) {
+  const [copied, setCopied] = useState(false);
+  const url = typeof window !== 'undefined' ? window.location.href : '';
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
+  };
+
+  return (
+    <div className="gate">
+      <div className="gate-card">
+        <div className="gate-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9.2" />
+            <path d="M2.8 12h18.4M12 2.8c2.6 2.5 4 5.8 4 9.2s-1.4 6.7-4 9.2c-2.6-2.5-4-5.8-4-9.2s1.4-6.7 4-9.2z" />
+          </svg>
+        </div>
+        <h1 className="gate-title">Abre en tu navegador</h1>
+        <p className="gate-text">
+          Estás en el navegador interno de la app. Para registrarte y entrar,
+          abre esta página en <strong>Chrome</strong> o <strong>Safari</strong>.
+        </p>
+        <ol className="gate-steps">
+          <li>Toca el menú <strong>⋯</strong> arriba en la esquina.</li>
+          <li>Elige <strong>«Abrir en el navegador»</strong>.</li>
+        </ol>
+        <button className="gate-copy" onClick={copy}>
+          {copied ? '✓ Enlace copiado' : 'Copiar enlace'}
+        </button>
+        <button className="gate-bypass" onClick={onBypass}>Continuar de todos modos</button>
+      </div>
+    </div>
+  );
+}
 
 function useMediaQuery(query) {
   const [match, setMatch] = useState(() => {
@@ -29,11 +86,20 @@ function Shell() {
   const { status } = useProfile();
   const [view, setView] = useState('home');
   const [showApp, setShowApp] = useState(false);
+  const [bypassGate, setBypassGate] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const inApp = useMemo(() => isInAppBrowser(), []);
+  const gated = inApp && !bypassGate;
 
   useEffect(() => {
-    if (status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
-  }, [status]);
+    // Clear the splash stuck-recovery timer once we render real content —
+    // including the browser gate, which is a valid terminal screen.
+    if (gated || status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
+  }, [gated, status]);
+
+  if (gated) {
+    return <BrowserGate onBypass={() => setBypassGate(true)} />;
+  }
 
   if (status === 'loading') {
     return <div className="splash"><div className="ornament">⚜ ⚔ ⚜</div></div>;
