@@ -899,6 +899,8 @@ body {
   transition: background 0.12s ease;
 }
 .landing-account-menu-item:hover { background: #f5efde; }
+.landing-account-logout { color: #b23a2c; }
+.landing-account-logout:hover { background: #f7e6e1; color: #8f2c20; }
 .landing-account-head {
   display: flex;
   align-items: center;
@@ -911,6 +913,9 @@ body {
 .landing-account-name {
   font-family: 'EB Garamond', serif;
   font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: #1b1814;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -918,15 +923,16 @@ body {
 }
 .landing-plan-badge {
   flex-shrink: 0;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #f0dca6 0%, #dcc07e 100%);
-  color: #4a3a12;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: #f6efdd;
+  border: 1px solid #e0cf9f;
+  color: #967833;
   font-family: 'Cinzel', serif;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  font-weight: 700;
-  box-shadow: 0 0 0 1px #c9a86a inset;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 /* Profile / test-history modal */
@@ -969,6 +975,7 @@ body {
 .prof-name {
   font-family: 'Cinzel', serif;
   font-size: 18px;
+  font-weight: 700;
   letter-spacing: 0.03em;
   overflow: hidden;
   text-overflow: ellipsis;
