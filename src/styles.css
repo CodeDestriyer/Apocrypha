@@ -4154,16 +4154,16 @@ body {
 }
 .qcard {
   width: 100%;
-  background: rgba(255, 253, 245, 0.92);
-  border: 1px solid rgba(214, 201, 168, 0.6);
-  border-radius: 16px;
-  padding: 24px 22px 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: #fdfaf1;
+  border: 1px solid #e3d8bd;
+  border-radius: 14px;
+  padding: 26px 26px 24px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 18px 44px rgba(30, 22, 10, 0.30);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
   transition: transform 180ms ease, opacity 180ms ease;
   transform: translateX(0) scale(1);
   opacity: 1;
@@ -4173,62 +4173,81 @@ body {
 .qcard-in-right  { transform: translateX(30%)  scale(0.96); opacity: 0; }
 .qcard-in-left   { transform: translateX(-30%) scale(0.96); opacity: 0; }
 .qcard-num {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-family: 'Cinzel', serif;
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  color: #8a7d63;
-  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: #a5842f;
+}
+.qcard-num::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #e0d0a6, rgba(224, 208, 166, 0));
 }
 .qcard-question {
   margin: 0;
-  font-family: 'Cinzel', serif;
-  font-size: 18px;
-  line-height: 1.45;
-  color: #1b1814;
-  min-height: 80px;
+  font-family: 'EB Garamond', serif;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #241f18;
+  min-height: 82px;
 }
 .qcard-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
 }
 .qcard-option {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 11px 14px;
+  padding: 13px 16px;
   background: #fff;
-  border: 1px solid #e0d3b0;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 14px;
-  color: #1b1814;
+  border: 1px solid #e6dcc4;
+  border-radius: 10px;
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  color: #2a2419;
   cursor: pointer;
   text-align: left;
-  transition: transform 80ms ease, background 120ms ease, border-color 120ms ease;
+  transition: transform 90ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
-.qcard-option:hover { background: #fbf6e8; border-color: #b8924a; }
+.qcard-option:hover {
+  background: #fdfaf0;
+  border-color: #cba85f;
+  box-shadow: 0 3px 12px rgba(184, 146, 74, 0.14);
+}
 .qcard-option:active { transform: translateY(1px); }
 .qcard-option.active {
-  background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
-  color: #fff8e6;
-  border-color: #0d0b08;
+  background: linear-gradient(180deg, #2a2419 0%, #17130d 100%);
+  color: #fbf4e2;
+  border-color: #17130d;
+  box-shadow: 0 8px 20px rgba(23, 19, 13, 0.30);
 }
-.qcard-option.active .qcard-option-dot { background: #e8c98a; border-color: #e8c98a; }
+.qcard-option.active .qcard-option-dot {
+  border-color: #e8c98a;
+  background: radial-gradient(circle, #e8c98a 42%, transparent 47%);
+}
 .qcard-option-dot {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  border: 2px solid #b8924a;
-  background: transparent;
+  border: 1.5px solid #c9bd9c;
+  background: #fff;
   flex-shrink: 0;
+  transition: border-color 140ms ease, background 140ms ease;
 }
-.opt-0 .qcard-option-dot { border-color: #6b8a5a; }
-.opt-1 .qcard-option-dot { border-color: #8aa46a; }
-.opt-2 .qcard-option-dot { border-color: #c9a04a; }
-.opt-3 .qcard-option-dot { border-color: #c97a3a; }
-.opt-4 .qcard-option-dot { border-color: #b04a3a; }
+.opt-0 .qcard-option-dot { border-color: #6f8f5e; }
+.opt-1 .qcard-option-dot { border-color: #97a660; }
+.opt-2 .qcard-option-dot { border-color: #c39a44; }
+.opt-3 .qcard-option-dot { border-color: #c17a3c; }
+.opt-4 .qcard-option-dot { border-color: #b0473a; }
 .qcard-nav {
   display: flex;
   gap: 10px;
@@ -4237,20 +4256,21 @@ body {
   margin-top: 6px;
 }
 .qcard-nav-btn {
-  padding: 10px 22px;
-  background: rgba(255, 248, 230, 0.12);
-  border: 1px solid rgba(255, 248, 230, 0.28);
+  padding: 10px 24px;
+  background: rgba(20, 16, 10, 0.28);
+  border: 1px solid rgba(255, 248, 230, 0.42);
   border-radius: 999px;
   font-family: 'Cinzel', serif;
   font-size: 12px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: #fbf6e8;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   text-transform: uppercase;
-  transition: background 120ms ease, opacity 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease;
 }
-.qcard-nav-btn:hover:not(:disabled) { background: rgba(255, 248, 230, 0.22); }
-.qcard-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.qcard-nav-btn:hover:not(:disabled) { background: rgba(20, 16, 10, 0.42); border-color: rgba(255, 248, 230, 0.6); }
+.qcard-nav-btn:disabled { opacity: 0.32; cursor: default; }
 .qcard-nav-result { padding: 12px 26px; }
 
 @media (max-width: 520px) {
@@ -4268,8 +4288,9 @@ body {
   .likert-dot { height: 36px; }
   .likert-dot-inner { width: 22px; height: 22px; }
   .test-modal { padding: 18px 14px 22px; }
-  .qcard { padding: 18px 16px; }
-  .qcard-question { font-size: 16px; min-height: 64px; }
+  .qcard { padding: 22px 18px 20px; gap: 18px; }
+  .qcard-question { font-size: 19px; min-height: 68px; }
+  .qcard-option { font-size: 15px; padding: 12px 14px; }
 }
 
 /* ─── Cards (Anki-like) ─────────────────────────────── */

@@ -268,7 +268,7 @@ export default function TestRunner({ test, onClose }) {
 
             <div className="qcard-stage">
               <div className={`qcard ${transition ? `qcard-${transition}` : ''}`}>
-                <div className="qcard-num">{index + 1}</div>
+                <div className="qcard-num"><span>{String(index + 1).padStart(2, '0')}</span></div>
                 <p className="qcard-question">{tx(item, lang)}</p>
                 <div className="qcard-options">
                   {labels.map((label, i) => {
