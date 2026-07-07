@@ -21,9 +21,9 @@ export const ADHD = {
   author: 'Varkanis',
   // Final result image, one per probability band (low/mid/high).
   images: {
-    low:  '/tdah-baja.jpg',
-    mid:  '/tdah-media.jpg',
-    high: '/tdah-alta.jpg',
+    low:  '/fdah-bajo.jpg',
+    mid:  '/fdah-medio.jpg',
+    high: '/fdah-alto.jpg',
   },
   title: { ru: 'Скрининг СДВГ', en: 'ADHD Screening', es: 'Cribado de TDAH' },
   short: {
@@ -283,6 +283,12 @@ export const PSYCH_AGE = {
   scale: 'choice',
   logo: '/psicoedad.jpg',
   author: 'Varkanis',
+  // Final result image, one per phase band.
+  images: {
+    reactive: '/edad-bajo.jpg',
+    critical: '/edad-medio.jpg',
+    stoic:    '/edad-alto.jpg',
+  },
   title: { ru: 'Психологический возраст', en: 'Psychological Age', es: 'Edad Psicológica' },
   short: {
     ru: '20 вопросов, ~4 минуты. Узнай свой психологический возраст — конкретное число лет.',
@@ -524,7 +530,13 @@ export const SILICON_MIND = {
   scale: 'choice',
   logo: '/autismtest.jpg',
   author: 'Varkanis',
-  title: { ru: 'Спектр аутизма · Silicon Mind', en: 'Autism Spectrum · Silicon Mind', es: 'Espectro Autista · Silicon Mind' },
+  // Final result image, one per band.
+  images: {
+    social:  '/autista-bajo.jpg',
+    adapted: '/autista-medio.jpg',
+    silicon: '/autista-alto.jpg',
+  },
+  title: { ru: 'Спектр аутизма', en: 'Autism Spectrum', es: 'Espectro Autista' },
   short: {
     ru: '30 вопросов, ~5 минут. Измерь свой процент нейродивергентной оптимизации.',
     en: '30 questions, ~5 minutes. Measure your neurodivergent optimization percentage.',
@@ -856,7 +868,7 @@ export const SILICON_MIND = {
   },
 };
 
-export const TESTS = [ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND];
+export const TESTS = [ADHD, PSYCH_AGE, DARK_TRIAD, ARCHETYPE_TEST, SILICON_MIND];
 
 // Concrete psychological age from total score (20..60), interpolated across the
 // three phase bands: reactive 20..33 → 15..22, critical 34..48 → 23..38,

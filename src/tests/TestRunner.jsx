@@ -258,6 +258,9 @@ function PsychAgeResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      {test.images?.[band] && (
+        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+      )}
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}
@@ -286,6 +289,9 @@ function SiliconResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      {test.images?.[band] && (
+        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+      )}
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}
