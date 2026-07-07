@@ -4262,6 +4262,19 @@ body {
   flex-shrink: 0;
   transition: border-color 140ms ease, background 140ms ease;
 }
+.qcard-option--choice {
+  align-items: flex-start;
+  line-height: 1.4;
+}
+.qcard-option--choice .qcard-option-dot { margin-top: 3px; }
+.psychage-caption {
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: #8a7d63;
+  margin: 2px 0 -2px;
+}
+.psychage-num { font-size: 52px; }
 .opt-0 .qcard-option-dot { border-color: #6f8f5e; }
 .opt-1 .qcard-option-dot { border-color: #97a660; }
 .opt-2 .qcard-option-dot { border-color: #c39a44; }

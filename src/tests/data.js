@@ -268,7 +268,273 @@ export const ARCHETYPE_TEST = {
   descriptions: ARCHETYPE_DESC,
 };
 
-export const TESTS = [ADHD, DARK_TRIAD, ARCHETYPE_TEST];
+// Psychological age — 20 single-choice items. Each option carries points:
+// a=1 (reactive, externally driven), b=2 (transitional, high self-conflict),
+// c=3 (rational, stoic autonomy). Total 20..60 maps to a CONCRETE age (15..55)
+// via piecewise-linear interpolation across three phases. Educational, not clinical.
+export const PSYCH_AGE = {
+  id: 'psych-age',
+  scale: 'choice',
+  logo: '/psicoedad.jpg',
+  author: 'Varkanis',
+  title: { ru: 'Психологический возраст', en: 'Psychological Age', es: 'Edad Psicológica' },
+  short: {
+    ru: '20 вопросов, ~4 минуты. Узнай свой психологический возраст — конкретное число лет.',
+    en: '20 questions, ~4 minutes. Discover your psychological age — a concrete number of years.',
+    es: '20 preguntas, ~4 minutos. Descubre tu edad psicológica: un número concreto de años.',
+  },
+  items: [
+    {
+      ru: 'Когда я совершаю серьёзную ошибку, моя первая реакция:',
+      en: 'When I make a serious mistake, my first reaction is:',
+      es: 'Cuando cometo un error grave, mi primera reacción es:',
+      options: [
+        { points: 1, ru: 'Искать, кого обвинить, или оправдываться внутри себя.', en: 'Look for someone to blame or justify myself internally.', es: 'Buscar a quién culpar o justificarme internamente.' },
+        { points: 2, ru: 'Чувствовать вину и погружаться в самобичевание.', en: 'Feel guilty and sink into self-criticism.', es: 'Sentirme culpable y sumirme en la autocrítica.' },
+        { points: 3, ru: 'Анализировать сбой как объективные данные, чтобы поправить систему.', en: 'Analyze the failure as objective data to fix the system.', es: 'Analizar el fallo como un dato objetivo para corregir el sistema.' },
+      ],
+    },
+    {
+      ru: 'Мысль о смерти или о конце времени вызывает у меня:',
+      en: 'The idea of death or the end of time makes me feel:',
+      es: 'La idea de la muerte o del fin del tiempo me produce:',
+      options: [
+        { points: 1, ru: 'Абстрактный страх, который я предпочитаю игнорировать.', en: 'An abstract fear I prefer to ignore.', es: 'Un miedo abstracto que prefiero ignorar.' },
+        { points: 2, ru: 'Тревогу и глубокий дискомфорт.', en: 'Anxiety and deep discomfort.', es: 'Ansiedad e incomodidad profunda.' },
+        { points: 3, ru: 'Холодное принятие, которое я использую, чтобы расставлять приоритеты.', en: 'A cool acceptance I use to prioritize my daily goals.', es: 'Una aceptación fría que uso para priorizar mis objetivos diarios.' },
+      ],
+    },
+    {
+      ru: 'В споре, если собеседник давит одними эмоциями, я:',
+      en: 'In an argument, if the other person uses pure emotion, I:',
+      es: 'En una discusión, si mi interlocutor argumenta con puras emociones, yo:',
+      options: [
+        { points: 1, ru: 'Завожусь и отвечаю с той же эмоциональной силой.', en: 'Get worked up and respond with the same emotional intensity.', es: 'Me altero y respondo con la misma intensidad emocional.' },
+        { points: 2, ru: 'Замолкаю от фрустрации и коплю обиду.', en: 'Go quiet out of frustration and hold on to the resentment.', es: 'Me callo por frustración y me guardo el resentimiento.' },
+        { points: 3, ru: 'Эмоционально отключаюсь и анализирую разговор со стороны.', en: 'Disconnect emotionally and analyze the conversation from the outside.', es: 'Desconecto emocionalmente y analizo la conversación desde fuera.' },
+      ],
+    },
+    {
+      ru: 'Понятие «успех» для меня — это:',
+      en: 'The concept of "success" for me is defined as:',
+      es: 'El concepto de "éxito" para mí se define como:',
+      options: [
+        { points: 1, ru: 'Внешнее признание, статус и одобрение окружающих.', en: 'External recognition, status, and the approval of others.', es: 'El reconocimiento externo, el estatus y la aprobación de los demás.' },
+        { points: 2, ru: 'Реализация моих идеалов и внутренних ожиданий.', en: 'The realization of my ideals and inner expectations.', es: 'La realización de mis ideales y expectativas internas.' },
+        { points: 3, ru: 'Полная автономия и абсолютный контроль над своим временем и ресурсами.', en: 'Total autonomy and full control over my time and resources.', es: 'La autonomía total y el control absoluto sobre mi tiempo y recursos.' },
+      ],
+    },
+    {
+      ru: 'Когда меня критикуют деструктивно:',
+      en: 'When someone criticizes me destructively:',
+      es: 'Cuando alguien me critica de forma destructiva:',
+      options: [
+        { points: 1, ru: 'Обижаюсь и ищу способ контратаковать.', en: 'I take offense and look for a way to counterattack.', es: 'Me ofendo y busco la forma de contraatacar.' },
+        { points: 2, ru: 'Начинаю сомневаться в себе и тону в этих сомнениях.', en: 'I doubt myself and sink into the doubt.', es: 'Dudo de mí mismo y me hundo en la duda.' },
+        { points: 3, ru: 'Оцениваю, есть ли 1% полезной правды; если нет — отбрасываю без эмоций.', en: 'I check whether there is a useful 1% of truth; if not, I discard it without emotion.', es: 'Evalúo si hay un 1% de verdad útil; si no, lo desecho sin emociones.' },
+      ],
+    },
+    {
+      ru: 'Мои планы на ближайшие 5–10 лет:',
+      en: 'My plans for the next 5–10 years are:',
+      es: 'Mis planes para los próximos 5-10 años son:',
+      options: [
+        { points: 1, ru: 'Абстрактные и идиллические, скорее желания, чем реальные шаги.', en: 'Abstract and idyllic, based on wishes more than real steps.', es: 'Abstractos e idílicos, basados en deseos más que en pasos reales.' },
+        { points: 2, ru: 'Стрессовые — я чувствую давление не оправдать ожиданий.', en: 'Stressful, because I feel the pressure of not achieving what is expected of me.', es: 'Estresantes, porque siento la presión de no lograr lo que se espera de mí.' },
+        { points: 3, ru: 'Гибкие, но структурированные, разбитые на конкретные тактические цели.', en: 'Flexible but structured, broken into concrete tactical goals.', es: 'Flexibles pero estructurados, divididos en objetivos tácticos concretos.' },
+      ],
+    },
+    {
+      ru: 'Одиночество для меня — это:',
+      en: 'Solitude for me is:',
+      es: 'La soledad para mí es:',
+      options: [
+        { points: 1, ru: 'Неуютная пустота, которую я заполняю цифровым шумом и соцсетями.', en: 'An uncomfortable void I try to fill with digital noise or social media.', es: 'Un vacío incómodo que intento llenar con ruido digital o redes sociales.' },
+        { points: 2, ru: 'Временное убежище, чтобы отдохнуть от хаоса мира.', en: 'A temporary refuge to rest from the chaos of the world.', es: 'Un refugio temporal para descansar del caos del mundo.' },
+        { points: 3, ru: 'Моё естественное состояние высокой продуктивности и ясности.', en: 'My natural state of high productivity and mental order.', es: 'Mi estado natural de alta productividad y orden mental.' },
+      ],
+    },
+    {
+      ru: 'К традициям и нормам, навязанным обществом, я отношусь так:',
+      en: 'Toward traditions and norms imposed by society:',
+      es: 'Frente a las tradiciones y normas impuestas por la sociedad:',
+      options: [
+        { points: 1, ru: 'Следую им по инерции и привычке, не задаваясь вопросами.', en: 'I follow them out of inertia or habit, without questioning them.', es: 'Las sigo por inercia o costumbre sin cuestionarlas.' },
+        { points: 2, ru: 'Бунтую просто ради того, чтобы идти против системы.', en: 'I rebel just for the sake of going against the system.', es: 'Rebelarme por el simple hecho de ir en contra del sistema.' },
+        { points: 3, ru: 'Оцениваю прагматично: полезны — использую, нет — игнорирую.', en: 'I assess them pragmatically: if useful, I use them; if not, I ignore them.', es: 'Las analizo pragmáticamente: si me son útiles, las uso; si no, las ignoro.' },
+      ],
+    },
+    {
+      ru: 'Вспоминая ошибки прошлого, я чувствую:',
+      en: 'When I remember my past mistakes, I feel:',
+      es: 'Cuando recuerdo mis errores del pasado, siento:',
+      options: [
+        { points: 1, ru: 'Стыд и желание стереть эти воспоминания.', en: 'Shame and a wish to erase those memories.', es: 'Vergüenza y ganas de borrar esos recuerdos.' },
+        { points: 2, ru: 'Ностальгию или сожаление об упущенных возможностях.', en: 'Nostalgia or regret over lost opportunities.', es: 'Nostalgia o arrepentimiento por las oportunidades perdidas.' },
+        { points: 3, ru: 'Холодную благодарность: это цена, заплаченная за мою нынешнюю оптимизацию.', en: 'A cold gratitude, since they are the price paid for my current optimization.', es: 'Gratitud fría, ya que son el coste pagado por mi optimización actual.' },
+      ],
+    },
+    {
+      ru: 'Скорость, с которой я меняю мнение при новых проверенных данных:',
+      en: 'How fast I change my mind when faced with new, verified data is:',
+      es: 'La velocidad con la que cambio de opinión ante datos nuevos y verificados es:',
+      options: [
+        { points: 1, ru: 'Медленная — мне тяжело публично признать, что я ошибался.', en: 'Slow; it is hard for me to admit publicly that I was wrong.', es: 'Lenta, me cuesta aceptar que estaba equivocado públicamente.' },
+        { points: 2, ru: 'Зависит от того, насколько эмоционально задевает меня новая правда.', en: 'It depends on how that new truth affects me emotionally.', es: 'Depende de cómo me afecte emocionalmente esa nueva verdad.' },
+        { points: 3, ru: 'Мгновенная — я не привязан к устаревшим идеям, если реальность их опровергла.', en: 'Instant; I have no attachment to obsolete ideas if reality proves otherwise.', es: 'Instantánea; no tengo apego a ideas obsoletas si la realidad demuestra lo contrario.' },
+      ],
+    },
+    {
+      ru: 'Человеческие отношения (дружбу, пару) я понимаю как:',
+      en: 'I understand human relationships (friendship, partner) as:',
+      es: 'Las relaciones humanas (amistad, pareja) las entiendo como:',
+      options: [
+        { points: 1, ru: 'Источник постоянного одобрения и компанию, чтобы не быть одному.', en: 'A source of constant validation and company so as not to be alone.', es: 'Una fuente de validación constante y compañía para no estar solo.' },
+        { points: 2, ru: 'Обмен привязанностью, эмоциональной поддержкой и взаимопониманием.', en: 'An exchange of affection, emotional support, and mutual understanding.', es: 'Un intercambio de afecto, apoyo emocional y comprensión mutua.' },
+        { points: 3, ru: 'Стратегический союз на основе ценностей, уважения и взаимного роста.', en: 'A strategic alliance based on values, respect, and mutual growth.', es: 'Una alianza estratégica basada en valores, respeto y crecimiento mutuo.' },
+      ],
+    },
+    {
+      ru: 'Моя ежедневная дисциплина зависит от:',
+      en: 'My level of daily discipline depends on:',
+      es: 'Mi nivel de disciplina diaria depende de:',
+      options: [
+        { points: 1, ru: 'Сиюминутной мотивации и настроения при пробуждении.', en: 'My momentary motivation and mood when I wake up.', es: 'Mi motivación momentánea y mi estado de ánimo al despertar.' },
+        { points: 2, ru: 'Внешнего давления и дедлайнов, которые висят надо мной.', en: 'External pressure or the deadlines hanging over me.', es: 'La presión externa o los plazos de entrega que tengo encima.' },
+        { points: 3, ru: 'Моей системы привычек и обязательств перед собой, независимо от чувств.', en: 'My system of habits and commitments to myself, regardless of how I feel.', es: 'Mi sistema de hábitos y compromisos conmigo mismo, sin importar cómo me sienta.' },
+      ],
+    },
+    {
+      ru: 'Когда я вижу страдания или хаос в мировых новостях:',
+      en: 'When I see suffering or chaos in the world news:',
+      es: 'Cuando veo el sufrimiento o el caos en las noticias del mundo:',
+      options: [
+        { points: 1, ru: 'Ужасаюсь и часами страдаю от чрезмерной эмпатии.', en: 'I am horrified and suffer excessive empathy for hours.', es: 'Me horrorizo y sufro empatía desmedida por horas.' },
+        { points: 2, ru: 'Сознательно стараюсь игнорировать, чтобы защитить свой покой.', en: 'I consciously try to ignore it to protect my peace of mind.', es: 'Intento ignorarlo conscientemente para proteger mi paz mental.' },
+        { points: 3, ru: 'Воспринимаю как часть исторических процессов и человеческой природы.', en: 'I understand it as part of historical processes and human nature.', es: 'Lo entiendo como parte de los procesos históricos y la naturaleza humana.' },
+      ],
+    },
+    {
+      ru: 'Скука или отсутствие немедленных стимулов вызывают у меня:',
+      en: 'Boredom or the lack of immediate stimulation makes me feel:',
+      es: 'El aburrimiento o la falta de estímulos inmediatos me genera:',
+      options: [
+        { points: 1, ru: 'Сильную тревогу и острую потребность в быстром контенте.', en: 'Extreme anxiety and an urgent need to consume fast content.', es: 'Ansiedad extrema y la necesidad urgente de consumir contenido rápido.' },
+        { points: 2, ru: 'Лень и склонность прокрастинировать без чёткого направления.', en: 'Laziness and a tendency to procrastinate with no clear direction.', es: 'Flojera y tendencia a procrastinar sin un rumbo claro.' },
+        { points: 3, ru: 'Свободное ментальное пространство, чтобы думать, планировать или наблюдать.', en: 'Free mental space to think, plan, or simply observe.', es: 'Espacio mental libre para pensar, planificar o simplemente observar.' },
+      ],
+    },
+    {
+      ru: 'Авторитет начальников, менторов и публичных фигур я оцениваю по:',
+      en: 'I judge the authority of bosses, mentors, or public figures by:',
+      es: 'La autoridad de jefes, mentores o figuras públicas la evalúo según:',
+      options: [
+        { points: 1, ru: 'Их положению, официальному статусу или харизме.', en: 'Their position, official status, or perceived charisma.', es: 'Su posición, su estatus oficial o su carisma percibido.' },
+        { points: 2, ru: 'Тому, насколько они мне лично симпатичны.', en: 'How much I personally like or dislike them.', es: 'Lo bien o mal que me caigan a nivel personal.' },
+        { points: 3, ru: 'Их реальным результатам, компетенциям и логике действий.', en: 'Their real results, proven competence, and the logic of their actions.', es: 'Sus resultados reales, sus competencias demostradas y la lógica de sus acciones.' },
+      ],
+    },
+    {
+      ru: 'Если важный план рушится в последний момент:',
+      en: 'If an important plan falls apart at the last minute:',
+      es: 'Si un plan importante se arruina por completo a última hora:',
+      options: [
+        { points: 1, ru: 'Я блокируюсь, злюсь и откладываю поиск решения.', en: 'I freeze, get frustrated, and put off looking for a solution.', es: 'Me bloqueo, me frustro y pospongo buscar una solución.' },
+        { points: 2, ru: 'Сокрушаюсь о невезении и потраченных впустую усилиях.', en: 'I lament the bad luck and the wasted effort.', es: 'Me lamento por la mala suerte y el esfuerzo desperdiciado.' },
+        { points: 3, ru: 'Мгновенно перехожу в режим решения задач и включаю запасной план.', en: 'I switch into problem-solving mode and activate the contingency plan at once.', es: 'Entro en modo resolución de problemas y activo el plan de contingencia al instante.' },
+      ],
+    },
+    {
+      ru: 'Тратить деньги на роскошь и мгновенное удовольствие для меня:',
+      en: 'Spending money on luxury or instant gratification is, for me:',
+      es: 'Gastar dinero en lujos o gratificación instantánea para mí es:',
+      options: [
+        { points: 1, ru: 'Моя главная слабость и частый способ себя порадовать.', en: 'My main weakness and a frequent way to reward myself.', es: 'Mi principal debilidad y forma de premiarme a menudo.' },
+        { points: 2, ru: 'То, что вызывает вину потом, если не было запланировано.', en: 'Something that makes me feel guilty afterward if it was not planned.', es: 'Algo que me genera culpa posterior si no estaba planificado.' },
+        { points: 3, ru: 'Просчитанное математическое решение; приоритет — вложения в своё развитие.', en: 'A calculated, mathematical decision; I prioritize investing in my own development.', es: 'Una decisión matemática calculada; priorizo la inversión en mi propio desarrollo.' },
+      ],
+    },
+    {
+      ru: 'Мнение окружающих о моих странностях и образе жизни:',
+      en: 'What the rest of the world thinks about my quirks or lifestyle:',
+      es: 'La opinión que el resto del mundo tiene sobre mis rarezas o estilo de vida:',
+      options: [
+        { points: 1, ru: 'Заметно меня беспокоит, и я маскирую их, чтобы вписаться.', en: 'Worries me quite a bit, and I try to camouflage them to fit in.', es: 'Me preocupa bastante y trato de camuflarlas para encajar.' },
+        { points: 2, ru: 'Раздражает, но я с усилием стараюсь его игнорировать.', en: 'Bothers me, but I try to ignore it with effort.', es: 'Me molesta, pero intento ignorarla con esfuerzo.' },
+        { points: 3, ru: 'Абсолютно неважно, пока это не влияет на мои планы.', en: 'Utterly irrelevant, as long as it does not affect my plans.', es: 'Me resulta absolutamente irrelevante mientras no afecte mis planes.' },
+      ],
+    },
+    {
+      ru: 'Понятие «удача» в моей повседневной жизни:',
+      en: 'The concept of "luck" in my daily life:',
+      es: 'El concepto de "suerte" en mi vida diaria:',
+      options: [
+        { points: 1, ru: 'Думаю, тут действует мистика или судьба всё решает.', en: 'I believe it plays a mystical role, or that fate decides things.', es: 'Creo que juega un papel místico o el destino define las cosas.' },
+        { points: 2, ru: 'Несправедливая переменная, которая чаще благоволит другим, а не мне.', en: 'An unfair variable that tends to favor others more than me.', es: 'Es una variable injusta que suele favorecer a otros más que a mí.' },
+        { points: 3, ru: 'Просто статистика — пересечение подготовки и возможности.', en: 'Simply statistics, the intersection of preparation and opportunity.', es: 'Es simplemente estadística y la intersección entre la preparación y la oportunidad.' },
+      ],
+    },
+    {
+      ru: 'Глядя на свою эволюцию за последний год, я чувствую, что:',
+      en: 'Looking at my personal evolution over the last year, I feel that:',
+      es: 'Al mirar mi evolución personal en el último año, siento que:',
+      options: [
+        { points: 1, ru: 'Остался практически тем же человеком, в тех же циклах.', en: 'I am practically the same person, stuck in the same loops.', es: 'Sigo siendo prácticamente la misma persona, con los mismos bucles.' },
+        { points: 2, ru: 'Сильно изменился эмоционально, но мне не хватает структуры.', en: 'I have changed a lot emotionally, but I lack structure.', es: 'He cambiado mucho emocionalmente, pero me falta estructura.' },
+        { points: 3, ru: 'Перепроектировал части мышления и оптимизировал принятие решений.', en: 'I have redesigned parts of my mindset and optimized my decision-making.', es: 'He rediseñado partes de mi mentalidad y optimizado mis procesos de toma de decisiones.' },
+      ],
+    },
+  ],
+  bands: {
+    reactive: { ru: 'Реактивная юность', en: 'Reactive Youth', es: 'Juventud Reactiva' },
+    critical: { ru: 'Критическая рациональность', en: 'Critical Rationality', es: 'Racionalidad Crítica' },
+    stoic:    { ru: 'Системный стоицизм', en: 'Systemic Stoicism', es: 'Estoicismo Sistémico' },
+  },
+  bandDesc: {
+    reactive: {
+      ru: 'Мозг сильно завязан на быстрые дофаминовые стимулы, внешнее одобрение и эмоциональные реакции. Системы самоконтроля ещё пластичны. Ошибки воспринимаются болезненно, а не как сухие данные.',
+      en: 'Your mind is heavily tied to fast dopamine hits, external approval, and emotional reactions. Self-control systems are still plastic. Mistakes feel painful rather than like dry data.',
+      es: 'Tu mente está muy ligada a los estímulos rápidos de dopamina, la aprobación externa y las reacciones emocionales. Los sistemas de autocontrol aún son plásticos. Los errores se viven con dolor, no como datos fríos.',
+    },
+    critical: {
+      ru: 'Золотой стандарт прагматика. Ты понимаешь цену ресурсам и времени, строишь личные границы, умеешь отключать эмоции ради дела. Бывают моменты выгорания из-за жёсткой попытки всё контролировать.',
+      en: 'The gold standard of the pragmatist. You understand the value of resources and time, build personal boundaries, and can switch off emotion for the sake of the task. Burnout can appear from the hard drive to control everything.',
+      es: 'El estándar de oro del pragmático. Entiendes el valor de los recursos y el tiempo, construyes límites personales y sabes desconectar las emociones por el bien de la tarea. Aparecen momentos de agotamiento por el intento férreo de controlarlo todo.',
+    },
+    stoic: {
+      ru: 'Предельный уровень автономии от мнения социума и внешнего шума. Философское, холодное отношение к хаосу, смерти и ошибкам. Локус контроля — целиком внутри. Возможный минус — чрезмерная эмоциональная изоляция (алекситимия).',
+      en: 'The highest level of autonomy from social opinion and outside noise. A philosophical, cold relationship with chaos, death, and mistakes. The locus of control is entirely internal. A potential downside is excessive emotional isolation (alexithymia).',
+      es: 'El máximo nivel de autonomía frente a la opinión social y el ruido externo. Una relación filosófica y fría con el caos, la muerte y los errores. El locus de control está por completo dentro. El posible inconveniente es una aislamiento emocional excesivo (alexitimia).',
+    },
+  },
+};
+
+export const TESTS = [ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE];
+
+// Concrete psychological age from total score (20..60), interpolated across the
+// three phase bands: reactive 20..33 → 15..22, critical 34..48 → 23..38,
+// stoic 49..60 → 39..55.
+export function psychAgeFromScore(score) {
+  let age;
+  if (score <= 33) age = 15 + ((score - 20) / 13) * 7;
+  else if (score <= 48) age = 23 + ((score - 34) / 14) * 15;
+  else age = 39 + ((score - 49) / 11) * 16;
+  return Math.round(age);
+}
+
+export function scorePsychAge(test, answers) {
+  let total = 0;
+  answers.forEach((a) => { if (a != null) total += a; }); // a is the option's points (1..3)
+  const n = test.items.length;
+  const min = n; // all 1s
+  const max = n * 3; // all 3s
+  const score = Math.max(min, Math.min(max, total));
+  let band = 'reactive';
+  if (score >= 49) band = 'stoic';
+  else if (score >= 34) band = 'critical';
+  const age = psychAgeFromScore(score);
+  return { total: score, min, max, band, age };
+}
 
 export function scoreArchetypes(test, answers) {
   const sums = {};

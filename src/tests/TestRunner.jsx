@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
-import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes } from './data.js';
+import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge } from './data.js';
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5 };
 
@@ -218,8 +218,42 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
   );
 }
 
+function PsychAgeResult({ test, answers, onClose, onRestart }) {
+  const { lang, t } = useLang();
+  const { total, min, max, band, age } = useMemo(() => scorePsychAge(test, answers), [test, answers]);
+  const pct = Math.round(((total - min) / (max - min)) * 100);
+  const yearsWord = { ru: 'лет', en: 'years', es: 'años' };
+  const caption = { ru: 'Твой психологический возраст', en: 'Your psychological age', es: 'Tu edad psicológica' };
+  return (
+    <div className="test-result">
+      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <p className="psychage-caption">{tx(caption, lang)}</p>
+      <div className="rosenberg-score">
+        <div className="rosenberg-score-num psychage-num">{age}<span>{tx(yearsWord, lang)}</span></div>
+        <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
+      </div>
+      <div className="big5-bar-track" style={{ marginTop: 12 }}>
+        <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      <div className="test-actions">
+        <button className="test-secondary" onClick={onRestart}>
+          {t('test.restart') || 'Restart'}
+        </button>
+        <button className="test-submit" onClick={onClose}>
+          {t('test.done') || 'Done'}
+        </button>
+      </div>
+      <p className="test-disclaimer">
+        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
+      </p>
+    </div>
+  );
+}
+
 export default function TestRunner({ test, onClose, onRegister }) {
   const { lang, t } = useLang();
+  const isChoice = test.scale === 'choice';
   const scaleSet = SCALE_LABELS[test.scale] ?? FREQ5;
   const labels = scaleSet[lang] ?? scaleSet.en;
 
@@ -228,7 +262,23 @@ export default function TestRunner({ test, onClose, onRegister }) {
   const [index, setIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [transition, setTransition] = useState(null); // 'out-left' | 'in-right' | null
+  const [shuffleSeed, setShuffleSeed] = useState(0);
   const advanceTimer = useRef(null);
+
+  // For choice-scale tests, shuffle each item's a/b/c options once per attempt so
+  // the "mature" answer isn't always in the same position. Points travel with the
+  // option, so scoring stays order-independent. Reshuffled on restart via seed.
+  const shuffledOptions = useMemo(() => {
+    if (!isChoice) return null;
+    return test.items.map((it) => {
+      const opts = it.options.slice();
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      return opts;
+    });
+  }, [test, isChoice, shuffleSeed]);
 
   useEffect(() => () => clearTimeout(advanceTimer.current), []);
 
@@ -266,6 +316,7 @@ export default function TestRunner({ test, onClose, onRegister }) {
     setIndex(0);
     setSubmitted(false);
     setTransition(null);
+    setShuffleSeed((s) => s + 1);
   };
 
   const item = test.items[index];
@@ -290,21 +341,37 @@ export default function TestRunner({ test, onClose, onRegister }) {
                 <div className="qcard-num"><span>{String(index + 1).padStart(2, '0')}</span></div>
                 <p className="qcard-question">{tx(item, lang)}</p>
                 <div className="qcard-options">
-                  {labels.map((label, i) => {
-                    const val = i + 1;
-                    const active = answers[index] === val;
-                    return (
-                      <button
-                        key={val}
-                        type="button"
-                        className={`qcard-option opt-${i} ${active ? 'active' : ''}`}
-                        onClick={() => pick(val)}
-                      >
-                        <span className="qcard-option-dot" />
-                        <span className="qcard-option-label">{label}</span>
-                      </button>
-                    );
-                  })}
+                  {isChoice
+                    ? shuffledOptions[index].map((opt, i) => {
+                        const val = opt.points;
+                        const active = answers[index] === val;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            className={`qcard-option qcard-option--choice opt-${i} ${active ? 'active' : ''}`}
+                            onClick={() => pick(val)}
+                          >
+                            <span className="qcard-option-dot" />
+                            <span className="qcard-option-label">{tx(opt, lang)}</span>
+                          </button>
+                        );
+                      })
+                    : labels.map((label, i) => {
+                        const val = i + 1;
+                        const active = answers[index] === val;
+                        return (
+                          <button
+                            key={val}
+                            type="button"
+                            className={`qcard-option opt-${i} ${active ? 'active' : ''}`}
+                            onClick={() => pick(val)}
+                          >
+                            <span className="qcard-option-dot" />
+                            <span className="qcard-option-label">{label}</span>
+                          </button>
+                        );
+                      })}
                 </div>
               </div>
             </div>
@@ -337,6 +404,9 @@ export default function TestRunner({ test, onClose, onRegister }) {
             )}
             {test.id === ARCHETYPE_TEST.id && (
               <ArchetypeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+            )}
+            {test.id === PSYCH_AGE.id && (
+              <PsychAgeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
             <RegisterCta onRegister={onRegister} />
           </>
