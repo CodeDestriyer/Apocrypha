@@ -4208,15 +4208,18 @@ body {
 .test-modal-result .test-actions { justify-content: center; }
 .test-modal-result .test-disclaimer { color: #8a7d63; }
 
-/* "Register to save your result" CTA — a compact section at the bottom of the
-   result card, separated from the buttons by a divider (not its own card). */
+/* "Register to save your result" CTA — its own subtly tinted, bordered module
+   inside the result card, clearly set apart from the result above and the
+   Listo button below (flat, not the old heavy gold card). */
 .test-register {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #e6dcc4;
+  margin: 22px 0 0;
+  padding: 15px 16px;
+  background: #f4ead0;
+  border: 1px solid #e3d4ad;
+  border-radius: 12px;
 }
 .test-register-icon {
   display: flex;
