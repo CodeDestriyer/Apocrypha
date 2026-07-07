@@ -4252,20 +4252,28 @@ body {
 .test-register-btn {
   flex-shrink: 0;
   padding: 12px 22px;
-  background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
-  color: #fff8e6;
+  background: linear-gradient(180deg, #d0402e 0%, #a5261a 100%);
+  color: #fff4ef;
   border: none;
   border-radius: 8px;
   font-family: 'Cinzel', serif;
   font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 0 0 1px #d4b87a inset;
+  box-shadow: 0 6px 18px rgba(150, 32, 20, 0.32), 0 0 0 1px rgba(90, 18, 10, 0.4) inset;
   transition: filter 0.15s ease, transform 0.1s ease;
 }
-.test-register-btn:hover { filter: brightness(1.14); }
+.test-register-btn:hover { filter: brightness(1.1); }
 .test-register-btn:active { transform: translateY(1px); }
+
+/* Single "Listo" button below the register CTA, right-aligned */
+.test-done-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
 @media (max-width: 520px) {
   .test-register { flex-direction: column; text-align: center; gap: 12px; }
   .test-register-btn { width: 100%; }

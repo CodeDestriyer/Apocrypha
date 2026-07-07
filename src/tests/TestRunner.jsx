@@ -90,14 +90,6 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
           );
         })}
       </div>
-      <div className="test-actions">
-        <button className="test-secondary" onClick={onRestart}>
-          {t('test.restart') || 'Restart'}
-        </button>
-        <button className="test-submit" onClick={onClose}>
-          {t('test.done') || 'Done'}
-        </button>
-      </div>
     </div>
   );
 }
@@ -141,14 +133,6 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
         })}
       </div>
 
-      <div className="test-actions">
-        <button className="test-secondary" onClick={onRestart}>
-          {t('test.restart') || 'Restart'}
-        </button>
-        <button className="test-submit" onClick={onClose}>
-          {t('test.done') || 'Done'}
-        </button>
-      </div>
     </div>
   );
 }
@@ -187,14 +171,6 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
         ))}
       </ul>
 
-      <div className="test-actions">
-        <button className="test-secondary" onClick={onRestart}>
-          {t('test.restart') || 'Restart'}
-        </button>
-        <button className="test-submit" onClick={onClose}>
-          {t('test.done') || 'Done'}
-        </button>
-      </div>
     </div>
   );
 }
@@ -220,14 +196,6 @@ function PsychAgeResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
-      <div className="test-actions">
-        <button className="test-secondary" onClick={onRestart}>
-          {t('test.restart') || 'Restart'}
-        </button>
-        <button className="test-submit" onClick={onClose}>
-          {t('test.done') || 'Done'}
-        </button>
-      </div>
     </div>
   );
 }
@@ -251,14 +219,6 @@ function SiliconResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
-      <div className="test-actions">
-        <button className="test-secondary" onClick={onRestart}>
-          {t('test.restart') || 'Restart'}
-        </button>
-        <button className="test-submit" onClick={onClose}>
-          {t('test.done') || 'Done'}
-        </button>
-      </div>
     </div>
   );
 }
@@ -441,6 +401,11 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
               <SiliconResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
             <RegisterCta onRegister={onRegister} />
+            <div className="test-done-row">
+              <button className="test-submit" onClick={onClose}>
+                {t('test.done') || 'Done'}
+              </button>
+            </div>
           </div>
         )}
       </div>
