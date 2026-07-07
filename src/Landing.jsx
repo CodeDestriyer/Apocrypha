@@ -1,7 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang } from './i18n.jsx';
+import { useProfile } from './ProfileContext.jsx';
+import { signInWithGoogle, signOut } from './supabase.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
+
+function PersonIcon({ size = 21 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.7" />
+      <path d="M4.6 20c0-4 3.3-6.6 7.4-6.6S19.4 16 19.4 20" />
+    </svg>
+  );
+}
 
 const COURSES = [
   {
@@ -16,14 +27,139 @@ const COURSES = [
   },
 ];
 
-function AccountButton({ onClick }) {
+function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  if (!authed) {
+    return (
+      <button className="landing-account" onClick={onRegister} aria-label="Cuenta">
+        <PersonIcon />
+      </button>
+    );
+  }
+
   return (
-    <button className="landing-account" onClick={onClick} aria-label="Cuenta">
-      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="8" r="3.7" />
-        <path d="M4.6 20c0-4 3.3-6.6 7.4-6.6S19.4 16 19.4 20" />
-      </svg>
-    </button>
+    <div className="landing-account-wrap" ref={ref}>
+      <button
+        className="landing-account landing-account-authed"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Cuenta"
+      >
+        {avatarUrl
+          ? <img className="landing-account-img" src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+          : <PersonIcon />}
+      </button>
+      {open && (
+        <div className="landing-account-menu">
+          <div className="landing-account-head">
+            <span className="landing-account-name">{name || 'Tu cuenta'}</span>
+            <span className="landing-plan-badge">FREE</span>
+          </div>
+          <button
+            className="landing-account-menu-item"
+            onClick={() => { setOpen(false); onOpenProfile(); }}
+          >
+            Mi perfil
+          </button>
+          <button
+            className="landing-account-menu-item"
+            onClick={() => { setOpen(false); signOut(); }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatResultDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+
+function ProfileModal({ onClose }) {
+  const { profile, googleAvatar } = useProfile();
+  const name = profile?.name || 'Tu cuenta';
+  const history = Array.isArray(profile?.test_results) ? profile.test_results : [];
+
+  return (
+    <div className="reg-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="prof-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="reg-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <div className="prof-head">
+          <span className="prof-avatar" aria-hidden="true">
+            {googleAvatar
+              ? <img className="landing-account-img" src={googleAvatar} alt="" referrerPolicy="no-referrer" />
+              : <PersonIcon size={24} />}
+          </span>
+          <div className="prof-id">
+            <span className="prof-name">{name}</span>
+            <span className="landing-plan-badge">FREE</span>
+          </div>
+        </div>
+
+        <h3 className="prof-hist-title">Historial de tests</h3>
+        {history.length === 0 ? (
+          <p className="prof-empty">Aún no has guardado ningún test. Completa uno para verlo aquí.</p>
+        ) : (
+          <ul className="prof-hist">
+            {history.map((r) => (
+              <li key={r.id} className="prof-hist-row">
+                <div className="prof-hist-main">
+                  <span className="prof-hist-test">{r.title}</span>
+                  <span className="prof-hist-date">{formatResultDate(r.date)}</span>
+                </div>
+                {(r.score || r.label) && (
+                  <span className="prof-hist-score">
+                    {r.score}{r.score && r.label ? ' · ' : ''}{r.label}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RegisterModal({ onClose }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const onGoogle = async () => {
+    setBusy(true);
+    setErr(null);
+    try { await signInWithGoogle(); }
+    catch (e) { setErr(e.message); setBusy(false); }
+  };
+
+  return (
+    <div className="reg-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="reg-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="reg-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <span className="reg-icon" aria-hidden="true"><PersonIcon size={26} /></span>
+        <h2 className="reg-title">Crea tu cuenta</h2>
+        <p className="reg-sub">Regístrate para guardar tus resultados y seguir tu evolución.</p>
+        <button className="reg-google" onClick={onGoogle} disabled={busy}>
+          <span className="reg-google-g">G</span>
+          <span>{busy ? '…' : 'Continuar con Google'}</span>
+        </button>
+        {err && <p className="reg-err">{err}</p>}
+        <p className="reg-fine">Al continuar, tu progreso se guardará en tu cuenta.</p>
+      </div>
+    </div>
   );
 }
 
@@ -169,13 +305,23 @@ function CoursesPage() {
   );
 }
 
-export default function Landing({ onLogin }) {
+export default function Landing() {
   const { t, setLang } = useLang();
+  const { status, googleAvatar, profile, update } = useProfile();
+  const authed = status === 'ready';
   const [view, setView] = useState('home');
   const [activeTest, setActiveTest] = useState(null);
+  const [showRegister, setShowRegister] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   // Public site is Spanish-only.
   useEffect(() => { setLang('es'); }, [setLang]);
+
+  const saveResult = (record) => {
+    update((curr) => ({
+      test_results: [record, ...(Array.isArray(curr?.test_results) ? curr.test_results : [])].slice(0, 100),
+    }));
+  };
 
   const isHome = view === 'home';
 
@@ -189,7 +335,13 @@ export default function Landing({ onLogin }) {
             {t('landing.back')}
           </button>
         )}
-        <AccountButton onClick={onLogin} />
+        <AccountButton
+          authed={authed}
+          avatarUrl={googleAvatar}
+          name={profile?.name}
+          onRegister={() => setShowRegister(true)}
+          onOpenProfile={() => setShowProfile(true)}
+        />
       </header>
 
       {isHome && (
@@ -213,16 +365,6 @@ export default function Landing({ onLogin }) {
                 alt="Varkanis — Academia de manipulación social y leyes de la influencia"
               />
             </button>
-            {false && (
-            <button className="landing-link" onClick={onLogin}>
-              <span className="landing-link-text">{t('landing.btn.app')}</span>
-              <img
-                className="landing-link-icon"
-                src="/applogo.jpg"
-                alt="Varkanis — Aplicación de psicología aplicada"
-              />
-            </button>
-            )}
           </div>
         </main>
       )}
@@ -235,9 +377,13 @@ export default function Landing({ onLogin }) {
         <TestRunner
           test={activeTest}
           onClose={() => setActiveTest(null)}
-          onRegister={onLogin}
+          onRegister={authed ? null : () => setShowRegister(true)}
+          onSaveResult={authed ? saveResult : null}
         />
       )}
+
+      {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
     </div>
   );
 }

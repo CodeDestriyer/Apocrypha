@@ -120,6 +120,7 @@ export async function createProfile(name) {
     looksmaxing: [],
     menmaxing: [],
     decks: [],
+    test_results: [],
     xp: 0,
   };
   const { data, error } = await supabase
