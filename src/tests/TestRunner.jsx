@@ -87,6 +87,9 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
           );
         })}
       </div>
+      {test.images?.[band] && (
+        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+      )}
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}

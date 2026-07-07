@@ -19,6 +19,12 @@ export const ADHD = {
   max: 5,
   logo: '/varkanis-test-tdah.png',
   author: 'Varkanis',
+  // Final result image, one per probability band (low/mid/high).
+  images: {
+    low:  '/tdah-baja.jpg',
+    mid:  '/tdah-media.jpg',
+    high: '/tdah-alta.jpg',
+  },
   title: { ru: 'Скрининг СДВГ', en: 'ADHD Screening', es: 'Cribado de TDAH' },
   short: {
     ru: '20 вопросов, ~3 минуты. Оцени, как часто это происходило за последние 6 месяцев.',
