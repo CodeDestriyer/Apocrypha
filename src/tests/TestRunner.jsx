@@ -95,9 +95,6 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
           {t('test.done') || 'Done'}
         </button>
       </div>
-      <p className="test-disclaimer">
-        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
-      </p>
     </div>
   );
 }
@@ -190,9 +187,6 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
           {t('test.done') || 'Done'}
         </button>
       </div>
-      <p className="test-disclaimer">
-        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
-      </p>
     </div>
   );
 }
@@ -239,9 +233,6 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
           {t('test.done') || 'Done'}
         </button>
       </div>
-      <p className="test-disclaimer">
-        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
-      </p>
     </div>
   );
 }
@@ -272,9 +263,6 @@ function PsychAgeResult({ test, answers, onClose, onRestart }) {
           {t('test.done') || 'Done'}
         </button>
       </div>
-      <p className="test-disclaimer">
-        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
-      </p>
     </div>
   );
 }
@@ -303,9 +291,6 @@ function SiliconResult({ test, answers, onClose, onRestart }) {
           {t('test.done') || 'Done'}
         </button>
       </div>
-      <p className="test-disclaimer">
-        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
-      </p>
     </div>
   );
 }
