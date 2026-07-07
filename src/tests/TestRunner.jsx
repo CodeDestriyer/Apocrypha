@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
-import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge } from './data.js';
+import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge, scoreSilicon } from './data.js';
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5 };
 
@@ -251,6 +251,37 @@ function PsychAgeResult({ test, answers, onClose, onRestart }) {
   );
 }
 
+function SiliconResult({ test, answers, onClose, onRestart }) {
+  const { lang, t } = useLang();
+  const { pct, band } = useMemo(() => scoreSilicon(test, answers), [test, answers]);
+  const caption = { ru: 'Нейродивергентная оптимизация', en: 'Neurodivergent optimization', es: 'Optimización neurodivergente' };
+  return (
+    <div className="test-result">
+      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <p className="psychage-caption">{tx(caption, lang)}</p>
+      <div className="rosenberg-score">
+        <div className="rosenberg-score-num psychage-num">{pct}<span>%</span></div>
+        <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
+      </div>
+      <div className="big5-bar-track" style={{ marginTop: 12 }}>
+        <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      <div className="test-actions">
+        <button className="test-secondary" onClick={onRestart}>
+          {t('test.restart') || 'Restart'}
+        </button>
+        <button className="test-submit" onClick={onClose}>
+          {t('test.done') || 'Done'}
+        </button>
+      </div>
+      <p className="test-disclaimer">
+        {t('test.disclaimer') || 'Educational self-assessment, not a medical diagnosis.'}
+      </p>
+    </div>
+  );
+}
+
 export default function TestRunner({ test, onClose, onRegister }) {
   const { lang, t } = useLang();
   const isChoice = test.scale === 'choice';
@@ -407,6 +438,9 @@ export default function TestRunner({ test, onClose, onRegister }) {
             )}
             {test.id === PSYCH_AGE.id && (
               <PsychAgeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+            )}
+            {test.id === SILICON_MIND.id && (
+              <SiliconResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
             <RegisterCta onRegister={onRegister} />
           </>

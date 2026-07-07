@@ -509,7 +509,348 @@ export const PSYCH_AGE = {
   },
 };
 
-export const TESTS = [ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE];
+// Autism-spectrum / "Silicon Mind" self-report — 30 single-choice items.
+// Each option carries points: a=0 (neurotypical, socially adapted), b=1
+// (moderate analytical traits), c=2 (pure logical / high neurodivergence).
+// Total 0..60 → optimization percentage. Educational, not a clinical diagnosis.
+export const SILICON_MIND = {
+  id: 'silicon-mind',
+  scale: 'choice',
+  logo: '/autismtest.jpg',
+  author: 'Varkanis',
+  title: { ru: 'Спектр аутизма · Silicon Mind', en: 'Autism Spectrum · Silicon Mind', es: 'Espectro Autista · Silicon Mind' },
+  short: {
+    ru: '30 вопросов, ~5 минут. Измерь свой процент нейродивергентной оптимизации.',
+    en: '30 questions, ~5 minutes. Measure your neurodivergent optimization percentage.',
+    es: '30 preguntas, ~5 minutos. Mide tu porcentaje de optimización neurodivergente.',
+  },
+  items: [
+    {
+      ru: 'Когда кто-то рассказывает мне личную проблему в ожидании эмоциональной поддержки, я:',
+      en: 'When someone tells me a personal problem expecting emotional support, I:',
+      es: 'Cuando alguien me cuenta un problema personal esperando apoyo emocional, yo:',
+      options: [
+        { points: 0, ru: 'Сразу сопереживаю и стараюсь эмоционально его успокоить.', en: 'Empathize immediately and try to comfort them emotionally.', es: 'Empatizo de inmediato y busco reconfortarlo emocionalmente.' },
+        { points: 1, ru: 'Чувствую неловкость, но пытаюсь сказать социально принятые фразы.', en: 'Feel some discomfort, but try to say the socially accepted phrases.', es: 'Siento cierta incomodidad, pero intento decir las frases socialmente aceptadas.' },
+        { points: 2, ru: 'Действую как ChatGPT: игнорирую драму и выдаю дерево решений с 3 логичными выходами.', en: 'Act like ChatGPT: ignore the drama and offer a decision tree with 3 logical solutions.', es: 'Actúo como ChatGPT: ignoro el drama y le ofrezco un árbol de decisiones con 3 soluciones lógicas.' },
+      ],
+    },
+    {
+      ru: 'Зрительный контакт с людьми не из круга абсолютного доверия для меня:',
+      en: 'Eye contact with people outside my circle of absolute trust feels:',
+      es: 'El contacto visual con personas que no son de mi confianza absoluta me resulta:',
+      options: [
+        { points: 0, ru: 'Естественен и нужен, чтобы установить связь в разговоре.', en: 'Natural and necessary to connect during a conversation.', es: 'Natural y necesario para conectar durante una charla.' },
+        { points: 1, ru: 'Немного вынужденный; иногда сознательно напоминаю себе смотреть в глаза.', en: 'A bit forced; sometimes I have to consciously remind myself to look them in the eye.', es: 'Un poco forzado; a veces tengo que recordarme conscientemente que debo mirar a los ojos.' },
+        { points: 2, ru: 'Ненужная пытка. Предпочитаю смотреть в экран, в пол или в бесконечную точку.', en: 'An unnecessary torture. I prefer looking at the screen, the floor, or a point in infinity.', es: 'Una tortura innecesaria. Prefiero mirar a la pantalla, al suelo o fijar la vista en un punto infinito.' },
+      ],
+    },
+    {
+      ru: 'Заходя в бар, ресторан или коворкинг с громкой музыкой и мигающим светом:',
+      en: 'Walking into a bar, restaurant, or coworking space with loud music and flashing lights:',
+      es: 'Al entrar a un bar, restaurante o espacio de coworking con música alta y luces parpadeantes:',
+      options: [
+        { points: 0, ru: 'Быстро адаптируюсь и спокойно занимаюсь своим делом.', en: 'I adapt quickly and focus on my own thing with no problem.', es: 'Me adapto rápido y me concentro en lo mío sin problemas.' },
+        { points: 1, ru: 'Немного мешает, но терплю, если компания того стоит.', en: 'It bothers me a little, but I can tolerate it if the company is worth it.', es: 'Me molesta un poco, pero logro tolerarlo si la compañía vale la pena.' },
+        { points: 2, ru: 'Мгновенная сенсорная перегрузка; мой ментальный CPU тормозит, хочу только сбежать.', en: 'Immediate sensory overload; my mental CPU slows down and I just want to flee.', es: 'Siento una sobrecarga sensorial inmediata; mi CPU mental se ralentiza y solo quiero huir.' },
+      ],
+    },
+    {
+      ru: 'Если кто-то говорит иронию или двусмысленность, не меняя тона голоса:',
+      en: 'If someone says an ironic or double-meaning phrase without changing their tone:',
+      es: 'Si alguien me dice una frase irónica o un doble sentido sin cambiar el tono de voz:',
+      options: [
+        { points: 0, ru: 'Мгновенно улавливаю сарказм по социальному контексту.', en: 'I catch the sarcasm instantly from the social context.', es: 'Capto el sarcasmo al instante por el contexto social.' },
+        { points: 1, ru: 'Мне нужно пару секунд, чтобы понять — шутка это или реальное утверждение.', en: 'It takes me a few seconds to process whether it was a joke or a real statement.', es: 'Tardo unos segundos en procesar si era un chiste o una afirmación real.' },
+        { points: 2, ru: 'Понимаю совершенно буквально и отвечаю фактами, создавая неловкость.', en: 'I take it completely literally and answer with objective data, leaving things awkward.', es: 'Lo tomo de forma completamente literal y respondo con datos objetivos, dejando la situación incómoda.' },
+      ],
+    },
+    {
+      ru: 'Мои отношения с ежедневными рутинами и расписанием:',
+      en: 'My relationship with daily routines and schedules is:',
+      es: 'Mi relación con las rutinas diarias y los horarios es:',
+      options: [
+        { points: 0, ru: 'Гибкие; меняю планы на ходу, и это не портит настроение.', en: 'Flexible; I change plans on the fly without it affecting my mood.', es: 'Flexible; cambio de planes sobre la marcha sin que me afecte el humor.' },
+        { points: 1, ru: 'Организованные, но могу подстроиться под разумную неожиданность.', en: 'Organized, but I can adapt to a reasonable unexpected event.', es: 'Organizada, pero puedo adaptarme si ocurre un imprevisto razonable.' },
+        { points: 2, ru: 'Священны. Если внешнее изменение ломает мой план дня без предупреждения — моя ОС уходит в короткое замыкание.', en: 'Sacred. If an external change alters my day plan without warning, my mental OS short-circuits.', es: 'Sagrada. Si un cambio externo altera mi plan del día sin previo aviso, mi sistema operativo mental entra en cortocircuito.' },
+      ],
+    },
+    {
+      ru: 'Когда я открываю новую интересную тему (технология, история, фреймворк и т.д.):',
+      en: 'When I discover a new topic that interests me (tech, history, a framework, etc.):',
+      es: 'Cuando descubro un nuevo tema que me interesa (tecnología, historia, un framework, etc.):',
+      options: [
+        { points: 0, ru: 'Читаю пару статей, знакомлюсь поверхностно и перехожу к другому.', en: 'I read a couple of articles, skim it, and move on.', es: 'Leo un par de artículos, me informo por encima y paso a otra cosa.' },
+        { points: 1, ru: 'Посвящаю пару дней интенсивного чтения в свободное время.', en: 'I dedicate a few days of intense reading in my free time.', es: 'Le dedico unos días de lectura intensa en mis ratos libres.' },
+        { points: 2, ru: 'Ухожу в тотальный гиперфокус: 72 часа без сна, пожирая документацию, форумы и базы данных, пока не узнаю больше создателей.', en: 'I enter massive hyperfocus: 72 hours without sleep, devouring docs, forums, and databases until I know more than the creators.', es: 'Entro en hiperenfoque masivo: paso 72 horas sin dormir, devorando documentación, foros y bases de datos hasta saber más que los creadores.' },
+      ],
+    },
+    {
+      ru: 'Неожиданные звонки с неизвестных или знакомых номеров для меня:',
+      en: 'Surprise phone calls from unknown or known numbers are:',
+      es: 'Las llamadas telefónicas sorpresa de números desconocidos o conocidos son:',
+      options: [
+        { points: 0, ru: 'Норма — отвечаю сразу, не задумываясь.', en: 'Normal; I answer instantly without thinking.', es: 'Algo normal que respondo al instante sin pensarlo.' },
+        { points: 1, ru: 'Немного раздражают; предпочитаю, чтобы предупредили сообщением.', en: 'Annoying; I prefer to be warned by message first.', es: 'Algo molesto; prefiero que me avisen antes por mensaje.' },
+        { points: 2, ru: 'Прямая агрессия против моего покоя. Даю прозвониться, потом решаю, достоин ли звонок ответа текстом.', en: 'A direct attack on my peace of mind. I let it ring, then decide if it deserves a text reply.', es: 'Una agresión directa a mi paz mental. Dejo que suene y luego analizo si realmente merece un texto de respuesta.' },
+      ],
+    },
+    {
+      ru: 'Текстуры одежды (царапающие бирки, синтетика, съехавшие носки):',
+      en: 'Toward clothing textures (scratchy tags, synthetic fabrics, misaligned socks):',
+      es: 'Frente a las texturas de la ropa (etiquetas que raspan, telas sintéticas, calcetines desalineados):',
+      options: [
+        { points: 0, ru: 'Большую часть времени даже не замечаю, что они есть.', en: "Most of the time I don't even notice they're there.", es: 'Ni me doy cuenta de que están ahí la mayor parte del tiempo.' },
+        { points: 1, ru: 'Немного мешают, но за пару минут привыкаю.', en: 'They bother me a bit, but I get used to them within minutes.', es: 'Me incomodan un poco, pero me acostumbro a los pocos minutos.' },
+        { points: 2, ru: 'Невыносимая помеха, которая рушит мой фокус, пока не переоденусь или не оторву бирку.', en: 'An unbearable distraction that ruins my focus until I change clothes or rip off the tag.', es: 'Son una distracción insoportable que arruina mi enfoque hasta que me cambio de ropa o arranco la etiqueta.' },
+      ],
+    },
+    {
+      ru: 'В групповых разговорах (small talk, болтовня о погоде в лифте):',
+      en: 'In group conversations (small talk, elevator chat about the weather):',
+      es: 'En las conversaciones grupales ("small talk" o charlas de ascensor sobre el clima):',
+      options: [
+        { points: 0, ru: 'Участвую легко и получаю удовольствие от лёгкого социального обмена.', en: 'I join in fluidly and enjoy the light social exchange.', es: 'Participo de forma fluida y disfruto del intercambio social ligero.' },
+        { points: 1, ru: 'Терплю, сознательно стараясь казаться приятным.', en: 'I tolerate them by making a conscious effort to seem likable.', es: 'Las tolero haciendo un esfuerzo consciente por parecer simpático.' },
+        { points: 2, ru: 'Считаю абсолютной тратой пропускной способности. Не понимаю, зачем люди тратят слюну на нерелевантные данные.', en: 'I see them as a total waste of bandwidth. I don\'t get why people spend saliva on irrelevant data.', es: 'Las considero una pérdida absoluta de ancho de banda. No entiendo por qué la gente gasta saliva en datos irrelevantes.' },
+      ],
+    },
+    {
+      ru: 'Когда меня увлекает тема и я начинаю говорить о ней с человеком:',
+      en: 'When I\'m passionate about a topic and start talking about it with someone:',
+      es: 'Cuando me apasiona un tema y empiezo a hablar de él con otra persona:',
+      options: [
+        { points: 0, ru: 'Слежу за его реакциями и меняю тему, если вижу, что ему скучно.', en: 'I monitor their reactions and change topic if I notice they\'re bored.', es: 'Monitorizo sus reacciones y cambio de tema si noto que se aburre.' },
+        { points: 1, ru: 'Загораюсь, но стараюсь себя контролировать, чтобы не монополизировать разговор.', en: 'I get excited, but try to control myself so I don\'t monopolize the chat.', es: 'Me emociono, pero intento controlarme para no monopolizar la charla.' },
+        { points: 2, ru: 'Выдаю структурированный 40-минутный монолог, не замечая, что собеседник смотрит на часы в поисках выхода.', en: 'I launch into a structured 40-minute monologue without noticing my listener is checking the clock for an exit.', es: 'Suelto un monólogo estructurado de 40 minutos sin darme cuenta de que mi interlocutor está mirando el reloj o buscando una salida.' },
+      ],
+    },
+    {
+      ru: 'Порядок вещей на моём столе или в цифровом окружении (файлы, Notion, код):',
+      en: 'The order of objects on my desk or in my digital space (files, Notion, code):',
+      es: 'El orden de los objetos en mi escritorio o en mi entorno digital (archivos, Notion, código):',
+      options: [
+        { points: 0, ru: 'Довольно хаотичный, но я нахожу вещи внутри своего беспорядка.', en: 'Pretty chaotic, but I know how to find things within my mess.', es: 'Bastante caótico, pero sé encontrar las cosas dentro de mi desorden.' },
+        { points: 1, ru: 'Чистый и стандартный — нормальный для работы.', en: 'Clean and standard, the normal thing to work well.', es: 'Limpio y estándar, lo normal para trabajar bien.' },
+        { points: 2, ru: 'Миллиметровый и одержимый. Если кто-то сдвинет иконку или предмет — замечаю мгновенно, и это вызывает отторжение.', en: 'Millimetric and obsessive. If someone moves a desktop icon or an object, I notice instantly and it repels me.', es: 'Milimétrico y obsesivo. Si alguien me mueve un icono del escritorio o un objeto de mi mesa, lo noto al instante y me genera rechazo.' },
+      ],
+    },
+    {
+      ru: 'Еда для меня — это в первую очередь:',
+      en: 'Food, for me, is mainly defined as:',
+      es: 'La comida para mí se define principalmente como:',
+      options: [
+        { points: 0, ru: 'Социальный опыт, кулинарное удовольствие и разнообразие вкусов.', en: 'A social experience, a culinary pleasure, and a variety of flavors.', es: 'Una experiencia social, un placer culinario y variedad de sabores.' },
+        { points: 1, ru: 'Необходимое питание, которое я стараюсь сделать приятным.', en: 'Necessary nutrition that I try to make pleasant.', es: 'Nutrición necesaria que intento que sea agradable.' },
+        { points: 2, ru: 'Топливо для организма. Готов есть одно и то же каждый день, если это экономит усталость от решений и уважает безопасные текстуры.', en: 'Fuel for the organism. I\'d eat the exact same thing every day if it spares me decision fatigue and respects my safe textures.', es: 'Combustible para el organismo. Prefiero comer exactamente lo mismo todos los días si eso me ahorra fatiga de decisión y respeta mis texturas seguras.' },
+      ],
+    },
+    {
+      ru: 'Когда я иду по улице, мой ум обычно занят:',
+      en: 'When I walk down the street, my mind is usually focused on:',
+      es: 'Cuando camino por la calle, mi mente suele estar concentrada en:',
+      options: [
+        { points: 0, ru: 'Наблюдением за людьми, витринами и городским пейзажем.', en: 'Watching people, shops, and enjoying the urban scenery.', es: 'Observar a la gente, las tiendas y disfrutar del paisaje urbano.' },
+        { points: 1, ru: 'Общими мыслями о делах на день.', en: 'Thinking about my to-dos for the day in general.', es: 'Pensar en mis pendientes del día de forma general.' },
+        { points: 2, ru: 'Подсчётом плиток, анализом геометрических паттернов зданий или расчётом оптимальной скорости до цели.', en: 'Counting tiles, analyzing geometric patterns in buildings, or calculating the optimal speed to reach my destination.', es: 'Contar baldosas, analizar patrones geométricos en los edificios o calcular la velocidad óptima para llegar a mi destino.' },
+      ],
+    },
+    {
+      ru: 'Повторяющиеся фоновые звуки (тиканье часов, чужое чавканье, старый кондиционер):',
+      en: 'Repetitive background noises (a ticking clock, someone chewing, an old A/C):',
+      es: 'Los ruidos repetitivos de fondo (el tic-tac de un reloj, alguien masticando, un aire acondicionado viejo):',
+      options: [
+        { points: 0, ru: 'Мозг фильтрует их автоматически; я их даже не слышу.', en: 'My brain filters them out automatically; I don\'t even hear them.', es: 'Mi cerebro los filtra automáticamente; ni los escucho.' },
+        { points: 1, ru: 'Замечаю сначала, но потом удаётся игнорировать, если сосредоточусь.', en: 'I notice them at first, but manage to ignore them once I focus.', es: 'Los noto al principio, pero luego logro ignorarlos si me concentro en mi tarea.' },
+        { points: 2, ru: 'Впиваются в мозг как иглы. Сосредоточиться невозможно без наушников с шумоподавлением.', en: 'They dig into my brain like needles. I can\'t concentrate without noise-cancelling headphones.', es: 'Se clavan en mi cerebro como agujas. Es imposible concentrarme sin auriculares con cancelación de ruido.' },
+      ],
+    },
+    {
+      ru: 'Нетворкинг и походы на соцмероприятия ради новых знакомств для меня:',
+      en: 'Networking or attending social events to meet new people feels:',
+      es: 'Hacer "networking" o asistir a eventos sociales para conocer gente nueva me resulta:',
+      options: [
+        { points: 0, ru: 'Стимулируют; заряжают энергией и новыми идеями.', en: 'Stimulating; it recharges me with energy and new ideas.', es: 'Estimulante; me recarga de energía y nuevas ideas.' },
+        { points: 1, ru: 'Необходимое зло для бизнеса, которое я умею исполнять с усилием.', en: 'A necessary evil for business that I can execute with effort.', es: 'Un mal necesario para el negocio que sé ejecutar con esfuerzo.' },
+        { points: 2, ru: 'Массовый слив социальной батареи. Нужно три дня полной изоляции в техно-пещере, чтобы восстановиться.', en: 'A massive drain of my social battery. I need three days of total isolation in my tech cave to recover.', es: 'Un drenaje masivo de batería social. Necesito tres días de aislamiento total en mi cueva tecnológica para recuperarme.' },
+      ],
+    },
+    {
+      ru: 'Когда люди выражают эмоции, плача или крича при мне:',
+      en: 'When people express emotions by crying or shouting in front of me:',
+      es: 'Cuando la gente expresa sus emociones llorando o gritando en mi presencia:',
+      options: [
+        { points: 0, ru: 'Хочу их обнять и заражаюсь их эмоциональным состоянием.', en: 'I feel the urge to hug them and I catch their emotional state.', es: 'Siento el impulso de abrazarlos y me contagio de su estado emocional.' },
+        { points: 1, ru: 'Знаю, какие жесты изобразить, хотя внутри думаю, что делать.', en: 'I know which gestures to make to show sympathy, though inside I\'m thinking about what to do.', es: 'Sé qué gestos hacer para mostrar simpatía, aunque por dentro esté pensando en qué hacer.' },
+        { points: 2, ru: 'Застываю, обрабатывая ситуацию как синтаксическую ошибку. Не знаю, куда деть руки и что сказать.', en: 'I freeze, processing the situation like a syntax error. I don\'t know what to do with my hands or what to say.', es: 'Me quedo congelado procesando la situación como un error de sintaxis. No sé qué hacer con mis manos ni qué decir.' },
+      ],
+    },
+    {
+      ru: 'Моя способность замечать логические паттерны, ошибки в коде или несогласованности в системе:',
+      en: 'My ability to spot logical patterns, code errors, or inconsistencies in a system is:',
+      es: 'Mi habilidad para detectar patrones lógicos, errores en líneas de código o inconsistencias en un sistema es:',
+      options: [
+        { points: 0, ru: 'Обычная, как у любого при небольшой тренировке.', en: 'Normal, like anyone with a bit of training.', es: 'Normal, como la de cualquiera con un poco de entrenamiento.' },
+        { points: 1, ru: 'Хорошая; часто вижу сбои, которые другие пропускают.', en: 'Good; I usually see flaws that others miss.', es: 'Buena; suelo ver fallos que a otros se les escapan por encima.' },
+        { points: 2, ru: 'Почти паранормальная. Ошибки бросаются в глаза, будто светятся на экране, ещё до того, как дочитаю.', en: 'Almost paranormal. Errors leap out as if glowing on the screen before I finish reading.', es: 'Casi paranormal. Los errores saltan a mi vista como si brillaran en la pantalla antes de que termine de leer.' },
+      ],
+    },
+    {
+      ru: 'С клиентами, партнёрами и друзьями я предпочитаю общаться через:',
+      en: 'I prefer to communicate with clients, partners, or friends through:',
+      es: 'Prefiero comunicarme con clientes, socios o amigos a través de:',
+      options: [
+        { points: 0, ru: 'Голосовые или видеозвонки; это человечнее и быстрее.', en: 'Voice or video calls; it\'s more human and faster.', es: 'Llamadas de voz o videollamadas; es más humano y rápido.' },
+        { points: 1, ru: 'Длинные текстовые сообщения или выверенные голосовые.', en: 'Long text messages or controlled voice notes.', es: 'Mensajes de texto largos o notas de audio controladas.' },
+        { points: 2, ru: 'Структурированный письменный текст, желательно с буллитами, markdown и без эмоциональных обиняков.', en: 'Structured written text, preferably with bullet points, markdown, and no emotional detours.', es: 'Texto escrito estructurado, preferiblemente con viñetas, markdown y sin rodeos emocionales.' },
+      ],
+    },
+    {
+      ru: 'В детстве/подростковом возрасте мои увлечения и интересы были:',
+      en: 'As a child/teen, my hobbies and interests were:',
+      es: 'Cuando era niño/adolescente, mis pasatiempos e intereses eran:',
+      options: [
+        { points: 0, ru: 'Такими же, как у остальных детей моего возраста (коллективные игры, прогулки).', en: 'The same as the rest of the kids my age (group games, going outside).', es: 'Los mismos que los del resto de niños de mi edad (juegos colectivos, salir a la calle).' },
+        { points: 1, ru: 'Смесью обычных игр и нескольких одиночных навязчивостей.', en: 'A mix of common games and a few solitary obsessions.', es: 'Una mezcla entre juegos comunes y algunas obsesiones solitarias.' },
+        { points: 2, ru: 'Коллекционированием конкретных данных, сортировкой предметов по цвету/размеру или часами над одной сложной игрой или техкнигой.', en: 'Collecting specific data, classifying objects by color/size, or spending hours obsessed with one complex video game or technical book.', es: 'Coleccionar datos específicos, clasificar objetos por colores/tamaños o pasar horas obsesionado con un solo videojuego complejo o libro técnico.' },
+      ],
+    },
+    {
+      ru: 'Планирование моих проектов или кода строится на:',
+      en: 'The way I plan my projects or code is based on:',
+      es: 'La forma en que planifico mis proyectos o código se basa en:',
+      options: [
+        { points: 0, ru: 'Делаю по ходу и решаю проблемы по мере их появления.', en: 'Just doing it and solving problems as they come up.', es: 'Ir haciendo y resolver los problemas según vayan surgiendo.' },
+        { points: 1, ru: 'Списке общих задач с гибкими дедлайнами.', en: 'A list of general tasks with flexible deadlines.', es: 'Una lista de tareas generales con fechas límite flexibles.' },
+        { points: 2, ru: 'Гипердетальной ментальной карте со всеми логическими зависимостями и сценариями сбоев до первой строки.', en: 'A hyper-detailed mind map with every logical dependency and possible failure case before writing the first line.', es: 'Un mapa mental hiperdetallado con todas las dependencias lógicas y casos de fallo posibles antes de picar la primera línea.' },
+      ],
+    },
+    {
+      ru: 'Если я сосредоточен на сложной задаче за компьютером и меня прерывают простым вопросом:',
+      en: 'If I\'m focused on a complex task on my computer and someone interrupts with a simple question:',
+      es: 'Si estoy concentrado en una tarea compleja en mi ordenador y alguien me interrumpe para hacerme una pregunta simple:',
+      options: [
+        { points: 0, ru: 'Отвечаю приветливо и возвращаюсь к работе, не теряя ритма.', en: 'I answer kindly and get back to work without losing my rhythm.', es: 'Respondo amablemente y retomo mi trabajo sin perder el ritmo.' },
+        { points: 1, ru: 'Немного раздражаюсь, но отвечаю и минуту-другую восстанавливаю фокус.', en: 'It bothers me a bit, but I answer and take a few minutes to refocus.', es: 'Me molesta un poco, pero respondo y tardo unos minutos en volver a enfocarme.' },
+        { points: 2, ru: 'Чувствую холодную глубокую ярость: только что рухнул карточный домик, который я два часа строил в голове.', en: 'I feel a cold, deep rage because they just knocked down a conceptual house of cards I spent two hours building in my head.', es: 'Siento una ira fría y profunda porque acaban de tirar abajo un castillo de naipes conceptual que tardé dos horas en construir en mi cabeza.' },
+      ],
+    },
+    {
+      ru: 'Понятие «ложь во спасение» (сказать, что одежда идёт, только из вежливости):',
+      en: 'The concept of "white lies" (telling someone their clothes look good just to be polite):',
+      es: 'El concepto de "mentiras piadosas" (decirle a alguien que su ropa le queda bien solo por educación):',
+      options: [
+        { points: 0, ru: 'Считаю отличным и нужным, чтобы общество работало без трений.', en: 'I see it as great and necessary for society to run without friction.', es: 'Lo veo genial y necesario para que la sociedad funcione sin fricciones.' },
+        { points: 1, ru: 'Использую, когда не хочу лишних конфликтов, хотя мне это не нравится.', en: 'I use it when I don\'t want unnecessary conflict, even though I dislike it.', es: 'Lo uso cuando no quiero generar conflictos innecesarios, aunque no me guste.' },
+        { points: 2, ru: 'Считаю неэффективной глупостью. Предпочитаю голую правду; реальная оптимизация требует честных данных, а не фальшивой лести.', en: 'I find it inefficient stupidity. I prefer raw truth; real optimization needs honest data, not fake flattery.', es: 'Me parece una estupidez ineficiente. Prefiero la verdad cruda; la optimización real requiere datos honestos, no falsos halagos.' },
+      ],
+    },
+    {
+      ru: 'На людях или в стрессе я склонен к бессознательным повторяющимся движениям (качать ногой, барабанить пальцами, вертеть предмет):',
+      en: 'In public or when stressed, I make unconscious repetitive movements (bouncing my foot, drumming fingers, fiddling with an object):',
+      es: 'Cuando estoy en público o estresado, suelo realizar movimientos repetitivos inconscientes (mover el pie, tamborilear los dedos, jugar con un objeto):',
+      options: [
+        { points: 0, ru: 'Редко или никогда; держусь в обычной позе.', en: 'Rarely or never; I keep a normal posture.', es: 'Rara vez o nunca; mantengo una postura normal.' },
+        { points: 1, ru: 'Иногда, когда уровень стресса очень высок.', en: 'Sometimes, when the stress level is very high.', es: 'A veces, cuando el nivel de estrés es muy alto.' },
+        { points: 2, ru: 'Постоянно. Это мой механизм самостимуляции (stimming), чтобы сбросить лишнюю энергию или тревогу среды.', en: 'Constantly. It\'s my self-stimulation ("stimming") mechanism to discharge excess energy or ambient anxiety.', es: 'Constantemente. Es mi mecanismo de estimulación ("stimming") para descargar el exceso de energía o ansiedad del entorno.' },
+      ],
+    },
+    {
+      ru: 'Понимание неявных социальных иерархий (знать, кому положено доп-уважение по формальному статусу, а не по заслугам):',
+      en: 'Understanding implicit social hierarchies (knowing who deserves extra respect by formal position, not merit):',
+      es: 'Entender las jerarquías sociales implícitas (saber a quién debes respeto extra solo por su posición formal y no por sus méritos):',
+      options: [
+        { points: 0, ru: 'Усваиваю естественно и действую по протоколу.', en: 'I assimilate it naturally and act according to protocol.', es: 'Lo asimilo de forma natural y actúo según el protocolo.' },
+        { points: 1, ru: 'Понимаю, но меня раздражает изображать покорность перед некомпетентными.', en: 'I understand it, but it bothers me to fake submission before incompetents.', es: 'Lo entiendo, pero me molesta tener que fingir sumisión ante incompetentes.' },
+        { points: 2, ru: 'Считаю это багом человеческой системы. Уважаю только техническую компетентность и логику; пустые титулы ничего не значат.', en: 'I see it as a bug in the human system. I only respect technical competence and logic; empty titles mean nothing.', es: 'Me parece un bug del sistema humano. Solo respeto la competencia técnica y la lógica; los títulos vacíos no significan nada.' },
+      ],
+    },
+    {
+      ru: 'Моя чувствительность к солнечному свету или офисным люминесцентным лампам:',
+      en: 'My sensitivity to sunlight or office fluorescent lighting is:',
+      es: 'Mi sensibilidad a la luz del sol o a las luces fluorescentes de oficina es:',
+      options: [
+        { points: 0, ru: 'Обычная; не мешает в повседневности.', en: 'Normal; it doesn\'t affect my day-to-day.', es: 'Normal; no me afecta en mi día a día.' },
+        { points: 1, ru: 'Предпочитаю тёплый или приглушённый свет, но работаю при любом.', en: 'I prefer warm or dim light, but I work fine under any lamp.', es: 'Prefiero luces cálidas o bajas, pero trabajo bien bajo cualquier foco.' },
+        { points: 2, ru: 'Высокая. Лучше работаю в темноте, с тёмной темой во всех приложениях, часто в солнцезащитных очках в помещении.', en: 'High. I work better in the dark, with dark mode in every app, and often wear sunglasses indoors if the light is aggressive.', es: 'Alta. Trabajo mejor a oscuras, con modo oscuro en todas las aplicaciones y a menudo uso gafas de sol en interiores si la luz es agresiva.' },
+      ],
+    },
+    {
+      ru: 'Читая роман или смотря фильм, я больше обращаю внимание на:',
+      en: 'When I read a novel or watch a film, I pay more attention to:',
+      es: 'Cuando leo una novela o veo una película, me fijo más en:',
+      options: [
+        { points: 0, ru: 'Любовную драму, эмоции персонажей и их отношения.', en: 'The love drama, the characters\' emotions, and their relationships.', es: 'El drama amoroso, las emociones de los personajes y sus relaciones.' },
+        { points: 1, ru: 'Общий фон истории и ритм сюжета.', en: 'The general backdrop of the story and the pace of the plot.', es: 'El trasfondo general de la historia y el ritmo de la trama.' },
+        { points: 2, ru: 'Связность лора, правила вселенной, технические детали и логические дыры сценария.', en: 'The coherence of the lore, the universe\'s rules, technical details, and logical plot holes.', es: 'La coherencia del "lore", las reglas del universo, los detalles técnicos y los fallos de guion lógicos.' },
+      ],
+    },
+    {
+      ru: 'Изучение новых языков или языков программирования даётся мне:',
+      en: 'Learning new languages or programming languages comes to me:',
+      es: 'Aprender nuevos idiomas o lenguajes de programación se me da:',
+      options: [
+        { points: 0, ru: 'С обычным усилием и практикой, как у любого.', en: 'With the usual effort and practice of any person.', es: 'Con el esfuerzo y la práctica habitual de cualquier persona.' },
+        { points: 1, ru: 'Относительно хорошо, если возьмусь всерьёз на несколько месяцев.', en: 'Relatively well if I get serious for a few months.', es: 'Relativamente bien si me pongo en serio unos meses.' },
+        { points: 2, ru: 'Крайне быстро; мозг обрабатывает грамматические структуры или синтаксис как нативные математические шаблоны.', en: 'Extremely fast; my brain processes grammar structures or code syntax like native mathematical templates.', es: 'Extremadamente rápido; mi cerebro procesa las estructuras gramaticales o la sintaxis de código como si fueran plantillas matemáticas nativas.' },
+      ],
+    },
+    {
+      ru: 'В личных отношениях люди обычно описывают меня как:',
+      en: 'In personal relationships, people usually describe me as:',
+      es: 'En las relaciones personales, la gente suele describirme como:',
+      options: [
+        { points: 0, ru: 'Тёплого, выразительного, легко читаемого эмоционально.', en: 'Someone warm, expressive, and emotionally easy to read.', es: 'Alguien cálido, expresivo y fácil de leer emocionalmente.' },
+        { points: 1, ru: 'Сдержанного, но верного, когда проникнется доверием.', en: 'Reserved but loyal once I gain trust.', es: 'Alguien reservado pero leal cuando coge confianza.' },
+        { points: 2, ru: 'Холодного, отстранённого, загадочного или «чёрный ящик», который трудно расшифровать.', en: 'Cold, distant, enigmatic, or a "black box" that\'s hard to decipher.', es: 'Alguien frío, distante, enigmático o una "caja negra" difícil de descifrar.' },
+      ],
+    },
+    {
+      ru: 'Вспоминая событие из прошлого, моя память работает через:',
+      en: 'When I try to recall a past event, my memory works through:',
+      es: 'Cuando intento recordar un evento del pasado, mi memoria funciona mediante:',
+      options: [
+        { points: 0, ru: 'Общее эмоциональное ощущение того, что произошло.', en: 'A general emotional sense of what happened.', es: 'Una sensación emocional general de lo que pasó.' },
+        { points: 1, ru: 'Повествовательный рассказ об основных фактах.', en: 'A narrative account of the main facts.', es: 'Un relato narrativo de los hechos principales.' },
+        { points: 2, ru: 'Гиперчёткие ментальные скриншоты, точные дата/время или детали среды, которые другие забыли.', en: 'Hyper-sharp mental screenshots, exact date/time data, or specific environmental details others forgot.', es: 'Capturas de pantalla mentales hipernítidas, datos exactos de la fecha/hora o detalles específicos del entorno que otros olvidaron.' },
+      ],
+    },
+    {
+      ru: 'Если бы я мог автоматизировать все повторяющиеся человеческие соцвзаимодействия с помощью ИИ, я:',
+      en: 'If I could automate all my repetitive human social interactions with an AI, I would:',
+      es: 'Si tuviera la oportunidad de automatizar todas mis interacciones sociales humanas repetitivas mediante una IA, yo:',
+      options: [
+        { points: 0, ru: 'Категорически отказался бы; предпочитаю реальный человеческий контакт с его несовершенствами.', en: 'Flatly refuse; I prefer real human contact with its imperfections.', es: 'Me negaría rotundamente; prefiero el contacto humano real con sus imperfecciones.' },
+        { points: 1, ru: 'Сделал бы это только для бюрократии и тяжёлых клиентов.', en: 'Do it only for bureaucratic errands and difficult clients.', es: 'Lo haría solo para trámites burocráticos y clientes pesados.' },
+        { points: 2, ru: 'Оформил бы премиум-подписку прямо сегодня. Это был бы идеальный софт для оптимизации моей жизни.', en: 'Pay for a premium subscription today. It would be the ultimate software to optimize my life.', es: 'Pagaría una suscripción premium hoy mismo. Sería el software definitivo para optimizar mi vida.' },
+      ],
+    },
+  ],
+  bands: {
+    social:  { ru: 'Социальный / базовый нейротип', en: 'Social / Basic Neurotypical', es: 'Mente Social / Neurotípica Básica' },
+    adapted: { ru: 'Адаптированный аналитик', en: 'Adapted Analyst', es: 'Analista Adaptado' },
+    silicon: { ru: 'Silicon Mind / Кремниевый мозг', en: 'Silicon Mind', es: 'Silicon Mind / Cerebro de Silicio' },
+  },
+  bandDesc: {
+    social: {
+      ru: 'Твой мозг заточен под плавное социальное взаимодействие и органическую эмпатию. Ты хорошо фильтруешь стимулы. Минус: склонен тратить время на неэффективные социальные динамики, и тебе трудно входить в глубокий гиперфокус.',
+      en: 'Your brain is wired for fluid social interaction and organic empathy. You filter stimuli well. Downside: you\'re prone to wasting time on inefficient social dynamics and struggle to enter deep hyperfocus.',
+      es: 'Tu cerebro está cableado para la interacción social fluida y la empatía orgánica. Filtras bien los estímulos. Desventaja: eres propenso a perder el tiempo en dinámicas sociales ineficientes y te cuesta entrar en hiperenfoque profundo.',
+    },
+    adapted: {
+      ru: 'У тебя сильная рациональная жилка и системное мышление. Ты ценишь порядок и логику, но умеешь «надевать социальную маску», когда этого требует дело. Ты — мост между человеческим хаосом и чистыми системами.',
+      en: 'You have a strong rational streak and systemic capacity. You value order and logic but keep the ability to "put on the social mask" when business requires it. You\'re the bridge between human chaos and pure systems.',
+      es: 'Tienes una fuerte vena racional y capacidad sistémica. Valoras el orden y la lógica, pero mantienes la capacidad de "ponerte la máscara" social cuando el negocio lo requiere. Eres el puente entre el caos humano y los sistemas puros.',
+    },
+    silicon: {
+      ru: 'Твой ум работает с точностью процессора последнего поколения. Эмоциональные искажения и бесполезные социальные тонкости отключены по умолчанию. У тебя крайне низкая толерантность к шуму и огромный потенциал гиперфокуса. Ты нативный архитектор систем, хотя люди иногда кажутся тебе плохо запрограммированными NPC.',
+      en: 'Your mind runs with the precision of a next-gen processor. Emotional biases and useless social subtleties are disabled by default. You have very low noise tolerance and massive hyperfocus potential. You\'re a native systems architect, even if humans sometimes look like badly-programmed NPCs.',
+      es: 'Tu mente opera con la precisión de un procesador de última generación. Los sesgos emocionales y las sutilezas sociales inútiles están desactivados por defecto. Tienes una tolerancia al ruido bajísima y un potencial de hiperenfoque masivo. Eres un arquitecto nativo de sistemas, aunque los humanos a veces te parezcan NPC mal programados.',
+    },
+  },
+};
+
+export const TESTS = [ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND];
 
 // Concrete psychological age from total score (20..60), interpolated across the
 // three phase bands: reactive 20..33 → 15..22, critical 34..48 → 23..38,
@@ -520,6 +861,19 @@ export function psychAgeFromScore(score) {
   else if (score <= 48) age = 23 + ((score - 34) / 14) * 15;
   else age = 39 + ((score - 49) / 11) * 16;
   return Math.round(age);
+}
+
+// Silicon Mind: sum points (0..2 per item), express as an optimization
+// percentage of the maximum, and band it: 0-30% social, 31-65% adapted, 66-100% silicon.
+export function scoreSilicon(test, answers) {
+  let total = 0;
+  answers.forEach((a) => { if (a != null) total += a; });
+  const max = test.items.length * 2;
+  const pct = Math.round((total / max) * 100);
+  let band = 'social';
+  if (pct >= 66) band = 'silicon';
+  else if (pct >= 31) band = 'adapted';
+  return { total, max, pct, band };
 }
 
 export function scorePsychAge(test, answers) {
