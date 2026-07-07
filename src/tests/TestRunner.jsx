@@ -102,86 +102,45 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
   );
 }
 
-function RadarChart({ test, subscales, axisOrder }) {
-  const { lang } = useLang();
-  const size = 280;
-  const cx = size / 2;
-  const cy = size / 2 + 6;
-  const radius = 96;
-  // axes evenly spaced, starting at the top
-  const angles = axisOrder.map((_, i) => -Math.PI / 2 + (i * 2 * Math.PI) / axisOrder.length);
-  const ringSteps = [0.25, 0.5, 0.75, 1];
-  const pt = (angle, r) => `${cx + Math.cos(angle) * r},${cy + Math.sin(angle) * r}`;
-  const ringPoly = (ratio) => angles.map((a) => pt(a, radius * ratio)).join(' ');
-  const dataPoly = axisOrder
-    .map((k, i) => pt(angles[i], radius * (subscales[k].pct / 100)))
-    .join(' ');
-
-  return (
-    <svg className="radar" viewBox={`0 0 ${size} ${size + 30}`} aria-hidden="true">
-      <defs>
-        <radialGradient id="radar-fill" cx="50%" cy="50%" r="60%">
-          <stop offset="0%"  stopColor="#e8c98a" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#b8924a" stopOpacity="0.35" />
-        </radialGradient>
-      </defs>
-      {ringSteps.map((r) => (
-        <polygon key={r} className="radar-ring" points={ringPoly(r)} />
-      ))}
-      {angles.map((a, i) => (
-        <line
-          key={i}
-          className="radar-axis"
-          x1={cx}
-          y1={cy}
-          x2={cx + Math.cos(a) * radius}
-          y2={cy + Math.sin(a) * radius}
-        />
-      ))}
-      <polygon className="radar-data" points={dataPoly} fill="url(#radar-fill)" />
-      {axisOrder.map((k, i) => {
-        const a = angles[i];
-        const labelR = radius + 22;
-        const lx = cx + Math.cos(a) * labelR;
-        const ly = cy + Math.sin(a) * labelR;
-        const anchor = Math.abs(Math.cos(a)) < 0.2 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end';
-        return (
-          <g key={k}>
-            <text className="radar-label" x={lx} y={ly} textAnchor={anchor}>
-              {tx(test.subscales[k], lang)}
-            </text>
-            <text className="radar-value" x={lx} y={ly + 14} textAnchor={anchor}>
-              {subscales[k].sum}/{subscales[k].max}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
+const DT_BAND_LABEL = {
+  low:  { ru: 'Низкий',  en: 'Low',      es: 'Bajo' },
+  mid:  { ru: 'Средний', en: 'Moderate', es: 'Medio' },
+  high: { ru: 'Высокий', en: 'High',     es: 'Alto' },
+};
 
 function DarkTriadResult({ test, answers, onClose, onRestart }) {
   const { lang, t } = useLang();
   const { subscales } = useMemo(() => scoreDarkTriad(test, answers), [test, answers]);
   const order = ['M', 'N', 'P'];
+  const dom = order.reduce((a, b) => (subscales[b].sum > subscales[a].sum ? b : a), order[0]);
+  const domLabel = { ru: 'Доминирующая черта', en: 'Dominant trait', es: 'Rasgo dominante' };
   return (
     <div className="test-result">
       <h3 className="test-result-title">{tx(test.title, lang)}</h3>
-      <RadarChart test={test} subscales={subscales} axisOrder={order} />
-      <div className="darktriad-bands">
+
+      <div className={`dt-dominant dt-${subscales[dom].band}`}>
+        <span className="dt-dominant-label">{tx(domLabel, lang)}</span>
+        <span className="dt-dominant-name">{tx(test.subscales[dom], lang)}</span>
+        <span className="dt-dominant-tag">{tx(test.subscaleBands[dom][subscales[dom].band], lang)}</span>
+      </div>
+
+      <div className="dt-traits">
         {order.map((k) => {
           const s = subscales[k];
           return (
-            <div key={k} className={`darktriad-band band-${s.band}`}>
-              <div className="darktriad-band-head">
-                <span className="darktriad-band-name">{tx(test.subscales[k], lang)}</span>
-                <span className="darktriad-band-score">{s.sum}/{s.max}</span>
+            <div key={k} className={`dt-trait dt-${s.band}`}>
+              <div className="dt-trait-head">
+                <span className="dt-trait-name">{tx(test.subscales[k], lang)}</span>
+                <span className="dt-trait-level">{tx(DT_BAND_LABEL[s.band], lang)}</span>
+                <span className="dt-trait-score">{s.sum}<i>/{s.max}</i></span>
               </div>
-              <span className="darktriad-band-tag">{tx(test.subscaleBands[k][s.band], lang)}</span>
+              <div className="dt-meter"><span style={{ width: `${s.pct}%` }} /></div>
+              <p className="dt-trait-desc">{tx(test.subscaleDesc[k][s.band], lang)}</p>
             </div>
           );
         })}
       </div>
+
       <div className="test-actions">
         <button className="test-secondary" onClick={onRestart}>
           {t('test.restart') || 'Restart'}

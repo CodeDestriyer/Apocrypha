@@ -146,6 +146,24 @@ export const DARK_TRIAD = {
       high: { ru: 'Импульсивный, бесстрашный, жёсткий',  en: 'Impulsive, fearless, harsh',         es: 'Impulsivo, audaz, duro' },
     },
   },
+  // Full per-level interpretation, one line per band — the stern verdict text.
+  subscaleDesc: {
+    M: {
+      low:  { ru: 'Играешь в открытую. Говоришь, что думаешь, и ждёшь того же — расчётливая игра тебе чужда.', en: 'You play it straight. You say what you mean and expect the same — calculated games aren’t your instinct.', es: 'Juegas con las cartas sobre la mesa. Dices lo que piensas y esperas lo mismo; el juego calculado no es lo tuyo.' },
+      mid:  { ru: 'Видишь чужие мотивы и умеешь подать себя, но не переходишь в холодный расчёт как образ жизни.', en: 'You read other people’s motives and know how to position yourself, without turning cold calculation into a way of life.', es: 'Lees los motivos ajenos y sabes posicionarte, sin convertir el cálculo frío en un modo de vida.' },
+      high: { ru: 'Мыслишь ходами. Информация — валюта, доверие — инструмент, каждый шаг ведёт к твоей цели.', en: 'You think in moves. Information is currency, trust is a tool, and every step serves your objective.', es: 'Piensas en jugadas. La información es moneda, la confianza una herramienta y cada paso sirve a tu objetivo.' },
+    },
+    N: {
+      low:  { ru: 'Тебе не нужны аплодисменты, чтобы чувствовать себя собой. Иногда — в ущерб собственной ценности.', en: 'You don’t need applause to feel like yourself — sometimes at the cost of your own worth.', es: 'No necesitas aplausos para sentirte tú mismo; a veces, a costa de tu propio valor.' },
+      mid:  { ru: 'Знаешь себе цену без грандиозности. Признание приятно, но не управляет тобой.', en: 'You know your worth without grandiosity. Recognition is nice, but it doesn’t run you.', es: 'Conoces tu valor sin grandiosidad. El reconocimiento agrada, pero no te gobierna.' },
+      high: { ru: 'Ты в центре собственной вселенной. Внимание — топливо, а посредственность вокруг — раздражает.', en: 'You’re the centre of your own universe. Attention is fuel, and the mediocrity around you grates.', es: 'Eres el centro de tu propio universo. La atención es combustible y la mediocridad ajena te irrita.' },
+    },
+    P: {
+      low:  { ru: 'Чужая боль отзывается в тебе. Осторожность и совесть держат руль крепче импульса.', en: 'Other people’s pain lands on you. Caution and conscience hold the wheel tighter than impulse.', es: 'El dolor ajeno te alcanza. La prudencia y la conciencia sujetan el volante más que el impulso.' },
+      mid:  { ru: 'Держишь голову холодной под давлением, но полностью эмоции не отключаешь.', en: 'You keep a cool head under pressure, without switching emotion off entirely.', es: 'Mantienes la cabeza fría bajo presión, sin apagar las emociones por completo.' },
+      high: { ru: 'Тормозов почти нет. Риск манит, вина молчит, а препятствия убираются без колебаний.', en: 'The brakes barely engage. Risk tempts you, guilt stays quiet, and obstacles get removed without hesitation.', es: 'Los frenos apenas responden. El riesgo te tienta, la culpa calla y los obstáculos se retiran sin titubear.' },
+    },
+  },
 };
 
 // Personality archetypes — 24 items, 5-point agree scale (0..4), grouped into
