@@ -21,11 +21,63 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    preview: '/MENTESBAJOCONTROL-PROMO_FINAL.pdf',
+    pages: ['/promo/p1.jpg', '/promo/p2.jpg', '/promo/p3.jpg', '/promo/p4.jpg'],
     hotmartUrl: 'https://hotmart.com/es/marketplace/productos/mentes-bajo-control-manipulacion-social-nivel-1/L106624559K?sck=HOTMART_SITE&search=10103c75-a40b-4598-a331-04850e1475da&hotfeature=33',
     url: null,
   },
 ];
+
+const HOTMART_LABEL = {
+  ru: 'Продолжить в Hotmart →',
+  en: 'Continue on Hotmart →',
+  es: 'Continuar en Hotmart →',
+};
+
+function PromoViewer({ course, onClose }) {
+  const { lang } = useLang();
+  const last = course.pages.length - 1;
+  return (
+    <div className="promo-overlay" role="dialog" aria-modal="true">
+      <header className="promo-bar">
+        <span className="promo-bar-title">{course.title}</span>
+        <button className="promo-close" onClick={onClose} aria-label="Cerrar">×</button>
+      </header>
+      <div className="promo-scroll">
+        <div className="promo-pages">
+          {course.pages.map((src, i) => (
+            <div className="promo-page" key={src}>
+              <img
+                className="promo-page-img"
+                src={src}
+                alt={`${course.title} — ${i + 1}`}
+                loading={i < 2 ? 'eager' : 'lazy'}
+              />
+              {i === last && course.hotmartUrl && (
+                <a
+                  className="promo-hotspot"
+                  href={course.hotmartUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={tx(HOTMART_LABEL, lang)}
+                />
+              )}
+            </div>
+          ))}
+          {course.hotmartUrl && (
+            <a
+              className="promo-cta-btn"
+              href={course.hotmartUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {tx(HOTMART_LABEL, lang)}
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile, onEnterApp }) {
   const [open, setOpen] = useState(false);
@@ -259,6 +311,7 @@ function TestsPage({ onStart }) {
 
 function CoursesPage() {
   const { lang, t } = useLang();
+  const [viewer, setViewer] = useState(null);
   return (
     <main className="landing-main landing-tests-page">
       <ul className="landing-test-list">
@@ -283,15 +336,13 @@ function CoursesPage() {
               </div>
             </div>
             <div className="landing-course-actions">
-              {course.preview ? (
-                <a
+              {course.pages?.length ? (
+                <button
                   className="landing-test-go"
-                  href={course.preview}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => setViewer(course)}
                 >
                   {t('landing.preview')}
-                </a>
+                </button>
               ) : (
                 <button className="landing-test-go" disabled>
                   {t('landing.courseSoon')}
@@ -318,6 +369,7 @@ function CoursesPage() {
           </li>
         ))}
       </ul>
+      {viewer && <PromoViewer course={viewer} onClose={() => setViewer(null)} />}
     </main>
   );
 }
