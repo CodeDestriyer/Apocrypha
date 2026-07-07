@@ -25,10 +25,7 @@ html, body, #root {
 }
 
 body {
-  background:
-    linear-gradient(rgba(6, 10, 18, 0.55), rgba(6, 10, 18, 0.78)),
-    url('/bg.jpg') center center / cover no-repeat,
-    var(--bg-0);
+  background: #f5f1e8;
 }
 
 .app {
@@ -819,7 +816,13 @@ body {
   place-items: center;
   gap: 12px;
   text-align: center;
+  /* Match the landing so loading never flashes the dark app background. */
+  background:
+    linear-gradient(180deg, rgba(255, 248, 232, 0.05) 0%, rgba(255, 248, 232, 0.55) 60%, rgba(255, 248, 232, 0.85) 100%),
+    url('/landing-bg.jpg') center top / cover no-repeat,
+    #f5f1e8;
 }
+.splash .ornament { color: #a5842f; }
 
 /* Landing — light theme, distinct from the dark app */
 .landing {
@@ -896,6 +899,137 @@ body {
   transition: background 0.12s ease;
 }
 .landing-account-menu-item:hover { background: #f5efde; }
+.landing-account-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #ece1c8;
+}
+.landing-account-name {
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  color: #1b1814;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landing-plan-badge {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f0dca6 0%, #dcc07e 100%);
+  color: #4a3a12;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px #c9a86a inset;
+}
+
+/* Profile / test-history modal */
+.prof-modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+  padding: 28px 26px 24px;
+  background: linear-gradient(180deg, #fffdf6 0%, #fbf4e4 100%);
+  border: 1px solid #e2c98f;
+  border-radius: 18px;
+  box-shadow: 0 30px 70px rgba(20, 14, 4, 0.4);
+  color: #1b1814;
+  max-height: 84vh;
+  overflow-y: auto;
+}
+.prof-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #ece1c8;
+}
+.prof-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #1f1c17 0%, #0d0b08 100%);
+  color: #e8c98a;
+  box-shadow: 0 0 0 1px #d4b87a inset;
+}
+.prof-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.prof-name {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prof-hist-title {
+  margin: 0 0 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a5842f;
+}
+.prof-empty {
+  margin: 0;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  color: #6a5f4c;
+  line-height: 1.4;
+}
+.prof-hist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.prof-hist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #ece1c8;
+  border-radius: 10px;
+}
+.prof-hist-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.prof-hist-test {
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #241f18;
+  line-height: 1.25;
+}
+.prof-hist-date {
+  font-family: 'Cinzel', serif;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a99a78;
+}
+.prof-hist-score {
+  flex-shrink: 0;
+  text-align: right;
+  font-family: 'EB Garamond', serif;
+  font-size: 13.5px;
+  color: #5a4f3c;
+  max-width: 45%;
+}
 
 /* Registration modal (Google) over the landing */
 .reg-overlay {

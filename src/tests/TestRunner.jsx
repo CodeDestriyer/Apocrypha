@@ -8,6 +8,25 @@ function tx(obj, lang) {
   return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
 }
 
+// Short one-line summary of a finished test, for the saved history.
+function summarizeResult(test, answers, lang) {
+  if (test.id === ADHD.id) {
+    const { total, max, band } = scoreAdhd(test, answers);
+    return { score: `${total}/${max}`, label: tx(test.bands[band], lang) };
+  }
+  if (test.id === DARK_TRIAD.id) {
+    const { subscales } = scoreDarkTriad(test, answers);
+    const order = ['M', 'N', 'P'];
+    const top = order.reduce((a, b) => (subscales[b].pct > subscales[a].pct ? b : a), order[0]);
+    return { score: `${subscales[top].sum}/${subscales[top].max}`, label: tx(test.subscales[top], lang) };
+  }
+  if (test.id === ARCHETYPE_TEST.id) {
+    const { core } = scoreArchetypes(test, answers);
+    return { score: `${core.sum}/${core.max}`, label: tx(test.archetypes[core.key], lang) };
+  }
+  return { score: '', label: '' };
+}
+
 function RegisterCta({ onRegister }) {
   if (!onRegister) return null;
   return (
@@ -218,7 +237,7 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
   );
 }
 
-export default function TestRunner({ test, onClose, onRegister }) {
+export default function TestRunner({ test, onClose, onRegister, onSaveResult }) {
   const { lang, t } = useLang();
   const scaleSet = SCALE_LABELS[test.scale] ?? FREQ5;
   const labels = scaleSet[lang] ?? scaleSet.en;
@@ -229,8 +248,24 @@ export default function TestRunner({ test, onClose, onRegister }) {
   const [submitted, setSubmitted] = useState(false);
   const [transition, setTransition] = useState(null); // 'out-left' | 'in-right' | null
   const advanceTimer = useRef(null);
+  const savedRef = useRef(false);
 
   useEffect(() => () => clearTimeout(advanceTimer.current), []);
+
+  // Persist the finished test to the logged-in user's history (once).
+  useEffect(() => {
+    if (!submitted || !onSaveResult || savedRef.current) return;
+    savedRef.current = true;
+    const { score, label } = summarizeResult(test, answers, lang);
+    onSaveResult({
+      id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      testId: test.id,
+      title: tx(test.title, lang),
+      date: new Date().toISOString(),
+      score,
+      label,
+    });
+  }, [submitted, onSaveResult, test, answers, lang]);
 
   const progressPct = Math.round(((submitted ? total : index) / total) * 100);
   const complete = answers.every((a) => a != null);
@@ -262,6 +297,7 @@ export default function TestRunner({ test, onClose, onRegister }) {
 
   const restart = () => {
     clearTimeout(advanceTimer.current);
+    savedRef.current = false;
     setAnswers(new Array(total).fill(null));
     setIndex(0);
     setSubmitted(false);

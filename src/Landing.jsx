@@ -27,7 +27,7 @@ const COURSES = [
   },
 ];
 
-function AccountButton({ authed, avatarUrl, onRegister }) {
+function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -58,6 +58,16 @@ function AccountButton({ authed, avatarUrl, onRegister }) {
       </button>
       {open && (
         <div className="landing-account-menu">
+          <div className="landing-account-head">
+            <span className="landing-account-name">{name || 'Tu cuenta'}</span>
+            <span className="landing-plan-badge">FREE</span>
+          </div>
+          <button
+            className="landing-account-menu-item"
+            onClick={() => { setOpen(false); onOpenProfile(); }}
+          >
+            Mi perfil
+          </button>
           <button
             className="landing-account-menu-item"
             onClick={() => { setOpen(false); signOut(); }}
@@ -66,6 +76,60 @@ function AccountButton({ authed, avatarUrl, onRegister }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function formatResultDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+
+function ProfileModal({ onClose }) {
+  const { profile, googleAvatar } = useProfile();
+  const name = profile?.name || 'Tu cuenta';
+  const history = Array.isArray(profile?.test_results) ? profile.test_results : [];
+
+  return (
+    <div className="reg-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="prof-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="reg-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <div className="prof-head">
+          <span className="prof-avatar" aria-hidden="true">
+            {googleAvatar
+              ? <img className="landing-account-img" src={googleAvatar} alt="" referrerPolicy="no-referrer" />
+              : <PersonIcon size={24} />}
+          </span>
+          <div className="prof-id">
+            <span className="prof-name">{name}</span>
+            <span className="landing-plan-badge">FREE</span>
+          </div>
+        </div>
+
+        <h3 className="prof-hist-title">Historial de tests</h3>
+        {history.length === 0 ? (
+          <p className="prof-empty">Aún no has guardado ningún test. Completa uno para verlo aquí.</p>
+        ) : (
+          <ul className="prof-hist">
+            {history.map((r) => (
+              <li key={r.id} className="prof-hist-row">
+                <div className="prof-hist-main">
+                  <span className="prof-hist-test">{r.title}</span>
+                  <span className="prof-hist-date">{formatResultDate(r.date)}</span>
+                </div>
+                {(r.score || r.label) && (
+                  <span className="prof-hist-score">
+                    {r.score}{r.score && r.label ? ' · ' : ''}{r.label}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -243,14 +307,21 @@ function CoursesPage() {
 
 export default function Landing() {
   const { t, setLang } = useLang();
-  const { status, googleAvatar } = useProfile();
+  const { status, googleAvatar, profile, update } = useProfile();
   const authed = status === 'ready';
   const [view, setView] = useState('home');
   const [activeTest, setActiveTest] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   // Public site is Spanish-only.
   useEffect(() => { setLang('es'); }, [setLang]);
+
+  const saveResult = (record) => {
+    update((curr) => ({
+      test_results: [record, ...(Array.isArray(curr?.test_results) ? curr.test_results : [])].slice(0, 100),
+    }));
+  };
 
   const isHome = view === 'home';
 
@@ -267,7 +338,9 @@ export default function Landing() {
         <AccountButton
           authed={authed}
           avatarUrl={googleAvatar}
+          name={profile?.name}
           onRegister={() => setShowRegister(true)}
+          onOpenProfile={() => setShowProfile(true)}
         />
       </header>
 
@@ -305,10 +378,12 @@ export default function Landing() {
           test={activeTest}
           onClose={() => setActiveTest(null)}
           onRegister={authed ? null : () => setShowRegister(true)}
+          onSaveResult={authed ? saveResult : null}
         />
       )}
 
       {showRegister && <RegisterModal onClose={() => setShowRegister(false)} />}
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
     </div>
   );
 }
