@@ -8,6 +8,25 @@ function tx(obj, lang) {
   return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
 }
 
+function RegisterCta({ onRegister }) {
+  if (!onRegister) return null;
+  return (
+    <div className="test-register">
+      <span className="test-register-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="8" r="3.7" />
+          <path d="M4.6 20c0-4 3.3-6.6 7.4-6.6S19.4 16 19.4 20" />
+        </svg>
+      </span>
+      <div className="test-register-text">
+        <strong>Guarda tu resultado</strong>
+        <span>Crea tu cuenta para guardar este resultado y seguir tu evolución.</span>
+      </div>
+      <button className="test-register-btn" onClick={onRegister}>Regístrate</button>
+    </div>
+  );
+}
+
 function AdhdResult({ test, answers, onClose, onRestart }) {
   const { lang, t } = useLang();
   const { total, max, band, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
@@ -199,7 +218,7 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
   );
 }
 
-export default function TestRunner({ test, onClose }) {
+export default function TestRunner({ test, onClose, onRegister }) {
   const { lang, t } = useLang();
   const scaleSet = SCALE_LABELS[test.scale] ?? FREQ5;
   const labels = scaleSet[lang] ?? scaleSet.en;
@@ -319,6 +338,7 @@ export default function TestRunner({ test, onClose }) {
             {test.id === ARCHETYPE_TEST.id && (
               <ArchetypeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
+            <RegisterCta onRegister={onRegister} />
           </>
         )}
       </div>

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLang, LANGS } from './i18n.jsx';
+import { useEffect, useState } from 'react';
+import { useLang } from './i18n.jsx';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 
@@ -16,67 +16,14 @@ const COURSES = [
   },
 ];
 
-const FLAG_SVG = {
-  ru: (
-    <svg viewBox="0 0 9 6" aria-hidden="true">
-      <rect width="9" height="2" y="0" fill="#fff" />
-      <rect width="9" height="2" y="2" fill="#0039A6" />
-      <rect width="9" height="2" y="4" fill="#D52B1E" />
-    </svg>
-  ),
-  en: (
-    <svg viewBox="0 0 60 30" aria-hidden="true">
-      <clipPath id="lf-en-c"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
-      <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
-      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
-      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4" clipPath="url(#lf-en-c)" />
-      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
-      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
-    </svg>
-  ),
-  es: (
-    <svg viewBox="0 0 9 6" aria-hidden="true">
-      <rect width="9" height="6" fill="#AA151B" />
-      <rect width="9" height="3" y="1.5" fill="#F1BF00" />
-    </svg>
-  ),
-};
-
-function Flag({ code }) {
-  return <span className="landing-flag">{FLAG_SVG[code] ?? null}</span>;
-}
-
-function LangPicker() {
-  const { lang, setLang } = useLang();
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
-  const current = LANGS.find((l) => l.code === lang) ?? LANGS[0];
+function AccountButton({ onClick }) {
   return (
-    <div className="landing-lang" ref={ref}>
-      <button className="landing-lang-btn" onClick={() => setOpen((o) => !o)} aria-label="Language">
-        <Flag code={current.code} />
-        <span className="landing-lang-code">{current.code.toUpperCase()}</span>
-      </button>
-      {open && (
-        <div className="landing-lang-menu">
-          {LANGS.map((l) => (
-            <button
-              key={l.code}
-              className={`landing-lang-option ${l.code === lang ? 'active' : ''}`}
-              onClick={() => { setLang(l.code); setOpen(false); }}
-            >
-              <Flag code={l.code} /><span>{l.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <button className="landing-account" onClick={onClick} aria-label="Cuenta">
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.7" />
+        <path d="M4.6 20c0-4 3.3-6.6 7.4-6.6S19.4 16 19.4 20" />
+      </svg>
+    </button>
   );
 }
 
@@ -223,9 +170,12 @@ function CoursesPage() {
 }
 
 export default function Landing({ onLogin }) {
-  const { t } = useLang();
+  const { t, setLang } = useLang();
   const [view, setView] = useState('home');
   const [activeTest, setActiveTest] = useState(null);
+
+  // Public site is Spanish-only.
+  useEffect(() => { setLang('es'); }, [setLang]);
 
   const isHome = view === 'home';
 
@@ -239,7 +189,7 @@ export default function Landing({ onLogin }) {
             {t('landing.back')}
           </button>
         )}
-        <LangPicker />
+        <AccountButton onClick={onLogin} />
       </header>
 
       {isHome && (
@@ -285,6 +235,7 @@ export default function Landing({ onLogin }) {
         <TestRunner
           test={activeTest}
           onClose={() => setActiveTest(null)}
+          onRegister={onLogin}
         />
       )}
     </div>
