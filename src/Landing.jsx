@@ -21,7 +21,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    pages: ['/promo/p1.jpg', '/promo/p2.jpg', '/promo/p3.jpg', '/promo/p4.jpg'],
+    pages: ['/promo/p1.jpg', '/promo/p2.jpg', '/promo/p3.jpg'],
     hotmartUrl: 'https://hotmart.com/es/marketplace/productos/mentes-bajo-control-manipulacion-social-nivel-1/L106624559K?sck=HOTMART_SITE&search=10103c75-a40b-4598-a331-04850e1475da&hotfeature=33',
     url: null,
   },
@@ -35,7 +35,6 @@ const HOTMART_LABEL = {
 
 function PromoViewer({ course, onClose }) {
   const { lang } = useLang();
-  const last = course.pages.length - 1;
   return (
     <div className="promo-overlay" role="dialog" aria-modal="true">
       <header className="promo-bar">
@@ -52,15 +51,6 @@ function PromoViewer({ course, onClose }) {
                 alt={`${course.title} — ${i + 1}`}
                 loading={i < 2 ? 'eager' : 'lazy'}
               />
-              {i === last && course.hotmartUrl && (
-                <a
-                  className="promo-hotspot"
-                  href={course.hotmartUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={tx(HOTMART_LABEL, lang)}
-                />
-              )}
             </div>
           ))}
           {course.hotmartUrl && (

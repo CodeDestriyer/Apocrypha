@@ -4214,17 +4214,6 @@ body {
   width: 100%;
   height: auto;
 }
-/* Invisible tap target over the printed "Continuar en Hotmart" button */
-.promo-hotspot {
-  position: absolute;
-  left: 8%;
-  width: 84%;
-  top: 61%;
-  height: 9%;
-  display: block;
-  border-radius: 8px;
-  -webkit-tap-highlight-color: rgba(255, 248, 230, 0.25);
-}
 .promo-cta-btn {
   display: block;
   text-align: center;
