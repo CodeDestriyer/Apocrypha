@@ -94,6 +94,13 @@ export const DARK_TRIAD = {
   max: 5,
   logo: '/varkanis-test-triada-oscura.jpg',
   author: 'Varkanis',
+  // Final result image: by dominant subscale, or 'balanced' when the three are close.
+  images: {
+    M: '/mackiavelismo-triad.jpg',
+    N: '/narcissitstic-triad.jpg',
+    P: '/psicopato-triad.jpg',
+    balanced: '/equilibrado-triad.jpg',
+  },
   title: { ru: 'Тёмная триада', en: 'Dark Triad', es: 'Tríada Oscura' },
   short: {
     ru: '18 вопросов, ~3 минуты. Три черты: макиавеллизм, нарциссизм, субклиническая психопатия.',

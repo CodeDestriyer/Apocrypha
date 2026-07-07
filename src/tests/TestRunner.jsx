@@ -105,10 +105,17 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
   const { subscales } = useMemo(() => scoreDarkTriad(test, answers), [test, answers]);
   const order = ['M', 'N', 'P'];
   const dom = order.reduce((a, b) => (subscales[b].sum > subscales[a].sum ? b : a), order[0]);
+  const sums = order.map((k) => subscales[k].sum);
+  const balanced = Math.max(...sums) - Math.min(...sums) <= 4;
+  const imgKey = balanced ? 'balanced' : dom;
   const domLabel = { ru: 'Доминирующая черта', en: 'Dominant trait', es: 'Rasgo dominante' };
   return (
     <div className="test-result">
       <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+
+      {test.images?.[imgKey] && (
+        <img className="test-result-image" src={test.images[imgKey]} alt={tx(test.title, lang)} />
+      )}
 
       <div className={`dt-dominant dt-${subscales[dom].band}`}>
         <span className="dt-dominant-label">{tx(domLabel, lang)}</span>
