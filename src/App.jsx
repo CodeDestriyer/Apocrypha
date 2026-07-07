@@ -88,8 +88,10 @@ function Shell() {
   const [showApp, setShowApp] = useState(false);
   const [bypassGate, setBypassGate] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+  // Temporarily disabled — flip back to true to re-enable the in-app gate.
+  const GATE_ENABLED = false;
   const inApp = useMemo(() => isInAppBrowser(), []);
-  const gated = inApp && !bypassGate;
+  const gated = GATE_ENABLED && inApp && !bypassGate;
 
   useEffect(() => {
     // Clear the splash stuck-recovery timer once we render real content —
