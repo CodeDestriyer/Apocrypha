@@ -234,7 +234,7 @@ function RegisterModal({ onClose }) {
           <>
             <h2 className="reg-title">Abre en tu navegador</h2>
             <p className="reg-sub">
-              TikTok no permite registrarse desde su navegador interno. Para crear
+              Esta app no permite registrarse desde su navegador interno. Para crear
               tu cuenta, abre esta página en <strong>Chrome</strong> o <strong>Safari</strong>.
             </p>
             <ol className="gate-steps">
