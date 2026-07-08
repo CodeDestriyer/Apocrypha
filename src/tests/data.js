@@ -258,7 +258,7 @@ export const ARCHETYPE_TEST = {
   id: 'archetypes',
   scale: 'agree5',
   max: 5,
-  logo: '/varkanis-test-arquetipos.jpg',
+  logo: '/archetipos.jpg',
   author: 'Varkanis',
   title: { ru: 'Архетипы личности', en: 'Personality Archetypes', es: 'Arquetipos de personalidad' },
   short: {
