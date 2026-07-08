@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLang } from './i18n.jsx';
 import { useProfile } from './ProfileContext.jsx';
 import { signInWithGoogle, signOut } from './supabase.js';
+import { isInAppBrowser } from './inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 
@@ -196,6 +197,8 @@ function ProfileModal({ onClose }) {
 function RegisterModal({ onClose }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const inApp = isInAppBrowser();
 
   const onGoogle = async () => {
     setBusy(true);
@@ -204,19 +207,57 @@ function RegisterModal({ onClose }) {
     catch (e) { setErr(e.message); setBusy(false); }
   };
 
+  const copyLink = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
+  };
+
   return (
     <div className="reg-overlay" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="reg-modal" onClick={(e) => e.stopPropagation()}>
         <button className="reg-close" onClick={onClose} aria-label="Cerrar">×</button>
         <span className="reg-icon" aria-hidden="true"><PersonIcon size={26} /></span>
-        <h2 className="reg-title">Crea tu cuenta</h2>
-        <p className="reg-sub">Regístrate para guardar tus resultados y seguir tu evolución.</p>
-        <button className="reg-google" onClick={onGoogle} disabled={busy}>
-          <span className="reg-google-g">G</span>
-          <span>{busy ? '…' : 'Continuar con Google'}</span>
-        </button>
-        {err && <p className="reg-err">{err}</p>}
-        <p className="reg-fine">Al continuar, tu progreso se guardará en tu cuenta.</p>
+        {inApp ? (
+          <>
+            <h2 className="reg-title">Abre en tu navegador</h2>
+            <p className="reg-sub">
+              TikTok no permite registrarse desde su navegador interno. Para crear
+              tu cuenta, abre esta página en <strong>Chrome</strong> o <strong>Safari</strong>.
+            </p>
+            <ol className="gate-steps">
+              <li>Toca el menú <strong>⋯</strong> arriba en la esquina.</li>
+              <li>Elige <strong>«Abrir en el navegador»</strong>.</li>
+            </ol>
+            <button className="reg-google" onClick={copyLink}>
+              <span>{copied ? '✓ Enlace copiado' : 'Copiar enlace'}</span>
+            </button>
+            <p className="reg-fine">Ahí podrás registrarte con Google en un toque.</p>
+          </>
+        ) : (
+          <>
+            <h2 className="reg-title">Crea tu cuenta</h2>
+            <p className="reg-sub">Regístrate para guardar tus resultados y seguir tu evolución.</p>
+            <button className="reg-google" onClick={onGoogle} disabled={busy}>
+              <span className="reg-google-g">G</span>
+              <span>{busy ? '…' : 'Continuar con Google'}</span>
+            </button>
+            {err && <p className="reg-err">{err}</p>}
+            <p className="reg-fine">Al continuar, tu progreso se guardará en tu cuenta.</p>
+          </>
+        )}
       </div>
     </div>
   );

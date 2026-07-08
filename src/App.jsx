@@ -5,15 +5,7 @@ import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import { LangProvider, useLang, LANGS } from './i18n.jsx';
 import { signOut } from './supabase.js';
 import CardsSection from './sections/CardsSection.jsx';
-
-// In-app browsers (TikTok, Instagram, Facebook…) run in embedded webviews where
-// Google sign-in is blocked (Error 403: disallowed_useragent) and behaviour is
-// unreliable. Detect them and stop the site with a "open in your browser" gate.
-function isInAppBrowser() {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  return /(TikTok|musical_ly|BytedanceWebview|Bytedance|trill|Instagram|FBAN|FBAV|FB_IAB|FBIOS|Snapchat|Pinterest|Line\/|Twitter|WhatsApp|OKApp|VKClient)/i.test(ua);
-}
+import { isInAppBrowser } from './inAppBrowser.js';
 
 function BrowserGate({ onBypass }) {
   const [copied, setCopied] = useState(false);
