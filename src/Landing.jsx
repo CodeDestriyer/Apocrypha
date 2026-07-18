@@ -23,19 +23,12 @@ const COURSES = [
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
     pages: ['/promo/p1.jpg', '/promo/p2.jpg', '/promo/p3.jpg'],
-    hotmartUrl: 'https://hotmart.com/es/marketplace/productos/mentes-bajo-control-manipulacion-social-nivel-1/L106624559K?sck=HOTMART_SITE&search=10103c75-a40b-4598-a331-04850e1475da&hotfeature=33',
     url: null,
   },
 ];
 
-const HOTMART_LABEL = {
-  ru: 'Продолжить в Hotmart →',
-  en: 'Continue on Hotmart →',
-  es: 'Continuar en Hotmart →',
-};
-
-function PromoViewer({ course, onClose }) {
-  const { lang } = useLang();
+function PromoViewer({ course, onClose, authed, onRegister }) {
+  const { t } = useLang();
   return (
     <div className="promo-overlay" role="dialog" aria-modal="true">
       <header className="promo-bar">
@@ -54,15 +47,19 @@ function PromoViewer({ course, onClose }) {
               />
             </div>
           ))}
-          {course.hotmartUrl && (
-            <a
-              className="promo-cta-btn"
-              href={course.hotmartUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {tx(HOTMART_LABEL, lang)}
-            </a>
+          {authed ? (
+            <div className="promo-gate promo-gate-done">
+              <span className="promo-gate-check" aria-hidden="true">✓</span>
+              <p className="promo-gate-text">{t('preview.gateDone')}</p>
+            </div>
+          ) : (
+            <div className="promo-gate">
+              <h3 className="promo-gate-title">{t('preview.gateTitle')}</h3>
+              <p className="promo-gate-text">{t('preview.gateText')}</p>
+              <button className="promo-cta-btn" type="button" onClick={onRegister}>
+                {t('preview.gateBtn')}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -340,7 +337,7 @@ function TestsPage({ onStart }) {
   );
 }
 
-function CoursesPage() {
+function CoursesPage({ authed, onRegister }) {
   const { lang, t } = useLang();
   const [viewer, setViewer] = useState(null);
   return (
@@ -379,28 +376,18 @@ function CoursesPage() {
                   {t('landing.courseSoon')}
                 </button>
               )}
-              {course.hotmartUrl && (
-                <a
-                  className="landing-course-buy"
-                  href={course.hotmartUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {tx(
-                    {
-                      ru: 'Продолжить в Hotmart →',
-                      en: 'Continue on Hotmart →',
-                      es: 'Continuar en Hotmart →',
-                    },
-                    lang
-                  )}
-                </a>
-              )}
             </div>
           </li>
         ))}
       </ul>
-      {viewer && <PromoViewer course={viewer} onClose={() => setViewer(null)} />}
+      {viewer && (
+        <PromoViewer
+          course={viewer}
+          onClose={() => setViewer(null)}
+          authed={authed}
+          onRegister={() => { setViewer(null); onRegister(); }}
+        />
+      )}
     </main>
   );
 }
@@ -470,7 +457,7 @@ export default function Landing({ onEnterApp }) {
         </main>
       )}
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
-      {view === 'courses' && <CoursesPage />}
+      {view === 'courses' && <CoursesPage authed={authed} onRegister={() => setShowRegister(true)} />}
 
       <footer className="landing-foot" />
 
