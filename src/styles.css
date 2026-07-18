@@ -4218,6 +4218,19 @@ body {
   flex-direction: column;
   gap: 16px;
 }
+.promo-canvas-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.promo-canvas-col:empty { display: none; }
+.promo-status {
+  margin: 40px auto;
+  text-align: center;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  color: #cdbfa4;
+}
 .promo-page {
   position: relative;
   line-height: 0;
@@ -4251,19 +4264,6 @@ body {
   font-size: 14px;
   line-height: 1.55;
   color: #cdbfa4;
-}
-.promo-gate-done .promo-gate-text { margin-bottom: 0; }
-.promo-gate-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  margin-bottom: 12px;
-  border-radius: 50%;
-  background: rgba(120, 170, 110, 0.18);
-  color: #8fce7e;
-  font-size: 22px;
 }
 .promo-cta-btn {
   display: block;

@@ -5,6 +5,12 @@ import { signInWithGoogle, signOut } from './supabase.js';
 import { isInAppBrowser } from './inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
+// Worker is emitted as a separate asset (its URL only) — the pdfjs library
+// itself is dynamically imported inside PdfBook so it stays out of the main bundle.
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Pages a non-registered visitor can read before the sign-up gate.
+const FREE_PAGES = 3;
 
 function PersonIcon({ size = 21 }) {
   return (
@@ -22,13 +28,72 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    pages: ['/promo/p1.jpg', '/promo/p2.jpg', '/promo/p3.jpg'],
-    url: null,
+    pdf: '/MENTESBAJOCONTROL.pdf',
   },
 ];
 
-function PromoViewer({ course, onClose, authed, onRegister }) {
+function PdfBook({ course, onClose, authed, onRegister }) {
   const { t } = useLang();
+  const pagesRef = useRef(null);
+  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+  const [gate, setGate] = useState(false); // sign-up gate shown after the free pages
+
+  useEffect(() => {
+    let cancelled = false;
+    let pdfDoc = null;
+
+    (async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+        pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
+        pdfDoc = await pdfjs.getDocument(course.pdf).promise;
+        if (cancelled) return;
+
+        const total = pdfDoc.numPages;
+        const limit = authed ? total : Math.min(FREE_PAGES, total);
+
+        const container = pagesRef.current;
+        if (!container) return;
+        const cw = Math.min(container.clientWidth || 780, 780);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        for (let n = 1; n <= limit; n++) {
+          if (cancelled) return;
+          const page = await pdfDoc.getPage(n);
+          const base = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({ scale: (cw / base.width) * dpr });
+
+          const canvas = document.createElement('canvas');
+          canvas.className = 'promo-page-img';
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.style.width = '100%';
+          canvas.style.height = 'auto';
+
+          const wrap = document.createElement('div');
+          wrap.className = 'promo-page';
+          wrap.appendChild(canvas);
+          container.appendChild(wrap);
+
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+          if (n === 1 && !cancelled) setStatus('ready');
+        }
+
+        if (cancelled) return;
+        setGate(!authed && total > limit);
+        setStatus('ready');
+      } catch (e) {
+        if (!cancelled) setStatus('error');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      try { pdfDoc?.destroy?.(); } catch {}
+    };
+  }, [course.pdf, authed]);
+
   return (
     <div className="promo-overlay" role="dialog" aria-modal="true">
       <header className="promo-bar">
@@ -37,22 +102,15 @@ function PromoViewer({ course, onClose, authed, onRegister }) {
       </header>
       <div className="promo-scroll">
         <div className="promo-pages">
-          {course.pages.map((src, i) => (
-            <div className="promo-page" key={src}>
-              <img
-                className="promo-page-img"
-                src={src}
-                alt={`${course.title} — ${i + 1}`}
-                loading={i < 2 ? 'eager' : 'lazy'}
-              />
-            </div>
-          ))}
-          {authed ? (
-            <div className="promo-gate promo-gate-done">
-              <span className="promo-gate-check" aria-hidden="true">✓</span>
-              <p className="promo-gate-text">{t('preview.gateDone')}</p>
-            </div>
-          ) : (
+          {/* Canvases are appended imperatively here; React never manages this node's children. */}
+          <div className="promo-canvas-col" ref={pagesRef} />
+          {status === 'loading' && (
+            <p className="promo-status">{t('preview.loading')}</p>
+          )}
+          {status === 'error' && (
+            <p className="promo-status">{t('preview.error')}</p>
+          )}
+          {gate && (
             <div className="promo-gate">
               <h3 className="promo-gate-title">{t('preview.gateTitle')}</h3>
               <p className="promo-gate-text">{t('preview.gateText')}</p>
@@ -381,12 +439,12 @@ function CoursesPage({ authed, onRegister }) {
               </div>
             </div>
             <div className="landing-course-actions">
-              {course.pages?.length ? (
+              {course.pdf ? (
                 <button
                   className="landing-test-go"
                   onClick={() => setViewer(course)}
                 >
-                  {t('landing.preview')}
+                  {authed ? t('landing.read') : t('landing.preview')}
                 </button>
               ) : (
                 <button className="landing-test-go" disabled>
@@ -398,7 +456,7 @@ function CoursesPage({ authed, onRegister }) {
         ))}
       </ul>
       {viewer && (
-        <PromoViewer
+        <PdfBook
           course={viewer}
           onClose={() => setViewer(null)}
           authed={authed}
