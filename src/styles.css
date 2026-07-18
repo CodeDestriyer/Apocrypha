@@ -989,6 +989,42 @@ body {
   text-transform: uppercase;
   color: #a5842f;
 }
+.prof-hist-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(165, 132, 47, 0.22);
+  border-bottom: 1px solid rgba(165, 132, 47, 0.22);
+  cursor: pointer;
+  text-align: left;
+}
+.prof-hist-toggle .prof-hist-title { margin: 0; }
+.prof-hist-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: rgba(165, 132, 47, 0.18);
+  color: #cdaa4a;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+}
+.prof-hist-chevron {
+  margin-left: auto;
+  color: #a5842f;
+  font-size: 14px;
+  transition: transform 0.18s ease;
+}
+.prof-hist-chevron.is-open { transform: rotate(180deg); }
+.prof-hist { margin-top: 12px; }
 .prof-empty {
   margin: 0;
   font-family: 'EB Garamond', serif;

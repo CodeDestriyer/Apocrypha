@@ -149,6 +149,7 @@ function ProfileModal({ onClose }) {
   const { profile, googleAvatar } = useProfile();
   const name = profile?.name || 'Tu cuenta';
   const history = Array.isArray(profile?.test_results) ? profile.test_results : [];
+  const [histOpen, setHistOpen] = useState(false);
 
   return (
     <div className="reg-overlay" role="dialog" aria-modal="true" onClick={onClose}>
@@ -166,25 +167,41 @@ function ProfileModal({ onClose }) {
           </div>
         </div>
 
-        <h3 className="prof-hist-title">Historial de tests</h3>
         {history.length === 0 ? (
-          <p className="prof-empty">Aún no has guardado ningún test. Completa uno para verlo aquí.</p>
+          <>
+            <h3 className="prof-hist-title">Historial de tests</h3>
+            <p className="prof-empty">Aún no has guardado ningún test. Completa uno para verlo aquí.</p>
+          </>
         ) : (
-          <ul className="prof-hist">
-            {history.map((r) => (
-              <li key={r.id} className="prof-hist-row">
-                <div className="prof-hist-main">
-                  <span className="prof-hist-test">{r.title}</span>
-                  <span className="prof-hist-date">{formatResultDate(r.date)}</span>
-                </div>
-                {(r.score || r.label) && (
-                  <span className="prof-hist-score">
-                    {r.score}{r.score && r.label ? ' · ' : ''}{r.label}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+          <>
+            <button
+              type="button"
+              className="prof-hist-toggle"
+              onClick={() => setHistOpen((o) => !o)}
+              aria-expanded={histOpen}
+            >
+              <span className="prof-hist-title">Historial de tests</span>
+              <span className="prof-hist-count">{history.length}</span>
+              <span className={`prof-hist-chevron${histOpen ? ' is-open' : ''}`} aria-hidden="true">▾</span>
+            </button>
+            {histOpen && (
+              <ul className="prof-hist">
+                {history.map((r) => (
+                  <li key={r.id} className="prof-hist-row">
+                    <div className="prof-hist-main">
+                      <span className="prof-hist-test">{r.title}</span>
+                      <span className="prof-hist-date">{formatResultDate(r.date)}</span>
+                    </div>
+                    {(r.score || r.label) && (
+                      <span className="prof-hist-score">
+                        {r.score}{r.score && r.label ? ' · ' : ''}{r.label}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </div>
     </div>
