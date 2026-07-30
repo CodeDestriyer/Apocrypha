@@ -694,8 +694,6 @@ function StudyView({ deck, onGrade, t }) {
           {t('cards.knew')}
         </button>
       </div>
-
-      <div className="cards-study-hint">{t('cards.swipeHint')}</div>
     </div>
   );
 }
