@@ -4958,6 +4958,7 @@ body {
 .cards-progress { text-align: center; font-family: 'Cinzel', serif; color: #cbbf9f; letter-spacing: 0.18em; font-size: 13px; }
 
 .study-card-stage {
+  position: relative;
   perspective: 1800px;
   perspective-origin: 50% 35%;
   width: 100%;
@@ -4967,6 +4968,33 @@ body {
   margin: 8px 0;
   touch-action: pan-y;
   will-change: transform;
+}
+
+/* "stamp" labels that fade in as the card is dragged toward a verdict */
+.study-grade-tag {
+  position: absolute;
+  top: 18px;
+  z-index: 3;
+  padding: 6px 14px;
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: opacity 0.1s linear;
+}
+.study-grade-tag--knew {
+  right: 18px;
+  color: #8fd18f;
+  transform: rotate(10deg);
+}
+.study-grade-tag--forgot {
+  left: 18px;
+  color: #e08a7a;
+  transform: rotate(-10deg);
 }
 .study-card-inner {
   position: relative;
@@ -5071,6 +5099,36 @@ body {
   min-width: 64px;
   text-align: center;
 }
+
+.cards-grade-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+.cards-grade-btn {
+  flex: 1;
+  padding: 15px 12px;
+  border-radius: 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+}
+.cards-grade-btn:active { transform: scale(0.96); }
+.cards-grade-btn--forgot {
+  color: #e0a79a;
+  background: rgba(224, 138, 122, 0.10);
+  border-color: rgba(224, 138, 122, 0.35);
+}
+.cards-grade-btn--forgot:hover { background: rgba(224, 138, 122, 0.18); border-color: rgba(224, 138, 122, 0.6); }
+.cards-grade-btn--knew {
+  color: #a6d6a6;
+  background: rgba(143, 209, 143, 0.10);
+  border-color: rgba(143, 209, 143, 0.35);
+}
+.cards-grade-btn--knew:hover { background: rgba(143, 209, 143, 0.18); border-color: rgba(143, 209, 143, 0.6); }
 
 @media (max-width: 640px) {
   .cards-study { gap: 12px; min-height: 65vh; }

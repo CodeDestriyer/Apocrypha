@@ -82,7 +82,7 @@ export default function CardsSection({ rootOnBack }) {
   const addCard = (deckId, front, back, note) => {
     const f = front.trim(); const b = back.trim();
     if (!f || !b) return;
-    const card = { id: newId(), front: f, back: b, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 };
+    const card = { id: newId(), front: f, back: b, box: 1, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 };
     if (note && note.trim()) card.note = note.trim();
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: [...x.cards, card] }
@@ -160,6 +160,7 @@ export default function CardsSection({ rootOnBack }) {
     body = (
       <StudyView
         deck={currentDeck}
+        onGrade={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
         t={t}
       />
     );
@@ -521,48 +522,104 @@ function CardRow({ card, onRemove, onUpdate, t }) {
   );
 }
 
-function StudyView({ deck, t }) {
-  const queue = useMemo(() => {
-    const saved = _study.get(deck.id);
-    const byId = new Map(deck.cards.map((c) => [c.id, c]));
-    if (saved && Array.isArray(saved.queueIds)) {
-      const restored = saved.queueIds.map((id) => byId.get(id)).filter(Boolean);
-      if (restored.length > 0) return restored;
-    }
-    const arr = [...deck.cards];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }, [deck.id]);
-  const savedStudy = _study.get(deck.id);
-  const [idx, _setIdx] = useState(() => {
-    const i = savedStudy?.idx ?? 0;
-    return Math.min(Math.max(0, i), Math.max(0, queue.length - 1));
+const BOX_MAX = 5;
+// Individual weight per card: box 1 = 16 … box 5 = 1 (halves each box up), so a
+// box-1 word is 16× more likely to surface than a box-5 word. Weighting is
+// per-card, so the mix self-balances no matter how cards are split across boxes.
+const weightOf = (card) => 2 ** (BOX_MAX - (card.box ?? 1));
+// Weighted random draw. Excludes the just-seen card so it can't repeat
+// back-to-back (unless it's the only card in the deck).
+const pickCard = (cards, excludeId) => {
+  if (!cards.length) return null;
+  let pool = cards;
+  if (excludeId != null && cards.length > 1) pool = cards.filter((c) => c.id !== excludeId);
+  const weights = pool.map(weightOf);
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= weights[i];
+    if (r < 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+};
+
+function StudyView({ deck, onGrade, t }) {
+  const saved = _study.get(deck.id);
+  const [currentId, _setCurrentId] = useState(() => {
+    if (saved?.currentId && deck.cards.some((c) => c.id === saved.currentId)) return saved.currentId;
+    const first = pickCard(deck.cards, null);
+    return first ? first.id : null;
   });
-  const [shown, _setShown] = useState(!!savedStudy?.shown);
-  const persistStudy = (patch) => {
-    const cur = _study.get(deck.id) ?? { queueIds: queue.map((c) => c.id), idx: 0, shown: false };
-    _study.set(deck.id, { ...cur, queueIds: queue.map((c) => c.id), ...patch });
-    _saveSS();
-  };
-  const setIdx = (v) => { persistStudy({ idx: typeof v === 'function' ? v(idx) : v }); _setIdx(v); };
-  const setShown = (v) => { persistStudy({ shown: typeof v === 'function' ? v(shown) : v }); _setShown(v); };
-  useEffect(() => { persistStudy({}); }, [deck.id, queue]);
+  const [shown, _setShown] = useState(!!saved?.shown);
+  const [reviewed, setReviewed] = useState(saved?.reviewed ?? 0);
+  const [known, setKnown] = useState(saved?.known ?? 0);
+
   const [dragX, setDragX] = useState(0);
   const [animDir, setAnimDir] = useState(0);
   const touch = useRef({ x: 0, y: 0, active: false });
-  const card = queue[idx];
+
+  const card = deck.cards.find((c) => c.id === currentId) ?? null;
+
+  // Persist a partial study state, keeping the rest from the current render.
+  const persist = (patch) => {
+    _study.set(deck.id, { currentId, shown, reviewed, known, ...patch });
+    _saveSS();
+  };
+  const setCurrentId = (v) => { persist({ currentId: v }); _setCurrentId(v); };
+  const setShown = (v) => {
+    const nv = typeof v === 'function' ? v(shown) : v;
+    persist({ shown: nv }); _setShown(nv);
+  };
+
+  // If the current card vanished (deleted / edited out from the deck view) but
+  // the deck still has cards, draw a fresh one.
+  useEffect(() => {
+    if (!currentId || card) return;
+    const next = pickCard(deck.cards, null);
+    if (next) setCurrentId(next.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId, card, deck.cards]);
 
   if (!card) {
-    return <StudyDone deckId={deck.id} t={t} />;
+    return (
+      <div className="cards-study">
+        <div className="cards-study-done">{t('cards.allDone')}</div>
+      </div>
+    );
   }
 
-  const advance = () => { setShown(false); setIdx(idx + 1); };
+  const grade = (knewIt) => {
+    const box = card.box ?? 1;
+    // Know it → up one box (capped). Don't → straight back to box 1.
+    const nextBox = knewIt ? Math.min(BOX_MAX, box + 1) : 1;
+    onGrade(card.id, {
+      box: nextBox,
+      reps: (card.reps ?? 0) + 1,
+      lapses: (card.lapses ?? 0) + (knewIt ? 0 : 1),
+    });
+    // Draw against the updated boxes so the just-graded card's new weight
+    // applies immediately (deck prop only updates on the next render).
+    const updated = deck.cards.map((c) => (c.id === card.id ? { ...c, box: nextBox } : c));
+    const next = pickCard(updated, card.id);
+    const nextState = {
+      currentId: next ? next.id : null,
+      shown: false,
+      reviewed: reviewed + 1,
+      known: known + (knewIt ? 1 : 0),
+    };
+    _study.set(deck.id, nextState);
+    _saveSS();
+    _setCurrentId(nextState.currentId);
+    _setShown(false);
+    setReviewed(nextState.reviewed);
+    setKnown(nextState.known);
+  };
 
-  const goNext = () => { if (idx < queue.length - 1) advance(); };
-  const goPrev = () => { if (idx > 0) { setShown(false); setIdx(idx - 1); } };
+  // knewIt → swipe right (dir +1); forgot → swipe left (dir -1)
+  const commit = (knewIt) => {
+    setAnimDir(knewIt ? 1 : -1);
+    setTimeout(() => { setDragX(0); setAnimDir(0); grade(knewIt); }, 180);
+  };
 
   const onTouchStart = (e) => {
     if (e.touches.length !== 1) return;
@@ -584,26 +641,23 @@ function StudyView({ deck, t }) {
     const dx = dragX;
     touch.current.active = false;
     const T = 60;
-    if (dx < -T && idx < queue.length - 1) {
-      setAnimDir(-1);
-      setTimeout(() => { setDragX(0); setAnimDir(0); goNext(); }, 180);
-    } else if (dx > T && idx > 0) {
-      setAnimDir(1);
-      setTimeout(() => { setDragX(0); setAnimDir(0); goPrev(); }, 180);
-    } else {
-      setDragX(0);
-    }
+    if (dx > T) commit(true);
+    else if (dx < -T) commit(false);
+    else setDragX(0);
   };
 
   const stageStyle = animDir !== 0
-    ? { transform: `translateX(${animDir > 0 ? 110 : -110}%)`, opacity: 0, transition: 'transform 0.18s ease-out, opacity 0.18s ease-out' }
+    ? { transform: `translateX(${animDir > 0 ? 110 : -110}%) rotate(${animDir * 8}deg)`, opacity: 0, transition: 'transform 0.18s ease-out, opacity 0.18s ease-out' }
     : dragX !== 0
       ? { transform: `translateX(${dragX}px) rotate(${dragX * 0.02}deg)`, opacity: Math.max(0.3, 1 - Math.abs(dragX) / 350) }
       : { transition: 'transform 0.25s ease-out, opacity 0.25s ease-out' };
 
+  const knewOpacity = Math.max(0, Math.min(1, dragX / 90));
+  const forgotOpacity = Math.max(0, Math.min(1, -dragX / 90));
+
   return (
     <div className="cards-study">
-      <div className="cards-progress">{idx + 1} / {queue.length}</div>
+      <div className="cards-progress">{t('cards.reviewed')}: {reviewed} · {known} ✓</div>
 
       <div
         className="study-card-stage"
@@ -613,6 +667,13 @@ function StudyView({ deck, t }) {
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchEnd}
       >
+        <div className="study-grade-tag study-grade-tag--knew" style={{ opacity: knewOpacity }}>
+          {t('cards.knew')}
+        </div>
+        <div className="study-grade-tag study-grade-tag--forgot" style={{ opacity: forgotOpacity }}>
+          {t('cards.forgot')}
+        </div>
+
         <div
           className={`study-card-inner ${shown ? 'flipped' : ''}`}
           onClick={() => { if (Math.abs(dragX) < 6) setShown((s) => !s); }}
@@ -625,33 +686,16 @@ function StudyView({ deck, t }) {
         </div>
       </div>
 
-      <div className="cards-nav-row">
-        <button
-          className="cards-nav-btn"
-          onClick={goPrev}
-          disabled={idx === 0}
-          aria-label={t('cards.prev')}
-        >‹</button>
-        <div className="cards-nav-counter">{idx + 1} / {queue.length}</div>
-        <button
-          className="cards-nav-btn"
-          onClick={goNext}
-          disabled={idx >= queue.length - 1}
-          aria-label={t('cards.next')}
-        >›</button>
+      <div className="cards-grade-row">
+        <button className="cards-grade-btn cards-grade-btn--forgot" onClick={() => commit(false)}>
+          {t('cards.forgot')}
+        </button>
+        <button className="cards-grade-btn cards-grade-btn--knew" onClick={() => commit(true)}>
+          {t('cards.knew')}
+        </button>
       </div>
-    </div>
-  );
-}
 
-function StudyDone({ deckId, t }) {
-  useEffect(() => {
-    _study.delete(deckId);
-    _saveSS();
-  }, [deckId]);
-  return (
-    <div className="cards-study">
-      <div className="cards-study-done">{t('cards.allDone')}</div>
+      <div className="cards-study-hint">{t('cards.swipeHint')}</div>
     </div>
   );
 }
