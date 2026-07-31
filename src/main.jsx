@@ -60,7 +60,11 @@ if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (reloaded) return;
         reloaded = true;
-        window.location.reload();
+        // Give the app a chance to flush any pending (debounced) profile save
+        // before we blow the page away — otherwise the last unsaved edits (e.g.
+        // freshly graded/added cards) are lost on this update reload.
+        try { window.dispatchEvent(new Event('lr:flush-save')); } catch {}
+        setTimeout(() => window.location.reload(), 500);
       });
 
       const check = () => reg.update().catch(() => {});

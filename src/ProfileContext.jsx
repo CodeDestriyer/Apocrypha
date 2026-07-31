@@ -16,6 +16,7 @@ export function ProfileProvider({ children }) {
   const [defaultName, setDefaultName] = useState('');
   const [googleAvatar, setGoogleAvatar] = useState(null);
   const saveTimer = useRef(null);
+  const maxTimer = useRef(null);
   const pendingPatch = useRef({});
   const currentUserId = useRef(null);
 
@@ -136,20 +137,53 @@ export function ProfileProvider({ children }) {
     }
   };
 
+  const flushNow = () => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    if (maxTimer.current) { clearTimeout(maxTimer.current); maxTimer.current = null; }
+    const toSave = pendingPatch.current;
+    if (!toSave || Object.keys(toSave).length === 0) return;
+    pendingPatch.current = {};
+    return saveProfile(toSave).catch((e) => {
+      console.error('save failed', e);
+      // Keep the unsaved changes pending (newer edits win) so the next
+      // edit/flush retries them instead of dropping them.
+      pendingPatch.current = { ...toSave, ...pendingPatch.current };
+    });
+  };
+
   const update = (patchOrFn) => {
     setProfile((curr) => {
       const patch = typeof patchOrFn === 'function' ? patchOrFn(curr) : patchOrFn;
       pendingPatch.current = { ...pendingPatch.current, ...patch };
       return { ...curr, ...patch };
     });
+    // Idle debounce: save 600ms after the last change…
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      const toSave = pendingPatch.current;
-      pendingPatch.current = {};
-      try { await saveProfile(toSave); }
-      catch (e) { console.error('save failed', e); }
-    }, 600);
+    saveTimer.current = setTimeout(flushNow, 600);
+    // …but never wait longer than 2.5s while changes keep coming (e.g. fast
+    // swiping/grading through study cards), so a reload or tab close can't drop
+    // a whole run of unsaved edits.
+    if (!maxTimer.current) {
+      maxTimer.current = setTimeout(flushNow, 2500);
+    }
   };
+
+  // Flush pending changes when the tab is hidden or the page is unloading —
+  // covers navigating away, closing, and the service-worker update reload that
+  // fires on refocus (window.location.reload in main.jsx). Without this the
+  // trailing debounced save is lost on every such transition.
+  useEffect(() => {
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flushNow(); };
+    window.addEventListener('pagehide', flushNow);
+    window.addEventListener('lr:flush-save', flushNow);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', flushNow);
+      window.removeEventListener('lr:flush-save', flushNow);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ProfileContext.Provider value={{ status, profile, error, defaultName, googleAvatar, submitName, update }}>
