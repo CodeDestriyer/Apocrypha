@@ -523,17 +523,19 @@ function CardRow({ card, onRemove, onUpdate, t }) {
 }
 
 const BOX_MAX = 5;
-// Individual weight per card: box 1 = 16 … box 5 = 1 (halves each box up), so a
+// Weight for a given box: box 1 = 16 … box 5 = 1 (halves each box up), so a
 // box-1 word is 16× more likely to surface than a box-5 word. Weighting is
 // per-card, so the mix self-balances no matter how cards are split across boxes.
-const weightOf = (card) => 2 ** (BOX_MAX - (card.box ?? 1));
-// Weighted random draw. Excludes the just-seen card so it can't repeat
-// back-to-back (unless it's the only card in the deck).
-const pickCard = (cards, excludeId) => {
+const weightForBox = (box) => 2 ** (BOX_MAX - box);
+// Weighted random draw. `boxOf` resolves the box a card is *weighted by* — this
+// is the frozen session box, not necessarily the card's real box (see below).
+// Excludes the just-seen card so it can't repeat back-to-back (unless it's the
+// only card in the deck).
+const pickCard = (cards, excludeId, boxOf = (c) => c.box ?? 1) => {
   if (!cards.length) return null;
   let pool = cards;
   if (excludeId != null && cards.length > 1) pool = cards.filter((c) => c.id !== excludeId);
-  const weights = pool.map(weightOf);
+  const weights = pool.map((c) => weightForBox(boxOf(c)));
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
   for (let i = 0; i < pool.length; i++) {
@@ -545,9 +547,18 @@ const pickCard = (cards, excludeId) => {
 
 function StudyView({ deck, onGrade, t }) {
   const saved = _study.get(deck.id);
+  // Per-session weighting snapshot (card id → box used for the draw). Grades
+  // update the card's real box (persisted for next time), but within THIS
+  // session a failed word keeps its old, rarer weight so it doesn't start
+  // spamming — the demotion only kicks in next session. A correct answer, by
+  // contrast, does lower the weight right away. Snapshot lives with the study
+  // state and is wiped when the session ends (Back / all reviewed).
+  const [drawBoxes, setDrawBoxes] = useState(() => saved?.drawBoxes ?? {});
+  const boxOf = (c) => drawBoxes[c.id] ?? (c.box ?? 1);
+
   const [currentId, _setCurrentId] = useState(() => {
     if (saved?.currentId && deck.cards.some((c) => c.id === saved.currentId)) return saved.currentId;
-    const first = pickCard(deck.cards, null);
+    const first = pickCard(deck.cards, null, (c) => (saved?.drawBoxes?.[c.id]) ?? (c.box ?? 1));
     return first ? first.id : null;
   });
   const [shown, _setShown] = useState(!!saved?.shown);
@@ -562,7 +573,7 @@ function StudyView({ deck, onGrade, t }) {
 
   // Persist a partial study state, keeping the rest from the current render.
   const persist = (patch) => {
-    _study.set(deck.id, { currentId, shown, reviewed, known, ...patch });
+    _study.set(deck.id, { currentId, shown, reviewed, known, drawBoxes, ...patch });
     _saveSS();
   };
   const setCurrentId = (v) => { persist({ currentId: v }); _setCurrentId(v); };
@@ -575,7 +586,7 @@ function StudyView({ deck, onGrade, t }) {
   // the deck still has cards, draw a fresh one.
   useEffect(() => {
     if (!currentId || card) return;
-    const next = pickCard(deck.cards, null);
+    const next = pickCard(deck.cards, null, boxOf);
     if (next) setCurrentId(next.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId, card, deck.cards]);
@@ -597,15 +608,23 @@ function StudyView({ deck, onGrade, t }) {
       reps: (card.reps ?? 0) + 1,
       lapses: (card.lapses ?? 0) + (knewIt ? 0 : 1),
     });
-    // Draw against the updated boxes so the just-graded card's new weight
-    // applies immediately (deck prop only updates on the next render).
-    const updated = deck.cards.map((c) => (c.id === card.id ? { ...c, box: nextBox } : c));
-    const next = pickCard(updated, card.id);
+    // Update this session's weighting snapshot:
+    //  • knew  → drop the weight now (use the promoted box) so it surfaces less
+    //            for the rest of the session too;
+    //  • forgot → keep the old weight (freeze current) so the demotion doesn't
+    //            start spamming — it only takes effect next session, when the
+    //            snapshot is gone and the real box-1 is used.
+    const nextDraw = {
+      ...drawBoxes,
+      [card.id]: knewIt ? nextBox : (drawBoxes[card.id] ?? box),
+    };
+    const next = pickCard(deck.cards, card.id, (c) => nextDraw[c.id] ?? (c.box ?? 1));
     const nextState = {
       currentId: next ? next.id : null,
       shown: false,
       reviewed: reviewed + 1,
       known: known + (knewIt ? 1 : 0),
+      drawBoxes: nextDraw,
     };
     _study.set(deck.id, nextState);
     _saveSS();
@@ -613,6 +632,7 @@ function StudyView({ deck, onGrade, t }) {
     _setShown(false);
     setReviewed(nextState.reviewed);
     setKnown(nextState.known);
+    setDrawBoxes(nextDraw);
   };
 
   // knewIt → swipe right (dir +1); forgot → swipe left (dir -1)
