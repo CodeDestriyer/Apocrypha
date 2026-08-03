@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import CharacterPage from './pages/CharacterPage.jsx';
-import Landing from './Landing.jsx';
+import CharacterPage from './apocrypha/CharacterPage.jsx';
+import Landing from './varkanis/Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import { LangProvider, useLang, LANGS } from './i18n.jsx';
 import { signOut } from './supabase.js';
-import CardsSection from './sections/CardsSection.jsx';
+import CardsSection from './apocrypha/CardsSection.jsx';
+import BodySection from './apocrypha/BodySection.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
 
 function BrowserGate({ onBypass }) {
@@ -110,6 +111,7 @@ function Shell() {
           <main className="desktop-content">
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
+            {view === 'body' && <BodySection rootOnBack={() => setView('home')} />}
           </main>
         </div>
       );
@@ -119,6 +121,8 @@ function Shell() {
         <div className="single-page">
           {view === 'cards'
             ? <CardsSection rootOnBack={() => setView('home')} />
+            : view === 'body'
+            ? <BodySection rootOnBack={() => setView('home')} />
             : <CharacterPage onNavigate={setView} showNav={true} onExit={() => setShowApp(false)} />
           }
         </div>
@@ -163,6 +167,13 @@ function DesktopSidebar({ view, setView, onExit }) {
         >
           <span className="desktop-nav-icon">⌘</span>
           <span>{t('nav.cards')}</span>
+        </button>
+        <button
+          className={`desktop-nav-item ${view === 'body' ? 'active' : ''}`}
+          onClick={() => setView('body')}
+        >
+          <span className="desktop-nav-icon">⚖</span>
+          <span>{t('nav.body')}</span>
         </button>
       </nav>
 

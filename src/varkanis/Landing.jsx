@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLang } from './i18n.jsx';
-import { useProfile } from './ProfileContext.jsx';
-import { signInWithGoogle, signOut } from './supabase.js';
-import { isInAppBrowser } from './inAppBrowser.js';
+import { useLang } from '../i18n.jsx';
+import { useProfile } from '../ProfileContext.jsx';
+import { signInWithGoogle, signOut } from '../supabase.js';
+import { isInAppBrowser } from '../inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library

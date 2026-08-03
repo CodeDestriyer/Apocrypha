@@ -5483,3 +5483,88 @@ body {
   cursor: pointer;
 }
 .gate-bypass:hover { color: #5a4f3c; }
+
+/* ─── Cuerpo (Body) tab ───────────────────────────────── */
+.body-section { display: flex; flex-direction: column; gap: 16px; }
+
+.body-latest {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 20px 18px;
+  border: 1px solid var(--gold);
+  background: rgba(190, 158, 92, 0.04);
+}
+.body-latest-value {
+  font-family: 'Cinzel', serif;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--gold-bright);
+}
+.body-latest-unit {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: var(--gold);
+}
+.body-latest-date {
+  margin-left: auto;
+  font-size: 13px;
+  color: #8a7d63;
+}
+.body-latest-empty { color: #8a7d63; font-size: 15px; }
+
+.body-input-row { display: flex; align-items: center; gap: 10px; }
+.body-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(190, 158, 92, 0.35);
+  color: inherit;
+  font: inherit;
+  font-size: 18px;
+}
+.body-input:focus { outline: none; border-color: var(--gold); }
+.body-input-unit { font-family: 'Cinzel', serif; font-size: 15px; color: var(--gold); }
+.body-save-btn {
+  padding: 12px 20px;
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: #1a140a;
+  font-family: 'Cinzel', serif;
+  font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.body-save-btn:hover { filter: brightness(1.1); }
+.body-save-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+
+.body-history-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a7d63;
+}
+.body-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.body-history-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(190, 158, 92, 0.15);
+}
+.body-history-weight { font-weight: 500; color: #f5f0e1; }
+.body-history-date { margin-left: auto; font-size: 13px; color: #8a7d63; }
+.body-history-del {
+  background: none;
+  border: none;
+  color: #8a7d63;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.body-history-del:hover { color: var(--danger); }

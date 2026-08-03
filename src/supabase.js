@@ -120,6 +120,7 @@ export async function createProfile(name) {
     looksmaxing: [],
     menmaxing: [],
     decks: [],
+    weight_log: [],
     test_results: [],
     xp: 0,
   };

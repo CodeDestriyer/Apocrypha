@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
-import CharacterModel from '../CharacterModel.jsx';
+import CharacterModel from './CharacterModel.jsx';
 
 const NAV = [
   { id: 'cards', labelKey: 'nav.cards', icon: '⌘', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
+  { id: 'body', labelKey: 'nav.body', icon: '⚖', summary: (p) => {
+    const log = Array.isArray(p.weight_log) ? p.weight_log : [];
+    return log.length ? `${log[0].weight} kg` : '—';
+  } },
 ];
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);

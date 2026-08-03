@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLang } from '../i18n.jsx';
+import { useLang } from '../../i18n.jsx';
 import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge, scoreSilicon } from './data.js';
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5 };
