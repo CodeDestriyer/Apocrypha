@@ -121,6 +121,7 @@ export async function createProfile(name) {
     menmaxing: [],
     decks: [],
     weight_log: [],
+    weight_goal: null,
     test_results: [],
     xp: 0,
   };
