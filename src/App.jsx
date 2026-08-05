@@ -168,13 +168,7 @@ function DesktopSidebar({ view, setView, onExit }) {
           <span className="desktop-nav-icon">⌘</span>
           <span>{t('nav.cards')}</span>
         </button>
-        <button
-          className={`desktop-nav-item ${view === 'body' ? 'active' : ''}`}
-          onClick={() => setView('body')}
-        >
-          <span className="desktop-nav-icon">⚖</span>
-          <span>{t('nav.body')}</span>
-        </button>
+        {/* Cuerpo (Body) tab hidden for now — re-add this button to bring it back. */}
       </nav>
 
       <div className="desktop-sidebar-footer">

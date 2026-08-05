@@ -6,10 +6,12 @@ import CharacterModel from './CharacterModel.jsx';
 
 const NAV = [
   { id: 'cards', labelKey: 'nav.cards', icon: '⌘', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
-  { id: 'body', labelKey: 'nav.body', icon: '⚖', summary: (p) => {
-    const log = Array.isArray(p.weight_log) ? p.weight_log : [];
-    return log.length ? `${log[0].weight} kg` : '—';
-  } },
+  // Cuerpo (Body) tab is built (see App.jsx / BodySection.jsx) but hidden for
+  // now — no nav entry points to it. Re-add this to bring it back:
+  // { id: 'body', labelKey: 'nav.body', icon: '⚖', summary: (p) => {
+  //   const log = Array.isArray(p.weight_log) ? p.weight_log : [];
+  //   return log.length ? `${log[0].weight} kg` : '—';
+  // } },
 ];
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);
