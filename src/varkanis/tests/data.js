@@ -553,7 +553,7 @@ export const PSYCH_AGE = {
 export const SILICON_MIND = {
   id: 'silicon-mind',
   scale: 'choice',
-  logo: '/autismtest.jpg',
+  logo: '/autist.jpg',
   author: 'Varkanis',
   // Final result image, one per band.
   images: {
