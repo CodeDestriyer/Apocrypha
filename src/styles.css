@@ -4130,9 +4130,12 @@ body {
     0 5px 18px rgba(20, 14, 6, 0.10);
 }
 .landing-course-card .landing-test-title {
-  font-size: 23px;
+  font-family: 'Playfair Display', 'EB Garamond', serif;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: 0.005em;
   margin-bottom: 10px;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 .landing-course-card .landing-test-short {
   font-size: 15px;
