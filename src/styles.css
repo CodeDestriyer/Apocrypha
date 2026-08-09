@@ -4119,30 +4119,15 @@ body {
 }
 
 .landing-course-card {
-  gap: 22px;
+  gap: 24px;
   padding: 24px 26px;
   align-items: stretch;
   min-height: 200px;
   background:
     linear-gradient(180deg, #fffdf7 0%, #fbf4e4 100%);
-  border-color: #e2d3ac;
+  border: 2px solid #0d0b08;
   box-shadow:
-    0 4px 20px rgba(40, 28, 8, 0.08),
-    0 0 0 1px rgba(212, 184, 122, 0.25) inset;
-}
-.landing-course-tag {
-  display: inline-block;
-  align-self: flex-start;
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #8a6a1e;
-  background: rgba(212, 184, 122, 0.18);
-  border: 1px solid rgba(184, 146, 74, 0.45);
-  border-radius: 999px;
-  padding: 4px 12px;
-  margin-bottom: 12px;
+    0 6px 22px rgba(10, 8, 4, 0.14);
 }
 .landing-course-card .landing-test-title {
   font-size: 23px;
@@ -4158,7 +4143,8 @@ body {
 .landing-course-card .landing-test-meta {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  flex: 1;
 }
 .landing-course-logo {
   flex-shrink: 0;
@@ -4172,20 +4158,35 @@ body {
     0 1px 0 rgba(255, 255, 255, 0.4) inset,
     0 0 0 1px #d4b87a;
 }
-.landing-course-body {
+.landing-course-content {
   display: flex;
-  align-items: center;
-  gap: 26px;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
 }
 .landing-course-actions {
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 10px;
+  margin-top: 16px;
 }
+
+/* Search bar in the courses section — black gradient variant */
+.landing-course-search {
+  background: linear-gradient(180deg, #26221b 0%, #0d0b08 100%);
+  border-color: #0d0b08;
+  box-shadow: 0 4px 16px rgba(10, 8, 4, 0.28), 0 0 0 1px rgba(212, 184, 122, 0.2) inset;
+}
+.landing-course-search:focus-within {
+  border-color: #d4b87a;
+  box-shadow: 0 4px 18px rgba(10, 8, 4, 0.32), 0 0 0 3px rgba(212, 184, 122, 0.22);
+}
+.landing-course-search .landing-test-search-icon { color: #d4b87a; }
+.landing-course-search .landing-test-search-input { color: #f6efdf; }
+.landing-course-search .landing-test-search-input::placeholder { color: #a89a7a; }
+.landing-course-search .landing-test-search-clear { color: #cbb684; }
+.landing-course-search .landing-test-search-clear:hover { color: #fff8e6; }
 /* ─── In-site promo viewer (renders PDF pages as images) ─── */
 .promo-overlay {
   position: fixed;
@@ -4828,15 +4829,13 @@ body {
   /* Test card on mobile: photo small & left, info right, button below */
   .landing-test-body { flex-direction: row; align-items: center; gap: 14px; }
   .landing-test-logo { width: 76px; height: 76px; align-self: center; }
-  .landing-course-card { padding: 16px; gap: 14px; min-height: 0; }
+  .landing-test-go { width: 100%; }
+  /* Course card on mobile: big cover left, all info + button right */
+  .landing-course-card { flex-direction: row; align-items: flex-start; padding: 16px; gap: 16px; min-height: 0; }
   .landing-course-card .landing-test-title { font-size: 19px; margin-bottom: 7px; }
   .landing-course-card .landing-test-short { font-size: 13.5px; margin-bottom: 8px; }
-  .landing-test-go { width: 100%; }
-  /* Course card on mobile: big cover left, all info right (like the tests) */
-  .landing-course-body { flex-direction: row; align-items: flex-start; gap: 16px; }
   .landing-course-logo { width: 118px; max-width: 118px; align-self: flex-start; }
-  .landing-course-card .landing-test-meta { justify-content: flex-start; }
-  .landing-course-tag { font-size: 10px; padding: 3px 10px; margin-bottom: 9px; }
+  .landing-course-actions { margin-top: 12px; }
   .likert-dot { height: 36px; }
   .likert-dot-inner { width: 22px; height: 22px; }
   .test-modal { padding: 18px 14px 22px; }

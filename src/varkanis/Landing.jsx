@@ -415,21 +415,55 @@ function TestsPage({ onStart }) {
 function CoursesPage({ authed, onRegister }) {
   const { lang, t } = useLang();
   const [viewer, setViewer] = useState(null);
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? COURSES.filter((course) => {
+        const hay = `${course.title} ${tx(course.short, lang)} ${course.author ?? ''}`.toLowerCase();
+        return hay.includes(q);
+      })
+    : COURSES;
   return (
     <main className="landing-main landing-tests-page">
+      <div className="landing-test-search landing-course-search">
+        <span className="landing-test-search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" />
+          </svg>
+        </span>
+        <input
+          type="search"
+          className="landing-test-search-input"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('landing.searchPlaceholder')}
+          aria-label={t('landing.searchPlaceholder')}
+        />
+        {query && (
+          <button
+            type="button"
+            className="landing-test-search-clear"
+            onClick={() => setQuery('')}
+            aria-label={t('cards.close') || 'Close'}
+          >×</button>
+        )}
+      </div>
+      {filtered.length === 0 ? (
+        <p className="landing-test-empty">{t('landing.searchEmpty')}</p>
+      ) : (
       <ul className="landing-test-list">
-        {COURSES.map((course) => (
+        {filtered.map((course) => (
           <li key={course.id} className="landing-test-card landing-course-card">
-            <div className="landing-course-body">
-              {course.logo && (
-                <img
-                  className="landing-course-logo"
-                  src={course.logo}
-                  alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
-                />
-              )}
+            {course.logo && (
+              <img
+                className="landing-course-logo"
+                src={course.logo}
+                alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
+              />
+            )}
+            <div className="landing-course-content">
               <div className="landing-test-meta">
-                <span className="landing-course-tag">Curso · Nivel 1</span>
                 <h3 className="landing-test-title">{course.title}</h3>
                 <p className="landing-test-short">{tx(course.short, lang)}</p>
                 {course.author && (
@@ -438,24 +472,25 @@ function CoursesPage({ authed, onRegister }) {
                   </div>
                 )}
               </div>
-            </div>
-            <div className="landing-course-actions">
-              {course.pdf ? (
-                <button
-                  className="landing-test-go"
-                  onClick={() => setViewer(course)}
-                >
-                  {authed ? t('landing.read') : t('landing.preview')}
-                </button>
-              ) : (
-                <button className="landing-test-go" disabled>
-                  {t('landing.courseSoon')}
-                </button>
-              )}
+              <div className="landing-course-actions">
+                {course.pdf ? (
+                  <button
+                    className="landing-test-go"
+                    onClick={() => setViewer(course)}
+                  >
+                    {authed ? t('landing.read') : t('landing.preview')}
+                  </button>
+                ) : (
+                  <button className="landing-test-go" disabled>
+                    {t('landing.courseSoon')}
+                  </button>
+                )}
+              </div>
             </div>
           </li>
         ))}
       </ul>
+      )}
       {viewer && (
         <PdfBook
           course={viewer}
