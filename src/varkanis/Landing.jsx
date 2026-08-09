@@ -24,7 +24,7 @@ function PersonIcon({ size = 21 }) {
 const COURSES = [
   {
     id: 'mentes-bajo-control',
-    title: 'Mentes Bajo Control: Manipulación Social',
+    title: 'Manipulación Social Nivel 1',
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
@@ -429,6 +429,7 @@ function CoursesPage({ authed, onRegister }) {
                 />
               )}
               <div className="landing-test-meta">
+                <span className="landing-course-tag">Curso · Nivel 1</span>
                 <h3 className="landing-test-title">{course.title}</h3>
                 <p className="landing-test-short">{tx(course.short, lang)}</p>
                 {course.author && (

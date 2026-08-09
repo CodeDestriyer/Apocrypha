@@ -4120,12 +4120,32 @@ body {
 
 .landing-course-card {
   gap: 22px;
-  padding: 22px 24px;
+  padding: 24px 26px;
   align-items: stretch;
   min-height: 200px;
+  background:
+    linear-gradient(180deg, #fffdf7 0%, #fbf4e4 100%);
+  border-color: #e2d3ac;
+  box-shadow:
+    0 4px 20px rgba(40, 28, 8, 0.08),
+    0 0 0 1px rgba(212, 184, 122, 0.25) inset;
+}
+.landing-course-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8a6a1e;
+  background: rgba(212, 184, 122, 0.18);
+  border: 1px solid rgba(184, 146, 74, 0.45);
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin-bottom: 12px;
 }
 .landing-course-card .landing-test-title {
-  font-size: 22px;
+  font-size: 23px;
   margin-bottom: 10px;
   line-height: 1.2;
 }
@@ -4138,24 +4158,24 @@ body {
 .landing-course-card .landing-test-meta {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
 }
 .landing-course-logo {
   flex-shrink: 0;
-  width: 128px;
+  width: 132px;
   height: auto;
   align-self: center;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow:
-    0 12px 30px rgba(30, 20, 8, 0.32),
+    0 16px 34px rgba(30, 20, 8, 0.36),
     0 1px 0 rgba(255, 255, 255, 0.4) inset,
     0 0 0 1px #d4b87a;
 }
 .landing-course-body {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 26px;
   flex: 1;
   min-width: 0;
 }
@@ -4808,12 +4828,15 @@ body {
   /* Test card on mobile: photo small & left, info right, button below */
   .landing-test-body { flex-direction: row; align-items: center; gap: 14px; }
   .landing-test-logo { width: 76px; height: 76px; align-self: center; }
-  .landing-course-card { padding: 18px; gap: 16px; min-height: 0; }
-  .landing-course-card .landing-test-title { font-size: 20px; }
+  .landing-course-card { padding: 16px; gap: 14px; min-height: 0; }
+  .landing-course-card .landing-test-title { font-size: 19px; margin-bottom: 7px; }
+  .landing-course-card .landing-test-short { font-size: 13.5px; margin-bottom: 8px; }
   .landing-test-go { width: 100%; }
-  /* Course card on mobile: photo small & left, info right, buttons below */
-  .landing-course-body { flex-direction: row; align-items: center; gap: 14px; }
-  .landing-course-logo { width: 88px; max-width: 88px; align-self: center; }
+  /* Course card on mobile: big cover left, all info right (like the tests) */
+  .landing-course-body { flex-direction: row; align-items: flex-start; gap: 16px; }
+  .landing-course-logo { width: 118px; max-width: 118px; align-self: flex-start; }
+  .landing-course-card .landing-test-meta { justify-content: flex-start; }
+  .landing-course-tag { font-size: 10px; padding: 3px 10px; margin-bottom: 9px; }
   .likert-dot { height: 36px; }
   .likert-dot-inner { width: 22px; height: 22px; }
   .test-modal { padding: 18px 14px 22px; }
