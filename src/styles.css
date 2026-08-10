@@ -2845,9 +2845,9 @@ body {
   .desktop-brand-text {
     font-family: 'Cinzel Decorative', 'Cinzel', serif;
     font-weight: 900;
-    font-size: 38px;
+    font-size: 28px;
     line-height: 1;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
     color: var(--gold-bright);
     text-shadow: 0 0 22px rgba(127, 184, 199, 0.5), 0 2px 0 rgba(0,0,0,0.6);
     text-transform: uppercase;
@@ -2944,7 +2944,7 @@ body {
     padding-top: 14px;
     flex-shrink: 0;
   }
-  .desktop-settings { position: relative; }
+  .desktop-settings { position: relative; display: flex; flex-direction: column; }
   .desktop-settings-pop {
     position: absolute;
     bottom: calc(100% + 8px);
