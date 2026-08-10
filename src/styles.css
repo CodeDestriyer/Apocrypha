@@ -5939,16 +5939,15 @@ body {
 .hero-cubes {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
-  width: min(300px, 100%);
-  margin: 20px auto 10px;
+  gap: 16px;
+  width: min(320px, 100%);
+  margin: 20px auto 12px;
 }
-/* On desktop: two capped squares side by side, left-aligned. */
+/* On desktop: two equal squares filling the full card width. */
 .desktop-content .hero-cubes {
   width: 100%;
-  grid-template-columns: repeat(2, minmax(0, 280px));
-  justify-content: start;
-  margin: 20px 0 10px;
+  grid-template-columns: 1fr 1fr;
+  margin: 20px 0 12px;
 }
 .hero-cube {
   aspect-ratio: 1 / 1;
