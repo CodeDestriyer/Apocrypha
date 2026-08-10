@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
-import { chartGeom, latestEntry } from './weightChart.jsx';
+import { WeightGraph, latestEntry } from './weightChart.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -65,11 +65,6 @@ export default function PesoSection({ rootOnBack }) {
   const remaining = goal != null && latest ? Math.round((latest.weight - goal) * 10) / 10 : null;
   const unit = t('body.unit');
 
-  const g = chartGeom(log, { padT: 10, padB: 8 });
-  const goalY = g && goal != null
-    ? Math.max(g.yAt(g.yMax), Math.min(g.yAt(g.yMin), g.yAt(goal)))
-    : null;
-
   return (
     <SubPage title={t('weight.title')} onBack={rootOnBack}>
       <div className="peso">
@@ -115,24 +110,11 @@ export default function PesoSection({ rootOnBack }) {
           <button className="peso-goal-add" onClick={openGoal}>+ {t('body.addGoal')}</button>
         )}
 
-        <div className="peso-graph">
-          {g ? (
-            <>
-              <svg className="peso-graph-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                <line className="peso-grid" x1="0" y1="25" x2="100" y2="25" />
-                <line className="peso-grid" x1="0" y1="50" x2="100" y2="50" />
-                <line className="peso-grid" x1="0" y1="75" x2="100" y2="75" />
-                {goalY != null && <line className="peso-goal-line" x1="0" y1={goalY.toFixed(2)} x2="100" y2={goalY.toFixed(2)} />}
-                {g.area && <path className="peso-area" d={g.area} />}
-                <path className="peso-line" d={g.line} />
-              </svg>
-              <span className="peso-graph-max">{g.maxW} {unit}</span>
-              <span className="peso-graph-min">{g.minW} {unit}</span>
-            </>
-          ) : (
-            <div className="empty-hint peso-graph-empty">{t('weight.hint')}</div>
-          )}
-        </div>
+        {log.length ? (
+          <WeightGraph log={log} goal={goal} />
+        ) : (
+          <div className="empty-hint peso-graph-empty">{t('weight.hint')}</div>
+        )}
 
         <div className="peso-input-row">
           <input

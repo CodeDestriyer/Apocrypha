@@ -6070,25 +6070,33 @@ body {
 /* Hero Peso cube: current weight top-right + live spark */
 .weight-card-current {
   font-family: 'Cinzel', serif;
-  font-size: 15px; font-weight: 700; letter-spacing: 0.02em;
+  font-size: 19px; font-weight: 800; letter-spacing: 0.02em;
   color: var(--wine); white-space: nowrap;
 }
 .weight-card-spark { position: absolute; inset: 0; }
+/* Charismatic PESO wordmark on the cube */
+.weight-card--link .weight-card-title,
+.weight-card .weight-card-title {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-weight: 900; font-size: 17px; letter-spacing: 0.05em;
+  color: var(--wine); text-transform: uppercase;
+}
 
-/* Hero header badge: last weight + tiny spark, top-right of the card */
+/* Hero header badge: last weight in a bold framed chip + tiny spark */
 .hero-weight-badge {
   position: absolute; top: 14px; right: 16px; z-index: 4;
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--line); border-radius: 6px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--gold-dim); border-radius: 9px;
   background: var(--paper); cursor: pointer;
-  transition: border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(42, 14, 8, 0.06);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.hero-weight-badge:hover { border-color: var(--gold-dim); }
-.hero-weight-badge-spark { width: 46px; height: 22px; }
+.hero-weight-badge:hover { border-color: var(--wine); box-shadow: 0 3px 12px rgba(42, 14, 8, 0.12); }
+.hero-weight-badge-spark { width: 52px; height: 26px; }
 .hero-weight-badge-val {
-  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
-  letter-spacing: 0.02em; color: var(--wine); white-space: nowrap;
+  font-family: 'Cinzel', serif; font-size: 20px; font-weight: 800;
+  letter-spacing: 0.01em; color: var(--wine); white-space: nowrap;
 }
 /* Keep clear of the mobile settings gear (top-right); gear is hidden on desktop. */
 .single-page .hero-weight-badge { top: 10px; right: 52px; }
@@ -6130,7 +6138,16 @@ body {
 .peso-graph-max, .peso-graph-min { position: absolute; left: 14px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.04em; color: var(--text-dim); }
 .peso-graph-max { top: 10px; }
 .peso-graph-min { bottom: 10px; }
-.peso-graph-empty { height: 100%; display: flex; align-items: center; justify-content: center; padding: 0; }
+.peso-graph-empty { height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px 8px; }
+
+/* Weight chart — clean line + kg/month axes (option 3) */
+.pchart { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); overflow: hidden; }
+.pchart-svg { display: block; }
+.pchart-grid { stroke: var(--line); stroke-width: 1; }
+.pchart-ylabel, .pchart-xlabel { font-family: 'Inter', 'EB Garamond', sans-serif; font-size: 10px; fill: var(--text-dim); }
+.pchart-goal { stroke: var(--wine); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.55; }
+.pchart-line { fill: none; stroke: var(--wine); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.pchart-dot { fill: var(--wine); }
 
 .peso-input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .peso-date {
