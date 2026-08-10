@@ -5,6 +5,7 @@ import { signOut } from '../supabase.js';
 
 const NAV = [
   { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
+  { id: 'salud', labelKey: 'nav.salud', icon: '✚', summary: () => '—' },
   // Cuerpo (Body) tab is built (see App.jsx / BodySection.jsx) but hidden for
   // now — no nav entry points to it. Re-add this to bring it back:
   // { id: 'body', labelKey: 'nav.body', icon: '⚖', summary: (p) => {
@@ -256,22 +257,29 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   );
 }
 
-// Large square placeholder for the upcoming weight chart (a "Libre"-style
-// tracker). Purely a stub for now — a framed chart mock, no data yet.
-function WeightCard({ t }) {
+// Hero stat cubes. Peso is a large square placeholder for the upcoming
+// weight chart (a "Libre"-style tracker) — a framed chart mock, no data
+// yet. On desktop a second, empty cube sits beside it (2-up); on mobile
+// only Peso shows.
+function HeroCubes({ t }) {
   return (
-    <div className="weight-card" aria-label={t('weight.hint')}>
-      <div className="weight-card-head">
-        <span className="weight-card-title">{t('weight.title')}</span>
-        <span className="weight-card-tag">{t('weight.soon')}</span>
+    <div className="hero-cubes">
+      <div className="hero-cube weight-card" aria-label={t('weight.hint')}>
+        <div className="weight-card-head">
+          <span className="weight-card-title">{t('weight.title')}</span>
+          <span className="weight-card-tag">{t('weight.soon')}</span>
+        </div>
+        <div className="weight-card-plot">
+          <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />
+            <line className="weight-card-grid" x1="0" y1="50" x2="100" y2="50" />
+            <line className="weight-card-grid" x1="0" y1="75" x2="100" y2="75" />
+            <polyline className="weight-card-line" points="3,70 21,58 39,63 57,42 75,49 97,28" />
+          </svg>
+        </div>
       </div>
-      <div className="weight-card-plot">
-        <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />
-          <line className="weight-card-grid" x1="0" y1="50" x2="100" y2="50" />
-          <line className="weight-card-grid" x1="0" y1="75" x2="100" y2="75" />
-          <polyline className="weight-card-line" points="3,70 21,58 39,63 57,42 75,49 97,28" />
-        </svg>
+      <div className="hero-cube hero-cube--empty" aria-hidden="true">
+        <span className="hero-cube-soon">{t('weight.soon')}</span>
       </div>
     </div>
   );
@@ -320,7 +328,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         </button>
       )}
 
-      <WeightCard t={t} />
+      <HeroCubes t={t} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 

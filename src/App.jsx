@@ -5,6 +5,9 @@ import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import { LangProvider, useLang, LANGS } from './i18n.jsx';
 import { signOut } from './supabase.js';
 import IdiomasSection from './apocrypha/IdiomasSection.jsx';
+import CardsSection from './apocrypha/CardsSection.jsx';
+import RulesSection from './apocrypha/RulesSection.jsx';
+import SaludSection from './apocrypha/SaludSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
 
@@ -110,6 +113,9 @@ function Shell() {
           <DesktopSidebar view={view} setView={setView} />
           <main className="desktop-content">
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
+            {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
+            {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
+            {view === 'salud' && <SaludSection rootOnBack={() => setView('home')} />}
             {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
             {view === 'body' && <BodySection rootOnBack={() => setView('home')} />}
           </main>
@@ -121,6 +127,12 @@ function Shell() {
         <div className="single-page">
           {view === 'idiomas'
             ? <IdiomasSection rootOnBack={() => setView('home')} />
+            : view === 'cards'
+            ? <CardsSection rootOnBack={() => setView('home')} />
+            : view === 'reglas'
+            ? <RulesSection rootOnBack={() => setView('home')} />
+            : view === 'salud'
+            ? <SaludSection rootOnBack={() => setView('home')} />
             : view === 'body'
             ? <BodySection rootOnBack={() => setView('home')} />
             : <CharacterPage onNavigate={setView} showNav={true} onExit={() => setShowApp(false)} />
@@ -136,6 +148,7 @@ function Shell() {
 function DesktopSidebar({ view, setView }) {
   const { t, lang, setLang } = useLang();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [idiomasOpen, setIdiomasOpen] = useState(view === 'cards' || view === 'reglas');
   const settingsRef = useRef(null);
 
   useEffect(() => {
@@ -161,12 +174,43 @@ function DesktopSidebar({ view, setView }) {
           <span className="desktop-nav-icon">⚔</span>
           <span>{t('tab.character')}</span>
         </button>
+        {/* Idiomas is a pure expander: clicking it only reveals its two
+            children (Tarjetas / Reglas) — it navigates nowhere itself. */}
+        <div className={`desktop-nav-group ${idiomasOpen ? 'open' : ''}`}>
+          <button
+            className={`desktop-nav-item desktop-nav-parent ${(view === 'cards' || view === 'reglas') ? 'active-parent' : ''}`}
+            onClick={() => setIdiomasOpen((o) => !o)}
+            aria-expanded={idiomasOpen}
+          >
+            <span className="desktop-nav-icon">✦</span>
+            <span>{t('nav.idiomas')}</span>
+            <span className={`desktop-nav-caret ${idiomasOpen ? 'open' : ''}`} aria-hidden="true">›</span>
+          </button>
+          {idiomasOpen && (
+            <div className="desktop-subnav">
+              <button
+                className={`desktop-nav-item desktop-subnav-item ${view === 'cards' ? 'active' : ''}`}
+                onClick={() => setView('cards')}
+              >
+                <span className="desktop-nav-icon">⌘</span>
+                <span>{t('nav.cards')}</span>
+              </button>
+              <button
+                className={`desktop-nav-item desktop-subnav-item ${view === 'reglas' ? 'active' : ''}`}
+                onClick={() => setView('reglas')}
+              >
+                <span className="desktop-nav-icon">§</span>
+                <span>{t('reglas.title')}</span>
+              </button>
+            </div>
+          )}
+        </div>
         <button
-          className={`desktop-nav-item ${view === 'idiomas' ? 'active' : ''}`}
-          onClick={() => setView('idiomas')}
+          className={`desktop-nav-item ${view === 'salud' ? 'active' : ''}`}
+          onClick={() => setView('salud')}
         >
-          <span className="desktop-nav-icon">✦</span>
-          <span>{t('nav.idiomas')}</span>
+          <span className="desktop-nav-icon">✚</span>
+          <span>{t('nav.salud')}</span>
         </button>
         {/* Cuerpo (Body) tab hidden for now — re-add this button to bring it back. */}
       </nav>

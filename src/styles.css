@@ -5935,11 +5935,23 @@ body {
 .rule-note--add { border: 1px dashed var(--gold-dim); color: var(--wine); background: transparent; }
 .rule-note--add:hover { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); border-style: dashed; }
 
-/* ── Hero: weight chart placeholder (Libre-style, coming soon) ─── */
-.weight-card {
+/* ── Hero: stat cubes (Peso chart placeholder + future slots) ──── */
+.hero-cubes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
   width: min(340px, 100%);
-  aspect-ratio: 1 / 1;
   margin: 22px auto 6px;
+}
+/* On desktop: two cubes side by side, left-aligned, filling the card. */
+.desktop-content .hero-cubes {
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: stretch;
+  margin-left: 0;
+}
+.hero-cube {
+  aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
   padding: 16px 18px;
@@ -5947,6 +5959,22 @@ body {
   border-radius: 6px;
   background: var(--paper);
   text-align: left;
+  min-width: 0;
+}
+/* The empty companion cube is desktop-only (mobile shows just Peso). */
+.hero-cube--empty {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  border-color: var(--gold-dim);
+  background: transparent;
+}
+.desktop-content .hero-cube--empty { display: flex; }
+.hero-cube-soon {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-dim);
 }
 .weight-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .weight-card-title {
@@ -5975,3 +6003,24 @@ body {
   stroke-dasharray: 4 4;
   opacity: 0.9;
 }
+
+/* ── Desktop sidebar: Idiomas expander submenu ──────────────────── */
+.desktop-nav-parent .desktop-nav-caret {
+  margin-left: auto;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: transform 0.18s ease;
+}
+.desktop-nav-caret.open { transform: rotate(90deg); }
+.desktop-nav-item.active-parent { color: #ffffff; }
+.desktop-subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 3px 0 3px 15px;
+  padding-left: 11px;
+  border-left: 1px solid rgba(245, 242, 236, 0.18);
+}
+.desktop-subnav-item { font-size: 14px; padding: 9px 12px; }
+.desktop-subnav-item .desktop-nav-icon { font-size: 15px; }
