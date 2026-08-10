@@ -115,9 +115,9 @@ body {
 .avatar:active { transform: scale(0.96); }
 
 .avatar-big {
-  width: 140px;
-  height: 140px;
-  font-size: 72px;
+  width: 104px;
+  height: 104px;
+  font-size: 52px;
   overflow: hidden;
 }
 .character-model-stage {
@@ -502,7 +502,7 @@ body {
 .name {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-weight: 700;
-  font-size: clamp(34px, 7.5vw, 48px);
+  font-size: clamp(28px, 6vw, 38px);
   line-height: 1.02;
   color: var(--gold-bright);
   margin: 0;
@@ -5972,15 +5972,17 @@ body {
 .hero-cubes {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
-  width: min(320px, 100%);
-  margin: 20px auto 12px;
+  gap: 12px;
+  width: min(230px, 100%);
+  margin: 16px auto 8px;
 }
-/* On desktop: two equal squares filling the full card width. */
+/* On desktop: two equal squares, kept compact so avatar + name + cubes all
+   fit on screen without the chart spilling off the bottom. */
 .desktop-content .hero-cubes {
   width: 100%;
+  max-width: 430px;
   grid-template-columns: 1fr 1fr;
-  margin: 20px 0 12px;
+  margin: 16px 0 8px;
 }
 .hero-cube {
   aspect-ratio: 1 / 1;
