@@ -128,58 +128,58 @@ export default function PesoSection({ rootOnBack }) {
           <div className="empty-hint peso-graph-empty">{t('weight.hint')}</div>
         )}
 
-        {adding ? (
-          <div className="peso-add">
-            <div className="peso-input-row">
-              <input
-                className="peso-date"
-                type="date"
-                value={entryDate}
-                max={todayISO()}
-                onChange={(e) => setEntryDate(e.target.value || todayISO())}
-                aria-label="fecha"
-              />
-              <input
-                className="cards-field-input peso-input"
-                type="number" inputMode="decimal" step="0.1" min="0" autoFocus
-                value={draft}
-                placeholder={t('body.placeholder')}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
-              />
-              <span className="peso-input-unit">{unit}</span>
-              <button className="cards-primary-btn peso-save" onClick={submit} disabled={!draft.trim()}>
-                {t('body.save')}
-              </button>
-              <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(''); }} aria-label={t('cards.close')}>×</button>
+        <div className="peso-bar">
+          {adding ? (
+            <div className="peso-add-slide">
+              <div className="peso-input-row peso-input-row--bar">
+                <input
+                  className="peso-date"
+                  type="date"
+                  value={entryDate}
+                  max={todayISO()}
+                  onChange={(e) => setEntryDate(e.target.value || todayISO())}
+                  aria-label="fecha"
+                />
+                <input
+                  className="cards-field-input peso-input"
+                  type="number" inputMode="decimal" step="0.1" min="0" autoFocus
+                  value={draft}
+                  placeholder={unit}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+                />
+                <button className="cards-primary-btn peso-save" onClick={submit} disabled={!draft.trim()}>
+                  {t('body.save')}
+                </button>
+                <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(''); }} aria-label={t('cards.close')}>×</button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <button className="peso-add-toggle" onClick={() => setAdding(true)}>
-            <span className="peso-add-plus">+</span>
-            <span>{t('weight.add')}</span>
-          </button>
-        )}
+          ) : (
+            <>
+              {log.length > 0 && (
+                <button className="peso-history-toggle" onClick={() => setHistOpen((o) => !o)} aria-expanded={histOpen}>
+                  <span className="peso-history-title">{t('body.history')}</span>
+                  <span className="peso-history-count">{log.length}</span>
+                  <span className={`peso-history-caret ${histOpen ? 'open' : ''}`} aria-hidden="true">›</span>
+                </button>
+              )}
+              <button className="peso-anadir-btn" onClick={() => setAdding(true)} aria-label={t('weight.add')}>
+                <span className="peso-anadir-plus">+</span>
+              </button>
+            </>
+          )}
+        </div>
 
-        {log.length > 0 && (
-          <div className="peso-history-wrap">
-            <button className="peso-history-toggle" onClick={() => setHistOpen((o) => !o)} aria-expanded={histOpen}>
-              <span className="peso-history-title">{t('body.history')}</span>
-              <span className="peso-history-count">{log.length}</span>
-              <span className={`peso-history-caret ${histOpen ? 'open' : ''}`} aria-hidden="true">›</span>
-            </button>
-            {histOpen && (
-              <ul className="peso-history">
-                {history.map((e) => (
-                  <li key={e.id} className="peso-entry">
-                    <span className="peso-entry-w">{e.weight} {unit}</span>
-                    <span className="peso-entry-date">{fmtDate(e.date)}</span>
-                    <button className="peso-entry-del" onClick={() => remove(e.id)} aria-label={t('body.delete')}>×</button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        {!adding && histOpen && log.length > 0 && (
+          <ul className="peso-history">
+            {history.map((e) => (
+              <li key={e.id} className="peso-entry">
+                <span className="peso-entry-w">{e.weight} {unit}</span>
+                <span className="peso-entry-date">{fmtDate(e.date)}</span>
+                <button className="peso-entry-del" onClick={() => remove(e.id)} aria-label={t('body.delete')}>×</button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </SubPage>

@@ -6241,3 +6241,21 @@ body {
 }
 .peso-history-caret { margin-left: auto; color: var(--text-dim); font-size: 16px; transition: transform 0.18s ease; }
 .peso-history-caret.open { transform: rotate(90deg); }
+
+/* History (80%) + Añadir (20%) share one line; Añadir swaps in the input */
+.peso-bar { display: flex; gap: 10px; align-items: stretch; min-height: 46px; }
+.peso-bar .peso-history-toggle { flex: 4; margin: 0; }
+.peso-anadir-btn {
+  flex: 1;
+  display: grid; place-items: center;
+  border: 1px solid var(--wine); border-radius: 6px;
+  background: var(--wine); color: var(--cream); cursor: pointer;
+  transition: background 0.15s;
+}
+.peso-anadir-btn:hover { background: var(--wine-deep); }
+.peso-anadir-plus { font-size: 26px; line-height: 1; }
+.peso-add-slide { flex: 1; overflow: hidden; }
+.peso-add-slide .peso-input-row--bar { animation: peso-slide-in 0.26s ease; flex-wrap: nowrap; margin: 0; }
+.peso-input-row--bar .peso-date { padding: 8px 10px; font-size: 14px; }
+.peso-input-row--bar .peso-save { padding: 10px 14px; }
+@keyframes peso-slide-in { from { transform: translateX(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
