@@ -1,14 +1,28 @@
 :root {
-  --bg-0: #060a12;
-  --bg-1: #0a1320;
-  --bg-2: #142133;
-  --gold: #9cc9d4;
-  --gold-dim: #5f8c97;
-  --gold-bright: #f0f6fa;
-  --text: #f2f6fa;
-  --text-dim: #aab5c2;
-  --danger: #9d5252;
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(127, 184, 199, 0.15) inset;
+  /* ── Neoclassical / luxury editorial palette ──────────────────
+     Warm ivory "paper-stone" surfaces, deep mahogany ink, wine
+     (sealing-wax) accents. Kept under the old variable names so the
+     var()-based rules across the app re-skin without a rewrite. */
+  --bg-0: #EFECE6;      /* deepest page tone */
+  --bg-1: #F5F2EC;      /* main page background (cream parchment) */
+  --bg-2: #FAF8F5;      /* raised paper / card */
+  --gold: #6E2413;      /* accent — sealing wax / wine (borders, icons) */
+  --gold-dim: #C9B8A8;  /* muted warm line */
+  --gold-bright: #2A0E08; /* strongest ink — headings */
+  --text: #3D140C;      /* mahogany body text */
+  --text-dim: #7C5E54;  /* muted brown */
+  --danger: #9d3b2f;
+  --shadow: 0 1px 2px rgba(42, 14, 8, 0.05), 0 14px 40px -16px rgba(42, 14, 8, 0.20);
+
+  /* Semantic aliases used by the theme layer below */
+  --paper: #FAF8F5;
+  --cream: #F5F2EC;
+  --ink: #2A0E08;
+  --ink-soft: #3D140C;
+  --wine: #4A150B;
+  --wine-deep: #3B0F07;
+  --line: #E0DCD3;
+  --accent: #6E2413;
 }
 
 * { box-sizing: border-box; }
@@ -19,13 +33,13 @@ html, body, #root {
   width: 100%;
   overflow: hidden;
   color: var(--text);
-  font-family: 'EB Garamond', 'Cinzel', Georgia, serif;
+  font-family: 'Inter', 'EB Garamond', Georgia, serif;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
 body {
-  background: #f5f1e8;
+  background: var(--cream);
 }
 
 .app {
@@ -54,11 +68,11 @@ body {
 
 .card {
   width: min(420px, 100%);
-  background: linear-gradient(160deg, rgb(22, 32, 48), rgb(10, 18, 30)) !important;
-  background-color: rgb(10, 18, 30) !important;
+  background: var(--paper) !important;
+  background-color: var(--paper) !important;
   color: var(--text);
-  border: 1px solid rgba(127, 184, 199, 0.3);
-  border-radius: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   padding: 28px 24px 22px;
   box-shadow: var(--shadow);
   text-align: center;
@@ -5750,3 +5764,202 @@ body {
 }
 .body-goal-clear { color: #8a7d63; }
 .body-goal-clear:hover { color: var(--danger); }
+
+/* ══════════════════════════════════════════════════════════════════
+   NEOCLASSICAL / LUXURY EDITORIAL THEME
+   Light "paper-stone" reskin of the hidden Apocrypha app — desktop
+   sidebar, Hero, Idiomas › Tarjetas + Reglas, and the settings menus.
+   Overrides the hardcoded dark/teal literals of the original dark
+   theme (palette variables above handle the var()-based rules). The
+   public Varkanis landing + login are intentionally left untouched.
+   ══════════════════════════════════════════════════════════════════ */
+
+.splash { background: var(--cream); }
+.ornament { color: var(--wine); }
+
+/* ── Shared surfaces ────────────────────────────────────── */
+.divider { background: var(--line); width: 72%; height: 1px; }
+.empty-hint { color: var(--text-dim); }
+
+/* ── Hero: avatar / name / xp ───────────────────────────── */
+.avatar {
+  background: radial-gradient(circle at 30% 28%, #ffffff, var(--cream));
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 12px rgba(42, 14, 8, 0.08), inset 0 0 0 transparent;
+}
+.avatar:hover { box-shadow: 0 4px 18px rgba(42, 14, 8, 0.16); }
+.avatar-fallback { color: var(--wine); }
+.name, .name-text { color: var(--ink); }
+.name-input { color: var(--ink); border-bottom-color: var(--gold-dim); }
+.xp-badge { color: var(--wine); }
+.xp-badge-suffix { color: var(--text-dim); }
+
+/* ── Hero: settings menu (top-right gear) ───────────────── */
+.settings-btn { border: 1px solid var(--line); background: var(--cream); color: var(--wine); }
+.settings-btn:hover { background: #efe7df; border-color: var(--gold-dim); }
+.settings-dropdown { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.settings-section-title { color: var(--text-dim); }
+.settings-option { color: var(--ink-soft); }
+.settings-option:hover { background: rgba(110, 36, 19, 0.07); }
+.settings-option.active { color: var(--wine); background: rgba(110, 36, 19, 0.06); }
+.settings-done { background: var(--wine); border: 1px solid var(--wine); color: var(--cream); border-radius: 4px; }
+.settings-done:hover { background: var(--wine-deep); border-color: var(--wine-deep); }
+
+/* ── Hero: nav grid (mobile launcher) ───────────────────── */
+.nav-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink-soft);
+}
+.nav-card::before { background: var(--gold-dim); }
+.nav-card:hover { background: #ffffff; border-color: var(--gold-dim); }
+.nav-card:hover::before { background: var(--wine); box-shadow: none; }
+.nav-icon { color: var(--wine); }
+.nav-label { color: var(--ink-soft); }
+.nav-summary { color: var(--wine); }
+.nav-check.on { background: var(--wine); border-color: var(--wine); color: var(--cream); }
+.nav-check.off { border-color: var(--gold-dim); }
+.nav-card.dragging { box-shadow: 0 8px 20px rgba(42, 14, 8, 0.18); border-color: var(--wine); }
+
+/* ── Desktop sidebar: deep wine accent rail ─────────────── */
+.desktop-sidebar {
+  background: linear-gradient(180deg, var(--wine) 0%, var(--wine-deep) 100%);
+  border-right: 1px solid rgba(42, 14, 8, 0.4);
+}
+.desktop-brand-text { color: var(--cream); text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.desktop-brand:hover .desktop-brand-text { text-shadow: 0 0 18px rgba(245, 242, 236, 0.4); }
+.desktop-nav-section { color: rgba(245, 242, 236, 0.72); border-bottom-color: rgba(245, 242, 236, 0.16); }
+.desktop-nav-item { color: rgba(245, 242, 236, 0.86); border-left-color: transparent; }
+.desktop-nav-item:hover {
+  background: rgba(245, 242, 236, 0.08);
+  color: #ffffff;
+  border-left-color: rgba(245, 242, 236, 0.6);
+}
+.desktop-nav-item.active {
+  background: rgba(245, 242, 236, 0.14);
+  border-color: rgba(245, 242, 236, 0.22);
+  border-left-color: var(--cream);
+  color: #ffffff;
+}
+.desktop-nav-icon { color: rgba(245, 242, 236, 0.85); }
+.desktop-nav-item.active .desktop-nav-icon { color: #ffffff; text-shadow: none; }
+.desktop-sidebar-footer { border-top-color: rgba(245, 242, 236, 0.18); }
+.desktop-settings-pop { background: var(--paper); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(42, 14, 8, 0.28); }
+.desktop-logout { color: #e7c9b8; }
+.desktop-logout:hover { background: rgba(245, 242, 236, 0.1); color: #ffffff; border-left-color: var(--cream); }
+
+/* ── SubPage shell (Idiomas) ────────────────────────────── */
+.sub-title { color: var(--ink); }
+.back-btn { border: 1px solid var(--line); background: var(--cream); color: var(--wine); }
+.back-btn:hover { background: #efe7df; border-color: var(--gold-dim); }
+
+/* ── Idiomas tab switch ─────────────────────────────────── */
+.idiomas-tabs { border: 1px solid var(--line); background: var(--cream); border-radius: 6px; }
+.idiomas-tab { color: var(--text-dim); }
+.idiomas-tab:hover { color: var(--wine); }
+.idiomas-tab.active { background: var(--wine); color: var(--cream); border-radius: 4px; }
+
+/* ── Tarjetas: deck list ────────────────────────────────── */
+.deck-row { border: 1px solid var(--line) !important; background: var(--paper) !important; }
+.deck-row:hover { background: #ffffff !important; border-color: var(--gold-dim) !important; }
+.deck-row .skill-name { color: var(--ink); }
+.deck-counts { color: var(--text-dim); }
+.deck-due { color: var(--wine); }
+.deck-total { color: var(--text-dim); }
+.skill { background: var(--paper); border-color: var(--line); }
+.skill-name { color: var(--ink); }
+
+/* ── Tarjetas: deck view controls ───────────────────────── */
+.cards-study-btn { border: 1px solid var(--wine); background: var(--wine); color: var(--cream); border-radius: 4px; }
+.cards-study-btn:hover { background: var(--wine-deep); }
+.cards-gear-btn { background: var(--cream); border-color: var(--line); color: var(--wine); }
+.cards-gear-btn:hover { background: #efe7df; color: var(--wine-deep); }
+.cards-gear-btn--sm { background: transparent; border-color: transparent; color: var(--text-dim); }
+.cards-gear-btn--sm:hover { background: rgba(110, 36, 19, 0.08); color: var(--wine); }
+.cards-gear-menu { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.cards-gear-item { color: var(--ink-soft); }
+.cards-gear-item:hover { background: rgba(110, 36, 19, 0.07); }
+.cards-gear-item--danger { color: var(--danger); }
+.cards-gear-item--danger:hover { background: rgba(157, 59, 47, 0.1); }
+
+/* ── Tarjetas: search ───────────────────────────────────── */
+.cards-search.open { border: 1px solid var(--line); background: var(--cream); border-radius: 4px; }
+.cards-search-glyph { color: var(--text-dim); }
+.cards-search-input { color: var(--ink); }
+.cards-search-input::placeholder { color: var(--text-dim); }
+.cards-search-close { color: var(--text-dim); }
+.cards-search-close:hover { color: var(--wine); }
+.cards-search-empty { color: var(--text-dim); }
+
+/* ── Tarjetas / Reglas: editor panel, fields, buttons ───── */
+.cards-panel { border: 1px solid var(--line); background: var(--cream); border-radius: 6px; }
+.cards-field-label { color: var(--text-dim); }
+.cards-field-input,
+.cards-field-textarea { background: #ffffff; border: 1px solid var(--line); color: var(--ink); border-radius: 4px; }
+.cards-field-input:focus,
+.cards-field-textarea:focus { border-color: var(--wine); }
+.cards-primary-btn { background: var(--wine); border: 1px solid var(--wine); color: var(--cream); border-radius: 4px; }
+.cards-primary-btn:hover { filter: none; background: var(--wine-deep); }
+.cards-secondary-btn { border: 1px solid var(--line); color: var(--text-dim); border-radius: 4px; }
+.cards-secondary-btn:hover { border-color: var(--wine); color: var(--wine); }
+.cards-big-add--deck { border: 1.5px dashed var(--gold-dim); color: var(--wine); border-radius: 6px; }
+.cards-big-add--deck:hover { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); border-style: dashed; }
+.cards-big-add--deck .cards-big-add-plus { border-color: var(--wine); }
+.cards-big-add--card { color: var(--wine); border: 1px solid var(--line); background: var(--paper); border-radius: 4px; }
+.cards-big-add--card:hover { border-color: var(--wine); background: #ffffff; }
+
+/* ── Tarjetas: card rows ────────────────────────────────── */
+.card-row { border: 1px solid var(--line); border-radius: 4px; }
+.card-row-front { color: var(--ink); }
+.card-row-back { color: var(--text-dim); }
+.card-row-editing { background: var(--cream); }
+.sub-title-input { border-color: var(--wine); color: var(--ink); }
+.cards-dup-warn { background: rgba(157, 59, 47, 0.06); border-left-color: var(--danger); }
+.cards-dup-warn-title { color: var(--danger); }
+.cards-dup-warn-back { color: var(--ink); }
+.cards-field-textarea--error { border-color: var(--danger) !important; background: rgba(157, 59, 47, 0.05) !important; }
+.cards-note-add { border: 1px dashed var(--gold-dim); color: var(--text-dim); }
+.cards-note-add:hover { border-color: var(--wine); color: var(--wine); }
+.cards-note-collapse { color: var(--text-dim); }
+.cards-note-collapse:hover { color: var(--wine); }
+
+/* ── Tarjetas: study view ───────────────────────────────── */
+.cards-progress { color: var(--text-dim); }
+.cards-study-hint { color: var(--text-dim); }
+.study-card-face {
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(110, 36, 19, 0.05), rgba(110, 36, 19, 0) 60%),
+    linear-gradient(180deg, #ffffff 0%, var(--paper) 100%);
+  box-shadow: 0 18px 40px -20px rgba(42, 14, 8, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.study-card-face::before,
+.study-card-face::after { border-color: rgba(110, 36, 19, 0.4); }
+.study-card-front { color: var(--ink); text-shadow: none; }
+.study-card-back {
+  color: var(--wine);
+  background:
+    radial-gradient(120% 90% at 50% 110%, rgba(110, 36, 19, 0.06), rgba(110, 36, 19, 0) 60%),
+    linear-gradient(180deg, var(--cream) 0%, #efe7df 100%);
+  text-shadow: none;
+}
+.study-card-note { color: var(--text-dim); }
+.study-card-note::before { background: var(--gold-dim); }
+.study-grade-tag--knew { color: #3f7a42; }
+.study-grade-tag--forgot { color: #a33f2e; }
+.cards-grade-btn--forgot { color: #a33f2e; background: rgba(163, 63, 46, 0.08); border-color: rgba(163, 63, 46, 0.4); }
+.cards-grade-btn--forgot:hover { background: rgba(163, 63, 46, 0.14); border-color: rgba(163, 63, 46, 0.6); }
+.cards-grade-btn--knew { color: #3f7a42; background: rgba(63, 122, 66, 0.08); border-color: rgba(63, 122, 66, 0.4); }
+.cards-grade-btn--knew:hover { background: rgba(63, 122, 66, 0.14); border-color: rgba(63, 122, 66, 0.6); }
+
+/* ── Reglas: note grid ──────────────────────────────────── */
+.rule-note { border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); border-radius: 6px; }
+.rule-note:hover { border-color: var(--gold-dim); background: #ffffff; }
+.rule-note--active { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.rule-note-title { color: var(--wine); }
+.rule-note-body { color: var(--ink-soft); }
+.rule-note-del { color: var(--text-dim); }
+.rule-note-del:hover { color: var(--danger); background: rgba(157, 59, 47, 0.1); }
+.rule-note--add { border: 1px dashed var(--gold-dim); color: var(--wine); background: transparent; }
+.rule-note--add:hover { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); border-style: dashed; }
