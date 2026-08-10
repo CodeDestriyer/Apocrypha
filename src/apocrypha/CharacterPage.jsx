@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
-import { WeightSpark, latestEntry } from './weightChart.jsx';
+import { WeightSpark, WeightGraph, latestEntry } from './weightChart.jsx';
 
 const NAV = [
   { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
@@ -281,7 +281,7 @@ function HeroCubes({ t, onNavigate, log }) {
         </div>
         <div className="weight-card-plot">
           {latest ? (
-            <WeightSpark log={log} className="weight-card-spark" />
+            <WeightGraph log={log} interactive={false} compact />
           ) : (
             <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />

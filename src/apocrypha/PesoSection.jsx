@@ -20,6 +20,8 @@ const parseWeight = (raw) => {
   return Math.round(n * 10) / 10;
 };
 
+const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
+
 // "Peso" — the weight tracker (Salud › Peso). Log a weight each morning
 // (multiple entries per day allowed); see the trend as a line chart. Data
 // lives on profile.weight_log (newest first) + profile.weight_goal.
@@ -45,14 +47,14 @@ export default function PesoSection({ rootOnBack }) {
   const [histOpen, setHistOpen] = useState(false);        // history is collapsed by default
   const [goalEditing, setGoalEditing] = useState(false);
   const [goalDraft, setGoalDraft] = useState('');
-  const [metaArmed, setMetaArmed] = useState(false);      // Meta needs a 2nd tap to edit
-  const armTimer = useRef(null);
-  useEffect(() => () => clearTimeout(armTimer.current), []);
-
-  const onMetaClick = () => {
-    if (metaArmed) { clearTimeout(armTimer.current); setMetaArmed(false); openGoal(); }
-    else { setMetaArmed(true); clearTimeout(armTimer.current); armTimer.current = setTimeout(() => setMetaArmed(false), 2600); }
-  };
+  const [menuOpen, setMenuOpen] = useState(false);        // weight settings gear (header)
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
 
   const setLog = (updater) =>
     update((curr) => ({ weight_log: updater(Array.isArray(curr.weight_log) ? curr.weight_log : []) }));
@@ -72,11 +74,33 @@ export default function PesoSection({ rootOnBack }) {
   const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setGoalEditing(false); };
   const clearGoal = () => { update({ weight_goal: null }); setGoalEditing(false); };
 
-  const remaining = goal != null && latest ? Math.round((latest.weight - goal) * 10) / 10 : null;
   const unit = t('body.unit');
 
+  const headerRight = (
+    <div className="cards-gear" ref={menuRef}>
+      <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('body.goal')}>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d={GEAR_PATH}/>
+        </svg>
+      </button>
+      {menuOpen && (
+        <div className="cards-gear-menu cards-gear-menu--right">
+          <button className="cards-gear-item" onClick={() => { setMenuOpen(false); openGoal(); }}>
+            {goal != null ? t('body.goal') : t('body.addGoal')}
+          </button>
+          {goal != null && (
+            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); clearGoal(); }}>
+              {t('body.delete')}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <SubPage title={t('weight.title')} onBack={rootOnBack}>
+    <SubPage title={t('weight.title')} onBack={rootOnBack} headerRight={headerRight}>
       <div className="peso">
         <div className="peso-current">
           {latest ? (
@@ -90,7 +114,7 @@ export default function PesoSection({ rootOnBack }) {
           )}
         </div>
 
-        {goalEditing ? (
+        {goalEditing && (
           <div className="peso-goal-edit">
             <span className="cards-field-label">{t('body.goal')}</span>
             <input
@@ -102,24 +126,8 @@ export default function PesoSection({ rootOnBack }) {
               onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setGoalEditing(false); }}
             />
             <button className="cards-primary-btn peso-goal-save" onClick={saveGoal}>✓</button>
-            {goal != null && (
-              <button className="cards-secondary-btn peso-goal-clear" onClick={clearGoal}>{t('body.delete')}</button>
-            )}
+            <button className="cards-secondary-btn peso-goal-clear" onClick={() => setGoalEditing(false)}>{t('cards.cancel')}</button>
           </div>
-        ) : goal != null ? (
-          <button className={`peso-goal-row ${metaArmed ? 'armed' : ''}`} onClick={onMetaClick}>
-            <span className="peso-goal-label">{t('body.goal')}</span>
-            <span className="peso-goal-value">{goal} {unit}</span>
-            {metaArmed ? (
-              <span className="peso-goal-hint">{t('weight.tapEdit')}</span>
-            ) : remaining != null && (
-              <span className="peso-goal-remaining">
-                {remaining === 0 ? t('body.reached') : t('body.toGo', { n: Math.abs(remaining) })}
-              </span>
-            )}
-          </button>
-        ) : (
-          <button className="peso-goal-add" onClick={openGoal}>+ {t('body.addGoal')}</button>
         )}
 
         {log.length ? (

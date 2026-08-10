@@ -65,14 +65,18 @@ export function WeightSpark({ log, className = '' }) {
   );
 }
 
-// Full weight chart — clean line with kg / date axes, goal line and a
-// "today" endpoint dot. Interactive: wheel / pinch to zoom the time axis,
-// drag to pan, double-click (or the ⟲ button) to reset. Y auto-scales to
-// the visible window. Measures its own width so labels + dot stay crisp.
+// Full weight chart — clean line with kg / date axes and a "today" dot.
+// Interactive (default): wheel / pinch zoom the time axis, drag to pan,
+// double-click / ⟲ to reset. Data is anchored to the LEFT wall with empty
+// "future" space only on the right. The goal shows as a green line; by
+// default the Y axis is tight on the weight data (goal off-screen), and as
+// you zoom OUT the axis stretches down until the goal comes into view.
+// `compact` shrinks paddings/labels (Hero cube); `interactive={false}`
+// makes it a static read-only chart.
 const DAY = 864e5;
-export function WeightGraph({ log, goal }) {
+export function WeightGraph({ log, goal, interactive = true, compact = false }) {
   const ref = useRef(null);
-  const [w, setW] = useState(0);
+  const [size, setSize] = useState({ w: 0, h: 0 });
   const [domain, setDomain] = useState(null); // [t0,t1] visible window, null = full
   const pointers = useRef(new Map());
   const gesture = useRef(null);
@@ -81,7 +85,7 @@ export function WeightGraph({ log, goal }) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const update = () => setW(el.clientWidth);
+    const update = () => setSize({ w: el.clientWidth, h: el.clientHeight });
     update();
     let ro;
     if (typeof ResizeObserver !== 'undefined') { ro = new ResizeObserver(update); ro.observe(el); }
@@ -89,7 +93,11 @@ export function WeightGraph({ log, goal }) {
     return () => { if (ro) ro.disconnect(); else if (typeof window !== 'undefined') window.removeEventListener('resize', update); };
   }, []);
 
-  const H = 212, padL = 38, padR = 12, padT = 14, padB = 26;
+  const w = size.w, H = size.h;
+  const padL = compact ? 24 : 38;
+  const padR = compact ? 6 : 12;
+  const padT = compact ? 8 : 14;
+  const padB = compact ? 15 : 26;
   const pts = (Array.isArray(log) ? log : [])
     .map((e) => ({ w: Number(e.weight), t: Date.parse(e.date || e.created_at || '') }))
     .filter((p) => Number.isFinite(p.w) && Number.isFinite(p.t))
@@ -98,11 +106,9 @@ export function WeightGraph({ log, goal }) {
   const fullT0 = pts.length ? pts[0].t : 0;
   const fullT1 = pts.length ? pts[pts.length - 1].t : 1;
   const fullSpan = Math.max(DAY, fullT1 - fullT0);
-  // Extended scroll space (TradingView-style): margins on both sides so you
-  // can pan into empty space and zoom OUT past the default full view. Zoom IN
-  // is capped at a few days.
-  const margin = fullSpan * 0.5;
-  const extMin = fullT0 - margin;
+  // Left wall = first data point; empty "future" space extends to the right.
+  const margin = fullSpan * 0.7;
+  const extMin = fullT0;
   const extMax = fullT1 + margin;
   const extSpan = extMax - extMin;
   const minWin = Math.min(extSpan, 4 * DAY);
@@ -127,6 +133,7 @@ export function WeightGraph({ log, goal }) {
 
   // Wheel zoom (native, non-passive so we can preventDefault).
   useEffect(() => {
+    if (!interactive) return;
     const el = ref.current;
     if (!el || !pts.length) return;
     const onWheel = (e) => {
@@ -138,7 +145,7 @@ export function WeightGraph({ log, goal }) {
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [w, t0, t1, pts.length]);
+  }, [interactive, w, t0, t1, pts.length]);
 
   const onPointerDown = (e) => {
     if (!pts.length) return;
@@ -179,14 +186,23 @@ export function WeightGraph({ log, goal }) {
   };
 
   let svg = null;
-  if (w > 0 && pts.length) {
+  if (w > 0 && H > 0 && pts.length) {
     const vis = pts.filter((p) => p.t >= t0 && p.t <= t1);
     const src = vis.length ? vis : pts;
     const ws = src.map((p) => p.w);
-    let minW = Math.min(...ws), maxW = Math.max(...ws);
-    if (maxW - minW < 2) { const m = (minW + maxW) / 2; minW = m - 1; maxW = m + 1; }
-    const yPad = (maxW - minW) * 0.12;
-    const yLo = minW - yPad, yHi = maxW + yPad;
+    let dMin = Math.min(...ws), dMax = Math.max(...ws);
+    if (dMax - dMin < 2) { const m = (dMin + dMax) / 2; dMin = m - 1; dMax = m + 1; }
+    const basePad = (dMax - dMin) * 0.12 || 0.5;
+    let yLo = dMin - basePad, yHi = dMax + basePad;
+    // As you zoom OUT, stretch the Y axis toward the goal so the green goal
+    // line comes into view; at default zoom the axis stays tight on the data.
+    if (goal != null && Number.isFinite(goal)) {
+      const zoomOut = Math.max(0, Math.min(1, (t1 - t0 - fullSpan) / (extSpan - fullSpan || 1)));
+      const gLo = Math.min(dMin, goal), gHi = Math.max(dMax, goal);
+      const gPad = (gHi - gLo) * 0.08 || 0.5;
+      yLo = yLo + (gLo - gPad - yLo) * zoomOut;
+      yHi = yHi + (gHi + gPad - yHi) * zoomOut;
+    }
     const X = (t) => (pts.length === 1 ? padL + plotW / 2 : padL + ((t - t0) / (t1 - t0 || 1)) * plotW);
     const Y = (v) => padT + (1 - (v - yLo) / (yHi - yLo)) * (H - padT - padB);
     const coords = pts.map((p) => ({ x: X(p.t), y: Y(p.w), t: p.t }));
@@ -195,12 +211,13 @@ export function WeightGraph({ log, goal }) {
     const lastVisible = last.t >= t0 && last.t <= t1;
 
     const span = yHi - yLo;
-    const step = span > 12 ? 4 : span > 6 ? 2 : 1;
+    const step = span > 24 ? 8 : span > 12 ? 4 : span > 6 ? 2 : 1;
     const yTicks = [];
     for (let v = Math.ceil(yLo / step) * step; v <= yHi; v += step) yTicks.push(v);
 
     // Adaptive X ticks: months for wide ranges, dated ticks when zoomed in.
     const winDays = (t1 - t0) / DAY;
+    const nx = compact ? 3 : 4;
     const xTicks = [];
     if (winDays > 70) {
       const first = new Date(t0); first.setUTCDate(1);
@@ -209,45 +226,43 @@ export function WeightGraph({ log, goal }) {
         if (tt >= t0 - 5 * DAY) xTicks.push({ x: X(Math.max(tt, t0)), label: m.toLocaleDateString(undefined, { month: 'short' }) });
       }
     } else {
-      const n = 4;
-      for (let i = 0; i <= n; i++) {
-        const tt = t0 + ((t1 - t0) * i) / n;
+      for (let i = 0; i <= nx; i++) {
+        const tt = t0 + ((t1 - t0) * i) / nx;
         xTicks.push({ x: X(tt), label: new Date(tt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) });
       }
     }
 
     const gy = (goal != null && Number.isFinite(goal) && goal >= yLo && goal <= yHi) ? Y(goal) : null;
+    const handlers = interactive ? {
+      onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp,
+      onDoubleClick: () => setDomain(null),
+    } : {};
 
     svg = (
-      <svg
-        width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="pchart-svg" role="img"
-        onPointerDown={onPointerDown} onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
-        onDoubleClick={() => setDomain(null)}
-      >
+      <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="pchart-svg" role="img" {...handlers}>
         <defs><clipPath id={clipId}><rect x={padL} y={0} width={plotW} height={H} /></clipPath></defs>
         {yTicks.map((v) => (
           <g key={`y${v}`}>
             <line className="pchart-grid" x1={padL} y1={Y(v)} x2={w - padR} y2={Y(v)} />
-            <text className="pchart-ylabel" x={padL - 6} y={Y(v) + 3} textAnchor="end">{v}</text>
+            <text className="pchart-ylabel" x={padL - 5} y={Y(v) + 3} textAnchor="end">{v}</text>
           </g>
         ))}
         {xTicks.map((tk, i) => (
-          <text key={`x${i}`} className="pchart-xlabel" x={Math.min(w - padR, Math.max(padL, tk.x))} y={H - 8} textAnchor="middle">{tk.label}</text>
+          <text key={`x${i}`} className="pchart-xlabel" x={Math.min(w - padR, Math.max(padL, tk.x))} y={H - (compact ? 4 : 8)} textAnchor="middle">{tk.label}</text>
         ))}
         {gy != null && <line className="pchart-goal" x1={padL} y1={gy} x2={w - padR} y2={gy} />}
         <g clipPath={`url(#${clipId})`}>
           <path className="pchart-line" d={line} />
-          {lastVisible && <circle className="pchart-dot" cx={last.x} cy={last.y} r="3.5" />}
+          {lastVisible && <circle className="pchart-dot" cx={last.x} cy={last.y} r={compact ? 2.6 : 3.5} />}
         </g>
       </svg>
     );
   }
 
   return (
-    <div className="pchart" ref={ref}>
+    <div className={`pchart ${compact ? 'pchart--compact' : ''} ${interactive ? '' : 'pchart--static'}`} ref={ref}>
       {svg}
-      {domain && (
+      {interactive && domain && (
         <button className="pchart-reset" onClick={() => setDomain(null)} aria-label="reset">⟲</button>
       )}
     </div>
