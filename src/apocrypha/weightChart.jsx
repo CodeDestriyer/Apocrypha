@@ -98,14 +98,24 @@ export function WeightGraph({ log, goal }) {
   const fullT0 = pts.length ? pts[0].t : 0;
   const fullT1 = pts.length ? pts[pts.length - 1].t : 1;
   const fullSpan = Math.max(DAY, fullT1 - fullT0);
-  const minWin = Math.min(fullSpan, 3 * DAY);
+  // Extended scroll space (TradingView-style): margins on both sides so you
+  // can pan into empty space and zoom OUT past the default full view. Zoom IN
+  // is capped at a few days.
+  const margin = fullSpan * 0.5;
+  const extMin = fullT0 - margin;
+  const extMax = fullT1 + margin;
+  const extSpan = extMax - extMin;
+  const minWin = Math.min(extSpan, 4 * DAY);
+  const maxWin = extSpan;
   const plotW = Math.max(1, w - padL - padR);
 
   const clampDomain = ([a, b]) => {
-    let span = Math.max(minWin, Math.min(fullSpan, b - a));
-    if (a < fullT0) { a = fullT0; b = a + span; }
-    if (b > fullT1) { b = fullT1; a = b - span; }
-    if (a < fullT0) a = fullT0;
+    let span = b - a;
+    if (span < minWin) { const c = (a + b) / 2; a = c - minWin / 2; b = c + minWin / 2; span = minWin; }
+    if (span > maxWin) { const c = (a + b) / 2; a = c - maxWin / 2; b = c + maxWin / 2; span = maxWin; }
+    if (a < extMin) { a = extMin; b = a + span; }
+    if (b > extMax) { b = extMax; a = b - span; }
+    if (a < extMin) a = extMin;
     return [a, b];
   };
   const [t0, t1] = domain ? clampDomain(domain) : [fullT0, fullT1];
@@ -122,7 +132,8 @@ export function WeightGraph({ log, goal }) {
     const onWheel = (e) => {
       e.preventDefault();
       const tc = xToTime(e.clientX);
-      const factor = Math.exp(e.deltaY * 0.0015);
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1; // lines/pages → px
+      const factor = Math.exp(e.deltaY * unit * 0.0025);
       setDomain(clampDomain([tc - (tc - t0) * factor, tc + (t1 - tc) * factor]));
     };
     el.addEventListener('wheel', onWheel, { passive: false });
@@ -131,7 +142,7 @@ export function WeightGraph({ log, goal }) {
 
   const onPointerDown = (e) => {
     if (!pts.length) return;
-    ref.current?.setPointerCapture?.(e.pointerId);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     pointers.current.set(e.pointerId, e.clientX);
     if (pointers.current.size === 2) {
       const xs = [...pointers.current.values()];

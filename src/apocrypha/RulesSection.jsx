@@ -176,16 +176,16 @@ export default function RulesSection({ rootOnBack }) {
           <div className="empty-hint">{t('reglas.empty')}</div>
         )}
 
+        {!query && (
+          <div className="rules-add-row">
+            <button className="rules-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
+          </div>
+        )}
+
         {visible.length === 0 && query ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
         ) : (
           <div className="rules-grid">
-            {!query && (
-              <button className="rule-note rule-note--add" onClick={openNew}>
-                <span className="rule-note-add-plus">+</span>
-                <span className="rule-note-add-label">{t('reglas.new')}</span>
-              </button>
-            )}
             {visible.map((r) => (
               <button key={r.id} className="rule-note" onClick={() => openRule(r)}>
                 {r.title && <div className="rule-note-title">{r.title}</div>}

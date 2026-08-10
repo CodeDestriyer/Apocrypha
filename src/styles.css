@@ -5188,6 +5188,18 @@ body {
 /* Idiomas landing menu (Tarjetas / Reglas entries) reuses .nav-card. */
 .idiomas-menu { margin-top: 4px; }
 
+/* Reglas — small square "+" add button (replaces the big add tile) */
+.rules-add-row { display: flex; margin-top: 16px; }
+.rules-add-btn {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border: 1.5px dashed var(--gold-dim); border-radius: 8px;
+  background: transparent; color: var(--wine);
+  font-size: 26px; line-height: 1; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.rules-add-btn:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.06); }
+
 /* Reglas — Notion/Keep-style note grid, max 3 tiles per row */
 .rules-grid {
   display: grid;
