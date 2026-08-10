@@ -107,7 +107,7 @@ function Shell() {
     if (isDesktop) {
       return (
         <div className="desktop-shell">
-          <DesktopSidebar view={view} setView={setView} onExit={() => setShowApp(false)} />
+          <DesktopSidebar view={view} setView={setView} />
           <main className="desktop-content">
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
             {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
@@ -133,7 +133,7 @@ function Shell() {
   return <Landing onEnterApp={status === 'ready' ? () => setShowApp(true) : null} />;
 }
 
-function DesktopSidebar({ view, setView, onExit }) {
+function DesktopSidebar({ view, setView }) {
   const { t, lang, setLang } = useLang();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
@@ -149,8 +149,8 @@ function DesktopSidebar({ view, setView, onExit }) {
 
   return (
     <aside className="desktop-sidebar">
-      <button className="desktop-brand" onClick={onExit}>
-        <span className="desktop-brand-text">varkanis</span>
+      <button className="desktop-brand" onClick={() => setView('home')}>
+        <span className="desktop-brand-text">Apocrypha</span>
       </button>
 
       <nav className="desktop-nav">

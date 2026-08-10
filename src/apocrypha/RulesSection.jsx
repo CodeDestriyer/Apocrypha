@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -8,11 +8,11 @@ const newId = () =>
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
-const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
-
-// Rules ("Reglas") — a minimal store of Spanish grammar rules. Each rule is
+// Rules ("Reglas") — a minimal store of Spanish grammar rules, shown as a
+// Notion/Keep-style grid of square note tiles (max 3 per row). Each rule is
 // { id, title, body, created_at } and lives on profile.rules (Supabase-backed,
-// same as decks). The whole surface reuses the cards-* styles for consistency.
+// same as decks). Tapping a note opens the editor; the add tile opens a blank
+// one. `editing` is null (closed), 'new', or a rule id.
 export default function RulesSection({ rootOnBack, langTab }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -21,29 +21,31 @@ export default function RulesSection({ rootOnBack, langTab }) {
   const setRules = (updater) =>
     update((curr) => ({ rules: updater(curr.rules ?? []) }));
 
-  const addRule = (title, body) => {
-    const ti = title.trim();
-    const bo = body.trim();
-    if (!ti && !bo) return;
+  const addRule = (title, body) =>
     setRules((r) => [
-      { id: newId(), title: ti, body: bo, created_at: new Date().toISOString() },
+      { id: newId(), title, body, created_at: new Date().toISOString() },
       ...r,
     ]);
-  };
   const removeRule = (id) => setRules((r) => r.filter((x) => x.id !== id));
   const updateRule = (id, patch) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
-  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [query, setQuery] = useState('');
 
-  const closeAdd = () => { setAdding(false); setTitle(''); setBody(''); };
-  const submit = () => {
-    if (!title.trim() && !body.trim()) return;
-    addRule(title, body);
-    closeAdd();
+  const openNew = () => { setTitle(''); setBody(''); setEditing('new'); };
+  const openEdit = (rule) => {
+    setTitle(rule.title ?? ''); setBody(rule.body ?? ''); setEditing(rule.id);
+  };
+  const close = () => { setEditing(null); setTitle(''); setBody(''); };
+  const save = () => {
+    const ti = title.trim(); const bo = body.trim();
+    if (!ti && !bo) { close(); return; }
+    if (editing === 'new') addRule(ti, bo);
+    else updateRule(editing, { title: ti, body: bo });
+    close();
   };
 
   const visible = useMemo(() => {
@@ -78,7 +80,7 @@ export default function RulesSection({ rootOnBack, langTab }) {
         </div>
       )}
 
-      {adding ? (
+      {editing !== null && (
         <div className="cards-panel">
           <label className="cards-field-label">{t('reglas.titleLabel')}</label>
           <input
@@ -95,121 +97,52 @@ export default function RulesSection({ rootOnBack, langTab }) {
             value={body}
             placeholder={t('reglas.bodyPlaceholder')}
             onChange={(e) => setBody(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(); }}
-            rows={4}
+            onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save(); }}
+            rows={5}
           />
           <div className="cards-panel-actions">
-            <button className="cards-secondary-btn" onClick={closeAdd}>{t('cards.cancel')}</button>
-            <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>
+            <button className="cards-secondary-btn" onClick={close}>{t('cards.cancel')}</button>
+            <button className="cards-primary-btn" onClick={save} disabled={!title.trim() && !body.trim()}>
               {t('cards.save')}
             </button>
           </div>
         </div>
-      ) : (
-        <button className="cards-big-add cards-big-add--card" onClick={() => setAdding(true)}>
-          <span className="cards-big-add-plus">+</span>
-          <span>{t('reglas.new')}</span>
-        </button>
       )}
 
-      {rules.length === 0 && !adding && (
+      {rules.length === 0 && editing === null && (
         <div className="empty-hint">{t('reglas.empty')}</div>
       )}
 
-      <ul className="cards-list">
-        {visible.length === 0 && query && (
-          <li className="cards-search-empty">{t('cards.searchEmpty')}</li>
-        )}
-        {visible.map((r) => (
-          <RuleRow
-            key={r.id}
-            rule={r}
-            onRemove={() => removeRule(r.id)}
-            onUpdate={(patch) => updateRule(r.id, patch)}
-            t={t}
-          />
-        ))}
-      </ul>
-    </SubPage>
-  );
-}
-
-function RuleRow({ rule, onRemove, onUpdate, t }) {
-  const [editing, setEditing] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [title, setTitle] = useState(rule.title ?? '');
-  const [body, setBody] = useState(rule.body ?? '');
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [menuOpen]);
-
-  const startEdit = () => {
-    setTitle(rule.title ?? ''); setBody(rule.body ?? '');
-    setEditing(true);
-  };
-  const save = () => {
-    if (!title.trim() && !body.trim()) return;
-    onUpdate({ title: title.trim(), body: body.trim() });
-    setEditing(false);
-  };
-
-  if (editing) {
-    return (
-      <li className="card-row card-row-editing">
-        <input
-          className="cards-field-input"
-          value={title}
-          autoFocus
-          placeholder={t('reglas.titlePlaceholder')}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={80}
-        />
-        <textarea
-          className="cards-field-textarea"
-          value={body}
-          placeholder={t('reglas.bodyPlaceholder')}
-          onChange={(e) => setBody(e.target.value)}
-          rows={4}
-        />
-        <div className="cards-panel-actions">
-          <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
-          <button className="cards-primary-btn" onClick={save} disabled={!title.trim() && !body.trim()}>{t('cards.save')}</button>
+      {visible.length === 0 && query ? (
+        <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
+      ) : (
+        <div className="rules-grid">
+          {!query && (
+            <button className="rule-note rule-note--add" onClick={openNew}>
+              <span className="rule-note-add-plus">+</span>
+              <span className="rule-note-add-label">{t('reglas.new')}</span>
+            </button>
+          )}
+          {visible.map((r) => (
+            <div
+              key={r.id}
+              className={`rule-note ${editing === r.id ? 'rule-note--active' : ''}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => openEdit(r)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEdit(r); } }}
+            >
+              <button
+                className="rule-note-del"
+                onClick={(e) => { e.stopPropagation(); removeRule(r.id); if (editing === r.id) close(); }}
+                aria-label={t('cards.deleteCard')}
+              >×</button>
+              {r.title && <div className="rule-note-title">{r.title}</div>}
+              {r.body && <div className="rule-note-body">{r.body}</div>}
+            </div>
+          ))}
         </div>
-      </li>
-    );
-  }
-
-  return (
-    <li className="card-row rule-row">
-      {rule.title && <div className="card-row-front">{rule.title}</div>}
-      {rule.body && <div className="card-row-back rule-row-body">{rule.body}</div>}
-      <div className="cards-gear card-row-gear" ref={menuRef}>
-        <button
-          className="cards-gear-btn cards-gear-btn--sm"
-          onClick={() => setMenuOpen((o) => !o)}
-          aria-label={t('cards.cardSettings')}
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"/>
-            <path d={GEAR_PATH}/>
-          </svg>
-        </button>
-        {menuOpen && (
-          <div className="cards-gear-menu cards-gear-menu--right">
-            <button className="cards-gear-item" onClick={() => { setMenuOpen(false); startEdit(); }}>
-              {t('cards.editCard')}
-            </button>
-            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); onRemove(); }}>
-              {t('cards.deleteCard')}
-            </button>
-          </div>
-        )}
-      </div>
-    </li>
+      )}
+    </SubPage>
   );
 }
