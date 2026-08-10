@@ -6132,8 +6132,17 @@ body {
 .peso-graph-min { bottom: 10px; }
 .peso-graph-empty { height: 100%; display: flex; align-items: center; justify-content: center; padding: 0; }
 
-.peso-input-row { display: flex; align-items: center; gap: 10px; }
-.peso-input { flex: 1; min-width: 0; }
+.peso-input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.peso-date {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: #ffffff; color: var(--ink); font: inherit; font-size: 15px;
+  color-scheme: light;
+  cursor: pointer;
+}
+.peso-date:focus { outline: none; border-color: var(--wine); }
+.peso-input { flex: 1 1 120px; min-width: 0; }
 .peso-input-unit { font-family: 'Cinzel', serif; color: var(--text-dim); }
 .peso-save { flex: 0 0 auto; max-width: none; }
 

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
-import { chartGeom } from './weightChart.jsx';
+import { chartGeom, latestEntry } from './weightChart.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -28,9 +28,19 @@ export default function PesoSection({ rootOnBack }) {
   const { t } = useLang();
   const log = Array.isArray(profile.weight_log) ? profile.weight_log : [];
   const goal = typeof profile.weight_goal === 'number' ? profile.weight_goal : null;
-  const latest = log[0] ?? null;
+  const latest = latestEntry(log);
+
+  // History, newest measurement first (by date, then entry time).
+  const history = useMemo(
+    () => [...log].sort((a, b) =>
+      (b.date || '').localeCompare(a.date || '') ||
+      (b.created_at || '').localeCompare(a.created_at || '')
+    ),
+    [log]
+  );
 
   const [draft, setDraft] = useState('');
+  const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
   const [goalEditing, setGoalEditing] = useState(false);
   const [goalDraft, setGoalDraft] = useState('');
 
@@ -40,9 +50,11 @@ export default function PesoSection({ rootOnBack }) {
   const submit = () => {
     const weight = parseWeight(draft);
     if (weight == null) return;
-    const entry = { id: newId(), weight, date: todayISO(), created_at: new Date().toISOString() };
+    const date = entryDate || todayISO();
+    const entry = { id: newId(), weight, date, created_at: new Date().toISOString() };
     setLog((l) => [entry, ...l]);
     setDraft('');
+    // Keep the chosen date so backfilling a run of past days stays quick.
   };
   const remove = (id) => setLog((l) => l.filter((e) => e.id !== id));
 
@@ -124,6 +136,14 @@ export default function PesoSection({ rootOnBack }) {
 
         <div className="peso-input-row">
           <input
+            className="peso-date"
+            type="date"
+            value={entryDate}
+            max={todayISO()}
+            onChange={(e) => setEntryDate(e.target.value || todayISO())}
+            aria-label={t('body.goal')}
+          />
+          <input
             className="cards-field-input peso-input"
             type="number" inputMode="decimal" step="0.1" min="0"
             value={draft}
@@ -141,7 +161,7 @@ export default function PesoSection({ rootOnBack }) {
           <>
             <div className="peso-history-title">{t('body.history')}</div>
             <ul className="peso-history">
-              {log.map((e) => (
+              {history.map((e) => (
                 <li key={e.id} className="peso-entry">
                   <span className="peso-entry-w">{e.weight} {unit}</span>
                   <span className="peso-entry-date">{fmtDate(e.date)}</span>

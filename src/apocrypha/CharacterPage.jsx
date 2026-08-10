@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
-import { WeightSpark } from './weightChart.jsx';
+import { WeightSpark, latestEntry } from './weightChart.jsx';
 
 const NAV = [
   { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
@@ -263,7 +263,7 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 // yet. On desktop a second, empty cube sits beside it (2-up); on mobile
 // only Peso shows.
 function HeroCubes({ t, onNavigate, log }) {
-  const latest = Array.isArray(log) && log.length ? log[0] : null;
+  const latest = latestEntry(log);
   const unit = t('body.unit');
   return (
     <div className="hero-cubes">
@@ -309,7 +309,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
   const setName = (name) => update({ name });
 
   const weightLog = Array.isArray(profile.weight_log) ? profile.weight_log : [];
-  const weightLatest = weightLog[0] ?? null;
+  const weightLatest = latestEntry(weightLog);
 
   return (
     <div className="card character-card">
