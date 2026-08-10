@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang, LANGS } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
+import { WeightSpark } from './weightChart.jsx';
 
 const NAV = [
   { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
@@ -261,26 +262,34 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 // weight chart (a "Libre"-style tracker) — a framed chart mock, no data
 // yet. On desktop a second, empty cube sits beside it (2-up); on mobile
 // only Peso shows.
-function HeroCubes({ t, onNavigate }) {
+function HeroCubes({ t, onNavigate, log }) {
+  const latest = Array.isArray(log) && log.length ? log[0] : null;
+  const unit = t('body.unit');
   return (
     <div className="hero-cubes">
       <button
         type="button"
         className="hero-cube weight-card weight-card--link"
-        aria-label={t('weight.hint')}
+        aria-label={t('weight.title')}
         onClick={() => onNavigate && onNavigate('peso')}
       >
         <div className="weight-card-head">
           <span className="weight-card-title">{t('weight.title')}</span>
-          <span className="weight-card-tag">{t('weight.soon')}</span>
+          {latest
+            ? <span className="weight-card-current">{latest.weight} {unit}</span>
+            : <span className="weight-card-tag">{t('weight.soon')}</span>}
         </div>
         <div className="weight-card-plot">
-          <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />
-            <line className="weight-card-grid" x1="0" y1="50" x2="100" y2="50" />
-            <line className="weight-card-grid" x1="0" y1="75" x2="100" y2="75" />
-            <polyline className="weight-card-line" points="3,70 21,58 39,63 57,42 75,49 97,28" />
-          </svg>
+          {latest ? (
+            <WeightSpark log={log} className="weight-card-spark" />
+          ) : (
+            <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />
+              <line className="weight-card-grid" x1="0" y1="50" x2="100" y2="50" />
+              <line className="weight-card-grid" x1="0" y1="75" x2="100" y2="75" />
+              <polyline className="weight-card-line" points="3,70 21,58 39,63 57,42 75,49 97,28" />
+            </svg>
+          )}
         </div>
       </button>
       <div className="hero-cube hero-cube--empty" aria-hidden="true">
@@ -299,9 +308,22 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
 
   const setName = (name) => update({ name });
 
+  const weightLog = Array.isArray(profile.weight_log) ? profile.weight_log : [];
+  const weightLatest = weightLog[0] ?? null;
+
   return (
     <div className="card character-card">
       <SettingsMenu setEditing={setEditing} setEditingInfo={setEditingInfo} />
+      {weightLatest && (
+        <button
+          className="hero-weight-badge"
+          onClick={() => onNavigate && onNavigate('peso')}
+          aria-label={t('weight.title')}
+        >
+          <WeightSpark log={weightLog} className="hero-weight-badge-spark" />
+          <span className="hero-weight-badge-val">{weightLatest.weight} {t('body.unit')}</span>
+        </button>
+      )}
       <div className="char-layout">
         <div className="avatar avatar-big">
           {googleAvatar ? (
@@ -333,7 +355,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         </button>
       )}
 
-      <HeroCubes t={t} onNavigate={onNavigate} />
+      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 

@@ -6056,3 +6056,91 @@ body {
 }
 .desktop-subnav-item { font-size: 14px; padding: 9px 12px; }
 .desktop-subnav-item .desktop-nav-icon { font-size: 15px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   WEIGHT TRACKER (Salud › Peso) + Hero widgets
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Sparkline (Hero cube + header badge) */
+.wspark { width: 100%; height: 100%; display: block; }
+.wspark * { vector-effect: non-scaling-stroke; }
+.wspark-line { fill: none; stroke: var(--wine); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.wspark-area { fill: rgba(110, 36, 19, 0.09); stroke: none; }
+
+/* Hero Peso cube: current weight top-right + live spark */
+.weight-card-current {
+  font-family: 'Cinzel', serif;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.02em;
+  color: var(--wine); white-space: nowrap;
+}
+.weight-card-spark { position: absolute; inset: 0; }
+
+/* Hero header badge: last weight + tiny spark, top-right of the card */
+.hero-weight-badge {
+  position: absolute; top: 14px; right: 16px; z-index: 4;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--paper); cursor: pointer;
+  transition: border-color 0.15s;
+}
+.hero-weight-badge:hover { border-color: var(--gold-dim); }
+.hero-weight-badge-spark { width: 46px; height: 22px; }
+.hero-weight-badge-val {
+  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.02em; color: var(--wine); white-space: nowrap;
+}
+/* Keep clear of the mobile settings gear (top-right); gear is hidden on desktop. */
+.single-page .hero-weight-badge { top: 10px; right: 52px; }
+.desktop-content .hero-weight-badge { top: 18px; right: 20px; }
+
+/* Peso section */
+.peso { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.peso-current { display: flex; align-items: baseline; gap: 8px; }
+.peso-current-value { font-family: 'Cinzel', serif; font-size: 40px; font-weight: 700; color: var(--ink); line-height: 1; }
+.peso-current-unit { font-family: 'Cinzel', serif; font-size: 16px; color: var(--text-dim); }
+.peso-current-date { margin-left: auto; font-size: 13px; color: var(--text-dim); }
+.peso-current-empty { color: var(--text-dim); font-style: italic; }
+
+.peso-goal-row, .peso-goal-add {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px;
+  background: transparent; color: var(--ink-soft); font: inherit; text-align: left; cursor: pointer;
+}
+.peso-goal-add { justify-content: center; color: var(--wine); border-style: dashed; }
+.peso-goal-row:hover, .peso-goal-add:hover { border-color: var(--gold-dim); }
+.peso-goal-label { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+.peso-goal-value { font-weight: 600; color: var(--ink); }
+.peso-goal-remaining { margin-left: auto; font-size: 13px; color: var(--wine); }
+.peso-goal-edit { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.peso-goal-input { flex: 1; min-width: 110px; }
+.peso-goal-save, .peso-goal-clear { flex: 0 0 auto; max-width: none; padding: 11px 16px; }
+
+.peso-graph {
+  position: relative; height: 220px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--paper);
+  padding: 10px;
+}
+.peso-graph-svg { width: 100%; height: 100%; display: block; }
+.peso-graph-svg * { vector-effect: non-scaling-stroke; }
+.peso-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
+.peso-goal-line { stroke: var(--wine); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.55; }
+.peso-area { fill: rgba(110, 36, 19, 0.08); stroke: none; }
+.peso-line { fill: none; stroke: var(--wine); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.peso-graph-max, .peso-graph-min { position: absolute; left: 14px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.04em; color: var(--text-dim); }
+.peso-graph-max { top: 10px; }
+.peso-graph-min { bottom: 10px; }
+.peso-graph-empty { height: 100%; display: flex; align-items: center; justify-content: center; padding: 0; }
+
+.peso-input-row { display: flex; align-items: center; gap: 10px; }
+.peso-input { flex: 1; min-width: 0; }
+.peso-input-unit { font-family: 'Cinzel', serif; color: var(--text-dim); }
+.peso-save { flex: 0 0 auto; max-width: none; }
+
+.peso-history-title { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-top: 4px; }
+.peso-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.peso-entry { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; }
+.peso-entry-w { font-weight: 600; color: var(--ink); }
+.peso-entry-date { color: var(--text-dim); font-size: 13px; }
+.peso-entry-del { margin-left: auto; background: transparent; border: none; color: var(--text-dim); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.peso-entry-del:hover { color: var(--danger); }
