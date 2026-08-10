@@ -5940,15 +5940,15 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
-  width: min(340px, 100%);
-  margin: 22px auto 6px;
+  width: min(300px, 100%);
+  margin: 20px auto 10px;
 }
-/* On desktop: two cubes side by side, left-aligned, filling the card. */
+/* On desktop: two capped squares side by side, left-aligned. */
 .desktop-content .hero-cubes {
   width: 100%;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  justify-items: stretch;
-  margin-left: 0;
+  grid-template-columns: repeat(2, minmax(0, 280px));
+  justify-content: start;
+  margin: 20px 0 10px;
 }
 .hero-cube {
   aspect-ratio: 1 / 1;
@@ -5991,6 +5991,18 @@ body {
   padding: 3px 7px;
 }
 .weight-card-plot { position: relative; flex: 1; margin-top: 14px; min-height: 0; }
+
+/* Peso section (Salud › Peso) — full chart card placeholder */
+.peso-plot {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.peso-plot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.peso-plot .weight-card-plot { flex: none; height: 210px; }
 .weight-card-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .weight-card-svg * { vector-effect: non-scaling-stroke; }
 .weight-card-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
@@ -6004,7 +6016,10 @@ body {
   opacity: 0.9;
 }
 
-/* ── Desktop sidebar: Idiomas expander submenu ──────────────────── */
+/* ── Desktop sidebar: Idiomas / Salud expander submenus ─────────── */
+/* The group must be a flex column so its parent button stretches to full
+   width — a bare block would let the <button> shrink-to-fit (half width). */
+.desktop-nav-group { display: flex; flex-direction: column; }
 .desktop-nav-parent .desktop-nav-caret {
   margin-left: auto;
   font-size: 16px;

@@ -8,6 +8,7 @@ import IdiomasSection from './apocrypha/IdiomasSection.jsx';
 import CardsSection from './apocrypha/CardsSection.jsx';
 import RulesSection from './apocrypha/RulesSection.jsx';
 import SaludSection from './apocrypha/SaludSection.jsx';
+import PesoSection from './apocrypha/PesoSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
 
@@ -115,6 +116,7 @@ function Shell() {
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
             {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
+            {view === 'peso' && <PesoSection rootOnBack={() => setView('home')} />}
             {view === 'salud' && <SaludSection rootOnBack={() => setView('home')} />}
             {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
             {view === 'body' && <BodySection rootOnBack={() => setView('home')} />}
@@ -149,6 +151,7 @@ function DesktopSidebar({ view, setView }) {
   const { t, lang, setLang } = useLang();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [idiomasOpen, setIdiomasOpen] = useState(view === 'cards' || view === 'reglas');
+  const [saludOpen, setSaludOpen] = useState(view === 'peso');
   const settingsRef = useRef(null);
 
   useEffect(() => {
@@ -205,13 +208,29 @@ function DesktopSidebar({ view, setView }) {
             </div>
           )}
         </div>
-        <button
-          className={`desktop-nav-item ${view === 'salud' ? 'active' : ''}`}
-          onClick={() => setView('salud')}
-        >
-          <span className="desktop-nav-icon">✚</span>
-          <span>{t('nav.salud')}</span>
-        </button>
+        {/* Salud is an expander too, with Peso (weight) as its child. */}
+        <div className={`desktop-nav-group ${saludOpen ? 'open' : ''}`}>
+          <button
+            className={`desktop-nav-item desktop-nav-parent ${view === 'peso' ? 'active-parent' : ''}`}
+            onClick={() => setSaludOpen((o) => !o)}
+            aria-expanded={saludOpen}
+          >
+            <span className="desktop-nav-icon">✚</span>
+            <span>{t('nav.salud')}</span>
+            <span className={`desktop-nav-caret ${saludOpen ? 'open' : ''}`} aria-hidden="true">›</span>
+          </button>
+          {saludOpen && (
+            <div className="desktop-subnav">
+              <button
+                className={`desktop-nav-item desktop-subnav-item ${view === 'peso' ? 'active' : ''}`}
+                onClick={() => setView('peso')}
+              >
+                <span className="desktop-nav-icon">⚖</span>
+                <span>{t('weight.title')}</span>
+              </button>
+            </div>
+          )}
+        </div>
         {/* Cuerpo (Body) tab hidden for now — re-add this button to bring it back. */}
       </nav>
 
