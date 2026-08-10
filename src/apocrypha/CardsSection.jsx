@@ -302,9 +302,11 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   const [query, setQuery] = useState('');
 
   const visibleCards = useMemo(() => {
+    // Newest first: cards are appended on add, so show the list reversed.
+    const base = [...deck.cards].reverse();
     const q = query.trim().toLowerCase();
-    if (!q) return deck.cards;
-    return deck.cards.filter((c) =>
+    if (!q) return base;
+    return base.filter((c) =>
       (c.front ?? '').toLowerCase().includes(q) ||
       (c.back ?? '').toLowerCase().includes(q) ||
       (c.note ?? '').toLowerCase().includes(q)
