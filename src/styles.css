@@ -5170,6 +5170,42 @@ body {
 .cards-study-done { text-align: center; padding: 32px; font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold); }
 
 /* ─── Cards: add buttons + add-panel ─────────────── */
+/* Idiomas sub-tab switch (Tarjetas / Reglas) — sits under the SubPage header */
+.idiomas-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 2px 0 14px;
+  border: 1px solid rgba(190, 158, 92, 0.28);
+  border-radius: 10px;
+  background: rgba(245, 240, 225, 0.03);
+}
+.idiomas-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #cbbf9f;
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.idiomas-tab:hover { color: #f5f0e1; }
+.idiomas-tab.active {
+  background: rgba(190, 158, 92, 0.16);
+  color: var(--gold);
+}
+
+.rule-row {
+  position: relative;
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 4px; padding: 10px 40px 10px 12px;
+}
+.rule-row .card-row-gear { position: absolute; top: 6px; right: 6px; }
+.rule-row-body { white-space: pre-wrap; }
+
 .cards-big-add {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   margin: 14px auto 4px;

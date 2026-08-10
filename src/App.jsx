@@ -4,7 +4,7 @@ import Landing from './varkanis/Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
 import { LangProvider, useLang, LANGS } from './i18n.jsx';
 import { signOut } from './supabase.js';
-import CardsSection from './apocrypha/CardsSection.jsx';
+import IdiomasSection from './apocrypha/IdiomasSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
 
@@ -110,7 +110,7 @@ function Shell() {
           <DesktopSidebar view={view} setView={setView} onExit={() => setShowApp(false)} />
           <main className="desktop-content">
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
-            {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
+            {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
             {view === 'body' && <BodySection rootOnBack={() => setView('home')} />}
           </main>
         </div>
@@ -119,8 +119,8 @@ function Shell() {
     return (
       <div className="app">
         <div className="single-page">
-          {view === 'cards'
-            ? <CardsSection rootOnBack={() => setView('home')} />
+          {view === 'idiomas'
+            ? <IdiomasSection rootOnBack={() => setView('home')} />
             : view === 'body'
             ? <BodySection rootOnBack={() => setView('home')} />
             : <CharacterPage onNavigate={setView} showNav={true} onExit={() => setShowApp(false)} />
@@ -162,11 +162,11 @@ function DesktopSidebar({ view, setView, onExit }) {
           <span>{t('tab.character')}</span>
         </button>
         <button
-          className={`desktop-nav-item ${view === 'cards' ? 'active' : ''}`}
-          onClick={() => setView('cards')}
+          className={`desktop-nav-item ${view === 'idiomas' ? 'active' : ''}`}
+          onClick={() => setView('idiomas')}
         >
-          <span className="desktop-nav-icon">⌘</span>
-          <span>{t('nav.cards')}</span>
+          <span className="desktop-nav-icon">✦</span>
+          <span>{t('nav.idiomas')}</span>
         </button>
         {/* Cuerpo (Body) tab hidden for now — re-add this button to bring it back. */}
       </nav>

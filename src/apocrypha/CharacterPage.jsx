@@ -5,7 +5,7 @@ import { signOut } from '../supabase.js';
 import CharacterModel from './CharacterModel.jsx';
 
 const NAV = [
-  { id: 'cards', labelKey: 'nav.cards', icon: '⌘', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
+  { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
   // Cuerpo (Body) tab is built (see App.jsx / BodySection.jsx) but hidden for
   // now — no nav entry points to it. Re-add this to bring it back:
   // { id: 'body', labelKey: 'nav.body', icon: '⚖', summary: (p) => {

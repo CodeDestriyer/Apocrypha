@@ -44,7 +44,7 @@ const _saveSS = () => {
   } catch {}
 };
 
-export default function CardsSection({ rootOnBack }) {
+export default function CardsSection({ rootOnBack, langTab = null }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const decks = profile.decks ?? [];
@@ -151,7 +151,7 @@ export default function CardsSection({ rootOnBack }) {
       </div>
     );
   } else {
-    title = t('nav.cards');
+    title = t('nav.idiomas');
     onBack = rootOnBack;
   }
 
@@ -177,12 +177,15 @@ export default function CardsSection({ rootOnBack }) {
     );
   } else {
     body = (
-      <DeckList
-        decks={decks}
-        onOpen={(id) => setOpenDeckId(id)}
-        onAdd={addDeck}
-        t={t}
-      />
+      <>
+        {langTab}
+        <DeckList
+          decks={decks}
+          onOpen={(id) => setOpenDeckId(id)}
+          onAdd={addDeck}
+          t={t}
+        />
+      </>
     );
   }
 
