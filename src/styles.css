@@ -6140,9 +6140,24 @@ body {
 .peso-graph-min { bottom: 10px; }
 .peso-graph-empty { height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px 8px; }
 
-/* Weight chart — clean line + kg/month axes (option 3) */
-.pchart { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); overflow: hidden; }
+/* Weight chart — clean line + kg/date axes (option 3), zoom + pan */
+.pchart {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--paper);
+  overflow: hidden;
+  touch-action: none; user-select: none; cursor: grab;
+}
+.pchart:active { cursor: grabbing; }
 .pchart-svg { display: block; }
+.pchart-reset {
+  position: absolute; top: 6px; right: 6px;
+  width: 26px; height: 26px; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--cream); color: var(--wine);
+  font-size: 15px; line-height: 1; cursor: pointer;
+}
+.pchart-reset:hover { border-color: var(--gold-dim); background: #efe7df; }
 .pchart-grid { stroke: var(--line); stroke-width: 1; }
 .pchart-ylabel, .pchart-xlabel { font-family: 'Inter', 'EB Garamond', sans-serif; font-size: 10px; fill: var(--text-dim); }
 .pchart-goal { stroke: var(--wine); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.55; }
@@ -6170,3 +6185,47 @@ body {
 .peso-entry-date { color: var(--text-dim); font-size: 13px; }
 .peso-entry-del { margin-left: auto; background: transparent; border: none; color: var(--text-dim); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px; }
 .peso-entry-del:hover { color: var(--danger); }
+
+/* Meta needs a second tap to edit (armed state) */
+.peso-goal-row.armed { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.peso-goal-hint { margin-left: auto; font-size: 12px; font-style: italic; color: var(--wine); }
+
+/* Add-weight: "+" reveals the input row with a drop animation */
+.peso-add-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px;
+  border: 1.5px dashed var(--gold-dim); border-radius: 6px;
+  background: transparent; color: var(--wine); cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+  transition: border-color 0.15s, background 0.15s;
+}
+.peso-add-toggle:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.peso-add-plus { font-size: 20px; line-height: 1; }
+@keyframes peso-drop {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+  to   { opacity: 1; transform: none; max-height: 200px; }
+}
+.peso-add { overflow: hidden; animation: peso-drop 0.22s ease; }
+.peso-add-close {
+  flex: 0 0 auto; width: 34px; height: 40px;
+  background: transparent; border: 1px solid var(--line); border-radius: 4px;
+  color: var(--text-dim); font-size: 18px; line-height: 1; cursor: pointer;
+}
+.peso-add-close:hover { color: var(--wine); border-color: var(--gold-dim); }
+
+/* Collapsible history */
+.peso-history-wrap { display: flex; flex-direction: column; gap: 6px; }
+.peso-history-toggle {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 12px;
+  background: transparent; border: 1px solid var(--line); border-radius: 6px;
+  cursor: pointer; text-align: left;
+}
+.peso-history-toggle:hover { border-color: var(--gold-dim); }
+.peso-history-toggle .peso-history-title { margin: 0; }
+.peso-history-count {
+  font-family: 'Cinzel', serif; font-size: 12px; color: var(--wine);
+  border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px;
+}
+.peso-history-caret { margin-left: auto; color: var(--text-dim); font-size: 16px; transition: transform 0.18s ease; }
+.peso-history-caret.open { transform: rotate(90deg); }

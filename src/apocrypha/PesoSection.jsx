@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -41,8 +41,18 @@ export default function PesoSection({ rootOnBack }) {
 
   const [draft, setDraft] = useState('');
   const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
+  const [adding, setAdding] = useState(false);            // "+" reveals the input
+  const [histOpen, setHistOpen] = useState(false);        // history is collapsed by default
   const [goalEditing, setGoalEditing] = useState(false);
   const [goalDraft, setGoalDraft] = useState('');
+  const [metaArmed, setMetaArmed] = useState(false);      // Meta needs a 2nd tap to edit
+  const armTimer = useRef(null);
+  useEffect(() => () => clearTimeout(armTimer.current), []);
+
+  const onMetaClick = () => {
+    if (metaArmed) { clearTimeout(armTimer.current); setMetaArmed(false); openGoal(); }
+    else { setMetaArmed(true); clearTimeout(armTimer.current); armTimer.current = setTimeout(() => setMetaArmed(false), 2600); }
+  };
 
   const setLog = (updater) =>
     update((curr) => ({ weight_log: updater(Array.isArray(curr.weight_log) ? curr.weight_log : []) }));
@@ -97,10 +107,12 @@ export default function PesoSection({ rootOnBack }) {
             )}
           </div>
         ) : goal != null ? (
-          <button className="peso-goal-row" onClick={openGoal}>
+          <button className={`peso-goal-row ${metaArmed ? 'armed' : ''}`} onClick={onMetaClick}>
             <span className="peso-goal-label">{t('body.goal')}</span>
             <span className="peso-goal-value">{goal} {unit}</span>
-            {remaining != null && (
+            {metaArmed ? (
+              <span className="peso-goal-hint">{t('weight.tapEdit')}</span>
+            ) : remaining != null && (
               <span className="peso-goal-remaining">
                 {remaining === 0 ? t('body.reached') : t('body.toGo', { n: Math.abs(remaining) })}
               </span>
@@ -116,42 +128,58 @@ export default function PesoSection({ rootOnBack }) {
           <div className="empty-hint peso-graph-empty">{t('weight.hint')}</div>
         )}
 
-        <div className="peso-input-row">
-          <input
-            className="peso-date"
-            type="date"
-            value={entryDate}
-            max={todayISO()}
-            onChange={(e) => setEntryDate(e.target.value || todayISO())}
-            aria-label={t('body.goal')}
-          />
-          <input
-            className="cards-field-input peso-input"
-            type="number" inputMode="decimal" step="0.1" min="0"
-            value={draft}
-            placeholder={t('body.placeholder')}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
-          />
-          <span className="peso-input-unit">{unit}</span>
-          <button className="cards-primary-btn peso-save" onClick={submit} disabled={!draft.trim()}>
-            {t('body.save')}
+        {adding ? (
+          <div className="peso-add">
+            <div className="peso-input-row">
+              <input
+                className="peso-date"
+                type="date"
+                value={entryDate}
+                max={todayISO()}
+                onChange={(e) => setEntryDate(e.target.value || todayISO())}
+                aria-label="fecha"
+              />
+              <input
+                className="cards-field-input peso-input"
+                type="number" inputMode="decimal" step="0.1" min="0" autoFocus
+                value={draft}
+                placeholder={t('body.placeholder')}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+              />
+              <span className="peso-input-unit">{unit}</span>
+              <button className="cards-primary-btn peso-save" onClick={submit} disabled={!draft.trim()}>
+                {t('body.save')}
+              </button>
+              <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(''); }} aria-label={t('cards.close')}>×</button>
+            </div>
+          </div>
+        ) : (
+          <button className="peso-add-toggle" onClick={() => setAdding(true)}>
+            <span className="peso-add-plus">+</span>
+            <span>{t('weight.add')}</span>
           </button>
-        </div>
+        )}
 
         {log.length > 0 && (
-          <>
-            <div className="peso-history-title">{t('body.history')}</div>
-            <ul className="peso-history">
-              {history.map((e) => (
-                <li key={e.id} className="peso-entry">
-                  <span className="peso-entry-w">{e.weight} {unit}</span>
-                  <span className="peso-entry-date">{fmtDate(e.date)}</span>
-                  <button className="peso-entry-del" onClick={() => remove(e.id)} aria-label={t('body.delete')}>×</button>
-                </li>
-              ))}
-            </ul>
-          </>
+          <div className="peso-history-wrap">
+            <button className="peso-history-toggle" onClick={() => setHistOpen((o) => !o)} aria-expanded={histOpen}>
+              <span className="peso-history-title">{t('body.history')}</span>
+              <span className="peso-history-count">{log.length}</span>
+              <span className={`peso-history-caret ${histOpen ? 'open' : ''}`} aria-hidden="true">›</span>
+            </button>
+            {histOpen && (
+              <ul className="peso-history">
+                {history.map((e) => (
+                  <li key={e.id} className="peso-entry">
+                    <span className="peso-entry-w">{e.weight} {unit}</span>
+                    <span className="peso-entry-date">{fmtDate(e.date)}</span>
+                    <button className="peso-entry-del" onClick={() => remove(e.id)} aria-label={t('body.delete')}>×</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </div>
     </SubPage>
