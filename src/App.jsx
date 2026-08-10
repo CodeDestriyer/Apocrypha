@@ -135,6 +135,8 @@ function Shell() {
             ? <RulesSection rootOnBack={() => setView('home')} />
             : view === 'salud'
             ? <SaludSection rootOnBack={() => setView('home')} />
+            : view === 'peso'
+            ? <PesoSection rootOnBack={() => setView('home')} />
             : view === 'body'
             ? <BodySection rootOnBack={() => setView('home')} />
             : <CharacterPage onNavigate={setView} showNav={true} onExit={() => setShowApp(false)} />
@@ -150,8 +152,13 @@ function Shell() {
 function DesktopSidebar({ view, setView }) {
   const { t, lang, setLang } = useLang();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [idiomasOpen, setIdiomasOpen] = useState(view === 'cards' || view === 'reglas');
-  const [saludOpen, setSaludOpen] = useState(view === 'peso');
+  // Accordion: only one parent group expanded at a time.
+  const [openGroup, setOpenGroup] = useState(
+    view === 'cards' || view === 'reglas' ? 'idiomas' : view === 'peso' ? 'salud' : null
+  );
+  const idiomasOpen = openGroup === 'idiomas';
+  const saludOpen = openGroup === 'salud';
+  const toggleGroup = (g) => setOpenGroup((cur) => (cur === g ? null : g));
   const settingsRef = useRef(null);
 
   useEffect(() => {
@@ -182,7 +189,7 @@ function DesktopSidebar({ view, setView }) {
         <div className={`desktop-nav-group ${idiomasOpen ? 'open' : ''}`}>
           <button
             className={`desktop-nav-item desktop-nav-parent ${(view === 'cards' || view === 'reglas') ? 'active-parent' : ''}`}
-            onClick={() => setIdiomasOpen((o) => !o)}
+            onClick={() => toggleGroup('idiomas')}
             aria-expanded={idiomasOpen}
           >
             <span className="desktop-nav-icon">✦</span>
@@ -212,7 +219,7 @@ function DesktopSidebar({ view, setView }) {
         <div className={`desktop-nav-group ${saludOpen ? 'open' : ''}`}>
           <button
             className={`desktop-nav-item desktop-nav-parent ${view === 'peso' ? 'active-parent' : ''}`}
-            onClick={() => setSaludOpen((o) => !o)}
+            onClick={() => toggleGroup('salud')}
             aria-expanded={saludOpen}
           >
             <span className="desktop-nav-icon">✚</span>

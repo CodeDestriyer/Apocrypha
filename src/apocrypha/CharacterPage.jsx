@@ -261,10 +261,15 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 // weight chart (a "Libre"-style tracker) — a framed chart mock, no data
 // yet. On desktop a second, empty cube sits beside it (2-up); on mobile
 // only Peso shows.
-function HeroCubes({ t }) {
+function HeroCubes({ t, onNavigate }) {
   return (
     <div className="hero-cubes">
-      <div className="hero-cube weight-card" aria-label={t('weight.hint')}>
+      <button
+        type="button"
+        className="hero-cube weight-card weight-card--link"
+        aria-label={t('weight.hint')}
+        onClick={() => onNavigate && onNavigate('peso')}
+      >
         <div className="weight-card-head">
           <span className="weight-card-title">{t('weight.title')}</span>
           <span className="weight-card-tag">{t('weight.soon')}</span>
@@ -277,7 +282,7 @@ function HeroCubes({ t }) {
             <polyline className="weight-card-line" points="3,70 21,58 39,63 57,42 75,49 97,28" />
           </svg>
         </div>
-      </div>
+      </button>
       <div className="hero-cube hero-cube--empty" aria-hidden="true">
         <span className="hero-cube-soon">{t('weight.soon')}</span>
       </div>
@@ -328,7 +333,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         </button>
       )}
 
-      <HeroCubes t={t} />
+      <HeroCubes t={t} onNavigate={onNavigate} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -8,11 +8,13 @@ const newId = () =>
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
-// Rules ("Reglas") — a minimal store of Spanish grammar rules, shown as a
-// Notion/Keep-style grid of square note tiles (max 3 per row). Each rule is
-// { id, title, body, created_at } and lives on profile.rules (Supabase-backed,
-// same as decks). Tapping a note opens the editor; the add tile opens a blank
-// one. `editing` is null (closed), 'new', or a rule id.
+const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
+
+// Rules ("Reglas") — a store of Spanish grammar rules, shown as a
+// Notion/Keep-style grid of square note tiles. Opening a tile drops into a
+// focused page (the grid is hidden): existing rules open in read mode, with
+// edit/delete tucked behind the header gear; the add tile opens a blank
+// editor. Each rule is { id, title, body, created_at } on profile.rules.
 export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -20,7 +22,6 @@ export default function RulesSection({ rootOnBack }) {
 
   const setRules = (updater) =>
     update((curr) => ({ rules: updater(curr.rules ?? []) }));
-
   const addRule = (title, body) =>
     setRules((r) => [
       { id: newId(), title, body, created_at: new Date().toISOString() },
@@ -30,23 +31,41 @@ export default function RulesSection({ rootOnBack }) {
   const updateRule = (id, patch) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
-  const [editing, setEditing] = useState(null);
+  const [open, setOpen] = useState(null);       // null (grid) | 'new' | ruleId
+  const [editMode, setEditMode] = useState(false); // focused existing rule: read vs edit
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [query, setQuery] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
-  const openNew = () => { setTitle(''); setBody(''); setEditing('new'); };
-  const openEdit = (rule) => {
-    setTitle(rule.title ?? ''); setBody(rule.body ?? ''); setEditing(rule.id);
-  };
-  const close = () => { setEditing(null); setTitle(''); setBody(''); };
-  const save = () => {
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
+
+  const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
+
+  const openNew = () => { setTitle(''); setBody(''); setEditMode(true); setMenuOpen(false); setOpen('new'); };
+  const openRule = (r) => { setEditMode(false); setMenuOpen(false); setOpen(r.id); };
+  const backToGrid = () => { setOpen(null); setEditMode(false); setMenuOpen(false); };
+  const startEdit = () => { setTitle(currentRule?.title ?? ''); setBody(currentRule?.body ?? ''); setMenuOpen(false); setEditMode(true); };
+
+  const saveNew = () => {
     const ti = title.trim(); const bo = body.trim();
-    if (!ti && !bo) { close(); return; }
-    if (editing === 'new') addRule(ti, bo);
-    else updateRule(editing, { title: ti, body: bo });
-    close();
+    if (!ti && !bo) { backToGrid(); return; }
+    addRule(ti, bo);
+    backToGrid();
   };
+  const saveEdit = () => {
+    const ti = title.trim(); const bo = body.trim();
+    if (!ti && !bo) return;
+    updateRule(currentRule.id, { title: ti, body: bo });
+    setEditMode(false);
+  };
+  const deleteCurrent = () => { removeRule(currentRule.id); backToGrid(); };
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -57,91 +76,131 @@ export default function RulesSection({ rootOnBack }) {
     );
   }, [query, rules]);
 
-  return (
-    <SubPage title={t('reglas.title')} onBack={rootOnBack}>
+  const isEditing = open === 'new' || (currentRule && editMode);
 
-      {rules.length > 0 && (
-        <div className="cards-search open">
-          <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"/>
-            <path d="m20 20-3.5-3.5"/>
-          </svg>
-          <input
-            className="cards-search-input"
-            placeholder={t('reglas.searchPlaceholder')}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
-          />
-          {query && (
-            <button className="cards-search-close" onClick={() => setQuery('')} aria-label={t('cards.close')}>×</button>
-          )}
-        </div>
-      )}
-
-      {editing !== null && (
-        <div className="cards-panel">
-          <label className="cards-field-label">{t('reglas.titleLabel')}</label>
-          <input
-            className="cards-field-input"
-            value={title}
-            autoFocus
-            placeholder={t('reglas.titlePlaceholder')}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={80}
-          />
-          <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
-          <textarea
-            className="cards-field-textarea"
-            value={body}
-            placeholder={t('reglas.bodyPlaceholder')}
-            onChange={(e) => setBody(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save(); }}
-            rows={5}
-          />
-          <div className="cards-panel-actions">
-            <button className="cards-secondary-btn" onClick={close}>{t('cards.cancel')}</button>
-            <button className="cards-primary-btn" onClick={save} disabled={!title.trim() && !body.trim()}>
-              {t('cards.save')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {rules.length === 0 && editing === null && (
-        <div className="empty-hint">{t('reglas.empty')}</div>
-      )}
-
-      {visible.length === 0 && query ? (
-        <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
-      ) : (
-        <div className="rules-grid">
-          {!query && (
-            <button className="rule-note rule-note--add" onClick={openNew}>
-              <span className="rule-note-add-plus">+</span>
-              <span className="rule-note-add-label">{t('reglas.new')}</span>
-            </button>
-          )}
-          {visible.map((r) => (
-            <div
-              key={r.id}
-              className={`rule-note ${editing === r.id ? 'rule-note--active' : ''}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => openEdit(r)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEdit(r); } }}
-            >
-              <button
-                className="rule-note-del"
-                onClick={(e) => { e.stopPropagation(); removeRule(r.id); if (editing === r.id) close(); }}
-                aria-label={t('cards.deleteCard')}
-              >×</button>
-              {r.title && <div className="rule-note-title">{r.title}</div>}
-              {r.body && <div className="rule-note-body">{r.body}</div>}
+  // ── Header (title / back / gear) ─────────────────────────────
+  let pageTitle, onBack, headerRight = null;
+  if (open === 'new') {
+    pageTitle = t('reglas.new');
+    onBack = backToGrid;
+  } else if (currentRule) {
+    pageTitle = <span className="sub-title-deck">{currentRule.title || t('reglas.title')}</span>;
+    onBack = backToGrid;
+    if (!editMode) {
+      headerRight = (
+        <div className="cards-gear" ref={menuRef}>
+          <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('cards.cardSettings')}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d={GEAR_PATH}/>
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="cards-gear-menu cards-gear-menu--right">
+              <button className="cards-gear-item" onClick={startEdit}>{t('cards.editCard')}</button>
+              <button className="cards-gear-item cards-gear-item--danger" onClick={deleteCurrent}>{t('cards.deleteCard')}</button>
             </div>
-          ))}
+          )}
         </div>
-      )}
+      );
+    }
+  } else {
+    pageTitle = t('reglas.title');
+    onBack = rootOnBack;
+  }
+
+  // ── Body ─────────────────────────────────────────────────────
+  let content;
+  if (isEditing) {
+    const submit = open === 'new' ? saveNew : saveEdit;
+    const cancel = open === 'new' ? backToGrid : () => setEditMode(false);
+    content = (
+      <div className="cards-panel">
+        <label className="cards-field-label">{t('reglas.titleLabel')}</label>
+        <input
+          className="cards-field-input"
+          value={title}
+          autoFocus
+          placeholder={t('reglas.titlePlaceholder')}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={80}
+        />
+        <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
+        <textarea
+          className="cards-field-textarea"
+          value={body}
+          placeholder={t('reglas.bodyPlaceholder')}
+          onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(); }}
+          rows={9}
+        />
+        <div className="cards-panel-actions">
+          <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
+          <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>
+            {t('cards.save')}
+          </button>
+        </div>
+      </div>
+    );
+  } else if (currentRule) {
+    content = (
+      <div className="rule-read">
+        {currentRule.body
+          ? <div className="rule-read-body">{currentRule.body}</div>
+          : <div className="empty-hint">{t('reglas.noBody')}</div>}
+      </div>
+    );
+  } else {
+    content = (
+      <>
+        {rules.length > 0 && (
+          <div className="cards-search open">
+            <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m20 20-3.5-3.5"/>
+            </svg>
+            <input
+              className="cards-search-input"
+              placeholder={t('reglas.searchPlaceholder')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
+            />
+            {query && (
+              <button className="cards-search-close" onClick={() => setQuery('')} aria-label={t('cards.close')}>×</button>
+            )}
+          </div>
+        )}
+
+        {rules.length === 0 && (
+          <div className="empty-hint">{t('reglas.empty')}</div>
+        )}
+
+        {visible.length === 0 && query ? (
+          <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
+        ) : (
+          <div className="rules-grid">
+            {!query && (
+              <button className="rule-note rule-note--add" onClick={openNew}>
+                <span className="rule-note-add-plus">+</span>
+                <span className="rule-note-add-label">{t('reglas.new')}</span>
+              </button>
+            )}
+            {visible.map((r) => (
+              <button key={r.id} className="rule-note" onClick={() => openRule(r)}>
+                {r.title && <div className="rule-note-title">{r.title}</div>}
+                {r.body && <div className="rule-note-body">{r.body}</div>}
+              </button>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <SubPage title={pageTitle} onBack={onBack} headerRight={headerRight}>
+      {content}
     </SubPage>
   );
 }

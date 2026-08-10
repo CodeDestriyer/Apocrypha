@@ -5934,6 +5934,23 @@ body {
 .rule-note-del:hover { color: var(--danger); background: rgba(157, 59, 47, 0.1); }
 .rule-note--add { border: 1px dashed var(--gold-dim); color: var(--wine); background: transparent; }
 .rule-note--add:hover { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); border-style: dashed; }
+/* Note tiles are <button>s now — inherit the page font, not the UA default. */
+.rule-note { font-family: inherit; }
+
+/* Focused rule — read view (Notion-style: open to read, edit via gear) */
+.rule-read { padding: 2px 2px 10px; text-align: left; }
+.rule-read-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+/* Hero Peso cube is a link into the Peso section */
+.weight-card--link { cursor: pointer; font-family: inherit; transition: border-color 0.15s, background 0.15s, transform 0.06s; }
+.weight-card--link:hover { border-color: var(--gold-dim); background: #ffffff; }
+.weight-card--link:active { transform: scale(0.995); }
 
 /* ── Hero: stat cubes (Peso chart placeholder + future slots) ──── */
 .hero-cubes {
