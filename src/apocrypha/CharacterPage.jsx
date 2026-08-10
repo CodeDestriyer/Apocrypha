@@ -256,6 +256,27 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
   );
 }
 
+// Large square placeholder for the upcoming weight chart (a "Libre"-style
+// tracker). Purely a stub for now — a framed chart mock, no data yet.
+function WeightCard({ t }) {
+  return (
+    <div className="weight-card" aria-label={t('weight.hint')}>
+      <div className="weight-card-head">
+        <span className="weight-card-title">{t('weight.title')}</span>
+        <span className="weight-card-tag">{t('weight.soon')}</span>
+      </div>
+      <div className="weight-card-plot">
+        <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />
+          <line className="weight-card-grid" x1="0" y1="50" x2="100" y2="50" />
+          <line className="weight-card-grid" x1="0" y1="75" x2="100" y2="75" />
+          <polyline className="weight-card-line" points="3,70 21,58 39,63 57,42 75,49 97,28" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export default function CharacterPage({ onNavigate, hideNav = false, showNav = true, extra = null }) {
   const { profile, update, googleAvatar } = useProfile();
   const { t } = useLang();
@@ -298,6 +319,8 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
           {t('settings.done')}
         </button>
       )}
+
+      <WeightCard t={t} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 

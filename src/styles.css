@@ -5184,33 +5184,8 @@ body {
 .cards-study-done { text-align: center; padding: 32px; font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold); }
 
 /* ─── Cards: add buttons + add-panel ─────────────── */
-/* Idiomas sub-tab switch (Tarjetas / Reglas) — sits under the SubPage header */
-.idiomas-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  margin: 2px 0 14px;
-  border: 1px solid rgba(190, 158, 92, 0.28);
-  border-radius: 10px;
-  background: rgba(245, 240, 225, 0.03);
-}
-.idiomas-tab {
-  flex: 1;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: #cbbf9f;
-  font-family: 'Cinzel', serif;
-  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.idiomas-tab:hover { color: #f5f0e1; }
-.idiomas-tab.active {
-  background: rgba(190, 158, 92, 0.16);
-  color: var(--gold);
-}
+/* Idiomas landing menu (Tarjetas / Reglas entries) reuses .nav-card. */
+.idiomas-menu { margin-top: 4px; }
 
 /* Reglas — Notion/Keep-style note grid, max 3 tiles per row */
 .rules-grid {
@@ -5855,10 +5830,6 @@ body {
 .back-btn:hover { background: #efe7df; border-color: var(--gold-dim); }
 
 /* ── Idiomas tab switch ─────────────────────────────────── */
-.idiomas-tabs { border: 1px solid var(--line); background: var(--cream); border-radius: 6px; }
-.idiomas-tab { color: var(--text-dim); }
-.idiomas-tab:hover { color: var(--wine); }
-.idiomas-tab.active { background: var(--wine); color: var(--cream); border-radius: 4px; }
 
 /* ── Tarjetas: deck list ────────────────────────────────── */
 .deck-row { border: 1px solid var(--line) !important; background: var(--paper) !important; }
@@ -5963,3 +5934,44 @@ body {
 .rule-note-del:hover { color: var(--danger); background: rgba(157, 59, 47, 0.1); }
 .rule-note--add { border: 1px dashed var(--gold-dim); color: var(--wine); background: transparent; }
 .rule-note--add:hover { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); border-style: dashed; }
+
+/* ── Hero: weight chart placeholder (Libre-style, coming soon) ─── */
+.weight-card {
+  width: min(340px, 100%);
+  aspect-ratio: 1 / 1;
+  margin: 22px auto 6px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  text-align: left;
+}
+.weight-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.weight-card-title {
+  font-family: 'Cinzel', serif;
+  font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink);
+}
+.weight-card-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 3px 7px;
+}
+.weight-card-plot { position: relative; flex: 1; margin-top: 14px; min-height: 0; }
+.weight-card-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.weight-card-svg * { vector-effect: non-scaling-stroke; }
+.weight-card-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
+.weight-card-line {
+  fill: none;
+  stroke: var(--gold-dim);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 4 4;
+  opacity: 0.9;
+}

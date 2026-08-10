@@ -13,7 +13,7 @@ const newId = () =>
 // { id, title, body, created_at } and lives on profile.rules (Supabase-backed,
 // same as decks). Tapping a note opens the editor; the add tile opens a blank
 // one. `editing` is null (closed), 'new', or a rule id.
-export default function RulesSection({ rootOnBack, langTab }) {
+export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const rules = profile.rules ?? [];
@@ -58,8 +58,7 @@ export default function RulesSection({ rootOnBack, langTab }) {
   }, [query, rules]);
 
   return (
-    <SubPage title={t('nav.idiomas')} onBack={rootOnBack}>
-      {langTab}
+    <SubPage title={t('reglas.title')} onBack={rootOnBack}>
 
       {rules.length > 0 && (
         <div className="cards-search open">
