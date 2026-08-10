@@ -153,33 +153,30 @@ export default function RulesSection({ rootOnBack }) {
   } else {
     content = (
       <>
-        {rules.length > 0 && (
-          <div className="cards-search open">
-            <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7"/>
-              <path d="m20 20-3.5-3.5"/>
-            </svg>
-            <input
-              className="cards-search-input"
-              placeholder={t('reglas.searchPlaceholder')}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
-            />
-            {query && (
-              <button className="cards-search-close" onClick={() => setQuery('')} aria-label={t('cards.close')}>×</button>
-            )}
-          </div>
-        )}
+        <div className="search-add-row">
+          {rules.length > 0 && (
+            <div className="cards-search open">
+              <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m20 20-3.5-3.5"/>
+              </svg>
+              <input
+                className="cards-search-input"
+                placeholder={t('reglas.searchPlaceholder')}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
+              />
+              {query && (
+                <button className="cards-search-close" onClick={() => setQuery('')} aria-label={t('cards.close')}>×</button>
+              )}
+            </div>
+          )}
+          <button className="search-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
+        </div>
 
         {rules.length === 0 && (
           <div className="empty-hint">{t('reglas.empty')}</div>
-        )}
-
-        {!query && (
-          <div className="rules-add-row">
-            <button className="rules-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
-          </div>
         )}
 
         {visible.length === 0 && query ? (

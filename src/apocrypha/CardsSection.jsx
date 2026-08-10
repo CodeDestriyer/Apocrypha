@@ -323,28 +323,31 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
         {t('cards.study')} · {dueCount}
       </button>
 
-      <div className="cards-search open">
-        <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"/>
-          <path d="m20 20-3.5-3.5"/>
-        </svg>
-        <input
-          className="cards-search-input"
-          placeholder={t('cards.searchPlaceholder')}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
-        />
-        {query && (
-          <button
-            className="cards-search-close"
-            onClick={() => setQuery('')}
-            aria-label={t('cards.close')}
-          >×</button>
-        )}
+      <div className="search-add-row">
+        <div className="cards-search open">
+          <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-3.5-3.5"/>
+          </svg>
+          <input
+            className="cards-search-input"
+            placeholder={t('cards.searchPlaceholder')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
+          />
+          {query && (
+            <button
+              className="cards-search-close"
+              onClick={() => setQuery('')}
+              aria-label={t('cards.close')}
+            >×</button>
+          )}
+        </div>
+        <button className="search-add-btn" onClick={() => setAdding(true)} aria-label={t('cards.newCard')}>+</button>
       </div>
 
-      {adding ? (
+      {adding && (
         <div className="cards-panel">
           <label className="cards-field-label">{t('cards.frontSide')}</label>
           <textarea
@@ -401,11 +404,6 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
             </button>
           </div>
         </div>
-      ) : (
-        <button className="cards-big-add cards-big-add--card" onClick={() => setAdding(true)}>
-          <span className="cards-big-add-plus">+</span>
-          <span>{t('cards.newCard')}</span>
-        </button>
       )}
 
       <ul className="cards-list">

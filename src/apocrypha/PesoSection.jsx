@@ -45,7 +45,6 @@ export default function PesoSection({ rootOnBack }) {
   const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
   const [adding, setAdding] = useState(false);            // "+" reveals the input
   const [histOpen, setHistOpen] = useState(false);        // history is collapsed by default
-  const [goalEditing, setGoalEditing] = useState(false);
   const [goalDraft, setGoalDraft] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);        // weight settings gear (header)
   const menuRef = useRef(null);
@@ -70,30 +69,40 @@ export default function PesoSection({ rootOnBack }) {
   };
   const remove = (id) => setLog((l) => l.filter((e) => e.id !== id));
 
-  const openGoal = () => { setGoalDraft(goal != null ? String(goal) : ''); setGoalEditing(true); };
-  const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setGoalEditing(false); };
-  const clearGoal = () => { update({ weight_goal: null }); setGoalEditing(false); };
+  const toggleMenu = () => { if (!menuOpen) setGoalDraft(goal != null ? String(goal) : ''); setMenuOpen((o) => !o); };
+  const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setMenuOpen(false); };
+  const clearGoal = () => { update({ weight_goal: null }); setMenuOpen(false); };
 
   const unit = t('body.unit');
 
   const headerRight = (
     <div className="cards-gear" ref={menuRef}>
-      <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('body.goal')}>
+      <button className="cards-gear-btn" onClick={toggleMenu} aria-label={t('body.goal')}>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d={GEAR_PATH}/>
         </svg>
       </button>
       {menuOpen && (
-        <div className="cards-gear-menu cards-gear-menu--right">
-          <button className="cards-gear-item" onClick={() => { setMenuOpen(false); openGoal(); }}>
-            {goal != null ? t('body.goal') : t('body.addGoal')}
-          </button>
-          {goal != null && (
-            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); clearGoal(); }}>
-              {t('body.delete')}
-            </button>
-          )}
+        <div className="cards-gear-menu cards-gear-menu--right peso-gear-menu">
+          <label className="cards-field-label">{t('body.goal')}</label>
+          <div className="peso-gear-row">
+            <input
+              className="cards-field-input peso-gear-input"
+              type="number" inputMode="decimal" step="0.1" min="0" autoFocus
+              value={goalDraft}
+              placeholder={t('body.goalPlaceholder')}
+              onChange={(e) => setGoalDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setMenuOpen(false); }}
+            />
+            <span className="peso-input-unit">{unit}</span>
+          </div>
+          <div className="peso-gear-actions">
+            {goal != null && (
+              <button className="cards-secondary-btn peso-gear-clear" onClick={clearGoal}>{t('body.delete')}</button>
+            )}
+            <button className="cards-primary-btn peso-gear-save" onClick={saveGoal}>{t('body.save')}</button>
+          </div>
         </div>
       )}
     </div>
@@ -114,22 +123,6 @@ export default function PesoSection({ rootOnBack }) {
           )}
         </div>
 
-        {goalEditing && (
-          <div className="peso-goal-edit">
-            <span className="cards-field-label">{t('body.goal')}</span>
-            <input
-              className="cards-field-input peso-goal-input"
-              type="number" inputMode="decimal" step="0.1" min="0" autoFocus
-              value={goalDraft}
-              placeholder={t('body.goalPlaceholder')}
-              onChange={(e) => setGoalDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setGoalEditing(false); }}
-            />
-            <button className="cards-primary-btn peso-goal-save" onClick={saveGoal}>✓</button>
-            <button className="cards-secondary-btn peso-goal-clear" onClick={() => setGoalEditing(false)}>{t('cards.cancel')}</button>
-          </div>
-        )}
-
         {log.length ? (
           <WeightGraph log={log} goal={goal} />
         ) : (
@@ -140,14 +133,24 @@ export default function PesoSection({ rootOnBack }) {
           {adding ? (
             <div className="peso-add-slide">
               <div className="peso-input-row peso-input-row--bar">
-                <input
-                  className="peso-date"
-                  type="date"
-                  value={entryDate}
-                  max={todayISO()}
-                  onChange={(e) => setEntryDate(e.target.value || todayISO())}
-                  aria-label="fecha"
-                />
+                <label
+                  className="peso-datechip"
+                  onClick={(e) => { const inp = e.currentTarget.querySelector('input'); try { inp?.showPicker?.(); } catch {} }}
+                >
+                  <svg className="peso-datechip-ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="4.5" width="18" height="16.5" rx="2"/>
+                    <path d="M3 9h18M8 2.5v4M16 2.5v4"/>
+                  </svg>
+                  <span className="peso-datechip-text">{entryDate === todayISO() ? t('weight.today') : fmtDate(entryDate)}</span>
+                  <input
+                    className="peso-datechip-input"
+                    type="date"
+                    value={entryDate}
+                    max={todayISO()}
+                    onChange={(e) => setEntryDate(e.target.value || todayISO())}
+                    aria-label="fecha"
+                  />
+                </label>
                 <input
                   className="cards-field-input peso-input"
                   type="number" inputMode="decimal" step="0.1" min="0" autoFocus

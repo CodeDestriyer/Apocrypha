@@ -500,12 +500,13 @@ body {
 .nav-done { width: 100%; margin-top: 12px; }
 
 .name {
-  font-family: 'Cinzel', serif;
-  font-weight: 600;
-  font-size: 26px;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-weight: 700;
+  font-size: clamp(34px, 7.5vw, 48px);
+  line-height: 1.02;
   color: var(--gold-bright);
-  margin: 0 0 4px;
-  letter-spacing: 0.08em;
+  margin: 0;
+  letter-spacing: 0.02em;
   cursor: default;
   text-shadow: 0 1px 0 #000, 0 0 12px rgba(127, 184, 199, 0.3);
 }
@@ -5188,17 +5189,19 @@ body {
 /* Idiomas landing menu (Tarjetas / Reglas entries) reuses .nav-card. */
 .idiomas-menu { margin-top: 4px; }
 
-/* Reglas — small square "+" add button (replaces the big add tile) */
-.rules-add-row { display: flex; margin-top: 16px; }
-.rules-add-btn {
-  width: 46px; height: 46px;
+/* Search + prominent "+" add button on one line (Reglas & Tarjetas) */
+.search-add-row { display: flex; align-items: stretch; gap: 10px; }
+.search-add-row .cards-search { flex: 1; min-width: 0; }
+.search-add-btn {
+  flex: 0 0 auto;
+  width: 48px;
   display: grid; place-items: center;
-  border: 1.5px dashed var(--gold-dim); border-radius: 8px;
-  background: transparent; color: var(--wine);
+  border: 1px solid var(--wine); border-radius: 8px;
+  background: var(--wine); color: var(--cream);
   font-size: 26px; line-height: 1; cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: background 0.15s;
 }
-.rules-add-btn:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.06); }
+.search-add-btn:hover { background: var(--wine-deep); }
 
 /* Reglas — Notion/Keep-style note grid, max 3 tiles per row */
 .rules-grid {
@@ -6262,4 +6265,25 @@ body {
 .peso-add-slide .peso-input-row--bar { animation: peso-slide-in 0.26s ease; flex-wrap: nowrap; margin: 0; }
 .peso-input-row--bar .peso-date { padding: 8px 10px; font-size: 14px; }
 .peso-input-row--bar .peso-save { padding: 10px 14px; }
-@keyframes peso-slide-in { from { transform: translateX(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Enters from the right, sliding left into place */
+@keyframes peso-slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Meta editor lives inline in the header gear popover */
+.peso-gear-menu { padding: 12px; gap: 8px; min-width: 210px; }
+.peso-gear-row { display: flex; align-items: center; gap: 8px; }
+.peso-gear-input { flex: 1; min-width: 0; }
+.peso-gear-actions { display: flex; gap: 8px; }
+.peso-gear-save, .peso-gear-clear { flex: 1; max-width: none; padding: 9px 12px; }
+
+/* Pretty "calendar" date chip in the add-weight row */
+.peso-datechip {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+  padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: #ffffff; color: var(--ink);
+  font-size: 14px; white-space: nowrap; cursor: pointer;
+}
+.peso-datechip-ico { color: var(--wine); flex: 0 0 auto; }
+.peso-datechip-text { font-weight: 600; letter-spacing: 0.01em; }
+.peso-datechip-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
