@@ -3,6 +3,7 @@ import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
+import { typeOf, TaskShape } from './taskTypes.jsx';
 
 const NAV = [
   { id: 'tareas', labelKey: 'nav.tareas', icon: '✓', summary: (p) => {
@@ -288,7 +289,7 @@ function HeroCubes({ t, onNavigate, log, tasks }) {
             <ul className="tareas-cube-list">
               {preview.map((task) => (
                 <li key={task.id} className={`tareas-cube-item ${task.done ? 'done' : ''}`}>
-                  <span className="tareas-cube-dot" aria-hidden="true" />
+                  <span className="tareas-cube-shape"><TaskShape type={typeOf(task)} done={task.done} size={15} /></span>
                   <span className="tareas-cube-text">{task.title}</span>
                 </li>
               ))}
