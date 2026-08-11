@@ -160,6 +160,46 @@ export default function RulesSection({ rootOnBack }) {
   const applyBox = () => wrapSelection('[[', ']]');
   const applyMark = () => wrapSelection('==', '==');
 
+  // Toolbar (works on any device — no right-click needed). Wraps the current
+  // selection in the editor, or inserts a block at the cursor.
+  const bodyRef = useRef(null);
+  const applyFmt = (openTok, closeTok) => {
+    const ta = bodyRef.current;
+    const s = ta ? ta.selectionStart : body.length;
+    const en = ta ? ta.selectionEnd : body.length;
+    const sel = body.slice(s, en);
+    const before = body.slice(0, s), after = body.slice(en);
+    const wrapped = sel.length >= openTok.length + closeTok.length && sel.startsWith(openTok) && sel.endsWith(closeTok);
+    const next = wrapped
+      ? before + sel.slice(openTok.length, sel.length - closeTok.length) + after
+      : `${before}${openTok}${sel}${closeTok}${after}`;
+    setBody(next);
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      const pos = wrapped ? en - openTok.length - closeTok.length : en + openTok.length + closeTok.length;
+      ta.focus();
+      try { ta.setSelectionRange(pos, pos); } catch {}
+    });
+  };
+  const insertBlock = (text) => {
+    const ta = bodyRef.current;
+    const s = ta ? ta.selectionStart : body.length;
+    const en = ta ? ta.selectionEnd : body.length;
+    let before = body.slice(0, s), after = body.slice(en);
+    if (before && !before.endsWith('\n')) before += '\n';
+    if (after && !after.startsWith('\n')) after = '\n' + after;
+    const next = before + text + after;
+    setBody(next);
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      const pos = before.length + text.length;
+      ta.focus();
+      try { ta.setSelectionRange(pos, pos); } catch {}
+    });
+  };
+  const insertTable = () => insertBlock('Columna 1 | Columna 2\ndato | dato');
+  const insertDivider = () => insertBlock('---');
+
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
 
   const openNew = () => { setTitle(''); setBody(''); setEditMode(true); setMenuOpen(false); setOpen('new'); };
@@ -240,7 +280,16 @@ export default function RulesSection({ rootOnBack }) {
           maxLength={80}
         />
         <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
+        <div className="rule-toolbar">
+          <button className="rule-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={applyBold} title={t('reglas.bold')}><strong>B</strong></button>
+          <button className="rule-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={applyBox} title={t('reglas.box')}><span className="rule-tb-box" /></button>
+          <button className="rule-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={applyMark} title={t('reglas.mark')}><span className="rule-tb-mark" /></button>
+          <span className="rule-tb-sep" />
+          <button className="rule-tb-btn rule-tb-wide" onMouseDown={(e) => e.preventDefault()} onClick={insertTable}>{t('reglas.table')}</button>
+          <button className="rule-tb-btn rule-tb-wide" onMouseDown={(e) => e.preventDefault()} onClick={insertDivider}>{t('reglas.divider')}</button>
+        </div>
         <textarea
+          ref={bodyRef}
           className="cards-field-textarea"
           value={body}
           placeholder={t('reglas.bodyPlaceholder')}
@@ -249,12 +298,6 @@ export default function RulesSection({ rootOnBack }) {
           onContextMenu={openFormatMenu}
           rows={9}
         />
-        {body.trim() && (
-          <div className="rule-preview">
-            <div className="rule-preview-label">{t('reglas.preview')}</div>
-            <div className="rule-read-body">{renderRuleBody(body)}</div>
-          </div>
-        )}
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>
