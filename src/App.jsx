@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CharacterPage from './apocrypha/CharacterPage.jsx';
 import Landing from './varkanis/Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
-import { LangProvider, useLang, LANGS } from './i18n.jsx';
+import { LangProvider, useLang } from './i18n.jsx';
 import { signOut } from './supabase.js';
 import IdiomasSection from './apocrypha/IdiomasSection.jsx';
 import CardsSection from './apocrypha/CardsSection.jsx';
@@ -154,8 +154,7 @@ function Shell() {
 }
 
 function DesktopSidebar({ view, setView }) {
-  const { t, lang, setLang } = useLang();
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { t } = useLang();
   // Accordion: only one parent group expanded at a time.
   const [openGroup, setOpenGroup] = useState(
     view === 'cards' || view === 'reglas' ? 'idiomas' : view === 'peso' ? 'salud' : null
@@ -163,16 +162,6 @@ function DesktopSidebar({ view, setView }) {
   const idiomasOpen = openGroup === 'idiomas';
   const saludOpen = openGroup === 'salud';
   const toggleGroup = (g) => setOpenGroup((cur) => (cur === g ? null : g));
-  const settingsRef = useRef(null);
-
-  useEffect(() => {
-    if (!settingsOpen) return;
-    const onDoc = (e) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target)) setSettingsOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [settingsOpen]);
 
   return (
     <aside className="desktop-sidebar">
@@ -253,27 +242,6 @@ function DesktopSidebar({ view, setView }) {
       </nav>
 
       <div className="desktop-sidebar-footer">
-        <div className="desktop-settings" ref={settingsRef}>
-          <button className="desktop-nav-item" onClick={() => setSettingsOpen((o) => !o)}>
-            <span className="desktop-nav-icon">⚙</span>
-            <span>{t('settings.title')}</span>
-          </button>
-          {settingsOpen && (
-            <div className="desktop-settings-pop">
-              <div className="settings-section-title">{t('lang.title')}</div>
-              {LANGS.map((l) => (
-                <button
-                  key={l.code}
-                  className={`settings-option ${lang === l.code ? 'active' : ''}`}
-                  onClick={() => setLang(l.code)}
-                >
-                  <span>{l.flag}</span>
-                  <span>{l.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
         <button className="desktop-nav-item desktop-logout" onClick={() => signOut()}>
           <span className="desktop-nav-icon">⎋</span>
           <span>{t('settings.logout')}</span>

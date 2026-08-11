@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang, LANGS } from '../i18n.jsx';
+import { useLang } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
 
@@ -69,13 +69,12 @@ function useModulePrefs() {
 }
 
 function SettingsMenu({ setEditing, setEditingInfo }) {
-  const { lang, setLang, t } = useLang();
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
-  const [section, setSection] = useState(null); // null | 'lang' | 'modules'
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!open) { setSection(null); return; }
+    if (!open) return;
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
@@ -84,8 +83,6 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, [open]);
-
-  const currentLang = LANGS.find((l) => l.code === lang) ?? LANGS[0];
 
   const openModules = () => {
     setEditing(true);
@@ -108,44 +105,19 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
       </button>
       {open && (
         <div className="settings-dropdown">
-          {section === null && (
-            <>
-              <button className="settings-row" onClick={openInfo}>
-                <span>{t('settings.info')}</span>
-                <span className="settings-row-value">›</span>
-              </button>
-              <button className="settings-row" onClick={() => setSection('lang')}>
-                <span>{t('lang.title')}</span>
-                <span className="settings-row-value">{currentLang.flag}</span>
-              </button>
-              <button className="settings-row" onClick={openModules}>
-                <span>{t('settings.modules')}</span>
-                <span className="settings-row-value">›</span>
-              </button>
-              <div className="settings-sep" />
-              <button className="settings-row settings-logout" onClick={() => signOut()}>
-                <span>{t('settings.logout')}</span>
-                <span className="settings-row-value">⎋</span>
-              </button>
-            </>
-          )}
-          {section === 'lang' && (
-            <>
-              <button className="settings-row settings-back" onClick={() => setSection(null)}>
-                <span>‹ {t('lang.title')}</span>
-              </button>
-              {LANGS.map((l) => (
-                <button
-                  key={l.code}
-                  className={`settings-option ${lang === l.code ? 'active' : ''}`}
-                  onClick={() => { setLang(l.code); setSection(null); }}
-                >
-                  <span>{l.flag}</span>
-                  <span>{l.label}</span>
-                </button>
-              ))}
-            </>
-          )}
+          <button className="settings-row" onClick={openInfo}>
+            <span>{t('settings.info')}</span>
+            <span className="settings-row-value">›</span>
+          </button>
+          <button className="settings-row" onClick={openModules}>
+            <span>{t('settings.modules')}</span>
+            <span className="settings-row-value">›</span>
+          </button>
+          <div className="settings-sep" />
+          <button className="settings-row settings-logout" onClick={() => signOut()}>
+            <span>{t('settings.logout')}</span>
+            <span className="settings-row-value">⎋</span>
+          </button>
         </div>
       )}
     </div>
@@ -309,9 +281,7 @@ function HeroCubes({ t, onNavigate, log, tasks }) {
       >
         <div className="weight-card-head">
           <span className="weight-card-title">{t('tareas.title')}</span>
-          {total > 0
-            ? <span className="tareas-cube-count">{done}/{total}</span>
-            : <span className="weight-card-tag">{t('weight.soon')}</span>}
+          {total > 0 && <span className="tareas-cube-count">{done}/{total}</span>}
         </div>
         <div className="tareas-cube-body">
           {total > 0 ? (

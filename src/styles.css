@@ -5986,7 +5986,7 @@ body {
 }
 .desktop-content .hero-cube {
   aspect-ratio: auto;
-  height: 220px;
+  height: 300px;
 }
 .hero-cube {
   aspect-ratio: 1 / 1;
@@ -6026,7 +6026,7 @@ body {
 }
 .tareas-cube-item.done .tareas-cube-dot { background: var(--wine); border-color: var(--wine); }
 .tareas-cube-text {
-  font-family: 'EB Garamond', serif; font-size: 14px; color: var(--ink);
+  font-family: 'EB Garamond', serif; font-size: 16px; font-weight: 600; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
 .tareas-cube-item.done .tareas-cube-text { color: var(--text-dim); text-decoration: line-through; }
@@ -6069,16 +6069,16 @@ body {
 .tareas-item.done { background: transparent; }
 .tareas-check {
   flex: none;
-  width: 22px; height: 22px;
+  width: 26px; height: 26px;
   display: grid; place-items: center;
-  border: 1.6px solid var(--gold-dim); border-radius: 6px;
+  border: 1.8px solid var(--gold-dim); border-radius: 50%;
   background: transparent; color: var(--cream); cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 .tareas-check.on { background: var(--wine); border-color: var(--wine); }
 .tareas-text {
   flex: 1; min-width: 0;
-  font-family: 'EB Garamond', serif; font-size: 16px; color: var(--ink);
+  font-family: 'EB Garamond', serif; font-size: 18px; font-weight: 600; color: var(--ink);
   cursor: pointer; overflow-wrap: anywhere;
 }
 .tareas-item.done .tareas-text { color: var(--text-dim); text-decoration: line-through; }
