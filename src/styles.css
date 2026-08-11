@@ -5974,6 +5974,19 @@ body {
   border: 1px solid var(--line); border-radius: 4px;
   font-family: 'Cinzel', serif; font-weight: 700; font-size: 13px; color: var(--wine);
 }
+.rule-ctx-box {
+  flex: none;
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--gold-dim); border-radius: 4px;
+  background: rgba(190, 158, 92, 0.1);
+}
+/* Boxed text inside a rule body */
+.rule-box {
+  border: 1px solid var(--gold-dim); border-radius: 4px;
+  padding: 0 5px;
+  background: rgba(190, 158, 92, 0.1);
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .rule-read-body {
   white-space: pre-wrap;

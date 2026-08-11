@@ -10,12 +10,22 @@ const newId = () =>
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
-// Rule bodies store bold as **markdown**; render it as <strong> (newlines are
-// kept by the container's white-space: pre-wrap).
+// Rule bodies store inline formatting as markers: **bold** and [[boxed]].
+// Render them as <strong> / a framed span (newlines are kept by the
+// container's white-space: pre-wrap).
 function renderRich(text) {
-  return String(text ?? '')
-    .split(/\*\*([\s\S]+?)\*\*/g)
-    .map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
+  const str = String(text ?? '');
+  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]/g;
+  const out = [];
+  let last = 0, m, key = 0;
+  while ((m = re.exec(str)) !== null) {
+    if (m.index > last) out.push(str.slice(last, m.index));
+    if (m[1] !== undefined) out.push(<strong key={key++}>{m[1]}</strong>);
+    else out.push(<span key={key++} className="rule-box">{m[2]}</span>);
+    last = m.index + m[0].length;
+  }
+  if (last < str.length) out.push(str.slice(last));
+  return out;
 }
 
 // Rules ("Reglas") — a store of Spanish grammar rules, shown as a
@@ -80,15 +90,20 @@ export default function RulesSection({ rootOnBack }) {
     e.preventDefault();
     setCtxMenu({ x: e.clientX, y: e.clientY, start: s, end: en });
   };
-  const applyBold = () => {
+  const wrapSelection = (openTok, closeTok) => {
     if (!ctxMenu) return;
     const { start: s, end: en } = ctxMenu;
     const sel = body.slice(s, en);
     const before = body.slice(0, s), after = body.slice(en);
-    const wrapped = sel.startsWith('**') && sel.endsWith('**') && sel.length >= 4;
-    setBody(wrapped ? before + sel.slice(2, -2) + after : `${before}**${sel}**${after}`);
+    const wrapped = sel.startsWith(openTok) && sel.endsWith(closeTok) && sel.length >= openTok.length + closeTok.length;
+    const next = wrapped
+      ? before + sel.slice(openTok.length, sel.length - closeTok.length) + after
+      : `${before}${openTok}${sel}${closeTok}${after}`;
+    setBody(next);
     setCtxMenu(null);
   };
+  const applyBold = () => wrapSelection('**', '**');
+  const applyBox = () => wrapSelection('[[', ']]');
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
 
@@ -248,6 +263,10 @@ export default function RulesSection({ rootOnBack }) {
           <button className="rule-ctx-item" onClick={applyBold}>
             <span className="rule-ctx-b">B</span>
             <span>{t('reglas.bold')}</span>
+          </button>
+          <button className="rule-ctx-item" onClick={applyBox}>
+            <span className="rule-ctx-box" aria-hidden="true" />
+            <span>{t('reglas.box')}</span>
           </button>
         </div>
       )}

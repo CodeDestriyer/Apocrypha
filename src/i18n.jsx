@@ -38,6 +38,7 @@ const DICT = {
   'reglas.searchPlaceholder': 'Buscar reglas…',
   'reglas.noBody': '(sin texto)',
   'reglas.bold': 'Negrita',
+  'reglas.box': 'Recuadro',
   'nav.body': 'Cuerpo',
   'weight.title': 'Peso',
   'weight.soon': 'Próximamente',
