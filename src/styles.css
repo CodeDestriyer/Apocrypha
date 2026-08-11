@@ -5977,16 +5977,32 @@ body {
 .rule-ctx-box {
   flex: none;
   width: 22px; height: 22px;
-  border: 1.5px solid var(--gold-dim); border-radius: 4px;
-  background: rgba(190, 158, 92, 0.1);
+  border: 1.5px solid var(--ink); border-radius: 4px;
 }
-/* Boxed text inside a rule body */
+.rule-ctx-mark {
+  flex: none;
+  width: 22px; height: 22px;
+  border-radius: 4px; background: rgba(240, 205, 90, 0.75);
+}
+.rule-ctx-accent {
+  flex: none;
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  border: 1px solid var(--line); border-radius: 4px;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 13px; color: var(--wine);
+}
+/* Inline formatting inside a rule body */
 .rule-box {
-  border: 1px solid var(--gold-dim); border-radius: 4px;
+  border: 1.5px solid var(--ink); border-radius: 4px;
   padding: 0 5px;
-  background: rgba(190, 158, 92, 0.1);
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
+.rule-mark {
+  background: rgba(240, 205, 90, 0.5); color: inherit;
+  border-radius: 3px; padding: 0 3px;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.rule-accent { color: var(--wine); font-weight: 600; }
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .rule-read-body {
   white-space: pre-wrap;

@@ -39,6 +39,8 @@ const DICT = {
   'reglas.noBody': '(sin texto)',
   'reglas.bold': 'Negrita',
   'reglas.box': 'Recuadro',
+  'reglas.mark': 'Resaltar',
+  'reglas.accent': 'Acento',
   'nav.body': 'Cuerpo',
   'weight.title': 'Peso',
   'weight.soon': 'Próximamente',
