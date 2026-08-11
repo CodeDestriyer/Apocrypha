@@ -5241,8 +5241,8 @@ body {
 }
 .rule-note-body {
   font-size: 13px; line-height: 1.45; color: #cbbf9f;
-  white-space: pre-wrap; overflow-wrap: anywhere;
-  display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: anywhere;
+  max-height: 132px; overflow: hidden;
 }
 
 .rule-note-del {
@@ -6004,6 +6004,28 @@ body {
   border-radius: 3px; padding: 0 3px;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
+/* Block formatting: paragraphs, dividers and pipe tables */
+.rule-para { white-space: pre-wrap; }
+.rule-para + .rule-table, .rule-table + .rule-para,
+.rule-para + .rule-hr, .rule-hr + .rule-para { margin-top: 4px; }
+.rule-hr {
+  border: none; height: 1px; margin: 12px 0;
+  background: var(--gold-dim); opacity: 0.7;
+}
+.rule-table {
+  border-collapse: collapse; width: 100%;
+  margin: 8px 0; font-size: 14px;
+}
+.rule-table th, .rule-table td {
+  border: 1px solid var(--line);
+  padding: 6px 10px; text-align: left; vertical-align: top;
+}
+.rule-table th { font-weight: 700; color: var(--ink); background: rgba(190, 158, 92, 0.14); }
+.rule-table td { color: var(--ink-soft); }
+/* Compact tables inside the small preview tiles */
+.rule-note-body .rule-table { font-size: 11px; margin: 4px 0; }
+.rule-note-body .rule-table th, .rule-note-body .rule-table td { padding: 2px 5px; }
+.rule-note-body .rule-hr { margin: 7px 0; }
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .rule-read-body {
   white-space: pre-wrap;

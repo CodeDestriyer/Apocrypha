@@ -29,6 +29,59 @@ function renderRich(text) {
   return out;
 }
 
+// A pipe table: first row is the header. Cells keep inline markers.
+function RuleTable({ rows }) {
+  const parse = (line) => {
+    let cells = line.split('|').map((c) => c.trim());
+    if (cells.length && cells[0] === '') cells = cells.slice(1);
+    if (cells.length && cells[cells.length - 1] === '') cells = cells.slice(0, -1);
+    return cells;
+  };
+  const grid = rows.map(parse);
+  const [head, ...body] = grid;
+  return (
+    <table className="rule-table">
+      <thead><tr>{head.map((c, i) => <th key={i}>{renderRich(c)}</th>)}</tr></thead>
+      {body.length > 0 && (
+        <tbody>
+          {body.map((row, ri) => (
+            <tr key={ri}>{row.map((c, ci) => <td key={ci}>{renderRich(c)}</td>)}</tr>
+          ))}
+        </tbody>
+      )}
+    </table>
+  );
+}
+
+// Block-level rendering of a rule body: pipe tables, `---` dividers, and
+// paragraphs of inline-formatted text (line breaks preserved).
+function renderRuleBody(text) {
+  const lines = String(text ?? '').split('\n');
+  const blocks = [];
+  let para = [], table = [], key = 0;
+  const flushPara = () => {
+    if (!para.length) return;
+    const buf = para; para = [];
+    blocks.push(
+      <div key={`p${key++}`} className="rule-para">
+        {buf.map((ln, i) => <span key={i}>{i > 0 && <br />}{renderRich(ln)}</span>)}
+      </div>
+    );
+  };
+  const flushTable = () => {
+    if (!table.length) return;
+    const buf = table; table = [];
+    blocks.push(<RuleTable key={`t${key++}`} rows={buf} />);
+  };
+  for (const line of lines) {
+    if (/^\s*-{3,}\s*$/.test(line)) { flushPara(); flushTable(); blocks.push(<hr key={`h${key++}`} className="rule-hr" />); }
+    else if (line.includes('|')) { flushPara(); table.push(line); }
+    else { flushTable(); para.push(line); }
+  }
+  flushPara(); flushTable();
+  return blocks;
+}
+
 // Rules ("Reglas") — a store of Spanish grammar rules, shown as a
 // Notion/Keep-style grid of square note tiles. Opening a tile drops into a
 // focused page (the grid is hidden): existing rules open in read mode, with
@@ -208,7 +261,7 @@ export default function RulesSection({ rootOnBack }) {
     content = (
       <div className="rule-read">
         {currentRule.body
-          ? <div className="rule-read-body">{renderRich(currentRule.body)}</div>
+          ? <div className="rule-read-body">{renderRuleBody(currentRule.body)}</div>
           : <div className="empty-hint">{t('reglas.noBody')}</div>}
       </div>
     );
@@ -248,7 +301,7 @@ export default function RulesSection({ rootOnBack }) {
             {visible.map((r) => (
               <button key={r.id} className="rule-note" onClick={() => openRule(r)}>
                 {r.title && <div className="rule-note-title">{r.title}</div>}
-                {r.body && <div className="rule-note-body">{renderRich(r.body)}</div>}
+                {r.body && <div className="rule-note-body">{renderRuleBody(r.body)}</div>}
               </button>
             ))}
           </div>
