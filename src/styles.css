@@ -5976,13 +5976,17 @@ body {
   width: min(230px, 100%);
   margin: 16px auto 8px;
 }
-/* On desktop: two equal squares, kept compact so avatar + name + cubes all
-   fit on screen without the chart spilling off the bottom. */
+/* On desktop: two cubes spanning the full width of the Hero card. They keep a
+   fixed height instead of a 1:1 ratio, so a full-width row doesn't grow tall
+   enough to push the chart off the bottom. */
 .desktop-content .hero-cubes {
   width: 100%;
-  max-width: 430px;
   grid-template-columns: 1fr 1fr;
   margin: 16px 0 8px;
+}
+.desktop-content .hero-cube {
+  aspect-ratio: auto;
+  height: 220px;
 }
 .hero-cube {
   aspect-ratio: 1 / 1;
