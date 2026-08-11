@@ -123,6 +123,7 @@ export async function createProfile(name) {
     rules: [],
     weight_log: [],
     weight_goal: null,
+    tasks: [],
     test_results: [],
     xp: 0,
   };

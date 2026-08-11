@@ -9,6 +9,7 @@ import CardsSection from './apocrypha/CardsSection.jsx';
 import RulesSection from './apocrypha/RulesSection.jsx';
 import SaludSection from './apocrypha/SaludSection.jsx';
 import PesoSection from './apocrypha/PesoSection.jsx';
+import TareasSection from './apocrypha/TareasSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
 
@@ -117,6 +118,7 @@ function Shell() {
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
             {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
             {view === 'peso' && <PesoSection rootOnBack={() => setView('home')} />}
+            {view === 'tareas' && <TareasSection rootOnBack={() => setView('home')} />}
             {view === 'salud' && <SaludSection rootOnBack={() => setView('home')} />}
             {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
             {view === 'body' && <BodySection rootOnBack={() => setView('home')} />}
@@ -137,6 +139,8 @@ function Shell() {
             ? <SaludSection rootOnBack={() => setView('home')} />
             : view === 'peso'
             ? <PesoSection rootOnBack={() => setView('home')} />
+            : view === 'tareas'
+            ? <TareasSection rootOnBack={() => setView('home')} />
             : view === 'body'
             ? <BodySection rootOnBack={() => setView('home')} />
             : <CharacterPage onNavigate={setView} showNav={true} onExit={() => setShowApp(false)} />
@@ -183,6 +187,13 @@ function DesktopSidebar({ view, setView }) {
         >
           <span className="desktop-nav-icon">⚔</span>
           <span>{t('tab.character')}</span>
+        </button>
+        <button
+          className={`desktop-nav-item ${view === 'tareas' ? 'active' : ''}`}
+          onClick={() => setView('tareas')}
+        >
+          <span className="desktop-nav-icon">✓</span>
+          <span>{t('nav.tareas')}</span>
         </button>
         {/* Idiomas is a pure expander: clicking it only reveals its two
             children (Tarjetas / Reglas) — it navigates nowhere itself. */}

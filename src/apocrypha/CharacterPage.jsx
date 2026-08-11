@@ -5,6 +5,10 @@ import { signOut } from '../supabase.js';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
 
 const NAV = [
+  { id: 'tareas', labelKey: 'nav.tareas', icon: '✓', summary: (p) => {
+    const tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    return tasks.length ? `${tasks.filter((x) => x.done).length}/${tasks.length}` : '—';
+  } },
   { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
   { id: 'salud', labelKey: 'nav.salud', icon: '✚', summary: () => '—' },
   // Cuerpo (Body) tab is built (see App.jsx / BodySection.jsx) but hidden for
@@ -259,10 +263,17 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 }
 
 // Hero stat cubes: a big "PESO" square with the live weight chart + weight,
-// plus a companion square, on the left of the Hero card. Tapping opens Peso.
-function HeroCubes({ t, onNavigate, log }) {
+// plus a "TAREAS" square holding the day's to-do list, on the left of the Hero
+// card. Tapping Peso opens Peso; tapping Tareas opens the task list.
+function HeroCubes({ t, onNavigate, log, tasks }) {
   const latest = latestEntry(log);
   const unit = t('body.unit');
+  const list = Array.isArray(tasks) ? tasks : [];
+  const total = list.length;
+  const done = list.filter((x) => x.done).length;
+  // Preview: open tasks first, then completed — a few of each fit the cube.
+  const preview = [...list.filter((x) => !x.done), ...list.filter((x) => x.done)].slice(0, 5);
+  const extra = total - preview.length;
   return (
     <div className="hero-cubes">
       <button
@@ -290,9 +301,34 @@ function HeroCubes({ t, onNavigate, log }) {
           )}
         </div>
       </button>
-      <div className="hero-cube hero-cube--empty" aria-hidden="true">
-        <span className="hero-cube-soon">{t('weight.soon')}</span>
-      </div>
+      <button
+        type="button"
+        className="hero-cube hero-cube--tareas weight-card--link"
+        aria-label={t('tareas.title')}
+        onClick={() => onNavigate && onNavigate('tareas')}
+      >
+        <div className="weight-card-head">
+          <span className="weight-card-title">{t('tareas.title')}</span>
+          {total > 0
+            ? <span className="tareas-cube-count">{done}/{total}</span>
+            : <span className="weight-card-tag">{t('weight.soon')}</span>}
+        </div>
+        <div className="tareas-cube-body">
+          {total > 0 ? (
+            <ul className="tareas-cube-list">
+              {preview.map((task) => (
+                <li key={task.id} className={`tareas-cube-item ${task.done ? 'done' : ''}`}>
+                  <span className="tareas-cube-dot" aria-hidden="true" />
+                  <span className="tareas-cube-text">{task.title}</span>
+                </li>
+              ))}
+              {extra > 0 && <li className="tareas-cube-more">+{extra}</li>}
+            </ul>
+          ) : (
+            <span className="tareas-cube-empty">{t('tareas.cubeEmpty')}</span>
+          )}
+        </div>
+      </button>
     </div>
   );
 }
@@ -307,6 +343,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
   const setName = (name) => update({ name });
 
   const weightLog = Array.isArray(profile.weight_log) ? profile.weight_log : [];
+  const tasks = Array.isArray(profile.tasks) ? profile.tasks : [];
 
   return (
     <div className="card character-card">
@@ -341,7 +378,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         </button>
       )}
 
-      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} />
+      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} tasks={tasks} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 

@@ -5999,21 +5999,108 @@ body {
   text-align: left;
   min-width: 0;
 }
-/* The empty companion cube is desktop-only (mobile shows just Peso). */
-.hero-cube--empty {
+/* The Tareas companion cube is desktop-only (mobile reaches tasks via the
+   nav grid card, so the Hero header stays a single Peso cube on phones). */
+.hero-cube--tareas {
   display: none;
-  align-items: center;
-  justify-content: center;
-  border-style: dashed;
-  border-color: var(--gold-dim);
-  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
 }
-.desktop-content .hero-cube--empty { display: flex; }
-.hero-cube-soon {
+.desktop-content .hero-cube--tareas { display: flex; }
+
+/* Tareas cube: progress count + a short preview of the day's tasks */
+.tareas-cube-count {
   font-family: 'Cinzel', serif;
-  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--text-dim);
+  font-size: 15px; font-weight: 700; letter-spacing: 0.03em;
+  color: var(--wine); white-space: nowrap;
 }
+.tareas-cube-body {
+  flex: 1; margin-top: 14px; min-height: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.tareas-cube-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.tareas-cube-item { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.tareas-cube-dot {
+  flex: none; width: 9px; height: 9px; border-radius: 50%;
+  border: 1.5px solid var(--gold-dim); box-sizing: border-box;
+}
+.tareas-cube-item.done .tareas-cube-dot { background: var(--wine); border-color: var(--wine); }
+.tareas-cube-text {
+  font-family: 'EB Garamond', serif; font-size: 14px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.tareas-cube-item.done .tareas-cube-text { color: var(--text-dim); text-decoration: line-through; }
+.tareas-cube-more { font-size: 12px; color: var(--text-dim); font-style: italic; padding-left: 18px; }
+.tareas-cube-empty {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim); text-align: center; margin: auto; line-height: 1.5;
+}
+
+/* ── Tareas section (daily to-do list) ──────────────────────────── */
+.tareas { display: flex; flex-direction: column; }
+.tareas-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.tareas-input { flex: 1; min-width: 0; }
+.tareas-add-btn {
+  flex: 0 0 auto;
+  width: 48px;
+  display: grid; place-items: center;
+  border: 1px solid var(--wine); border-radius: 6px;
+  background: var(--wine); color: var(--cream);
+  font-size: 26px; line-height: 1; cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.tareas-add-btn:hover { background: var(--wine-deep); }
+.tareas-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tareas-done-banner {
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--wine); text-align: center;
+  padding: 8px; margin-bottom: 10px;
+  border: 1px solid var(--line); border-radius: 6px; background: rgba(110, 36, 19, 0.05);
+}
+.tareas-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.tareas-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--paper);
+  transition: border-color 0.15s, background 0.15s;
+}
+.tareas-item.done { background: transparent; }
+.tareas-check {
+  flex: none;
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: 1.6px solid var(--gold-dim); border-radius: 6px;
+  background: transparent; color: var(--cream); cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tareas-check.on { background: var(--wine); border-color: var(--wine); }
+.tareas-text {
+  flex: 1; min-width: 0;
+  font-family: 'EB Garamond', serif; font-size: 16px; color: var(--ink);
+  cursor: pointer; overflow-wrap: anywhere;
+}
+.tareas-item.done .tareas-text { color: var(--text-dim); text-decoration: line-through; }
+.tareas-del {
+  flex: none;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border: none; background: transparent;
+  color: var(--text-dim); font-size: 22px; line-height: 1; cursor: pointer;
+  border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.tareas-del:hover { color: var(--wine); background: rgba(110, 36, 19, 0.06); }
+.tareas-clear {
+  align-self: center;
+  margin-top: 16px;
+  padding: 8px 16px;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: transparent; color: var(--text-dim);
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.tareas-clear:hover { border-color: var(--wine); color: var(--wine); }
 .weight-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .weight-card-title {
   font-family: 'Cinzel', serif;
