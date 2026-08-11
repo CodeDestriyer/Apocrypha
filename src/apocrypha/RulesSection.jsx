@@ -139,10 +139,11 @@ export default function RulesSection({ rootOnBack }) {
 
   const openFormatMenu = (e) => {
     const ta = e.currentTarget;
-    const s = ta.selectionStart, en = ta.selectionEnd;
-    if (s == null || s === en) return; // nothing selected → let the native menu open
+    const s = ta.selectionStart ?? body.length, en = ta.selectionEnd ?? body.length;
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, start: s, end: en });
+    // With a selection → format it (bold/box/mark). On empty space → insert
+    // a block (table / divider) at the caret.
+    setCtxMenu({ x: e.clientX, y: e.clientY, start: s, end: en, hasSel: s !== en });
   };
   const wrapSelection = (openTok, closeTok) => {
     if (!ctxMenu) return;
@@ -160,45 +161,18 @@ export default function RulesSection({ rootOnBack }) {
   const applyBox = () => wrapSelection('[[', ']]');
   const applyMark = () => wrapSelection('==', '==');
 
-  // Toolbar (works on any device — no right-click needed). Wraps the current
-  // selection in the editor, or inserts a block at the cursor.
-  const bodyRef = useRef(null);
-  const applyFmt = (openTok, closeTok) => {
-    const ta = bodyRef.current;
-    const s = ta ? ta.selectionStart : body.length;
-    const en = ta ? ta.selectionEnd : body.length;
-    const sel = body.slice(s, en);
-    const before = body.slice(0, s), after = body.slice(en);
-    const wrapped = sel.length >= openTok.length + closeTok.length && sel.startsWith(openTok) && sel.endsWith(closeTok);
-    const next = wrapped
-      ? before + sel.slice(openTok.length, sel.length - closeTok.length) + after
-      : `${before}${openTok}${sel}${closeTok}${after}`;
-    setBody(next);
-    requestAnimationFrame(() => {
-      if (!ta) return;
-      const pos = wrapped ? en - openTok.length - closeTok.length : en + openTok.length + closeTok.length;
-      ta.focus();
-      try { ta.setSelectionRange(pos, pos); } catch {}
-    });
-  };
-  const insertBlock = (text) => {
-    const ta = bodyRef.current;
-    const s = ta ? ta.selectionStart : body.length;
-    const en = ta ? ta.selectionEnd : body.length;
-    let before = body.slice(0, s), after = body.slice(en);
+  // Insert a block (table / divider) at the caret where the menu was opened.
+  const insertAt = (text) => {
+    if (!ctxMenu) return;
+    const pos = ctxMenu.start;
+    let before = body.slice(0, pos), after = body.slice(pos);
     if (before && !before.endsWith('\n')) before += '\n';
     if (after && !after.startsWith('\n')) after = '\n' + after;
-    const next = before + text + after;
-    setBody(next);
-    requestAnimationFrame(() => {
-      if (!ta) return;
-      const pos = before.length + text.length;
-      ta.focus();
-      try { ta.setSelectionRange(pos, pos); } catch {}
-    });
+    setBody(before + text + after);
+    setCtxMenu(null);
   };
-  const insertTable = () => insertBlock('Columna 1 | Columna 2\ndato | dato');
-  const insertDivider = () => insertBlock('---');
+  const insertTable = () => insertAt('Columna 1 | Columna 2\ndato | dato');
+  const insertDivider = () => insertAt('---');
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
 
@@ -280,16 +254,7 @@ export default function RulesSection({ rootOnBack }) {
           maxLength={80}
         />
         <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
-        <div className="rule-toolbar">
-          <button className="rule-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={applyBold} title={t('reglas.bold')}><strong>B</strong></button>
-          <button className="rule-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={applyBox} title={t('reglas.box')}><span className="rule-tb-box" /></button>
-          <button className="rule-tb-btn" onMouseDown={(e) => e.preventDefault()} onClick={applyMark} title={t('reglas.mark')}><span className="rule-tb-mark" /></button>
-          <span className="rule-tb-sep" />
-          <button className="rule-tb-btn rule-tb-wide" onMouseDown={(e) => e.preventDefault()} onClick={insertTable}>{t('reglas.table')}</button>
-          <button className="rule-tb-btn rule-tb-wide" onMouseDown={(e) => e.preventDefault()} onClick={insertDivider}>{t('reglas.divider')}</button>
-        </div>
         <textarea
-          ref={bodyRef}
           className="cards-field-textarea"
           value={body}
           placeholder={t('reglas.bodyPlaceholder')}
@@ -364,18 +329,33 @@ export default function RulesSection({ rootOnBack }) {
       {content}
       {ctxMenu && (
         <div className="rule-ctx-menu" ref={ctxRef} style={{ top: ctxMenu.y, left: ctxMenu.x }}>
-          <button className="rule-ctx-item" onClick={applyBold}>
-            <span className="rule-ctx-b">B</span>
-            <span>{t('reglas.bold')}</span>
-          </button>
-          <button className="rule-ctx-item" onClick={applyBox}>
-            <span className="rule-ctx-box" aria-hidden="true" />
-            <span>{t('reglas.box')}</span>
-          </button>
-          <button className="rule-ctx-item" onClick={applyMark}>
-            <span className="rule-ctx-mark" aria-hidden="true" />
-            <span>{t('reglas.mark')}</span>
-          </button>
+          {ctxMenu.hasSel ? (
+            <>
+              <button className="rule-ctx-item" onClick={applyBold}>
+                <span className="rule-ctx-b">B</span>
+                <span>{t('reglas.bold')}</span>
+              </button>
+              <button className="rule-ctx-item" onClick={applyBox}>
+                <span className="rule-ctx-box" aria-hidden="true" />
+                <span>{t('reglas.box')}</span>
+              </button>
+              <button className="rule-ctx-item" onClick={applyMark}>
+                <span className="rule-ctx-mark" aria-hidden="true" />
+                <span>{t('reglas.mark')}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="rule-ctx-item" onClick={insertTable}>
+                <span className="rule-ctx-glyph" aria-hidden="true">▦</span>
+                <span>{t('reglas.table')}</span>
+              </button>
+              <button className="rule-ctx-item" onClick={insertDivider}>
+                <span className="rule-ctx-glyph" aria-hidden="true">—</span>
+                <span>{t('reglas.divider')}</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </SubPage>
