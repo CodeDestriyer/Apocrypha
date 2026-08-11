@@ -249,6 +249,12 @@ export default function RulesSection({ rootOnBack }) {
           onContextMenu={openFormatMenu}
           rows={9}
         />
+        {body.trim() && (
+          <div className="rule-preview">
+            <div className="rule-preview-label">{t('reglas.preview')}</div>
+            <div className="rule-read-body">{renderRuleBody(body)}</div>
+          </div>
+        )}
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>

@@ -40,6 +40,7 @@ const DICT = {
   'reglas.bold': 'Negrita',
   'reglas.box': 'Recuadro',
   'reglas.mark': 'Resaltar',
+  'reglas.preview': 'Vista previa',
   'nav.body': 'Cuerpo',
   'weight.title': 'Peso',
   'weight.soon': 'Próximamente',

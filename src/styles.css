@@ -6026,6 +6026,17 @@ body {
 .rule-note-body .rule-table { font-size: 11px; margin: 4px 0; }
 .rule-note-body .rule-table th, .rule-note-body .rule-table td { padding: 2px 5px; }
 .rule-note-body .rule-hr { margin: 7px 0; }
+/* Live preview under the editor — shows the formatted result while typing */
+.rule-preview {
+  margin-top: 10px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: rgba(190, 158, 92, 0.05);
+  text-align: left;
+}
+.rule-preview-label {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 8px;
+}
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .rule-read-body {
   white-space: pre-wrap;
