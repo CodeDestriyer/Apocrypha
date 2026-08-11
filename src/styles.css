@@ -5999,14 +5999,15 @@ body {
   text-align: left;
   min-width: 0;
 }
-/* The Tareas companion cube is desktop-only (mobile reaches tasks via the
-   nav grid card, so the Hero header stays a single Peso cube on phones). */
+/* On phones the Hero header shows the Tareas cube only; Peso moves to its own
+   section. On desktop both cubes sit side by side. */
 .hero-cube--tareas {
-  display: none;
+  display: flex;
   cursor: pointer;
   font-family: inherit;
 }
-.desktop-content .hero-cube--tareas { display: flex; }
+.hero-cube--peso { display: none; }
+.desktop-content .hero-cube--peso { display: flex; }
 
 /* Tareas cube: progress count + a short preview of the day's tasks */
 .tareas-cube-count {
@@ -6020,7 +6021,13 @@ body {
 }
 .tareas-cube-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
 .tareas-cube-item { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.tareas-cube-shape { flex: none; display: inline-flex; width: 15px; height: 15px; }
+.tareas-cube-shape {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; margin: -3px 0;
+  border: none; background: transparent; padding: 0; cursor: pointer;
+  border-radius: 5px; transition: background 0.12s;
+}
+.tareas-cube-shape:hover { background: rgba(0, 0, 0, 0.05); }
 .tareas-cube-text {
   font-family: 'EB Garamond', serif; font-size: 16px; font-weight: 600; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
@@ -6035,24 +6042,27 @@ body {
 
 /* ── Tareas section (daily to-do list) ──────────────────────────── */
 .tareas { display: flex; flex-direction: column; }
-/* Type picker (pick a category when adding a task) */
-.tareas-type-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+/* Type picker — square swatches that pop up only while you're typing a task */
+.tareas-type-picker {
+  display: flex; gap: 8px; margin: 2px 0 14px;
+  animation: tareas-pop 0.16s ease;
+}
+@keyframes tareas-pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tareas-type-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 7px 12px 7px 9px;
-  border: 1px solid var(--line); border-radius: 999px;
-  background: var(--paper); color: var(--text-dim); cursor: pointer;
-  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  flex: 0 0 auto;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--line); border-radius: 8px;
+  background: var(--paper); cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.06s;
 }
 .tareas-type-chip svg { display: block; }
+.tareas-type-chip:active { transform: scale(0.94); }
 .tareas-type-chip.active {
   border-color: var(--type-color);
-  color: var(--type-color);
-  background: color-mix(in srgb, var(--type-color) 10%, transparent);
+  background: color-mix(in srgb, var(--type-color) 12%, transparent);
 }
-.tareas-type-chip-label { line-height: 1; }
-.tareas-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.tareas-add-row { display: flex; gap: 8px; margin-bottom: 6px; }
 .tareas-input { flex: 1; min-width: 0; }
 .tareas-add-btn {
   flex: 0 0 auto;
@@ -6065,14 +6075,13 @@ body {
 }
 .tareas-add-btn:hover { background: var(--wine-deep); }
 .tareas-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.tareas-done-banner {
-  font-family: 'Cinzel', serif;
-  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--wine); text-align: center;
-  padding: 8px; margin-bottom: 10px;
-  border: 1px solid var(--line); border-radius: 6px; background: rgba(110, 36, 19, 0.05);
-}
+/* Groups: one list per type, with a small divider between them */
+.tareas-groups { display: flex; flex-direction: column; }
 .tareas-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.tareas-groups > .tareas-list:not(:first-child) {
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
 .tareas-item {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;

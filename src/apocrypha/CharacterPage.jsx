@@ -238,7 +238,7 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 // Hero stat cubes: a big "PESO" square with the live weight chart + weight,
 // plus a "TAREAS" square holding the day's to-do list, on the left of the Hero
 // card. Tapping Peso opens Peso; tapping Tareas opens the task list.
-function HeroCubes({ t, onNavigate, log, tasks }) {
+function HeroCubes({ t, onNavigate, log, tasks, onToggleTask }) {
   const latest = latestEntry(log);
   const unit = t('body.unit');
   const list = Array.isArray(tasks) ? tasks : [];
@@ -247,11 +247,12 @@ function HeroCubes({ t, onNavigate, log, tasks }) {
   // Preview: open tasks first, then completed — a few of each fit the cube.
   const preview = [...list.filter((x) => !x.done), ...list.filter((x) => x.done)].slice(0, 5);
   const extra = total - preview.length;
+  const openTareas = () => onNavigate && onNavigate('tareas');
   return (
     <div className="hero-cubes">
       <button
         type="button"
-        className="hero-cube weight-card weight-card--link"
+        className="hero-cube hero-cube--peso weight-card weight-card--link"
         aria-label={t('weight.title')}
         onClick={() => onNavigate && onNavigate('peso')}
       >
@@ -274,11 +275,15 @@ function HeroCubes({ t, onNavigate, log, tasks }) {
           )}
         </div>
       </button>
-      <button
-        type="button"
+      {/* A plain div, not a button, so the per-task shapes can be real toggle
+          buttons inside it. Clicking anywhere else on the cube opens Tareas. */}
+      <div
         className="hero-cube hero-cube--tareas weight-card--link"
+        role="button"
+        tabIndex={0}
         aria-label={t('tareas.title')}
-        onClick={() => onNavigate && onNavigate('tareas')}
+        onClick={openTareas}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTareas(); } }}
       >
         <div className="weight-card-head">
           <span className="weight-card-title">{t('tareas.title')}</span>
@@ -289,7 +294,15 @@ function HeroCubes({ t, onNavigate, log, tasks }) {
             <ul className="tareas-cube-list">
               {preview.map((task) => (
                 <li key={task.id} className={`tareas-cube-item ${task.done ? 'done' : ''}`}>
-                  <span className="tareas-cube-shape"><TaskShape type={typeOf(task)} done={task.done} size={15} /></span>
+                  <button
+                    type="button"
+                    className="tareas-cube-shape"
+                    onClick={(e) => { e.stopPropagation(); onToggleTask && onToggleTask(task.id); }}
+                    aria-label={task.title}
+                    aria-pressed={task.done}
+                  >
+                    <TaskShape type={typeOf(task)} done={task.done} size={17} />
+                  </button>
                   <span className="tareas-cube-text">{task.title}</span>
                 </li>
               ))}
@@ -299,7 +312,7 @@ function HeroCubes({ t, onNavigate, log, tasks }) {
             <span className="tareas-cube-empty">{t('tareas.cubeEmpty')}</span>
           )}
         </div>
-      </button>
+      </div>
     </div>
   );
 }
@@ -315,6 +328,11 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
 
   const weightLog = Array.isArray(profile.weight_log) ? profile.weight_log : [];
   const tasks = Array.isArray(profile.tasks) ? profile.tasks : [];
+  const toggleTask = (id) =>
+    update((curr) => {
+      const list = Array.isArray(curr.tasks) ? curr.tasks : [];
+      return { tasks: list.map((x) => (x.id === id ? { ...x, done: !x.done } : x)) };
+    });
 
   return (
     <div className="card character-card">
@@ -349,7 +367,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         </button>
       )}
 
-      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} tasks={tasks} />
+      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} tasks={tasks} onToggleTask={toggleTask} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 
