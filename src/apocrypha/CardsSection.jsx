@@ -12,6 +12,27 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const dueCountFor = (deck) => deck.cards.length;
 
+// Hashtags on a card (e.g. #trabajo, #psicología). Stored on `card.tags` as a
+// deduped list of normalized strings WITHOUT the leading '#'; the '#' is only
+// added for display. `parseTags` accepts free text — commas, spaces, newlines
+// and stray '#' are all treated as separators — so the same helper powers the
+// chip input and any pasted "trabajo, psicología" blob.
+const normTag = (s) =>
+  String(s).replace(/^#+/, '').trim().toLowerCase().slice(0, 24);
+const parseTags = (raw) =>
+  String(raw).split(/[\s,]+/).map(normTag).filter(Boolean);
+const mergeTags = (existing, incoming) => {
+  const out = [...existing];
+  for (const tg of incoming) if (tg && !out.includes(tg)) out.push(tg);
+  return out;
+};
+const cardHasTag = (card, tag) => (card.tags ?? []).includes(tag);
+const deckTagsOf = (deck) => {
+  const set = new Set();
+  for (const c of deck.cards) for (const tg of (c.tags ?? [])) set.add(tg);
+  return [...set].sort((a, b) => a.localeCompare(b));
+};
+
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
 // Module-level cache so the in-progress deck/study screen and the unsaved
@@ -31,6 +52,7 @@ const _ssInit = _loadSS() ?? {};
 const _nav = {
   openDeckId: _ssInit.nav?.openDeckId ?? null,
   studyDeckId: _ssInit.nav?.studyDeckId ?? null,
+  studyTag: _ssInit.nav?.studyTag ?? null,
 };
 const _drafts = new Map(Object.entries(_ssInit.drafts ?? {}));
 const _study = new Map(Object.entries(_ssInit.study ?? {}));
@@ -51,10 +73,13 @@ export default function CardsSection({ rootOnBack }) {
 
   const [openDeckId, _setOpenDeckId] = useState(_nav.openDeckId);
   const [studyDeckId, _setStudyDeckId] = useState(_nav.studyDeckId);
+  // When set, the study session is scoped to cards carrying this hashtag.
+  const [studyTag, _setStudyTag] = useState(_nav.studyTag);
   const setOpenDeckId = (v) => { _nav.openDeckId = v; _saveSS(); _setOpenDeckId(v); };
   const setStudyDeckId = (v) => { _nav.studyDeckId = v; _saveSS(); _setStudyDeckId(v); };
-  const startStudy = (id) => { setStudyDeckId(id); };
-  const endStudy = () => { setStudyDeckId(null); };
+  const setStudyTag = (v) => { _nav.studyTag = v; _saveSS(); _setStudyTag(v); };
+  const startStudy = (id, tag = null) => { setStudyTag(tag); setStudyDeckId(id); };
+  const endStudy = () => { setStudyDeckId(null); setStudyTag(null); };
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
@@ -79,11 +104,12 @@ export default function CardsSection({ rootOnBack }) {
   const renameDeck = (id, name) =>
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, name } : x)));
 
-  const addCard = (deckId, front, back, note) => {
+  const addCard = (deckId, front, back, note, tags) => {
     const f = front.trim(); const b = back.trim();
     if (!f || !b) return;
     const card = { id: newId(), front: f, back: b, box: 1, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 };
     if (note && note.trim()) card.note = note.trim();
+    if (tags && tags.length) card.tags = tags;
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: [...x.cards, card] }
       : x));
@@ -99,10 +125,23 @@ export default function CardsSection({ rootOnBack }) {
 
   // Compute SubPage header dynamically
   const currentDeck = decks.find((d) => d.id === (studyDeckId || openDeckId));
+  // Deck the StudyView actually reviews: the whole deck, or — when a hashtag is
+  // selected — only the cards carrying it. Persistence key is namespaced by tag
+  // so a tag session's progress snapshot never collides with a full-deck one.
+  const studyDeck = (studyDeckId && currentDeck)
+    ? (studyTag
+        ? { ...currentDeck, cards: currentDeck.cards.filter((c) => cardHasTag(c, studyTag)) }
+        : currentDeck)
+    : null;
+  const studyKey = studyTag ? `${studyDeckId}::${studyTag}` : studyDeckId;
   let title, onBack, headerRight;
   if (studyDeckId && currentDeck) {
-    title = <span className="sub-title-deck">{currentDeck.name}</span>;
-    onBack = () => { _study.delete(currentDeck.id); _saveSS(); endStudy(); };
+    title = (
+      <span className="sub-title-deck">
+        {currentDeck.name}{studyTag ? <span className="sub-title-tag"> · #{studyTag}</span> : null}
+      </span>
+    );
+    onBack = () => { _study.delete(studyKey); _saveSS(); endStudy(); };
     headerRight = null;
   } else if (openDeckId && currentDeck) {
     if (editingName) {
@@ -159,7 +198,8 @@ export default function CardsSection({ rootOnBack }) {
   if (studyDeckId && currentDeck) {
     body = (
       <StudyView
-        deck={currentDeck}
+        deck={studyDeck}
+        studyKey={studyKey}
         onGrade={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
         t={t}
       />
@@ -169,7 +209,8 @@ export default function CardsSection({ rootOnBack }) {
       <DeckView
         deck={currentDeck}
         onStudy={() => startStudy(currentDeck.id)}
-        onAddCard={(f, b, n) => addCard(currentDeck.id, f, b, n)}
+        onStudyTag={(tag) => startStudy(currentDeck.id, tag)}
+        onAddCard={(f, b, n, tags) => addCard(currentDeck.id, f, b, n, tags)}
         onRemoveCard={(cardId) => removeCard(currentDeck.id, cardId)}
         onEditCard={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
         t={t}
@@ -261,24 +302,28 @@ function DeckList({ decks, onOpen, onAdd, t }) {
   );
 }
 
-function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
-  const draft = _drafts.get(deck.id) ?? { front: '', back: '', note: '', adding: false, noteOpen: false };
+function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
+  const _draftDefault = { front: '', back: '', note: '', tags: [], adding: false, noteOpen: false };
+  const draft = _drafts.get(deck.id) ?? _draftDefault;
   const [front, _setFront] = useState(draft.front);
   const [back, _setBack] = useState(draft.back);
   const [note, _setNote] = useState(draft.note);
+  const [tags, _setTags] = useState(draft.tags ?? []);
   const [noteOpen, _setNoteOpen] = useState(draft.noteOpen);
   const [adding, _setAdding] = useState(draft.adding);
   const persist = (patch) => {
-    const cur = _drafts.get(deck.id) ?? { front: '', back: '', note: '', adding: false, noteOpen: false };
+    const cur = _drafts.get(deck.id) ?? _draftDefault;
     _drafts.set(deck.id, { ...cur, ...patch });
     _saveSS();
   };
   const setFront = (v) => { persist({ front: v }); _setFront(v); };
   const setBack = (v) => { persist({ back: v }); _setBack(v); };
   const setNote = (v) => { persist({ note: v }); _setNote(v); };
+  const setTags = (v) => { persist({ tags: v }); _setTags(v); };
   const setNoteOpen = (v) => { persist({ noteOpen: v }); _setNoteOpen(v); };
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
+  const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
 
   const duplicate = useMemo(() => {
     const f = front.trim().toLowerCase();
@@ -288,14 +333,14 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
 
   const closeAdd = () => {
     setAdding(false);
-    setFront(''); setBack(''); setNote(''); setNoteOpen(false);
+    setFront(''); setBack(''); setNote(''); setTags([]); setNoteOpen(false);
     _drafts.delete(deck.id);
     _saveSS();
   };
 
   const submitCard = () => {
     if (!front.trim() || !back.trim() || duplicate) return;
-    onAddCard(front, back, note.trim() || undefined);
+    onAddCard(front, back, note.trim() || undefined, tags);
     closeAdd();
   };
 
@@ -306,10 +351,12 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
     const base = [...deck.cards].reverse();
     const q = query.trim().toLowerCase();
     if (!q) return base;
+    const qTag = q.replace(/^#+/, '');
     return base.filter((c) =>
       (c.front ?? '').toLowerCase().includes(q) ||
       (c.back ?? '').toLowerCase().includes(q) ||
-      (c.note ?? '').toLowerCase().includes(q)
+      (c.note ?? '').toLowerCase().includes(q) ||
+      (c.tags ?? []).some((tg) => tg.includes(qTag))
     );
   }, [query, deck.cards]);
 
@@ -322,6 +369,26 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
       >
         {t('cards.study')} · {dueCount}
       </button>
+
+      {deckTags.length > 0 && (
+        <div className="cards-tag-study">
+          <span className="cards-tag-study-label">{t('cards.studyByTag')}</span>
+          <div className="cards-tag-study-chips">
+            {deckTags.map((tg) => {
+              const n = deck.cards.filter((c) => cardHasTag(c, tg)).length;
+              return (
+                <button
+                  key={tg}
+                  className="cards-tag-study-chip"
+                  onClick={() => onStudyTag(tg)}
+                >
+                  #{tg}<span className="cards-tag-study-count">{n}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="search-add-row">
         <div className="cards-search open">
@@ -395,6 +462,9 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
             <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
           )}
 
+          <label className="cards-field-label">{t('cards.tags')}</label>
+          <TagInput tags={tags} onChange={setTags} suggestions={deckTags} t={t} />
+
           <div className="cards-panel-actions">
             <button className="cards-secondary-btn" onClick={closeAdd}>
               {t('cards.cancel')}
@@ -414,6 +484,7 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
           <CardRow
             key={c.id}
             card={c}
+            allTags={deckTags}
             onRemove={() => onRemoveCard(c.id)}
             onUpdate={(patch) => onEditCard(c.id, patch)}
             t={t}
@@ -424,12 +495,13 @@ function DeckView({ deck, onStudy, onAddCard, onRemoveCard, onEditCard, t }) {
   );
 }
 
-function CardRow({ card, onRemove, onUpdate, t }) {
+function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [front, setFront] = useState(card.front);
   const [back, setBack] = useState(card.back);
   const [note, setNote] = useState(card.note ?? '');
+  const [tags, setTags] = useState(card.tags ?? []);
   const [noteOpen, setNoteOpen] = useState(!!card.note);
   const menuRef = useRef(null);
 
@@ -443,11 +515,12 @@ function CardRow({ card, onRemove, onUpdate, t }) {
   const startEdit = () => {
     setFront(card.front); setBack(card.back);
     setNote(card.note ?? ''); setNoteOpen(!!card.note);
+    setTags(card.tags ?? []);
     setEditing(true);
   };
   const save = () => {
     if (!front.trim() || !back.trim()) return;
-    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null });
+    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null, tags });
     setEditing(false);
   };
 
@@ -484,6 +557,8 @@ function CardRow({ card, onRemove, onUpdate, t }) {
         ) : (
           <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
         )}
+        <label className="cards-field-label">{t('cards.tags')}</label>
+        <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={save} disabled={!front.trim() || !back.trim()}>{t('cards.save')}</button>
@@ -518,7 +593,74 @@ function CardRow({ card, onRemove, onUpdate, t }) {
           </div>
         )}
       </div>
+      {(card.tags?.length ?? 0) > 0 && (
+        <div className="card-row-tags">
+          {card.tags.map((tg) => (
+            <span key={tg} className="card-row-tag">#{tg}</span>
+          ))}
+        </div>
+      )}
     </li>
+  );
+}
+
+// Chip-style hashtag editor. Typing text and hitting Enter / comma / space
+// commits it as a chip; Backspace on an empty field removes the last chip.
+// `suggestions` are the tags already used elsewhere (deck-wide) — shown as
+// one-tap chips so the same hashtag gets reused rather than re-typed.
+function TagInput({ tags, onChange, suggestions = [], t }) {
+  const [text, setText] = useState('');
+  const commit = (raw) => {
+    const parsed = parseTags(raw);
+    if (parsed.length) onChange(mergeTags(tags, parsed));
+    setText('');
+  };
+  const removeAt = (i) => onChange(tags.filter((_, idx) => idx !== i));
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',' || (e.key === ' ' && text.trim())) {
+      e.preventDefault();
+      commit(text);
+    } else if (e.key === 'Backspace' && !text && tags.length) {
+      removeAt(tags.length - 1);
+    }
+  };
+  const avail = suggestions.filter((s) => !tags.includes(s));
+  return (
+    <div className="cards-tags-field">
+      <div className="cards-tags-box">
+        {tags.map((tg, i) => (
+          <span key={tg} className="cards-tag-chip">
+            #{tg}
+            <button
+              type="button"
+              className="cards-tag-chip-x"
+              onClick={() => removeAt(i)}
+              aria-label={t('cards.removeTag')}
+            >×</button>
+          </span>
+        ))}
+        <input
+          className="cards-tags-input"
+          value={text}
+          placeholder={tags.length ? '' : t('cards.tagsPlaceholder')}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          onBlur={() => { if (text.trim()) commit(text); }}
+        />
+      </div>
+      {avail.length > 0 && (
+        <div className="cards-tags-suggest">
+          {avail.slice(0, 12).map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="cards-tag-suggest"
+              onClick={() => commit(s)}
+            >#{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -545,8 +687,11 @@ const pickCard = (cards, excludeId, boxOf = (c) => c.box ?? 1) => {
   return pool[pool.length - 1];
 };
 
-function StudyView({ deck, onGrade, t }) {
-  const saved = _study.get(deck.id);
+function StudyView({ deck, studyKey, onGrade, t }) {
+  // Persistence key: usually the deck id, but a tag-scoped session namespaces it
+  // (`deckId::tag`) so its progress snapshot stays separate from the full deck's.
+  const key = studyKey ?? deck.id;
+  const saved = _study.get(key);
   // Per-session weighting snapshot (card id → box used for the draw). Grades
   // update the card's real box (persisted for next time), but within THIS
   // session a failed word keeps its old, rarer weight so it doesn't start
@@ -573,7 +718,7 @@ function StudyView({ deck, onGrade, t }) {
 
   // Persist a partial study state, keeping the rest from the current render.
   const persist = (patch) => {
-    _study.set(deck.id, { currentId, shown, reviewed, known, drawBoxes, ...patch });
+    _study.set(key, { currentId, shown, reviewed, known, drawBoxes, ...patch });
     _saveSS();
   };
   const setCurrentId = (v) => { persist({ currentId: v }); _setCurrentId(v); };
@@ -626,7 +771,7 @@ function StudyView({ deck, onGrade, t }) {
       known: known + (knewIt ? 1 : 0),
       drawBoxes: nextDraw,
     };
-    _study.set(deck.id, nextState);
+    _study.set(key, nextState);
     _saveSS();
     _setCurrentId(nextState.currentId);
     _setShown(false);

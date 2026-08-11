@@ -5420,6 +5420,88 @@ body {
 .cards-note-collapse:hover { color: #cbbf9f; }
 .cards-field-textarea--note { font-size: 13px; font-style: italic; }
 
+/* ─── Card hashtags: chip input, suggestions, study-by-tag, row chips ─── */
+.cards-tags-field { display: flex; flex-direction: column; gap: 8px; }
+.cards-tags-box {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(190, 158, 92, 0.35);
+}
+.cards-tags-box:focus-within { border-color: var(--gold); }
+.cards-tags-input {
+  flex: 1; min-width: 90px;
+  background: transparent; border: none; color: inherit; font: inherit; font-size: 14px;
+  padding: 2px 0;
+}
+.cards-tags-input:focus { outline: none; }
+.cards-tag-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  background: rgba(190, 158, 92, 0.16);
+  border: 1px solid rgba(190, 158, 92, 0.4);
+  color: #e8dcbb;
+  font-size: 12.5px; letter-spacing: 0.02em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.cards-tag-chip-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; padding: 0;
+  background: transparent; border: none; cursor: pointer;
+  color: #b7a878; font-size: 14px; line-height: 1;
+}
+.cards-tag-chip-x:hover { color: #f5f0e1; }
+.cards-tags-suggest { display: flex; flex-wrap: wrap; gap: 6px; }
+.cards-tag-suggest {
+  padding: 3px 9px;
+  background: transparent;
+  border: 1px dashed rgba(190, 158, 92, 0.4);
+  color: #a99a70;
+  font-size: 12.5px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cards-tag-suggest:hover { color: var(--gold); border-color: var(--gold); }
+
+/* Study-by-tag chips under the study button */
+.cards-tag-study { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.cards-tag-study-label {
+  font-family: 'Cinzel', serif; font-size: 11px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: #8a7d63;
+}
+.cards-tag-study-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cards-tag-study-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: rgba(190, 158, 92, 0.08);
+  border: 1px solid rgba(190, 158, 92, 0.35);
+  color: #e8dcbb;
+  font-size: 13.5px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cards-tag-study-chip:hover { background: rgba(190, 158, 92, 0.18); border-color: var(--gold); }
+.cards-tag-study-count {
+  font-size: 11px; color: #8a7d63;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 6px; border-radius: 999px;
+}
+
+/* Hashtags shown on a card row (read view) */
+.card-row-tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.card-row-tag {
+  padding: 2px 8px;
+  background: rgba(190, 158, 92, 0.12);
+  border: 1px solid rgba(190, 158, 92, 0.3);
+  color: #c9bb8c;
+  font-size: 11.5px; letter-spacing: 0.02em;
+  border-radius: 999px;
+}
+.sub-title-tag { color: var(--gold); font-weight: 600; }
+
 /* Note shown under back side during study — pinned to bottom so the main
    translation stays geometrically centered on the card regardless of note. */
 .study-card-back { position: relative; }
@@ -5910,6 +5992,19 @@ body {
 .cards-note-add:hover { border-color: var(--wine); color: var(--wine); }
 .cards-note-collapse { color: var(--text-dim); }
 .cards-note-collapse:hover { color: var(--wine); }
+.cards-tags-box { background: #ffffff; border: 1px solid var(--line); border-radius: 4px; }
+.cards-tags-box:focus-within { border-color: var(--wine); }
+.cards-tag-chip { background: rgba(110, 36, 19, 0.07); border-color: var(--gold-dim); color: var(--wine); }
+.cards-tag-chip-x { color: var(--gold-dim); }
+.cards-tag-chip-x:hover { color: var(--wine); }
+.cards-tag-suggest { border: 1px dashed var(--gold-dim); color: var(--text-dim); }
+.cards-tag-suggest:hover { color: var(--wine); border-color: var(--wine); }
+.cards-tag-study-label { color: var(--text-dim); }
+.cards-tag-study-chip { background: var(--paper); border: 1px solid var(--line); color: var(--wine); }
+.cards-tag-study-chip:hover { background: #ffffff; border-color: var(--wine); }
+.cards-tag-study-count { color: var(--text-dim); background: rgba(0, 0, 0, 0.06); }
+.card-row-tag { background: rgba(110, 36, 19, 0.06); border-color: var(--gold-dim); color: var(--wine); }
+.sub-title-tag { color: var(--wine); }
 
 /* ── Tarjetas: study view ───────────────────────────────── */
 .cards-progress { color: var(--text-dim); }
