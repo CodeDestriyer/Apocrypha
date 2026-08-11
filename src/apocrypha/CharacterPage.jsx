@@ -239,7 +239,7 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 // Hero stat cubes: a big "PESO" square with the live weight chart + weight,
 // plus a "TAREAS" square holding the day's to-do list, on the left of the Hero
 // card. Tapping Peso opens Peso; tapping Tareas opens the task list.
-function HeroCubes({ t, onNavigate, log, tasks, onToggleTask }) {
+function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
   const latest = latestEntry(log);
   const unit = t('body.unit');
   // The cube always reflects today's tasks; day-paging lives in the section.
@@ -299,15 +299,16 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask }) {
           {total > 0 ? (
             <ul className="tareas-cube-list">
               {preview.map((task) => (
-                <li key={task.id} className={`tareas-cube-item ${task.done ? 'done' : ''}`}>
+                <li key={task.id} className={`tareas-cube-item ${task.done ? 'done' : ''} ${task.missed ? 'missed' : ''}`}>
                   <button
                     type="button"
                     className="tareas-cube-shape"
                     onClick={(e) => { e.stopPropagation(); onToggleTask && onToggleTask(task.id); }}
+                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onMissTask && onMissTask(task.id); }}
                     aria-label={task.title}
                     aria-pressed={task.done}
                   >
-                    <TaskShape type={typeOf(task)} done={task.done} size={17} />
+                    <TaskShape type={typeOf(task)} done={task.done} missed={task.missed} size={17} />
                   </button>
                   <span className="tareas-cube-text">{task.title}</span>
                 </li>
@@ -337,7 +338,12 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
   const toggleTask = (id) =>
     update((curr) => {
       const list = Array.isArray(curr.tasks) ? curr.tasks : [];
-      return { tasks: list.map((x) => (x.id === id ? { ...x, done: !x.done } : x)) };
+      return { tasks: list.map((x) => (x.id === id ? { ...x, done: !x.done, missed: false } : x)) };
+    });
+  const missTask = (id) =>
+    update((curr) => {
+      const list = Array.isArray(curr.tasks) ? curr.tasks : [];
+      return { tasks: list.map((x) => (x.id === id ? { ...x, missed: !x.missed, done: false } : x)) };
     });
 
   return (
@@ -373,7 +379,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
         </button>
       )}
 
-      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} tasks={tasks} onToggleTask={toggleTask} />
+      <HeroCubes t={t} onNavigate={onNavigate} log={weightLog} tasks={tasks} onToggleTask={toggleTask} onMissTask={missTask} />
 
       {!hideNav && (showNav || editing) && <div className="divider" />}
 

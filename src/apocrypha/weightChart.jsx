@@ -107,7 +107,9 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
   const fullT1 = pts.length ? pts[pts.length - 1].t : 1;
   const fullSpan = Math.max(DAY, fullT1 - fullT0);
   // Left wall = first data point; empty "future" space extends to the right.
-  const margin = fullSpan * 0.7;
+  // The wide margin is what lets you zoom the time axis further out (the line
+  // shrinks toward the left as the empty future grows).
+  const margin = fullSpan * 3;
   const extMin = fullT0;
   const extMax = fullT1 + margin;
   const extSpan = extMax - extMin;

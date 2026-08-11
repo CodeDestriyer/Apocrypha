@@ -59,7 +59,10 @@ export default function TareasSection({ rootOnBack }) {
     setDraft('');
   };
   const toggle = (id) =>
-    setTasks((l) => l.map((x) => (x.id === id ? { ...x, done: !x.done } : x)));
+    setTasks((l) => l.map((x) => (x.id === id ? { ...x, done: !x.done, missed: false } : x)));
+  // Right-click marks a task as NOT done for the day (struck shape); persists.
+  const toggleMissed = (id) =>
+    setTasks((l) => l.map((x) => (x.id === id ? { ...x, missed: !x.missed, done: false } : x)));
   const remove = (id) => { setTasks((l) => l.filter((x) => x.id !== id)); setMenuId(null); setEditId(null); };
 
   const startEdit = (task) => {
@@ -154,15 +157,16 @@ export default function TareasSection({ rootOnBack }) {
                     );
                   }
                   return (
-                    <li key={task.id} className={`tareas-item ${task.done ? 'done' : ''}`}>
+                    <li key={task.id} className={`tareas-item ${task.done ? 'done' : ''} ${task.missed ? 'missed' : ''}`}>
                       <button
                         className="tareas-check"
                         onClick={() => toggle(task.id)}
+                        onContextMenu={(e) => { e.preventDefault(); toggleMissed(task.id); }}
                         role="checkbox"
                         aria-checked={task.done}
                         aria-label={task.title}
                       >
-                        <TaskShape type={ty} done={task.done} size={26} />
+                        <TaskShape type={ty} done={task.done} missed={task.missed} size={26} />
                       </button>
                       <span className="tareas-text" onClick={() => toggle(task.id)}>{task.title}</span>
                       <div className="tareas-gear" ref={menuId === task.id ? menuRef : null}>

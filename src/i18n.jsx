@@ -37,7 +37,7 @@ const DICT = {
   'reglas.bodyPlaceholder': 'Escribe la regla…',
   'reglas.searchPlaceholder': 'Buscar reglas…',
   'reglas.noBody': '(sin texto)',
-  'reglas.boldHint': 'Selecciona texto y haz clic derecho para ponerlo en negrita',
+  'reglas.bold': 'Negrita',
   'nav.body': 'Cuerpo',
   'weight.title': 'Peso',
   'weight.soon': 'Próximamente',

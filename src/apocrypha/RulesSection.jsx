@@ -54,17 +54,40 @@ export default function RulesSection({ rootOnBack }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
 
-  // Right-click a selection in the editor to bold it (wraps it in **…**);
-  // right-click with nothing selected still opens the normal browser menu.
-  const boldSelection = (e) => {
+  // Right-click a selection in the editor to open a small formatting menu
+  // (one option for now: Negrita). Nothing selected → native browser menu.
+  const [ctxMenu, setCtxMenu] = useState(null); // { x, y, start, end }
+  const ctxRef = useRef(null);
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const close = () => setCtxMenu(null);
+    const onDown = (e) => { if (ctxRef.current && !ctxRef.current.contains(e.target)) close(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [ctxMenu]);
+
+  const openFormatMenu = (e) => {
     const ta = e.currentTarget;
     const s = ta.selectionStart, en = ta.selectionEnd;
-    if (s == null || s === en) return;
+    if (s == null || s === en) return; // nothing selected → let the native menu open
     e.preventDefault();
+    setCtxMenu({ x: e.clientX, y: e.clientY, start: s, end: en });
+  };
+  const applyBold = () => {
+    if (!ctxMenu) return;
+    const { start: s, end: en } = ctxMenu;
     const sel = body.slice(s, en);
     const before = body.slice(0, s), after = body.slice(en);
     const wrapped = sel.startsWith('**') && sel.endsWith('**') && sel.length >= 4;
     setBody(wrapped ? before + sel.slice(2, -2) + after : `${before}**${sel}**${after}`);
+    setCtxMenu(null);
   };
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
@@ -153,10 +176,9 @@ export default function RulesSection({ rootOnBack }) {
           placeholder={t('reglas.bodyPlaceholder')}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(); }}
-          onContextMenu={boldSelection}
+          onContextMenu={openFormatMenu}
           rows={9}
         />
-        <div className="rule-edit-hint">{t('reglas.boldHint')}</div>
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>
@@ -221,6 +243,14 @@ export default function RulesSection({ rootOnBack }) {
   return (
     <SubPage title={pageTitle} onBack={onBack} headerRight={headerRight}>
       {content}
+      {ctxMenu && (
+        <div className="rule-ctx-menu" ref={ctxRef} style={{ top: ctxMenu.y, left: ctxMenu.x }}>
+          <button className="rule-ctx-item" onClick={applyBold}>
+            <span className="rule-ctx-b">B</span>
+            <span>{t('reglas.bold')}</span>
+          </button>
+        </div>
+      )}
     </SubPage>
   );
 }

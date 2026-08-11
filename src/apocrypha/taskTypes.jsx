@@ -31,9 +31,10 @@ export const taskDay = (task) => task?.day || todayISO();
 const STAR_POINTS =
   '12,3 14.17,9.01 20.56,9.22 15.52,13.14 17.29,19.28 12,15.7 6.71,19.28 8.48,13.14 3.44,9.22 9.83,9.01';
 
-// One shape (square / triangle / circle / star) in the type's colour — outlined
-// when `done` is false, solid-filled when true.
-export function TaskShape({ type, done, size = 24 }) {
+// One shape (square / triangle / circle / star) in the type's colour. Outlined
+// while open, solid-filled when `done`, and struck through when `missed`
+// (marked as not done for the day).
+export function TaskShape({ type, done, missed, size = 24 }) {
   const { shape, color } = TASK_TYPES[type] ?? TASK_TYPES[DEFAULT_TYPE];
   const fill = done ? color : 'none';
   const props = { fill, stroke: color, strokeWidth: 2, strokeLinejoin: 'round' };
@@ -43,6 +44,7 @@ export function TaskShape({ type, done, size = 24 }) {
       {shape === 'circle' && <circle cx="12" cy="12" r="8.5" {...props} />}
       {shape === 'triangle' && <polygon points="12,3.8 20.5,19 3.5,19" {...props} />}
       {shape === 'star' && <polygon points={STAR_POINTS} {...props} />}
+      {missed && <line x1="1.5" y1="12" x2="22.5" y2="12" stroke={color} strokeWidth="2.6" strokeLinecap="round" />}
     </svg>
   );
 }
