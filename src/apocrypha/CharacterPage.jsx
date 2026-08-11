@@ -3,11 +3,12 @@ import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
-import { typeOf, TaskShape } from './taskTypes.jsx';
+import { typeOf, TaskShape, todayISO, taskDay } from './taskTypes.jsx';
 
 const NAV = [
   { id: 'tareas', labelKey: 'nav.tareas', icon: '✓', summary: (p) => {
-    const tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    const today = todayISO();
+    const tasks = (Array.isArray(p.tasks) ? p.tasks : []).filter((x) => taskDay(x) === today);
     return tasks.length ? `${tasks.filter((x) => x.done).length}/${tasks.length}` : '—';
   } },
   { id: 'idiomas', labelKey: 'nav.idiomas', icon: '✦', summary: (p) => (p.decks ?? []).reduce((s, d) => s + (d.cards ?? []).length, 0) },
@@ -241,11 +242,14 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 function HeroCubes({ t, onNavigate, log, tasks, onToggleTask }) {
   const latest = latestEntry(log);
   const unit = t('body.unit');
-  const list = Array.isArray(tasks) ? tasks : [];
+  // The cube always reflects today's tasks; day-paging lives in the section.
+  const today = todayISO();
+  const list = (Array.isArray(tasks) ? tasks : []).filter((x) => taskDay(x) === today);
   const total = list.length;
   const done = list.filter((x) => x.done).length;
-  // Preview: open tasks first, then completed — a few of each fit the cube.
-  const preview = [...list.filter((x) => !x.done), ...list.filter((x) => x.done)].slice(0, 5);
+  // Preview: open tasks first, then completed. Shows plenty; only very long
+  // days spill into a "+N" tail.
+  const preview = [...list.filter((x) => !x.done), ...list.filter((x) => x.done)].slice(0, 8);
   const extra = total - preview.length;
   const openTareas = () => onNavigate && onNavigate('tareas');
   return (

@@ -6019,21 +6019,21 @@ body {
   flex: 1; margin-top: 14px; min-height: 0;
   display: flex; flex-direction: column; overflow: hidden;
 }
-.tareas-cube-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
-.tareas-cube-item { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.tareas-cube-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.tareas-cube-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .tareas-cube-shape {
   flex: none; display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; margin: -3px 0;
+  width: 20px; height: 20px;
   border: none; background: transparent; padding: 0; cursor: pointer;
   border-radius: 5px; transition: background 0.12s;
 }
-.tareas-cube-shape:hover { background: rgba(0, 0, 0, 0.05); }
+.tareas-cube-shape:hover { background: rgba(0, 0, 0, 0.06); }
 .tareas-cube-text {
-  font-family: 'EB Garamond', serif; font-size: 16px; font-weight: 600; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 600; color: var(--ink);
+  line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
 .tareas-cube-item.done .tareas-cube-text { color: var(--text-dim); text-decoration: line-through; }
-.tareas-cube-more { font-size: 12px; color: var(--text-dim); font-style: italic; padding-left: 18px; }
+.tareas-cube-more { font-size: 12px; color: var(--text-dim); font-style: italic; padding-left: 28px; margin-top: 1px; }
 .tareas-cube-empty {
   font-family: 'Cinzel', serif;
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -6042,6 +6042,22 @@ body {
 
 /* ── Tareas section (daily to-do list) ──────────────────────────── */
 .tareas { display: flex; flex-direction: column; }
+/* Day pager — step to yesterday / tomorrow */
+.tareas-daynav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 16px; }
+.tareas-day-arrow {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--paper); color: var(--wine);
+  font-size: 20px; line-height: 1; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tareas-day-arrow:hover { border-color: var(--wine); background: #ffffff; }
+.tareas-day-label {
+  min-width: 92px; text-align: center;
+  font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink);
+}
 /* Type picker — square swatches that pop up only while you're typing a task */
 .tareas-type-picker {
   display: flex; gap: 8px; margin: 2px 0 14px;
@@ -6075,13 +6091,19 @@ body {
 }
 .tareas-add-btn:hover { background: var(--wine-deep); }
 .tareas-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-/* Groups: one list per type, with a small divider between them */
+/* Groups: one list per type, each under a small coloured type label */
 .tareas-groups { display: flex; flex-direction: column; }
-.tareas-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.tareas-groups > .tareas-list:not(:first-child) {
-  margin-top: 14px; padding-top: 14px;
+.tareas-group { display: flex; flex-direction: column; gap: 8px; }
+.tareas-group + .tareas-group {
+  margin-top: 22px; padding-top: 20px;
   border-top: 1px solid var(--line);
 }
+.tareas-group-label {
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  padding-left: 2px;
+}
+.tareas-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .tareas-item {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
@@ -6102,7 +6124,7 @@ body {
   cursor: pointer; overflow-wrap: anywhere;
 }
 .tareas-item.done .tareas-text { color: var(--text-dim); text-decoration: line-through; }
-/* Per-task gear → popover to change the task's type or delete it */
+/* Per-task gear → small popover: Editar / Eliminar */
 .tareas-gear { flex: none; position: relative; }
 .tareas-gear-btn {
   width: 32px; height: 32px;
@@ -6114,45 +6136,26 @@ body {
 .tareas-gear-btn:hover { color: var(--wine); background: rgba(110, 36, 19, 0.06); }
 .tareas-gear-menu {
   position: absolute; top: calc(100% + 4px); right: 0; z-index: 10;
-  min-width: 190px;
+  min-width: 150px;
   display: flex; flex-direction: column; gap: 2px;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid var(--line); border-radius: 8px;
   background: var(--paper); box-shadow: 0 10px 30px rgba(42, 14, 8, 0.22);
 }
-.tareas-gear-heading {
-  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--text-dim); padding: 2px 6px 6px;
-}
-.tareas-gear-types { display: flex; flex-direction: column; gap: 2px; }
-.tareas-gear-type {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 8px; border: 1px solid transparent; border-radius: 6px;
+.tareas-gear-item {
+  padding: 9px 10px; border: none; border-radius: 6px;
   background: transparent; color: var(--ink); cursor: pointer;
   font-family: 'EB Garamond', serif; font-size: 15px; text-align: left;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.12s;
 }
-.tareas-gear-type svg { display: block; flex: none; }
-.tareas-gear-type:hover { background: rgba(0, 0, 0, 0.035); }
-.tareas-gear-type.active { border-color: var(--line); background: rgba(0, 0, 0, 0.05); font-weight: 600; }
-.tareas-gear-del {
-  margin-top: 4px;
-  padding: 8px; border: none; border-top: 1px solid var(--line);
-  background: transparent; color: var(--wine); cursor: pointer;
-  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
-  text-align: left; border-radius: 0 0 4px 4px;
-}
-.tareas-gear-del:hover { background: rgba(110, 36, 19, 0.06); }
-.tareas-clear {
-  align-self: center;
-  margin-top: 16px;
-  padding: 8px 16px;
-  border: 1px solid var(--line); border-radius: 6px;
-  background: transparent; color: var(--text-dim);
-  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  cursor: pointer; transition: border-color 0.15s, color 0.15s;
-}
-.tareas-clear:hover { border-color: var(--wine); color: var(--wine); }
+.tareas-gear-item:hover { background: rgba(0, 0, 0, 0.04); }
+.tareas-gear-item--danger { color: var(--wine); }
+.tareas-gear-item--danger:hover { background: rgba(110, 36, 19, 0.07); }
+/* Inline editor (gear → Editar): change the text and the type at once */
+.tareas-item--editing { display: block; padding: 12px; }
+.tareas-edit { display: flex; flex-direction: column; gap: 10px; }
+.tareas-edit .tareas-type-picker { margin: 0; }
+.tareas-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .weight-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .weight-card-title {
   font-family: 'Cinzel', serif;

@@ -14,6 +14,20 @@ export const DEFAULT_TYPE = 'study';
 // Fall back gracefully for tasks saved before types existed / unknown values.
 export const typeOf = (task) => (TASK_TYPES[task?.type] ? task.type : DEFAULT_TYPE);
 
+// Local (not UTC) YYYY-MM-DD, so "today" matches the user's wall-clock day.
+export const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+export const shiftISO = (iso, delta) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + delta);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+};
+// Tasks saved before the per-day feature have no `day` — treat them as today's.
+export const taskDay = (task) => task?.day || todayISO();
+
 const STAR_POINTS =
   '12,3 14.17,9.01 20.56,9.22 15.52,13.14 17.29,19.28 12,15.7 6.71,19.28 8.48,13.14 3.44,9.22 9.83,9.01';
 
