@@ -80,10 +80,23 @@ function useMediaQuery(query) {
   return match;
 }
 
+// Direct entry to the gamification app: visiting with #apocrypha (or #app) in
+// the URL, or having entered before (remembered in localStorage), opens the app
+// straight away — no 10-tap gesture, and a refresh keeps you inside it.
+const ENTER_KEY = 'lr.enterApp';
+function readEnterIntent() {
+  try {
+    if (typeof window === 'undefined') return false;
+    const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+    if (hash === 'apocrypha' || hash === 'app') return true;
+    return localStorage.getItem(ENTER_KEY) === '1';
+  } catch { return false; }
+}
+
 function Shell() {
   const { status } = useProfile();
   const [view, setView] = useState('home');
-  const [showApp, setShowApp] = useState(false);
+  const [showApp, setShowApp] = useState(readEnterIntent);
   const [bypassGate, setBypassGate] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   // Temporarily disabled — flip back to true to re-enable the in-app gate.
@@ -97,6 +110,30 @@ function Shell() {
     if (gated || status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
   }, [gated, status]);
 
+  // Keep the URL hash + remembered flag in sync with whether we're in the app,
+  // so the link is shareable/bookmarkable and survives reloads.
+  useEffect(() => {
+    try {
+      const bareUrl = window.location.pathname + window.location.search;
+      if (showApp) {
+        localStorage.setItem(ENTER_KEY, '1');
+        if ((window.location.hash || '').replace(/^#/, '').toLowerCase() !== 'apocrypha') {
+          window.history.replaceState(null, '', `${bareUrl}#apocrypha`);
+        }
+      } else {
+        localStorage.removeItem(ENTER_KEY);
+        if (window.location.hash) window.history.replaceState(null, '', bareUrl);
+      }
+    } catch {}
+  }, [showApp]);
+
+  // Navigating to #apocrypha in the same tab (e.g. pasting the link) opens it.
+  useEffect(() => {
+    const onHash = () => { if (readEnterIntent()) setShowApp(true); };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
   if (gated) {
     return <BrowserGate onBypass={() => setBypassGate(true)} />;
   }
@@ -105,9 +142,9 @@ function Shell() {
     return <div className="splash"><div className="ornament">⚜ ⚔ ⚜</div></div>;
   }
 
-  // Hidden entry: a registered user who taps the avatar 10× drops into the
-  // gamification app. It's not part of the normal flow — refreshing returns
-  // to the public landing.
+  // Entry to the gamification app: the #apocrypha link, the remembered flag, or
+  // the hidden 10-tap gesture on the avatar. Once in, it sticks across reloads
+  // (see the sync effect above) until the user exits back to the landing.
   if (showApp && status === 'ready') {
     if (isDesktop) {
       return (
