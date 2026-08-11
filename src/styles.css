@@ -5941,11 +5941,20 @@ body {
 .cards-grade-btn--knew:hover { background: rgba(63, 122, 66, 0.14); border-color: rgba(63, 122, 66, 0.6); }
 
 /* ── Reglas: note grid ──────────────────────────────────── */
-.rule-note { border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); border-radius: 6px; }
-.rule-note:hover { border-color: var(--gold-dim); background: #ffffff; }
+.rule-note {
+  border: 1.5px solid var(--gold-dim); background: var(--paper); color: var(--ink-soft);
+  border-radius: 8px; box-shadow: 0 2px 6px rgba(42, 14, 8, 0.07);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s;
+}
+.rule-note:hover {
+  border-color: var(--wine); background: #ffffff;
+  box-shadow: 0 6px 16px rgba(42, 14, 8, 0.14); transform: translateY(-2px);
+}
 .rule-note--active { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
-.rule-note-title { color: var(--wine); }
+.rule-note-title { color: var(--wine); font-weight: 800; font-size: 14px; letter-spacing: 0.02em; }
 .rule-note-body { color: var(--ink-soft); }
+/* The opened rule's title in the header */
+.sub-title-deck { font-weight: 800; }
 .rule-note-del { color: var(--text-dim); }
 .rule-note-del:hover { color: var(--danger); background: rgba(157, 59, 47, 0.1); }
 .rule-note--add { border: 1px dashed var(--gold-dim); color: var(--wine); background: transparent; }
@@ -5984,13 +5993,6 @@ body {
   width: 22px; height: 22px;
   border-radius: 4px; background: rgba(240, 205, 90, 0.75);
 }
-.rule-ctx-accent {
-  flex: none;
-  display: grid; place-items: center;
-  width: 22px; height: 22px;
-  border: 1px solid var(--line); border-radius: 4px;
-  font-family: 'Cinzel', serif; font-weight: 700; font-size: 13px; color: var(--wine);
-}
 /* Inline formatting inside a rule body */
 .rule-box {
   border: 1.5px solid var(--ink); border-radius: 4px;
@@ -6002,7 +6004,6 @@ body {
   border-radius: 3px; padding: 0 3px;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
-.rule-accent { color: var(--wine); font-weight: 600; }
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .rule-read-body {
   white-space: pre-wrap;

@@ -10,20 +10,19 @@ const newId = () =>
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
-// Rule bodies store inline formatting as markers: **bold**, [[boxed]],
-// ==highlight== and %%accent%%. Render each as its own span (newlines are kept
-// by the container's white-space: pre-wrap).
+// Rule bodies store inline formatting as markers: **bold**, [[boxed]] and
+// ==highlight==. Render each as its own span (newlines are kept by the
+// container's white-space: pre-wrap).
 function renderRich(text) {
   const str = String(text ?? '');
-  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|%%([\s\S]+?)%%/g;
+  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==/g;
   const out = [];
   let last = 0, m, key = 0;
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) out.push(str.slice(last, m.index));
     if (m[1] !== undefined) out.push(<strong key={key++}>{m[1]}</strong>);
     else if (m[2] !== undefined) out.push(<span key={key++} className="rule-box">{m[2]}</span>);
-    else if (m[3] !== undefined) out.push(<mark key={key++} className="rule-mark">{m[3]}</mark>);
-    else out.push(<span key={key++} className="rule-accent">{m[4]}</span>);
+    else out.push(<mark key={key++} className="rule-mark">{m[3]}</mark>);
     last = m.index + m[0].length;
   }
   if (last < str.length) out.push(str.slice(last));
@@ -107,7 +106,6 @@ export default function RulesSection({ rootOnBack }) {
   const applyBold = () => wrapSelection('**', '**');
   const applyBox = () => wrapSelection('[[', ']]');
   const applyMark = () => wrapSelection('==', '==');
-  const applyAccent = () => wrapSelection('%%', '%%');
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
 
@@ -275,10 +273,6 @@ export default function RulesSection({ rootOnBack }) {
           <button className="rule-ctx-item" onClick={applyMark}>
             <span className="rule-ctx-mark" aria-hidden="true" />
             <span>{t('reglas.mark')}</span>
-          </button>
-          <button className="rule-ctx-item" onClick={applyAccent}>
-            <span className="rule-ctx-accent" aria-hidden="true">A</span>
-            <span>{t('reglas.accent')}</span>
           </button>
         </div>
       )}
