@@ -9,7 +9,7 @@ export const TASK_TYPES = {
 };
 
 export const TYPE_ORDER = ['spanish', 'varkanis', 'body', 'study'];
-export const DEFAULT_TYPE = 'study';
+export const DEFAULT_TYPE = 'spanish';
 
 // Fall back gracefully for tasks saved before types existed / unknown values.
 export const typeOf = (task) => (TASK_TYPES[task?.type] ? task.type : DEFAULT_TYPE);

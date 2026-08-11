@@ -3,7 +3,7 @@ import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
-import { typeOf, TaskShape, todayISO, taskDay } from './taskTypes.jsx';
+import { typeOf, TaskShape, todayISO, taskDay, TYPE_ORDER } from './taskTypes.jsx';
 
 const NAV = [
   { id: 'tareas', labelKey: 'nav.tareas', icon: '✓', summary: (p) => {
@@ -247,9 +247,11 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask }) {
   const list = (Array.isArray(tasks) ? tasks : []).filter((x) => taskDay(x) === today);
   const total = list.length;
   const done = list.filter((x) => x.done).length;
-  // Preview: open tasks first, then completed. Shows plenty; only very long
-  // days spill into a "+N" tail.
-  const preview = [...list.filter((x) => !x.done), ...list.filter((x) => x.done)].slice(0, 8);
+  // Preview follows the same type order as the section (Español → varkanis.com
+  // → Cuerpo → Estudio); only very long days spill into a "+N" tail.
+  const preview = [...list]
+    .sort((a, b) => TYPE_ORDER.indexOf(typeOf(a)) - TYPE_ORDER.indexOf(typeOf(b)))
+    .slice(0, 8);
   const extra = total - preview.length;
   const openTareas = () => onNavigate && onNavigate('tareas');
   return (

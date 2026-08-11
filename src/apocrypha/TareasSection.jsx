@@ -102,13 +102,10 @@ export default function TareasSection({ rootOnBack }) {
   return (
     <SubPage title={t('tareas.title')} onBack={rootOnBack}>
       <div className="tareas">
-        <div className="tareas-topbar">
-          <div className="tareas-daynav">
-            <button className="tareas-day-arrow" onClick={() => goDay(-1)} aria-label={t('tareas.yesterday')}>‹</button>
-            <span className="tareas-day-label">{dayLabel}</span>
-            <button className="tareas-day-arrow" onClick={() => goDay(1)} aria-label={t('tareas.tomorrow')}>›</button>
-          </div>
-          <button className="tareas-add-btn" onClick={add} disabled={!draft.trim()} aria-label={t('tareas.add')}>+</button>
+        <div className="tareas-daynav">
+          <button className="tareas-day-arrow" onClick={() => goDay(-1)} aria-label={t('tareas.yesterday')}>‹</button>
+          <span className="tareas-day-label">{dayLabel}</span>
+          <button className="tareas-day-arrow" onClick={() => goDay(1)} aria-label={t('tareas.tomorrow')}>›</button>
         </div>
 
         <div className="tareas-add-row">
@@ -120,6 +117,7 @@ export default function TareasSection({ rootOnBack }) {
             onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
             maxLength={120}
           />
+          <button className="tareas-add-btn" onClick={add} disabled={!draft.trim()} aria-label={t('tareas.add')}>+</button>
         </div>
 
         {showTypePicker && typePicker(draftType, setDraftType)}

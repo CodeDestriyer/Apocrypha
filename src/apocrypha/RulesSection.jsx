@@ -10,6 +10,14 @@ const newId = () =>
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
+// Rule bodies store bold as **markdown**; render it as <strong> (newlines are
+// kept by the container's white-space: pre-wrap).
+function renderRich(text) {
+  return String(text ?? '')
+    .split(/\*\*([\s\S]+?)\*\*/g)
+    .map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
+}
+
 // Rules ("Reglas") — a store of Spanish grammar rules, shown as a
 // Notion/Keep-style grid of square note tiles. Opening a tile drops into a
 // focused page (the grid is hidden): existing rules open in read mode, with
@@ -45,6 +53,19 @@ export default function RulesSection({ rootOnBack }) {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
+
+  // Right-click a selection in the editor to bold it (wraps it in **…**);
+  // right-click with nothing selected still opens the normal browser menu.
+  const boldSelection = (e) => {
+    const ta = e.currentTarget;
+    const s = ta.selectionStart, en = ta.selectionEnd;
+    if (s == null || s === en) return;
+    e.preventDefault();
+    const sel = body.slice(s, en);
+    const before = body.slice(0, s), after = body.slice(en);
+    const wrapped = sel.startsWith('**') && sel.endsWith('**') && sel.length >= 4;
+    setBody(wrapped ? before + sel.slice(2, -2) + after : `${before}**${sel}**${after}`);
+  };
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
 
@@ -132,8 +153,10 @@ export default function RulesSection({ rootOnBack }) {
           placeholder={t('reglas.bodyPlaceholder')}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(); }}
+          onContextMenu={boldSelection}
           rows={9}
         />
+        <div className="rule-edit-hint">{t('reglas.boldHint')}</div>
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>
@@ -146,7 +169,7 @@ export default function RulesSection({ rootOnBack }) {
     content = (
       <div className="rule-read">
         {currentRule.body
-          ? <div className="rule-read-body">{currentRule.body}</div>
+          ? <div className="rule-read-body">{renderRich(currentRule.body)}</div>
           : <div className="empty-hint">{t('reglas.noBody')}</div>}
       </div>
     );
@@ -186,7 +209,7 @@ export default function RulesSection({ rootOnBack }) {
             {visible.map((r) => (
               <button key={r.id} className="rule-note" onClick={() => openRule(r)}>
                 {r.title && <div className="rule-note-title">{r.title}</div>}
-                {r.body && <div className="rule-note-body">{r.body}</div>}
+                {r.body && <div className="rule-note-body">{renderRich(r.body)}</div>}
               </button>
             ))}
           </div>
