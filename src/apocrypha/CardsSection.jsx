@@ -326,6 +326,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
   const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
+  const [studyExpanded, setStudyExpanded] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
 
   const duplicate = useMemo(() => {
@@ -365,24 +366,33 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
 
   return (
     <div className="cards-deck">
-      <div className="cards-study-split">
+      {!studyExpanded ? (
         <button
-          className="cards-study-btn cards-study-btn--all"
-          onClick={onStudy}
+          className="cards-study-btn"
+          onClick={() => { if (deckTags.length) setStudyExpanded(true); else onStudy(); }}
           disabled={dueCount === 0}
         >
-          {t('cards.studyAllLabel')} · {dueCount}
+          {t('cards.study')} · {dueCount}
         </button>
-        <button
-          className={`cards-study-btn cards-study-btn--tag ${tagPickerOpen ? 'active' : ''}`}
-          onClick={() => setTagPickerOpen((o) => !o)}
-          disabled={deckTags.length === 0}
-        >
-          {t('cards.studyTag')}
-        </button>
-      </div>
+      ) : (
+        <div className="cards-study-split">
+          <button
+            className="cards-study-btn"
+            onClick={onStudy}
+            disabled={dueCount === 0}
+          >
+            {t('cards.studyAllLabel')} · {dueCount}
+          </button>
+          <button
+            className={`cards-study-btn ${tagPickerOpen ? 'active' : ''}`}
+            onClick={() => setTagPickerOpen((o) => !o)}
+          >
+            {t('cards.studyTag')}
+          </button>
+        </div>
+      )}
 
-      {tagPickerOpen && deckTags.length > 0 && (
+      {studyExpanded && tagPickerOpen && deckTags.length > 0 && (
         <div className="cards-tag-study">
           <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
           <div className="cards-tag-study-chips">
@@ -515,6 +525,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
             key={c.id}
             card={c}
             allTags={deckTags}
+            onTagClick={(tg) => setQuery((q) => (q.replace(/^#/, '') === tg ? '' : `#${tg}`))}
             onRemove={() => onRemoveCard(c.id)}
             onUpdate={(patch) => onEditCard(c.id, patch)}
             t={t}
@@ -525,7 +536,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
   );
 }
 
-function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
+function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [front, setFront] = useState(card.front);
@@ -646,7 +657,12 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
       {(card.tags?.length ?? 0) > 0 && (
         <div className="card-row-tags">
           {card.tags.map((tg) => (
-            <span key={tg} className="card-row-tag">#{tg}</span>
+            <button
+              key={tg}
+              type="button"
+              className="card-row-tag"
+              onClick={() => onTagClick?.(tg)}
+            >#{tg}</button>
           ))}
         </div>
       )}

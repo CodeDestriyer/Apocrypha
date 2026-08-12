@@ -5499,25 +5499,19 @@ body {
   color: #c9bb8c;
   font-size: 11.5px; letter-spacing: 0.02em;
   border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
+.card-row-tag:hover { background: rgba(190, 158, 92, 0.22); border-color: var(--gold); color: #f5f0e1; }
 .sub-title-tag { color: var(--gold); font-weight: 600; }
 
-/* Study button split into "todo" + "etiqueta" */
+/* Study button splits into two equal, equivalent buttons on click */
 .cards-study-split { display: flex; gap: 8px; }
-.cards-study-split .cards-study-btn { width: auto; margin: 0; }
-.cards-study-btn--all { flex: 2 1 0; }
-.cards-study-btn--tag {
-  flex: 1 1 0;
-  font-size: 14px; letter-spacing: 0.08em;
-  background: transparent;
-  border: 1px solid rgba(190, 158, 92, 0.5);
-  color: #cbbf9f;
+.cards-study-split .cards-study-btn {
+  flex: 1 1 0; width: auto; margin: 0;
+  font-size: 15px; letter-spacing: 0.08em;
 }
-.cards-study-btn--tag:hover:not(:disabled) { background: rgba(190, 158, 92, 0.1); color: var(--gold); }
-.cards-study-btn--tag.active {
-  background: rgba(190, 158, 92, 0.16); color: var(--gold); border-color: var(--gold);
-}
-.cards-study-btn--tag:disabled { opacity: 0.35; }
+.cards-study-btn.active { background: rgba(190, 158, 92, 0.2); }
 
 /* Side-by-side "add note" / "add tags" buttons */
 .cards-extra-row { display: flex; gap: 8px; }
@@ -6038,10 +6032,11 @@ body {
 .cards-tag-study-chip:hover { background: #ffffff; border-color: var(--wine); }
 .cards-tag-study-count { color: var(--text-dim); background: rgba(0, 0, 0, 0.06); }
 .card-row-tag { background: rgba(110, 36, 19, 0.06); border-color: var(--gold-dim); color: var(--wine); }
+.card-row-tag:hover { background: rgba(110, 36, 19, 0.12); border-color: var(--wine); color: var(--wine); }
 .sub-title-tag { color: var(--wine); }
-.cards-study-btn--tag { background: transparent; border: 1px solid var(--line); color: var(--wine); }
-.cards-study-btn--tag:hover:not(:disabled) { background: rgba(110, 36, 19, 0.05); color: var(--wine); }
-.cards-study-btn--tag.active { background: rgba(110, 36, 19, 0.08); color: var(--wine); border-color: var(--wine); }
+.cards-study-split .cards-study-btn { background: #ffffff; color: var(--wine); border: 1px solid var(--wine); }
+.cards-study-split .cards-study-btn:hover:not(:disabled) { background: rgba(110, 36, 19, 0.05); }
+.cards-study-split .cards-study-btn.active { background: rgba(110, 36, 19, 0.1); }
 .cards-extra-btn { background: var(--paper); border: 1px solid var(--line); color: var(--text-dim); border-radius: 4px; }
 .cards-extra-btn:hover { border-color: var(--wine); color: var(--wine); background: #ffffff; }
 .cards-extra-plus { color: var(--wine); }
