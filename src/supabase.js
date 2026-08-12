@@ -133,6 +133,29 @@ export async function createProfile(name) {
     .select()
     .single();
   if (error) throw error;
+  // Backfill `day` on tasks that predate the per-day feature. Without a stored
+  // `day` a task drifts onto whatever day the app is opened; pin it to its
+  // creation day (local) once, so it stays put from now on.
+  const tasksArr = Array.isArray(data.tasks) ? data.tasks : [];
+  const needsDay = tasksArr.some((tk) => tk && !tk.day);
+  if (needsDay) {
+    const localDay = (ts) => {
+      const d = ts ? new Date(ts) : new Date();
+      const src = Number.isNaN(d.getTime()) ? new Date() : d;
+      return `${src.getFullYear()}-${String(src.getMonth() + 1).padStart(2, '0')}-${String(src.getDate()).padStart(2, '0')}`;
+    };
+    data.tasks = tasksArr.map((tk) =>
+      tk && !tk.day ? { ...tk, day: localDay(tk.created_at) } : tk);
+    try {
+      await supabase
+        .from('profiles')
+        .update({ tasks: data.tasks, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+    } catch (e) {
+      console.error('tasks day backfill save failed', e);
+    }
+  }
+
   return data;
 }
 
