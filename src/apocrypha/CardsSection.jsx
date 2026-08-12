@@ -131,6 +131,13 @@ export default function CardsSection({ rootOnBack }) {
   const updateCardAnywhere = (cardId, patch) =>
     setDecks((d) => d.map((x) => ({ ...x, cards: x.cards.map((c) => c.id === cardId ? { ...c, ...patch } : c) })));
 
+  // Hashtags are shared across every deck: suggestions come from all decks,
+  // not just the one being edited.
+  const allDeckTags = useMemo(
+    () => deckTagsOf({ cards: decks.flatMap((d) => d.cards) }),
+    [decks],
+  );
+
   // Compute SubPage header dynamically
   const isGlobalStudy = studyDeckId === ALL_DECKS;
   const globalDeck = { id: ALL_DECKS, name: t('cards.allDecks'), cards: decks.flatMap((d) => d.cards) };
@@ -220,6 +227,7 @@ export default function CardsSection({ rootOnBack }) {
     body = (
       <DeckView
         deck={currentDeck}
+        allDeckTags={allDeckTags}
         onStudy={() => startStudy(currentDeck.id)}
         onStudyTag={(tag) => startStudy(currentDeck.id, tag)}
         onAddCard={(f, b, n, tags) => addCard(currentDeck.id, f, b, n, tags)}
@@ -385,7 +393,7 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
   );
 }
 
-function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
+function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
   const _draftDefault = { front: '', back: '', note: '', tags: [], adding: false, noteOpen: false, tagsOpen: false };
   const draft = _drafts.get(deck.id) ?? _draftDefault;
   const [front, _setFront] = useState(draft.front);
@@ -570,7 +578,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
                 <label className="cards-field-label">{t('cards.tags')}</label>
                 <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }}>{t('cards.hide')}</button>
               </div>
-              <TagInput tags={tags} onChange={setTags} suggestions={deckTags} t={t} />
+              <TagInput tags={tags} onChange={setTags} suggestions={allDeckTags} t={t} />
             </>
           )}
           {(!noteOpen || !tagsOpen) && (
@@ -607,7 +615,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
           <CardRow
             key={c.id}
             card={c}
-            allTags={deckTags}
+            allTags={allDeckTags}
             onTagClick={(tg) => setQuery((q) => (q.replace(/^#/, '') === tg ? '' : `#${tg}`))}
             onRemove={() => onRemoveCard(c.id)}
             onUpdate={(patch) => onEditCard(c.id, patch)}
