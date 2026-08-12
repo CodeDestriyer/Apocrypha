@@ -5505,6 +5505,9 @@ body {
 .card-row-tag:hover { background: rgba(190, 158, 92, 0.22); border-color: var(--gold); color: #f5f0e1; }
 .sub-title-tag { color: var(--gold); font-weight: 600; }
 
+/* Global "study all decks" block on the deck list */
+.cards-global-study { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
 /* Study button splits into two equal, equivalent buttons on click */
 .cards-study-split { display: flex; gap: 8px; }
 .cards-study-split .cards-study-btn {

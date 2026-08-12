@@ -114,6 +114,8 @@ const DICT = {
   'cards.studyAllLabel': 'Estudiar todo',
   'cards.studyTag': 'Estudiar etiqueta',
   'cards.pickTag': 'Elige una etiqueta',
+  'cards.studyAllDecks': 'Estudiar todo',
+  'cards.allDecks': 'Todos los mazos',
   'name.hero': 'Nombre del héroe',
   'name.placeholder': 'Nombre',
   'btn.enter': 'Entrar',

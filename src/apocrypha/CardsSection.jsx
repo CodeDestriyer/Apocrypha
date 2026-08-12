@@ -10,6 +10,10 @@ const newId = () =>
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// Sentinel "deck id" for the cross-deck study session started from the deck
+// list — reviews every card across all decks at once.
+const ALL_DECKS = '__all__';
+
 const dueCountFor = (deck) => deck.cards.length;
 
 // Hashtags on a card (e.g. #trabajo, #psicología). Stored on `card.tags` as a
@@ -122,9 +126,17 @@ export default function CardsSection({ rootOnBack }) {
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: x.cards.map((c) => c.id === cardId ? { ...c, ...patch } : c) }
       : x));
+  // Grade routing for the cross-deck ("all decks") study session: card ids are
+  // unique, so patch the card wherever it lives without needing its deck id.
+  const updateCardAnywhere = (cardId, patch) =>
+    setDecks((d) => d.map((x) => ({ ...x, cards: x.cards.map((c) => c.id === cardId ? { ...c, ...patch } : c) })));
 
   // Compute SubPage header dynamically
-  const currentDeck = decks.find((d) => d.id === (studyDeckId || openDeckId));
+  const isGlobalStudy = studyDeckId === ALL_DECKS;
+  const globalDeck = { id: ALL_DECKS, name: t('cards.allDecks'), cards: decks.flatMap((d) => d.cards) };
+  const currentDeck = isGlobalStudy
+    ? globalDeck
+    : decks.find((d) => d.id === (studyDeckId || openDeckId));
   // Deck the StudyView actually reviews: the whole deck, or — when a hashtag is
   // selected — only the cards carrying it. Persistence key is namespaced by tag
   // so a tag session's progress snapshot never collides with a full-deck one.
@@ -200,7 +212,7 @@ export default function CardsSection({ rootOnBack }) {
       <StudyView
         deck={studyDeck}
         studyKey={studyKey}
-        onGrade={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
+        onGrade={(cardId, patch) => isGlobalStudy ? updateCardAnywhere(cardId, patch) : updateCard(currentDeck.id, cardId, patch)}
         t={t}
       />
     );
@@ -222,6 +234,8 @@ export default function CardsSection({ rootOnBack }) {
         decks={decks}
         onOpen={(id) => setOpenDeckId(id)}
         onAdd={addDeck}
+        onStudyAll={() => startStudy(ALL_DECKS)}
+        onStudyAllTag={(tag) => startStudy(ALL_DECKS, tag)}
         t={t}
       />
     );
@@ -234,9 +248,20 @@ export default function CardsSection({ rootOnBack }) {
   );
 }
 
-function DeckList({ decks, onOpen, onAdd, t }) {
+function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
+  const [studyExpanded, setStudyExpanded] = useState(false);
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
+
+  const totalCards = useMemo(() => decks.reduce((s, d) => s + d.cards.length, 0), [decks]);
+  const allTags = useMemo(() => {
+    const set = new Set();
+    for (const d of decks) for (const c of d.cards) for (const tg of (c.tags ?? [])) set.add(tg);
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [decks]);
+  const tagCount = (tg) =>
+    decks.reduce((s, d) => s + d.cards.filter((c) => cardHasTag(c, tg)).length, 0);
 
   const submit = () => {
     if (!name.trim()) return;
@@ -249,6 +274,48 @@ function DeckList({ decks, onOpen, onAdd, t }) {
     <>
       {decks.length === 0 && (
         <div className="empty-hint">{t('cards.empty')}</div>
+      )}
+
+      {totalCards > 0 && (
+        <div className="cards-global-study">
+          {!studyExpanded ? (
+            <button
+              className="cards-study-btn"
+              onClick={() => { if (allTags.length) setStudyExpanded(true); else onStudyAll(); }}
+            >
+              {t('cards.studyAllDecks')} · {totalCards}
+            </button>
+          ) : (
+            <div className="cards-study-split">
+              <button className="cards-study-btn" onClick={onStudyAll}>
+                {t('cards.studyAllLabel')} · {totalCards}
+              </button>
+              <button
+                className={`cards-study-btn ${tagPickerOpen ? 'active' : ''}`}
+                onClick={() => setTagPickerOpen((o) => !o)}
+              >
+                {t('cards.studyTag')}
+              </button>
+            </div>
+          )}
+
+          {studyExpanded && tagPickerOpen && allTags.length > 0 && (
+            <div className="cards-tag-study">
+              <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
+              <div className="cards-tag-study-chips">
+                {allTags.map((tg) => (
+                  <button
+                    key={tg}
+                    className="cards-tag-study-chip"
+                    onClick={() => onStudyAllTag(tg)}
+                  >
+                    #{tg}<span className="cards-tag-study-count">{tagCount(tg)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <ul className="skills">
