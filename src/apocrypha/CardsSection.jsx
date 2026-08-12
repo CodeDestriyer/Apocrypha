@@ -270,34 +270,48 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
     setAdding(false);
   };
 
+  const newDeckBtn = (
+    <button
+      className="cards-newdeck-btn"
+      onClick={() => setAdding(true)}
+      aria-label={t('cards.newDeck')}
+      title={t('cards.newDeck')}
+    >+</button>
+  );
+
   return (
     <>
-      {decks.length === 0 && (
+      {decks.length === 0 && !adding && (
         <div className="empty-hint">{t('cards.empty')}</div>
       )}
 
-      {totalCards > 0 && (
+      {decks.length > 0 && (
         <div className="cards-global-study">
-          {!studyExpanded ? (
-            <button
-              className="cards-study-btn"
-              onClick={() => { if (allTags.length) setStudyExpanded(true); else onStudyAll(); }}
-            >
-              {t('cards.studyAllDecks')} · {totalCards}
-            </button>
-          ) : (
-            <div className="cards-study-split">
-              <button className="cards-study-btn" onClick={onStudyAll}>
-                {t('cards.studyAllLabel')} · {totalCards}
-              </button>
-              <button
-                className={`cards-study-btn ${tagPickerOpen ? 'active' : ''}`}
-                onClick={() => setTagPickerOpen((o) => !o)}
-              >
-                {t('cards.studyTag')}
-              </button>
-            </div>
-          )}
+          <div className="cards-study-row">
+            {totalCards > 0 && (
+              !studyExpanded ? (
+                <button
+                  className="cards-study-btn"
+                  onClick={() => { if (allTags.length) setStudyExpanded(true); else onStudyAll(); }}
+                >
+                  {t('cards.study')} · {totalCards}
+                </button>
+              ) : (
+                <div className="cards-study-split">
+                  <button className="cards-study-btn" onClick={onStudyAll}>
+                    {t('cards.studyAllLabel')} · {totalCards}
+                  </button>
+                  <button
+                    className={`cards-study-btn ${tagPickerOpen ? 'active' : ''}`}
+                    onClick={() => setTagPickerOpen((o) => !o)}
+                  >
+                    {t('cards.studyTag')}
+                  </button>
+                </div>
+              )
+            )}
+            {newDeckBtn}
+          </div>
 
           {studyExpanded && tagPickerOpen && allTags.length > 0 && (
             <div className="cards-tag-study">
@@ -318,24 +332,7 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
         </div>
       )}
 
-      <ul className="skills">
-        {decks.map((d) => {
-          const due = dueCountFor(d);
-          return (
-            <li key={d.id} className="skill deck-row" onClick={() => onOpen(d.id)} role="button">
-              <div className="skill-head">
-                <span className="skill-name">{d.name}</span>
-                <span className="deck-counts">
-                  <span className="deck-due">{due}</span>
-                  <span className="deck-total">/ {d.cards.length}</span>
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      {adding ? (
+      {adding && (
         <div className="cards-panel">
           <label className="cards-field-label">{t('cards.newDeck')}</label>
           <input
@@ -359,7 +356,26 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
             </button>
           </div>
         </div>
-      ) : (
+      )}
+
+      <ul className="skills">
+        {decks.map((d) => {
+          const due = dueCountFor(d);
+          return (
+            <li key={d.id} className="skill deck-row" onClick={() => onOpen(d.id)} role="button">
+              <div className="skill-head">
+                <span className="skill-name">{d.name}</span>
+                <span className="deck-counts">
+                  <span className="deck-due">{due}</span>
+                  <span className="deck-total">/ {d.cards.length}</span>
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {decks.length === 0 && !adding && (
         <button className="cards-big-add cards-big-add--deck" onClick={() => setAdding(true)}>
           <span className="cards-big-add-plus">+</span>
           <span>{t('cards.newDeck')}</span>

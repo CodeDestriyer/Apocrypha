@@ -5507,6 +5507,23 @@ body {
 
 /* Global "study all decks" block on the deck list */
 .cards-global-study { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.cards-study-row { display: flex; gap: 8px; align-items: stretch; }
+.cards-study-row > .cards-study-btn,
+.cards-study-row > .cards-study-split { flex: 1 1 auto; min-width: 0; }
+/* Small "+" that replaces the big "Nuevo mazo" button, sitting to the right
+   of the top Estudiar button — much smaller, white, with a wine "+". */
+.cards-newdeck-btn {
+  flex: 0 0 auto;
+  width: 52px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 26px; line-height: 1; font-weight: 400;
+  background: rgba(190, 158, 92, 0.06);
+  border: 1px solid rgba(190, 158, 92, 0.4);
+  color: var(--gold);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cards-newdeck-btn:hover { background: rgba(190, 158, 92, 0.14); border-color: var(--gold); }
 
 /* Study button splits into two equal, equivalent buttons on click */
 .cards-study-split { display: flex; gap: 8px; }
@@ -6040,6 +6057,8 @@ body {
 .cards-study-split .cards-study-btn { background: #ffffff; color: var(--wine); border: 1px solid var(--wine); }
 .cards-study-split .cards-study-btn:hover:not(:disabled) { background: rgba(110, 36, 19, 0.05); }
 .cards-study-split .cards-study-btn.active { background: rgba(110, 36, 19, 0.1); }
+.cards-newdeck-btn { background: #ffffff; border: 1px solid var(--wine); color: var(--wine); border-radius: 4px; }
+.cards-newdeck-btn:hover { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); }
 .cards-extra-btn { background: var(--paper); border: 1px solid var(--line); color: var(--text-dim); border-radius: 4px; }
 .cards-extra-btn:hover { border-color: var(--wine); color: var(--wine); background: #ffffff; }
 .cards-extra-plus { color: var(--wine); }
