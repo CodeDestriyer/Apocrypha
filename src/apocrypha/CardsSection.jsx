@@ -326,6 +326,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
   const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
 
   const duplicate = useMemo(() => {
     const f = front.trim().toLowerCase();
@@ -364,17 +365,26 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
 
   return (
     <div className="cards-deck">
-      <button
-        className="cards-study-btn"
-        onClick={onStudy}
-        disabled={dueCount === 0}
-      >
-        {t('cards.study')} · {dueCount}
-      </button>
+      <div className="cards-study-split">
+        <button
+          className="cards-study-btn cards-study-btn--all"
+          onClick={onStudy}
+          disabled={dueCount === 0}
+        >
+          {t('cards.studyAllLabel')} · {dueCount}
+        </button>
+        <button
+          className={`cards-study-btn cards-study-btn--tag ${tagPickerOpen ? 'active' : ''}`}
+          onClick={() => setTagPickerOpen((o) => !o)}
+          disabled={deckTags.length === 0}
+        >
+          {t('cards.studyTag')}
+        </button>
+      </div>
 
-      {deckTags.length > 0 && (
+      {tagPickerOpen && deckTags.length > 0 && (
         <div className="cards-tag-study">
-          <span className="cards-tag-study-label">{t('cards.studyByTag')}</span>
+          <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
           <div className="cards-tag-study-chips">
             {deckTags.map((tg) => {
               const n = deck.cards.filter((c) => cardHasTag(c, tg)).length;
@@ -445,7 +455,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
             rows={3}
           />
 
-          {noteOpen ? (
+          {noteOpen && (
             <>
               <div className="cards-note-head">
                 <label className="cards-field-label">{t('cards.note')}</label>
@@ -460,11 +470,8 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
                 autoFocus
               />
             </>
-          ) : (
-            <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
           )}
-
-          {tagsOpen ? (
+          {tagsOpen && (
             <>
               <div className="cards-note-head">
                 <label className="cards-field-label">{t('cards.tags')}</label>
@@ -472,8 +479,20 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
               </div>
               <TagInput tags={tags} onChange={setTags} suggestions={deckTags} t={t} />
             </>
-          ) : (
-            <button className="cards-note-add" onClick={() => setTagsOpen(true)}>+ {t('cards.addTags')}</button>
+          )}
+          {(!noteOpen || !tagsOpen) && (
+            <div className="cards-extra-row">
+              {!noteOpen && (
+                <button className="cards-extra-btn" onClick={() => setNoteOpen(true)}>
+                  <span className="cards-extra-plus">+</span> {t('cards.addNote')}
+                </button>
+              )}
+              {!tagsOpen && (
+                <button className="cards-extra-btn" onClick={() => setTagsOpen(true)}>
+                  <span className="cards-extra-plus">#</span> {t('cards.addTags')}
+                </button>
+              )}
+            </div>
           )}
 
           <div className="cards-panel-actions">
@@ -552,7 +571,7 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
           onChange={(e) => setBack(e.target.value)}
           rows={2}
         />
-        {noteOpen ? (
+        {noteOpen && (
           <>
             <div className="cards-note-head">
               <label className="cards-field-label">{t('cards.note')}</label>
@@ -566,10 +585,8 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
               rows={2}
             />
           </>
-        ) : (
-          <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
         )}
-        {tagsOpen ? (
+        {tagsOpen && (
           <>
             <div className="cards-note-head">
               <label className="cards-field-label">{t('cards.tags')}</label>
@@ -577,8 +594,20 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
             </div>
             <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
           </>
-        ) : (
-          <button className="cards-note-add" onClick={() => setTagsOpen(true)}>+ {t('cards.addTags')}</button>
+        )}
+        {(!noteOpen || !tagsOpen) && (
+          <div className="cards-extra-row">
+            {!noteOpen && (
+              <button className="cards-extra-btn" onClick={() => setNoteOpen(true)}>
+                <span className="cards-extra-plus">+</span> {t('cards.addNote')}
+              </button>
+            )}
+            {!tagsOpen && (
+              <button className="cards-extra-btn" onClick={() => setTagsOpen(true)}>
+                <span className="cards-extra-plus">#</span> {t('cards.addTags')}
+              </button>
+            )}
+          </div>
         )}
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
