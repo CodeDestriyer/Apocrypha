@@ -107,6 +107,7 @@ const DICT = {
   'cards.create': 'Crear',
   'cards.cancel': 'Cancelar',
   'cards.tags': 'Etiquetas',
+  'cards.addTags': 'añadir etiquetas',
   'cards.tagsPlaceholder': 'trabajo, psicología…',
   'cards.removeTag': 'Quitar etiqueta',
   'cards.studyByTag': 'Estudiar por etiqueta',

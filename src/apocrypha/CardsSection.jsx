@@ -303,13 +303,14 @@ function DeckList({ decks, onOpen, onAdd, t }) {
 }
 
 function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
-  const _draftDefault = { front: '', back: '', note: '', tags: [], adding: false, noteOpen: false };
+  const _draftDefault = { front: '', back: '', note: '', tags: [], adding: false, noteOpen: false, tagsOpen: false };
   const draft = _drafts.get(deck.id) ?? _draftDefault;
   const [front, _setFront] = useState(draft.front);
   const [back, _setBack] = useState(draft.back);
   const [note, _setNote] = useState(draft.note);
   const [tags, _setTags] = useState(draft.tags ?? []);
   const [noteOpen, _setNoteOpen] = useState(draft.noteOpen);
+  const [tagsOpen, _setTagsOpen] = useState(draft.tagsOpen ?? false);
   const [adding, _setAdding] = useState(draft.adding);
   const persist = (patch) => {
     const cur = _drafts.get(deck.id) ?? _draftDefault;
@@ -321,6 +322,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
   const setNote = (v) => { persist({ note: v }); _setNote(v); };
   const setTags = (v) => { persist({ tags: v }); _setTags(v); };
   const setNoteOpen = (v) => { persist({ noteOpen: v }); _setNoteOpen(v); };
+  const setTagsOpen = (v) => { persist({ tagsOpen: v }); _setTagsOpen(v); };
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
   const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
@@ -333,7 +335,7 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
 
   const closeAdd = () => {
     setAdding(false);
-    setFront(''); setBack(''); setNote(''); setTags([]); setNoteOpen(false);
+    setFront(''); setBack(''); setNote(''); setTags([]); setNoteOpen(false); setTagsOpen(false);
     _drafts.delete(deck.id);
     _saveSS();
   };
@@ -462,8 +464,17 @@ function DeckView({ deck, onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCa
             <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
           )}
 
-          <label className="cards-field-label">{t('cards.tags')}</label>
-          <TagInput tags={tags} onChange={setTags} suggestions={deckTags} t={t} />
+          {tagsOpen ? (
+            <>
+              <div className="cards-note-head">
+                <label className="cards-field-label">{t('cards.tags')}</label>
+                <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }}>{t('cards.hide')}</button>
+              </div>
+              <TagInput tags={tags} onChange={setTags} suggestions={deckTags} t={t} />
+            </>
+          ) : (
+            <button className="cards-note-add" onClick={() => setTagsOpen(true)}>+ {t('cards.addTags')}</button>
+          )}
 
           <div className="cards-panel-actions">
             <button className="cards-secondary-btn" onClick={closeAdd}>
@@ -503,6 +514,7 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
   const [note, setNote] = useState(card.note ?? '');
   const [tags, setTags] = useState(card.tags ?? []);
   const [noteOpen, setNoteOpen] = useState(!!card.note);
+  const [tagsOpen, setTagsOpen] = useState((card.tags?.length ?? 0) > 0);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -515,7 +527,7 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
   const startEdit = () => {
     setFront(card.front); setBack(card.back);
     setNote(card.note ?? ''); setNoteOpen(!!card.note);
-    setTags(card.tags ?? []);
+    setTags(card.tags ?? []); setTagsOpen((card.tags?.length ?? 0) > 0);
     setEditing(true);
   };
   const save = () => {
@@ -557,8 +569,17 @@ function CardRow({ card, allTags = [], onRemove, onUpdate, t }) {
         ) : (
           <button className="cards-note-add" onClick={() => setNoteOpen(true)}>+ {t('cards.addNote')}</button>
         )}
-        <label className="cards-field-label">{t('cards.tags')}</label>
-        <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
+        {tagsOpen ? (
+          <>
+            <div className="cards-note-head">
+              <label className="cards-field-label">{t('cards.tags')}</label>
+              <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }}>{t('cards.hide')}</button>
+            </div>
+            <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
+          </>
+        ) : (
+          <button className="cards-note-add" onClick={() => setTagsOpen(true)}>+ {t('cards.addTags')}</button>
+        )}
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={save} disabled={!front.trim() || !back.trim()}>{t('cards.save')}</button>
