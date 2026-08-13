@@ -6350,6 +6350,7 @@ body {
   transition: border-color 0.15s, background 0.15s;
 }
 .tareas-item.done { background: transparent; }
+.tareas-item.missed { background: rgba(192, 57, 43, 0.07); border-color: rgba(192, 57, 43, 0.3); }
 .tareas-check {
   flex: none;
   width: 30px; height: 30px;
