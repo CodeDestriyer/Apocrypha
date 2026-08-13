@@ -9,6 +9,7 @@ import CardsSection from './apocrypha/CardsSection.jsx';
 import RulesSection from './apocrypha/RulesSection.jsx';
 import SaludSection from './apocrypha/SaludSection.jsx';
 import PesoSection from './apocrypha/PesoSection.jsx';
+import HabitosSection from './apocrypha/HabitosSection.jsx';
 import TareasSection from './apocrypha/TareasSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
@@ -155,6 +156,7 @@ function Shell() {
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
             {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
             {view === 'peso' && <PesoSection rootOnBack={() => setView('home')} />}
+            {view === 'habitos' && <HabitosSection rootOnBack={() => setView('home')} />}
             {view === 'tareas' && <TareasSection rootOnBack={() => setView('home')} />}
             {view === 'salud' && <SaludSection rootOnBack={() => setView('home')} />}
             {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
@@ -176,6 +178,8 @@ function Shell() {
             ? <SaludSection rootOnBack={() => setView('home')} />
             : view === 'peso'
             ? <PesoSection rootOnBack={() => setView('home')} />
+            : view === 'habitos'
+            ? <HabitosSection rootOnBack={() => setView('home')} />
             : view === 'tareas'
             ? <TareasSection rootOnBack={() => setView('home')} />
             : view === 'body'
@@ -194,7 +198,7 @@ function DesktopSidebar({ view, setView }) {
   const { t } = useLang();
   // Accordion: only one parent group expanded at a time.
   const [openGroup, setOpenGroup] = useState(
-    view === 'cards' || view === 'reglas' ? 'idiomas' : view === 'peso' ? 'salud' : null
+    view === 'cards' || view === 'reglas' ? 'idiomas' : (view === 'peso' || view === 'habitos') ? 'salud' : null
   );
   const idiomasOpen = openGroup === 'idiomas';
   const saludOpen = openGroup === 'salud';
@@ -255,7 +259,7 @@ function DesktopSidebar({ view, setView }) {
         {/* Salud is an expander too, with Peso (weight) as its child. */}
         <div className={`desktop-nav-group ${saludOpen ? 'open' : ''}`}>
           <button
-            className={`desktop-nav-item desktop-nav-parent ${view === 'peso' ? 'active-parent' : ''}`}
+            className={`desktop-nav-item desktop-nav-parent ${(view === 'peso' || view === 'habitos') ? 'active-parent' : ''}`}
             onClick={() => toggleGroup('salud')}
             aria-expanded={saludOpen}
           >
@@ -271,6 +275,13 @@ function DesktopSidebar({ view, setView }) {
               >
                 <span className="desktop-nav-icon">⚖</span>
                 <span>{t('weight.title')}</span>
+              </button>
+              <button
+                className={`desktop-nav-item desktop-subnav-item ${view === 'habitos' ? 'active' : ''}`}
+                onClick={() => setView('habitos')}
+              >
+                <span className="desktop-nav-icon">⏳</span>
+                <span>{t('habits.title')}</span>
               </button>
             </div>
           )}
