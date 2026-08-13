@@ -190,7 +190,7 @@ export default function TareasSection({ rootOnBack }) {
         <div className="tareas-groups">
           {isPast ? (
             <ul className="tareas-list">
-              {dayTasks.map((task) => renderTask(task))}
+              {groups.flatMap((g) => g.items).map((task) => renderTask(task))}
             </ul>
           ) : (
             groups.map((g) => (
