@@ -67,14 +67,12 @@ export default function BodySection({ rootOnBack }) {
     <SubPage title={t('nav.body')} onBack={rootOnBack}>
       <div className="body-section">
         <div className="body-latest">
-          {latest ? (
+          {latest && (
             <>
               <span className="body-latest-value">{latest.weight}</span>
               <span className="body-latest-unit">{t('body.unit')}</span>
               <span className="body-latest-date">{fmtDate(latest.date)}</span>
             </>
-          ) : (
-            <span className="body-latest-empty">{t('body.empty')}</span>
           )}
         </div>
 

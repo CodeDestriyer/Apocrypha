@@ -289,9 +289,6 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
 
   return (
     <>
-      {decks.length === 0 && !adding && (
-        <div className="empty-hint">{t('cards.empty')}</div>
-      )}
 
       {decks.length > 0 && (
         <div className="cards-global-study">

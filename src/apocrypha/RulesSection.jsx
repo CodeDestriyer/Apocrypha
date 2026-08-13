@@ -304,10 +304,6 @@ export default function RulesSection({ rootOnBack }) {
           <button className="search-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
         </div>
 
-        {rules.length === 0 && (
-          <div className="empty-hint">{t('reglas.empty')}</div>
-        )}
-
         {visible.length === 0 && query ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
         ) : (

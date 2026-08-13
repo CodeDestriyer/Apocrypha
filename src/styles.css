@@ -6679,36 +6679,29 @@ body {
 
 /* ── Salud › Hábitos: quit-counter cards ─────────────────────── */
 .habitos { display: flex; flex-direction: column; gap: 14px; }
+.habitos-topbar { display: flex; justify-content: flex-end; }
 .habitos-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+
+/* Mobile: centered stack, with the reset/delete controls in the top-right. */
 .habito-card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--paper);
-  padding: 16px 16px 14px;
+  padding: 18px 16px 16px;
   text-align: center;
   box-shadow: var(--shadow);
 }
-.habito-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.habito-main { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
 .habito-name {
   font-family: 'EB Garamond', serif;
-  font-size: 18px; font-weight: 600; color: var(--ink);
-  text-align: left; overflow-wrap: anywhere; line-height: 1.25;
+  font-size: 19px; font-weight: 600; color: var(--ink);
+  overflow-wrap: anywhere; line-height: 1.2;
 }
-.habito-actions { display: flex; gap: 6px; flex: none; }
-.habito-reset, .habito-del {
-  width: 30px; height: 30px;
-  display: grid; place-items: center;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 17px; line-height: 1;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-.habito-reset:hover { border-color: var(--gold); color: var(--gold); background: rgba(110, 36, 19, 0.05); }
-.habito-del:hover { border-color: var(--danger); color: var(--danger); background: rgba(157, 59, 47, 0.06); }
-.habito-timer { display: flex; align-items: baseline; justify-content: center; gap: 9px; margin-top: 6px; }
+.habito-since { font-size: 12px; color: var(--text-dim); letter-spacing: 0.03em; }
+.habito-count { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.habito-timer { display: flex; align-items: baseline; gap: 9px; }
 .habito-days {
   font-family: 'Cinzel', serif;
   font-size: 48px; font-weight: 700; line-height: 1;
@@ -6722,9 +6715,33 @@ body {
 .habito-clock {
   font-family: 'Cinzel', serif;
   font-variant-numeric: tabular-nums;
-  font-size: 21px; letter-spacing: 0.1em;
+  font-size: 20px; letter-spacing: 0.1em;
   color: var(--ink-soft);
-  margin-top: 6px;
 }
-.habito-since { font-size: 12px; color: var(--text-dim); margin-top: 9px; letter-spacing: 0.03em; }
+.habito-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+.habito-reset, .habito-del {
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 17px; line-height: 1;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.habito-reset:hover { border-color: var(--gold); color: var(--gold); background: rgba(110, 36, 19, 0.05); }
+.habito-del:hover { border-color: var(--danger); color: var(--danger); background: rgba(157, 59, 47, 0.06); }
 .habito-add { margin-top: 0; }
+
+/* Desktop: horizontal — big name on the left, day counter on the right,
+   controls pinned to the far-right edge. */
+.desktop-content .habito-card {
+  flex-direction: row; align-items: center; text-align: left;
+  gap: 18px; padding: 18px 20px;
+}
+.desktop-content .habito-main { flex: 1; align-items: flex-start; text-align: left; }
+.desktop-content .habito-name { font-size: 25px; }
+.desktop-content .habito-count { align-items: flex-end; margin-right: 46px; }
+.desktop-content .habito-days { font-size: 40px; }
+.desktop-content .habito-actions { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); flex-direction: column; }

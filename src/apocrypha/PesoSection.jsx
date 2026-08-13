@@ -111,22 +111,16 @@ export default function PesoSection({ rootOnBack }) {
   return (
     <SubPage title={t('weight.title')} onBack={rootOnBack} headerRight={headerRight}>
       <div className="peso">
-        <div className="peso-current">
-          {latest ? (
-            <>
-              <span className="peso-current-value">{latest.weight}</span>
-              <span className="peso-current-unit">{unit}</span>
-              <span className="peso-current-date">{fmtDate(latest.date)}</span>
-            </>
-          ) : (
-            <span className="peso-current-empty">{t('body.empty')}</span>
-          )}
-        </div>
+        {latest && (
+          <div className="peso-current">
+            <span className="peso-current-value">{latest.weight}</span>
+            <span className="peso-current-unit">{unit}</span>
+            <span className="peso-current-date">{fmtDate(latest.date)}</span>
+          </div>
+        )}
 
-        {log.length ? (
+        {log.length > 0 && (
           <WeightGraph log={log} goal={goal} />
-        ) : (
-          <div className="empty-hint peso-graph-empty">{t('weight.hint')}</div>
         )}
 
         <div className="peso-bar">

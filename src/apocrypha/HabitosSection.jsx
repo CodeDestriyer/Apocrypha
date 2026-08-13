@@ -64,35 +64,13 @@ export default function HabitosSection({ rootOnBack }) {
   return (
     <SubPage title={t('habits.title')} onBack={rootOnBack}>
       <div className="habitos">
-        {habits.length === 0 && !adding && (
-          <div className="empty-hint">{t('habits.empty')}</div>
+        {!adding && (
+          <div className="habitos-topbar">
+            <button className="search-add-btn" onClick={() => setAdding(true)} aria-label={t('habits.add')}>+</button>
+          </div>
         )}
 
-        <ul className="habitos-list">
-          {habits.map((hb) => {
-            const since = new Date(hb.since).getTime();
-            const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
-            return (
-              <li key={hb.id} className="habito-card">
-                <div className="habito-head">
-                  <span className="habito-name">{hb.name}</span>
-                  <div className="habito-actions">
-                    <button className="habito-reset" onClick={() => reset(hb.id)} title={t('habits.resetHint')} aria-label={t('habits.reset')}>↺</button>
-                    <button className="habito-del" onClick={() => remove(hb.id)} aria-label={t('habits.delete')}>×</button>
-                  </div>
-                </div>
-                <div className="habito-timer">
-                  <span className="habito-days">{days}</span>
-                  <span className="habito-days-label">{days === 1 ? t('habits.day') : t('habits.days')}</span>
-                </div>
-                <div className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</div>
-                <div className="habito-since">{t('habits.since')} {fmtSince(hb.since)}</div>
-              </li>
-            );
-          })}
-        </ul>
-
-        {adding ? (
+        {adding && (
           <div className="cards-panel habito-add">
             <input
               className="cards-field-input"
@@ -115,12 +93,33 @@ export default function HabitosSection({ rootOnBack }) {
               </button>
             </div>
           </div>
-        ) : (
-          <button className="cards-big-add cards-big-add--deck" onClick={() => setAdding(true)}>
-            <span className="cards-big-add-plus">+</span>
-            <span>{t('habits.placeholder')}</span>
-          </button>
         )}
+
+        <ul className="habitos-list">
+          {habits.map((hb) => {
+            const since = new Date(hb.since).getTime();
+            const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
+            return (
+              <li key={hb.id} className="habito-card">
+                <div className="habito-main">
+                  <span className="habito-name">{hb.name}</span>
+                  <span className="habito-since">{t('habits.since')} {fmtSince(hb.since)}</span>
+                </div>
+                <div className="habito-count">
+                  <div className="habito-timer">
+                    <span className="habito-days">{days}</span>
+                    <span className="habito-days-label">{days === 1 ? t('habits.day') : t('habits.days')}</span>
+                  </div>
+                  <div className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</div>
+                </div>
+                <div className="habito-actions">
+                  <button className="habito-reset" onClick={() => reset(hb.id)} title={t('habits.resetHint')} aria-label={t('habits.reset')}>↺</button>
+                  <button className="habito-del" onClick={() => remove(hb.id)} aria-label={t('habits.delete')}>×</button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </SubPage>
   );
