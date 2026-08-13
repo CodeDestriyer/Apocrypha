@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -7,6 +7,8 @@ const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
+
+const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
 // Split an elapsed millisecond span into whole days + hh:mm:ss.
 const elapsedParts = (ms) => {
@@ -43,6 +45,14 @@ export default function HabitosSection({ rootOnBack }) {
 
   const [draft, setDraft] = useState('');
   const [adding, setAdding] = useState(false);
+  const [menuId, setMenuId] = useState(null);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (menuId == null) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuId(null); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuId]);
 
   const setHabits = (updater) =>
     update((curr) => ({ habits: updater(Array.isArray(curr.habits) ? curr.habits : []) }));
@@ -56,10 +66,11 @@ export default function HabitosSection({ rootOnBack }) {
     setAdding(false);
   };
   const reset = (id) => {
+    setMenuId(null);
     if (!window.confirm(t('habits.resetConfirm'))) return;
     setHabits((h) => h.map((x) => (x.id === id ? { ...x, since: new Date().toISOString() } : x)));
   };
-  const remove = (id) => setHabits((h) => h.filter((x) => x.id !== id));
+  const remove = (id) => { setMenuId(null); setHabits((h) => h.filter((x) => x.id !== id)); };
 
   return (
     <SubPage title={t('habits.title')} onBack={rootOnBack}>
@@ -106,15 +117,29 @@ export default function HabitosSection({ rootOnBack }) {
                   <span className="habito-since">{t('habits.since')} {fmtSince(hb.since)}</span>
                 </div>
                 <div className="habito-count">
-                  <div className="habito-timer">
-                    <span className="habito-days">{days}</span>
+                  <span className="habito-days">{days}</span>
+                  <div className="habito-countside">
                     <span className="habito-days-label">{days === 1 ? t('habits.day') : t('habits.days')}</span>
+                    <span className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</span>
                   </div>
-                  <div className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</div>
                 </div>
-                <div className="habito-actions">
-                  <button className="habito-reset" onClick={() => reset(hb.id)} title={t('habits.resetHint')} aria-label={t('habits.reset')}>↺</button>
-                  <button className="habito-del" onClick={() => remove(hb.id)} aria-label={t('habits.delete')}>×</button>
+                <div className="habito-gear" ref={menuId === hb.id ? menuRef : null}>
+                  <button
+                    className="cards-gear-btn cards-gear-btn--sm"
+                    onClick={() => setMenuId((cur) => (cur === hb.id ? null : hb.id))}
+                    aria-label={t('habits.title')}
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d={GEAR_PATH}/>
+                    </svg>
+                  </button>
+                  {menuId === hb.id && (
+                    <div className="cards-gear-menu cards-gear-menu--right">
+                      <button className="cards-gear-item" onClick={() => reset(hb.id)}>{t('habits.reset')}</button>
+                      <button className="cards-gear-item cards-gear-item--danger" onClick={() => remove(hb.id)}>{t('habits.delete')}</button>
+                    </div>
+                  )}
                 </div>
               </li>
             );
