@@ -6676,3 +6676,55 @@ body {
 .peso-datechip-ico { color: var(--wine); flex: 0 0 auto; }
 .peso-datechip-text { font-weight: 600; letter-spacing: 0.01em; }
 .peso-datechip-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+
+/* ── Salud › Hábitos: quit-counter cards ─────────────────────── */
+.habitos { display: flex; flex-direction: column; gap: 14px; }
+.habitos-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.habito-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 16px 16px 14px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.habito-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.habito-name {
+  font-family: 'EB Garamond', serif;
+  font-size: 18px; font-weight: 600; color: var(--ink);
+  text-align: left; overflow-wrap: anywhere; line-height: 1.25;
+}
+.habito-actions { display: flex; gap: 6px; flex: none; }
+.habito-reset, .habito-del {
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 17px; line-height: 1;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.habito-reset:hover { border-color: var(--gold); color: var(--gold); background: rgba(110, 36, 19, 0.05); }
+.habito-del:hover { border-color: var(--danger); color: var(--danger); background: rgba(157, 59, 47, 0.06); }
+.habito-timer { display: flex; align-items: baseline; justify-content: center; gap: 9px; margin-top: 6px; }
+.habito-days {
+  font-family: 'Cinzel', serif;
+  font-size: 48px; font-weight: 700; line-height: 1;
+  color: var(--wine);
+}
+.habito-days-label {
+  font-family: 'Cinzel', serif;
+  font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.habito-clock {
+  font-family: 'Cinzel', serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 21px; letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+.habito-since { font-size: 12px; color: var(--text-dim); margin-top: 9px; letter-spacing: 0.03em; }
+.habito-add { margin-top: 0; }
