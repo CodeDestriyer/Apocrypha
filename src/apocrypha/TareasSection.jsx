@@ -80,10 +80,72 @@ export default function TareasSection({ rootOnBack }) {
   const groups = TYPE_ORDER
     .map((tp) => ({ type: tp, items: dayTasks.filter((x) => typeOf(x) === tp) }))
     .filter((g) => g.items.length);
+  // Past days show a plain flat list (no type headings); today (and future)
+  // keep the type-grouped layout with labels.
+  const isPast = day < todayISO();
 
   const showTypePicker = draft.trim().length > 0;
 
   const dayLabel = fmtDate(day);
+
+  const renderTask = (task) => {
+    const ty = typeOf(task);
+    if (editId === task.id) {
+      return (
+        <li key={task.id} className="tareas-item tareas-item--editing">
+          <div className="tareas-edit">
+            <input
+              className="cards-field-input"
+              value={editText}
+              autoFocus
+              placeholder={t('tareas.placeholder')}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+              maxLength={120}
+            />
+            {typePicker(editType, setEditType)}
+            <div className="tareas-edit-actions">
+              <button className="cards-secondary-btn" onClick={cancelEdit}>{t('cards.cancel')}</button>
+              <button className="cards-primary-btn" onClick={saveEdit} disabled={!editText.trim()}>{t('body.save')}</button>
+            </div>
+          </div>
+        </li>
+      );
+    }
+    return (
+      <li key={task.id} className={`tareas-item ${task.done ? 'done' : ''} ${task.missed ? 'missed' : ''}`}>
+        <button
+          className="tareas-check"
+          onClick={() => toggle(task.id)}
+          onContextMenu={(e) => { e.preventDefault(); toggleMissed(task.id); }}
+          role="checkbox"
+          aria-checked={task.done}
+          aria-label={task.title}
+        >
+          <TaskShape type={ty} done={task.done} missed={task.missed} size={26} />
+        </button>
+        <span className="tareas-text" onClick={() => toggle(task.id)}>{task.title}</span>
+        <div className="tareas-gear" ref={menuId === task.id ? menuRef : null}>
+          <button
+            className="tareas-gear-btn"
+            onClick={() => setMenuId((cur) => (cur === task.id ? null : task.id))}
+            aria-label={t('tareas.typeLabel')}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d={GEAR_PATH} />
+            </svg>
+          </button>
+          {menuId === task.id && (
+            <div className="tareas-gear-menu">
+              <button className="tareas-gear-item" onClick={() => startEdit(task)}>{t('tareas.edit')}</button>
+              <button className="tareas-gear-item tareas-gear-item--danger" onClick={() => remove(task.id)}>{t('body.delete')}</button>
+            </div>
+          )}
+        </div>
+      </li>
+    );
+  };
 
   const typePicker = (selected, onPick) => (
     <div className="tareas-type-picker">
@@ -126,73 +188,22 @@ export default function TareasSection({ rootOnBack }) {
         {showTypePicker && typePicker(draftType, setDraftType)}
 
         <div className="tareas-groups">
-          {groups.map((g) => (
-            <div className="tareas-group" key={g.type}>
-              <div className="tareas-group-label" style={{ color: TASK_TYPES[g.type].color }}>
-                {t(TASK_TYPES[g.type].labelKey)}
+          {isPast ? (
+            <ul className="tareas-list">
+              {dayTasks.map((task) => renderTask(task))}
+            </ul>
+          ) : (
+            groups.map((g) => (
+              <div className="tareas-group" key={g.type}>
+                <div className="tareas-group-label" style={{ color: TASK_TYPES[g.type].color }}>
+                  {t(TASK_TYPES[g.type].labelKey)}
+                </div>
+                <ul className="tareas-list">
+                  {g.items.map((task) => renderTask(task))}
+                </ul>
               </div>
-              <ul className="tareas-list">
-                {g.items.map((task) => {
-                  const ty = typeOf(task);
-                  if (editId === task.id) {
-                    return (
-                      <li key={task.id} className="tareas-item tareas-item--editing">
-                        <div className="tareas-edit">
-                          <input
-                            className="cards-field-input"
-                            value={editText}
-                            autoFocus
-                            placeholder={t('tareas.placeholder')}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
-                            maxLength={120}
-                          />
-                          {typePicker(editType, setEditType)}
-                          <div className="tareas-edit-actions">
-                            <button className="cards-secondary-btn" onClick={cancelEdit}>{t('cards.cancel')}</button>
-                            <button className="cards-primary-btn" onClick={saveEdit} disabled={!editText.trim()}>{t('body.save')}</button>
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  }
-                  return (
-                    <li key={task.id} className={`tareas-item ${task.done ? 'done' : ''} ${task.missed ? 'missed' : ''}`}>
-                      <button
-                        className="tareas-check"
-                        onClick={() => toggle(task.id)}
-                        onContextMenu={(e) => { e.preventDefault(); toggleMissed(task.id); }}
-                        role="checkbox"
-                        aria-checked={task.done}
-                        aria-label={task.title}
-                      >
-                        <TaskShape type={ty} done={task.done} missed={task.missed} size={26} />
-                      </button>
-                      <span className="tareas-text" onClick={() => toggle(task.id)}>{task.title}</span>
-                      <div className="tareas-gear" ref={menuId === task.id ? menuRef : null}>
-                        <button
-                          className="tareas-gear-btn"
-                          onClick={() => setMenuId((cur) => (cur === task.id ? null : task.id))}
-                          aria-label={t('tareas.typeLabel')}
-                        >
-                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d={GEAR_PATH} />
-                          </svg>
-                        </button>
-                        {menuId === task.id && (
-                          <div className="tareas-gear-menu">
-                            <button className="tareas-gear-item" onClick={() => startEdit(task)}>{t('tareas.edit')}</button>
-                            <button className="tareas-gear-item tareas-gear-item--danger" onClick={() => remove(task.id)}>{t('body.delete')}</button>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </SubPage>
