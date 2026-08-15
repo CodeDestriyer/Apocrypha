@@ -4,7 +4,7 @@ import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
 import {
   TASK_TYPES, TYPE_ORDER, DEFAULT_TYPE, typeOf, TaskShape,
-  todayISO, shiftISO, taskDay,
+  todayISO, shiftISO, taskDay, isRestDay,
 } from './taskTypes.jsx';
 
 const newId = () =>
@@ -85,6 +85,9 @@ export default function TareasSection({ rootOnBack }) {
   const isPast = day < todayISO();
 
   const showTypePicker = draft.trim().length > 0;
+  // Saturdays are a rest day: no adding, no list — just the "Día libre" screen.
+  // Any tasks that already live on a Saturday stay in the profile, just hidden.
+  const restDay = isRestDay(day);
 
   const dayLabel = fmtDate(day);
 
@@ -173,38 +176,44 @@ export default function TareasSection({ rootOnBack }) {
           <button className="tareas-day-arrow" onClick={() => goDay(1)} aria-label={t('tareas.tomorrow')}>›</button>
         </div>
 
-        <div className="tareas-add-row">
-          <input
-            className="cards-field-input tareas-input"
-            value={draft}
-            placeholder={t('tareas.placeholder')}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-            maxLength={120}
-          />
-          <button className="tareas-add-btn" onClick={add} disabled={!draft.trim()} aria-label={t('tareas.add')}>+</button>
-        </div>
+        {restDay ? (
+          <div className="tareas-rest">{t('tareas.diaLibre')}</div>
+        ) : (
+          <>
+            <div className="tareas-add-row">
+              <input
+                className="cards-field-input tareas-input"
+                value={draft}
+                placeholder={t('tareas.placeholder')}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
+                maxLength={120}
+              />
+              <button className="tareas-add-btn" onClick={add} disabled={!draft.trim()} aria-label={t('tareas.add')}>+</button>
+            </div>
 
-        {showTypePicker && typePicker(draftType, setDraftType)}
+            {showTypePicker && typePicker(draftType, setDraftType)}
 
-        <div className="tareas-groups">
-          {isPast ? (
-            <ul className="tareas-list">
-              {groups.flatMap((g) => g.items).map((task) => renderTask(task))}
-            </ul>
-          ) : (
-            groups.map((g) => (
-              <div className="tareas-group" key={g.type}>
-                <div className="tareas-group-label" style={{ color: TASK_TYPES[g.type].color }}>
-                  {t(TASK_TYPES[g.type].labelKey)}
-                </div>
+            <div className="tareas-groups">
+              {isPast ? (
                 <ul className="tareas-list">
-                  {g.items.map((task) => renderTask(task))}
+                  {groups.flatMap((g) => g.items).map((task) => renderTask(task))}
                 </ul>
-              </div>
-            ))
-          )}
-        </div>
+              ) : (
+                groups.map((g) => (
+                  <div className="tareas-group" key={g.type}>
+                    <div className="tareas-group-label" style={{ color: TASK_TYPES[g.type].color }}>
+                      {t(TASK_TYPES[g.type].labelKey)}
+                    </div>
+                    <ul className="tareas-list">
+                      {g.items.map((task) => renderTask(task))}
+                    </ul>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </div>
     </SubPage>
   );

@@ -20,6 +20,7 @@ const DICT = {
   'tareas.placeholder': 'Nueva tarea del día…',
   'tareas.cubeEmpty': 'Escribe tus tareas del día',
   'tareas.today': 'Hoy',
+  'tareas.diaLibre': 'Día libre',
   'tareas.yesterday': 'Ayer',
   'tareas.tomorrow': 'Mañana',
   'tareas.edit': 'Editar',
