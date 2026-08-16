@@ -114,14 +114,19 @@ function Shell() {
   // shareable/bookmarkable (and a refresh on #apocrypha stays inside). We do
   // NOT persist entry anywhere: a bare varkanis.com must always show the
   // landing, so leaving the app strips the hash and nothing is remembered.
+  // Only ever touch OUR OWN hash (#apocrypha/#app) — a foreign hash such as the
+  // Google OAuth return (#access_token=…) must be left intact so Supabase can
+  // read the tokens out of the URL; clobbering it silently breaks sign-up.
   useEffect(() => {
     try {
       const bareUrl = window.location.pathname + window.location.search;
+      const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+      const isAppHash = hash === 'apocrypha' || hash === 'app';
       if (showApp) {
-        if ((window.location.hash || '').replace(/^#/, '').toLowerCase() !== 'apocrypha') {
+        if (hash !== 'apocrypha') {
           window.history.replaceState(null, '', `${bareUrl}#apocrypha`);
         }
-      } else if (window.location.hash) {
+      } else if (isAppHash) {
         window.history.replaceState(null, '', bareUrl);
       }
     } catch {}
