@@ -81,16 +81,15 @@ function useMediaQuery(query) {
   return match;
 }
 
-// Direct entry to the gamification app: visiting with #apocrypha (or #app) in
-// the URL, or having entered before (remembered in localStorage), opens the app
-// straight away — no 10-tap gesture, and a refresh keeps you inside it.
-const ENTER_KEY = 'lr.enterApp';
+// Direct entry to the gamification app is driven purely by the URL hash:
+// #apocrypha (or #app) opens the app, a bare varkanis.com always lands on the
+// landing. Entry is intentionally NOT remembered across visits — the app is a
+// distinct page you reach via its hash, not a sticky mode.
 function readEnterIntent() {
   try {
     if (typeof window === 'undefined') return false;
     const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
-    if (hash === 'apocrypha' || hash === 'app') return true;
-    return localStorage.getItem(ENTER_KEY) === '1';
+    return hash === 'apocrypha' || hash === 'app';
   } catch { return false; }
 }
 
@@ -111,19 +110,19 @@ function Shell() {
     if (gated || status !== 'loading') window.dispatchEvent(new Event('lr:app-ready'));
   }, [gated, status]);
 
-  // Keep the URL hash + remembered flag in sync with whether we're in the app,
-  // so the link is shareable/bookmarkable and survives reloads.
+  // Keep the URL hash in sync with whether we're in the app, so the link is
+  // shareable/bookmarkable (and a refresh on #apocrypha stays inside). We do
+  // NOT persist entry anywhere: a bare varkanis.com must always show the
+  // landing, so leaving the app strips the hash and nothing is remembered.
   useEffect(() => {
     try {
       const bareUrl = window.location.pathname + window.location.search;
       if (showApp) {
-        localStorage.setItem(ENTER_KEY, '1');
         if ((window.location.hash || '').replace(/^#/, '').toLowerCase() !== 'apocrypha') {
           window.history.replaceState(null, '', `${bareUrl}#apocrypha`);
         }
-      } else {
-        localStorage.removeItem(ENTER_KEY);
-        if (window.location.hash) window.history.replaceState(null, '', bareUrl);
+      } else if (window.location.hash) {
+        window.history.replaceState(null, '', bareUrl);
       }
     } catch {}
   }, [showApp]);
@@ -143,9 +142,10 @@ function Shell() {
     return <div className="splash"><div className="ornament">⚜ ⚔ ⚜</div></div>;
   }
 
-  // Entry to the gamification app: the #apocrypha link, the remembered flag, or
-  // the hidden 10-tap gesture on the avatar. Once in, it sticks across reloads
-  // (see the sync effect above) until the user exits back to the landing.
+  // Entry to the gamification app: the #apocrypha link or the hidden 10-tap
+  // gesture on the avatar. It sticks across reloads while the #apocrypha hash is
+  // in the URL (see the sync effect above); exiting strips the hash and returns
+  // to the landing, and a bare varkanis.com always lands there.
   if (showApp && status === 'ready') {
     if (isDesktop) {
       return (
