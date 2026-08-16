@@ -125,11 +125,9 @@ function PdfBook({ course, onClose, authed, onRegister }) {
   );
 }
 
-function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile, onEnterApp }) {
+function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const taps = useRef(0);
-  const tapTimer = useRef(null);
   useEffect(() => {
     if (!open) return;
     const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -145,20 +143,7 @@ function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile, onE
     );
   }
 
-  const onAvatarClick = () => {
-    setOpen((o) => !o);
-    // Hidden shortcut: 10 quick taps on the avatar open the gamification app.
-    if (!onEnterApp) return;
-    taps.current += 1;
-    clearTimeout(tapTimer.current);
-    tapTimer.current = setTimeout(() => { taps.current = 0; }, 2000);
-    if (taps.current >= 10) {
-      taps.current = 0;
-      clearTimeout(tapTimer.current);
-      setOpen(false);
-      onEnterApp();
-    }
-  };
+  const onAvatarClick = () => setOpen((o) => !o);
 
   return (
     <div className="landing-account-wrap" ref={ref}>
@@ -503,7 +488,7 @@ function CoursesPage({ authed, onRegister }) {
   );
 }
 
-export default function Landing({ onEnterApp }) {
+export default function Landing() {
   const { t, setLang } = useLang();
   const { status, googleAvatar, profile, update } = useProfile();
   const authed = status === 'ready';
@@ -539,7 +524,6 @@ export default function Landing({ onEnterApp }) {
           name={profile?.name}
           onRegister={() => setShowRegister(true)}
           onOpenProfile={() => setShowProfile(true)}
-          onEnterApp={onEnterApp}
         />
       </header>
 

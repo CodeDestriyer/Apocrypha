@@ -142,10 +142,10 @@ function Shell() {
     return <div className="splash"><div className="ornament">⚜ ⚔ ⚜</div></div>;
   }
 
-  // Entry to the gamification app: the #apocrypha link or the hidden 10-tap
-  // gesture on the avatar. It sticks across reloads while the #apocrypha hash is
-  // in the URL (see the sync effect above); exiting strips the hash and returns
-  // to the landing, and a bare varkanis.com always lands there.
+  // Entry to the gamification app is via the #apocrypha link only. It sticks
+  // across reloads while the #apocrypha hash is in the URL (see the sync effect
+  // above); exiting strips the hash and returns to the landing, and a bare
+  // varkanis.com always lands there.
   if (showApp && status === 'ready') {
     if (isDesktop) {
       return (
@@ -191,7 +191,7 @@ function Shell() {
     );
   }
 
-  return <Landing onEnterApp={status === 'ready' ? () => setShowApp(true) : null} />;
+  return <Landing />;
 }
 
 function DesktopSidebar({ view, setView }) {
