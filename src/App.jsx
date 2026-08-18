@@ -12,6 +12,7 @@ import PesoSection from './apocrypha/PesoSection.jsx';
 import HabitosSection from './apocrypha/HabitosSection.jsx';
 import TareasSection from './apocrypha/TareasSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
+import LoginScreen from './LoginScreen.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
 
 function BrowserGate({ onBypass }) {
@@ -93,10 +94,30 @@ function readEnterIntent() {
   } catch { return false; }
 }
 
+// Installed-PWA detection. When launched from the home screen (standalone
+// display mode, or iOS Safari's navigator.standalone) this is the
+// Apocrypha-only build: it opens straight into the cabinet and NEVER shows the
+// Varkanis marketing landing / tests — an unauthenticated launch gets the
+// minimal login instead. In a normal browser tab this is false and the full
+// site (landing + hash-gated app) behaves as before.
+function readStandalone() {
+  try {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      window.matchMedia?.('(display-mode: fullscreen)').matches ||
+      window.matchMedia?.('(display-mode: minimal-ui)').matches ||
+      window.navigator.standalone === true
+    );
+  } catch { return false; }
+}
+
 function Shell() {
   const { status } = useProfile();
   const [view, setView] = useState('home');
-  const [showApp, setShowApp] = useState(readEnterIntent);
+  // In the installed PWA we're always inside Apocrypha — never the landing.
+  const isPwa = useMemo(readStandalone, []);
+  const [showApp, setShowApp] = useState(() => readEnterIntent() || isPwa);
   const [bypassGate, setBypassGate] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   // Temporarily disabled — flip back to true to re-enable the in-app gate.
@@ -151,7 +172,7 @@ function Shell() {
   // across reloads while the #apocrypha hash is in the URL (see the sync effect
   // above); exiting strips the hash and returns to the landing, and a bare
   // varkanis.com always lands there.
-  if (showApp && status === 'ready') {
+  if ((showApp || isPwa) && status === 'ready') {
     if (isDesktop) {
       return (
         <div className="desktop-shell">
@@ -189,12 +210,16 @@ function Shell() {
             ? <TareasSection rootOnBack={() => setView('home')} />
             : view === 'body'
             ? <BodySection rootOnBack={() => setView('home')} />
-            : <CharacterPage onNavigate={setView} showNav={true} onExit={() => setShowApp(false)} />
+            : <CharacterPage onNavigate={setView} showNav={true} onExit={isPwa ? null : () => setShowApp(false)} />
           }
         </div>
       </div>
     );
   }
+
+  // Installed PWA never shows the marketing landing: an unauthenticated (or
+  // still-onboarding) launch gets the minimal Apocrypha login instead.
+  if (isPwa) return <LoginScreen />;
 
   return <Landing />;
 }

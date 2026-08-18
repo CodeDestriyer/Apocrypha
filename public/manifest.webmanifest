@@ -1,8 +1,8 @@
 {
-  "name": "Varkanis",
-  "short_name": "Varkanis",
-  "description": "Varkanis",
-  "start_url": "/",
+  "name": "Apocrypha",
+  "short_name": "Apocrypha",
+  "description": "Apocrypha — tarjetas de vocabulario y tu progreso.",
+  "start_url": "/#apocrypha",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
