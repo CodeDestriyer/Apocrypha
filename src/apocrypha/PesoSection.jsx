@@ -20,6 +20,29 @@ const parseWeight = (raw) => {
   return Math.round(n * 10) / 10;
 };
 
+// Local YYYY-MM-DD (avoids the UTC shift that toISOString would cause).
+const isoLocal = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+// Sunday-start week containing `d`.
+const startOfWeek = (d) => {
+  const dt = new Date(d);
+  dt.setHours(0, 0, 0, 0);
+  dt.setDate(dt.getDate() - dt.getDay()); // getDay(): 0 = Sunday
+  return dt;
+};
+// Signed 0.1-kg delta, or null.
+const fmtDelta = (n) => {
+  if (n == null) return null;
+  const r = Math.round(n * 10) / 10;
+  if (r === 0) return '0';
+  return (r > 0 ? '+' : '−') + Math.abs(r);
+};
+const WEEK_LETTERS = ['D', 'L', 'M', 'X', 'J', 'V', 'S']; // Dom..Sáb
+
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
 // "Peso" — the weight tracker (Salud › Peso). Log a weight each morning
@@ -40,6 +63,48 @@ export default function PesoSection({ rootOnBack }) {
     ),
     [log]
   );
+
+  // Current week (Sun→Sat): one representative weight per day (the last
+  // measurement that day), each day's delta vs. the previous logged
+  // measurement, and the week total (first − last logged this week).
+  const week = useMemo(() => {
+    // Last measurement of each date, and dates in ascending order.
+    const asc = [...log].sort((a, b) =>
+      (a.date || '').localeCompare(b.date || '') ||
+      (a.created_at || '').localeCompare(b.created_at || '')
+    );
+    const byDay = new Map();
+    for (const e of asc) byDay.set(e.date, e.weight);
+    const dates = [...byDay.keys()].sort();
+    const prevWeight = (iso) => {
+      let res = null;
+      for (const d of dates) { if (d < iso) res = byDay.get(d); else break; }
+      return res;
+    };
+
+    const start = startOfWeek(new Date());
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const iso = isoLocal(d);
+      const weight = byDay.has(iso) ? byDay.get(iso) : null;
+      const prev = weight != null ? prevWeight(iso) : null;
+      days.push({
+        iso,
+        letter: WEEK_LETTERS[i],
+        weight,
+        delta: weight != null && prev != null ? weight - prev : null,
+        isToday: iso === todayISO(),
+      });
+    }
+    const logged = days.filter((d) => d.weight != null);
+    // Total per request: first − last logged this week (positive = lost).
+    const total = logged.length >= 2
+      ? logged[0].weight - logged[logged.length - 1].weight
+      : null;
+    return { days, total, count: logged.length };
+  }, [log]);
 
   const [draft, setDraft] = useState('');
   const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
@@ -186,6 +251,49 @@ export default function PesoSection({ rootOnBack }) {
             ))}
           </ul>
         )}
+
+        {log.length > 0 && (() => {
+          const total = week.total != null ? Math.round(week.total * 10) / 10 : null;
+          const dir = total == null || total === 0 ? 'flat' : total > 0 ? 'down' : 'up';
+          return (
+            <div className="peso-week">
+              <div className="peso-week-head">
+                <span className="peso-week-title">{t('weight.week')}</span>
+                {total == null ? (
+                  <span className="peso-week-total peso-week-total--flat">—</span>
+                ) : (
+                  <span className={`peso-week-total peso-week-total--${dir}`}>
+                    {dir !== 'flat' && (
+                      <span className="peso-week-arrow" aria-hidden="true">{dir === 'down' ? '▼' : '▲'}</span>
+                    )}
+                    {dir === 'flat' ? t('weight.noChange') : `${Math.abs(total)} ${unit}`}
+                  </span>
+                )}
+              </div>
+              <div className="peso-week-days">
+                {week.days.map((d) => {
+                  const dd = fmtDelta(d.delta);
+                  const cls = d.delta == null || d.delta === 0 ? 'flat' : d.delta < 0 ? 'down' : 'up';
+                  return (
+                    <div
+                      key={d.iso}
+                      className={`peso-week-day${d.weight != null ? ' has' : ''}${d.isToday ? ' today' : ''}`}
+                    >
+                      <span className="peso-week-dow">{d.letter}</span>
+                      {d.weight != null && dd != null ? (
+                        <span className={`peso-week-delta peso-week-delta--${cls}`}>{dd}</span>
+                      ) : d.weight != null ? (
+                        <span className="peso-week-dot" aria-hidden="true" />
+                      ) : (
+                        <span className="peso-week-delta peso-week-delta--empty" aria-hidden="true">·</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </SubPage>
   );

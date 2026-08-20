@@ -6685,6 +6685,49 @@ body {
 .peso-datechip-text { font-weight: 600; letter-spacing: 0.01em; }
 .peso-datechip-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 
+/* ── Peso: weekly widget (Sun→Sat + this week's total) ───────── */
+.peso-week {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 4px; padding: 14px 14px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--paper);
+}
+.peso-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.peso-week-title {
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.peso-week-total {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Cinzel', serif; font-size: 17px; font-weight: 700;
+}
+.peso-week-arrow { font-size: 12px; line-height: 1; }
+.peso-week-total--down { color: #3f7a4a; }
+.peso-week-total--up   { color: var(--danger); }
+.peso-week-total--flat { color: var(--text-dim); font-weight: 600; font-size: 14px; }
+
+.peso-week-days { display: flex; gap: 6px; }
+.peso-week-day {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 2px 7px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: #ffffff;
+}
+.peso-week-day.has { border-color: var(--gold-dim); }
+.peso-week-day.today { border-color: var(--wine); box-shadow: 0 0 0 1px var(--wine) inset; }
+.peso-week-dow {
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
+  color: var(--text-dim); letter-spacing: 0.02em;
+}
+.peso-week-day.today .peso-week-dow { color: var(--wine); }
+.peso-week-delta { font-size: 12px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.peso-week-delta--down  { color: #3f7a4a; }
+.peso-week-delta--up    { color: var(--danger); }
+.peso-week-delta--flat  { color: var(--text-dim); }
+.peso-week-delta--empty { color: var(--gold-dim); }
+.peso-week-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wine); }
+
 /* ── Salud › Hábitos: quit-counter cards ─────────────────────── */
 .habitos { display: flex; flex-direction: column; gap: 14px; }
 .habitos-topbar { display: flex; justify-content: flex-end; }
