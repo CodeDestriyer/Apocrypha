@@ -129,6 +129,7 @@ const DICT = {
   'cards.studyAllLabel': 'Estudiar todo',
   'cards.studyTag': 'Estudiar etiqueta',
   'cards.noTag': 'Sin etiqueta',
+  'cards.filterTags': 'Filtrar por etiqueta',
   'cards.studyAllDecks': 'Estudiar todo',
   'cards.allDecks': 'Todos los mazos',
   'name.hero': 'Nombre del héroe',

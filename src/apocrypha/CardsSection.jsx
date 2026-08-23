@@ -455,6 +455,12 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   };
 
   const [query, setQuery] = useState('');
+  // Tag filter panel (toggled by the funnel button next to "add"). Tapping a
+  // chip drives the same `query` used by the search box (`#tag`), so all the
+  // existing list-filtering logic is reused; tapping the active chip clears it.
+  const [filterOpen, setFilterOpen] = useState(false);
+  const onFilterTag = (tg) =>
+    setQuery((q) => (q.replace(/^#/, '') === tg ? '' : `#${tg}`));
 
   const visibleCards = useMemo(() => {
     // Newest first: cards are appended on add, so show the list reversed.
@@ -546,8 +552,40 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
             >×</button>
           )}
         </div>
+        {deckTags.length > 0 && (
+          <button
+            className={`search-filter-btn ${filterOpen ? 'active' : ''}`}
+            onClick={() => setFilterOpen((o) => !o)}
+            aria-label={t('cards.filterTags')}
+            title={t('cards.filterTags')}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+            </svg>
+          </button>
+        )}
         <button className="search-add-btn" onClick={() => setAdding(true)} aria-label={t('cards.newCard')}>+</button>
       </div>
+
+      {filterOpen && deckTags.length > 0 && (
+        <div className="cards-tag-study cards-tag-filter">
+          <div className="cards-tag-study-chips">
+            {deckTags.map((tg) => {
+              const n = deck.cards.filter((c) => cardHasTag(c, tg)).length;
+              const active = query.replace(/^#/, '') === tg;
+              return (
+                <button
+                  key={tg}
+                  className={`cards-tag-study-chip ${active ? 'active' : ''}`}
+                  onClick={() => onFilterTag(tg)}
+                >
+                  #{tg}<span className="cards-tag-study-count">{n}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {adding && (
         <div className="cards-panel">

@@ -5202,6 +5202,20 @@ body {
   transition: background 0.15s;
 }
 .search-add-btn:hover { background: var(--wine-deep); }
+.search-filter-btn {
+  flex: 0 0 auto;
+  width: 48px;
+  display: grid; place-items: center;
+  border: 1px solid var(--wine); border-radius: 8px;
+  background: transparent; color: var(--wine);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.search-filter-btn:hover { background: rgba(74, 21, 11, 0.08); }
+.search-filter-btn.active { background: var(--wine); color: var(--cream); }
+.cards-tag-filter { margin-top: 10px; }
+.cards-tag-study-chip.active { background: var(--wine); border-color: var(--wine); color: var(--cream); }
+.cards-tag-study-chip.active .cards-tag-study-count { color: var(--cream); background: rgba(0, 0, 0, 0.2); }
 
 /* Reglas — Notion/Keep-style note grid, max 3 tiles per row */
 .rules-grid {
