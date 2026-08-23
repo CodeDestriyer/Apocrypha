@@ -5484,6 +5484,7 @@ body {
   transition: background 0.15s, border-color 0.15s;
 }
 .cards-tag-study-chip:hover { background: rgba(190, 158, 92, 0.18); border-color: var(--gold); }
+.cards-tag-study-chip--none { border-style: dashed; }
 .cards-tag-study-count {
   font-size: 11px; color: #8a7d63;
   background: rgba(0, 0, 0, 0.25);

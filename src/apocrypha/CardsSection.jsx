@@ -13,6 +13,11 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 // Sentinel "deck id" for the cross-deck study session started from the deck
 // list — reviews every card across all decks at once.
 const ALL_DECKS = '__all__';
+// Sentinel "tag" for a study session scoped to the cards carrying NO hashtag —
+// the neutral words, for when you want general practice without a specific
+// label (e.g. #autoescuela). Used exactly like a real tag in `studyTag`.
+const NO_TAG = '__notag__';
+const cardHasNoTag = (card) => !((card.tags ?? []).length);
 
 const dueCountFor = (deck) => deck.cards.length;
 
@@ -149,7 +154,8 @@ export default function CardsSection({ rootOnBack }) {
   // so a tag session's progress snapshot never collides with a full-deck one.
   const studyDeck = (studyDeckId && currentDeck)
     ? (studyTag
-        ? { ...currentDeck, cards: currentDeck.cards.filter((c) => cardHasTag(c, studyTag)) }
+        ? { ...currentDeck, cards: currentDeck.cards.filter((c) =>
+            studyTag === NO_TAG ? cardHasNoTag(c) : cardHasTag(c, studyTag)) }
         : currentDeck)
     : null;
   const studyKey = studyTag ? `${studyDeckId}::${studyTag}` : studyDeckId;
@@ -157,7 +163,7 @@ export default function CardsSection({ rootOnBack }) {
   if (studyDeckId && currentDeck) {
     title = (
       <span className="sub-title-deck">
-        {currentDeck.name}{studyTag ? <span className="sub-title-tag"> · #{studyTag}</span> : null}
+        {currentDeck.name}{studyTag ? <span className="sub-title-tag"> · {studyTag === NO_TAG ? t('cards.noTag') : `#${studyTag}`}</span> : null}
       </span>
     );
     onBack = () => { _study.delete(studyKey); _saveSS(); endStudy(); };
@@ -270,6 +276,10 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
   }, [decks]);
   const tagCount = (tg) =>
     decks.reduce((s, d) => s + d.cards.filter((c) => cardHasTag(c, tg)).length, 0);
+  const noTagCount = useMemo(
+    () => decks.reduce((s, d) => s + d.cards.filter(cardHasNoTag).length, 0),
+    [decks],
+  );
 
   const submit = () => {
     if (!name.trim()) return;
@@ -322,6 +332,14 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
             <div className="cards-tag-study">
               <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
               <div className="cards-tag-study-chips">
+                {noTagCount > 0 && (
+                  <button
+                    className="cards-tag-study-chip cards-tag-study-chip--none"
+                    onClick={() => onStudyAllTag(NO_TAG)}
+                  >
+                    {t('cards.noTag')}<span className="cards-tag-study-count">{noTagCount}</span>
+                  </button>
+                )}
                 {allTags.map((tg) => (
                   <button
                     key={tg}
@@ -414,6 +432,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
   const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
+  const noTagCount = useMemo(() => deck.cards.filter(cardHasNoTag).length, [deck.cards]);
   const [studyExpanded, setStudyExpanded] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
 
@@ -484,6 +503,14 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
         <div className="cards-tag-study">
           <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
           <div className="cards-tag-study-chips">
+            {noTagCount > 0 && (
+              <button
+                className="cards-tag-study-chip cards-tag-study-chip--none"
+                onClick={() => onStudyTag(NO_TAG)}
+              >
+                {t('cards.noTag')}<span className="cards-tag-study-count">{noTagCount}</span>
+              </button>
+            )}
             {deckTags.map((tg) => {
               const n = deck.cards.filter((c) => cardHasTag(c, tg)).length;
               return (
