@@ -53,6 +53,8 @@ const DICT = {
   'weight.tapEdit': 'toca otra vez',
   'weight.today': 'Hoy',
   'weight.week': 'Esta semana',
+  'weight.prevWeek': 'Semana anterior',
+  'weight.nextWeek': 'Semana siguiente',
   'weight.weekNoData': 'Sin registros esta semana',
   'weight.noChange': 'Sin cambios',
   'habits.title': 'Hábitos',

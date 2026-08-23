@@ -64,9 +64,15 @@ export default function PesoSection({ rootOnBack }) {
     [log]
   );
 
-  // Current week (Sun→Sat): one representative weight per day (the last
+  // Which week is shown: 0 = current, -1 = previous, +1 = next (capped at 0,
+  // so you can never scroll into the future). Swipe or the ‹ › arrows change it.
+  const [weekOffset, setWeekOffset] = useState(0);
+  const goPrevWeek = () => setWeekOffset((o) => o - 1);
+  const goNextWeek = () => setWeekOffset((o) => Math.min(0, o + 1));
+
+  // Shown week (Sun→Sat): one representative weight per day (the last
   // measurement that day), each day's delta vs. the previous logged
-  // measurement, and the week total (first − last logged this week).
+  // measurement, and the week total (first − last logged that week).
   const week = useMemo(() => {
     // Last measurement of each date, and dates in ascending order.
     const asc = [...log].sort((a, b) =>
@@ -83,6 +89,7 @@ export default function PesoSection({ rootOnBack }) {
     };
 
     const start = startOfWeek(new Date());
+    start.setDate(start.getDate() + weekOffset * 7);
     const days = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
@@ -104,7 +111,7 @@ export default function PesoSection({ rootOnBack }) {
       ? logged[0].weight - logged[logged.length - 1].weight
       : null;
     return { days, total, count: logged.length };
-  }, [log]);
+  }, [log, weekOffset]);
 
   const [draft, setDraft] = useState('');
   const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
@@ -113,6 +120,31 @@ export default function PesoSection({ rootOnBack }) {
   const [goalDraft, setGoalDraft] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);        // weight settings gear (header)
   const menuRef = useRef(null);
+
+  // Horizontal swipe on the week block → change week (right = older, left = newer).
+  const weekTouch = useRef({ x: 0, y: 0, active: false, locked: null });
+  const onWeekTouchStart = (e) => {
+    if (e.touches.length !== 1) return;
+    weekTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true, locked: null };
+  };
+  const onWeekTouchMove = (e) => {
+    const tc = weekTouch.current;
+    if (!tc.active || tc.locked != null) return;
+    const dx = e.touches[0].clientX - tc.x;
+    const dy = e.touches[0].clientY - tc.y;
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    tc.locked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+  };
+  const onWeekTouchEnd = (e) => {
+    const tc = weekTouch.current;
+    if (!tc.active) return;
+    tc.active = false;
+    if (tc.locked !== 'x') return;
+    const dx = (e.changedTouches?.[0]?.clientX ?? tc.x) - tc.x;
+    const T = 40;
+    if (dx > T) goPrevWeek();
+    else if (dx < -T) goNextWeek();
+  };
   useEffect(() => {
     if (!menuOpen) return;
     const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
@@ -255,10 +287,23 @@ export default function PesoSection({ rootOnBack }) {
         {log.length > 0 && (() => {
           const total = week.total != null ? Math.round(week.total * 10) / 10 : null;
           const dir = total == null || total === 0 ? 'flat' : total > 0 ? 'down' : 'up';
+          const weekLabel = weekOffset === 0
+            ? t('weight.week')
+            : `${fmtDate(week.days[0].iso)} – ${fmtDate(week.days[6].iso)}`;
           return (
-            <div className="peso-week">
+            <div
+              className="peso-week"
+              onTouchStart={onWeekTouchStart}
+              onTouchMove={onWeekTouchMove}
+              onTouchEnd={onWeekTouchEnd}
+              onTouchCancel={onWeekTouchEnd}
+            >
               <div className="peso-week-head">
-                <span className="peso-week-title">{t('weight.week')}</span>
+                <div className="peso-week-nav-group">
+                  <button className="peso-week-nav" onClick={goPrevWeek} aria-label={t('weight.prevWeek')}>‹</button>
+                  <span className="peso-week-title">{weekLabel}</span>
+                  <button className="peso-week-nav" onClick={goNextWeek} disabled={weekOffset === 0} aria-label={t('weight.nextWeek')}>›</button>
+                </div>
                 {total == null ? (
                   <span className="peso-week-total peso-week-total--flat">—</span>
                 ) : (
