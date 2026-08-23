@@ -128,7 +128,6 @@ const DICT = {
   'cards.studyByTag': 'Estudiar por etiqueta',
   'cards.studyAllLabel': 'Estudiar todo',
   'cards.studyTag': 'Estudiar etiqueta',
-  'cards.pickTag': 'Elige una etiqueta',
   'cards.noTag': 'Sin etiqueta',
   'cards.studyAllDecks': 'Estudiar todo',
   'cards.allDecks': 'Todos los mazos',

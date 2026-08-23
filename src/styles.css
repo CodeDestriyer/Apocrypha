@@ -5467,24 +5467,26 @@ body {
 
 /* Study-by-tag chips under the study button */
 .cards-tag-study { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-.cards-tag-study-label {
-  font-family: 'Cinzel', serif; font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; color: #8a7d63;
-}
 .cards-tag-study-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .cards-tag-study-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px;
-  background: rgba(190, 158, 92, 0.08);
-  border: 1px solid rgba(190, 158, 92, 0.35);
-  color: #e8dcbb;
-  font-size: 13.5px;
+  padding: 7px 14px;
+  background: rgba(190, 158, 92, 0.12);
+  border: 1.5px solid rgba(190, 158, 92, 0.55);
+  color: #f0e6c8;
+  font-size: 14px;
+  font-weight: 600;
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.cards-tag-study-chip:hover { background: rgba(190, 158, 92, 0.18); border-color: var(--gold); }
-.cards-tag-study-chip--none { border-style: dashed; }
+.cards-tag-study-chip:hover { background: rgba(190, 158, 92, 0.22); border-color: var(--gold); }
+.cards-tag-study-chip--none {
+  border-color: #a83224;
+  color: #f0cfc8;
+  background: rgba(168, 50, 36, 0.14);
+}
+.cards-tag-study-chip--none:hover { border-color: #c8442f; background: rgba(168, 50, 36, 0.24); }
 .cards-tag-study-count {
   font-size: 11px; color: #8a7d63;
   background: rgba(0, 0, 0, 0.25);
@@ -6048,9 +6050,10 @@ body {
 .cards-tag-chip-x:hover { color: var(--wine); }
 .cards-tag-suggest { border: 1px dashed var(--gold-dim); color: var(--text-dim); }
 .cards-tag-suggest:hover { color: var(--wine); border-color: var(--wine); }
-.cards-tag-study-label { color: var(--text-dim); }
-.cards-tag-study-chip { background: var(--paper); border: 1px solid var(--line); color: var(--wine); }
+.cards-tag-study-chip { background: var(--paper); border: 1.5px solid var(--gold-dim); color: var(--wine); }
 .cards-tag-study-chip:hover { background: #ffffff; border-color: var(--wine); }
+.cards-tag-study-chip--none { border-color: var(--wine); color: var(--wine); background: rgba(74, 21, 11, 0.06); }
+.cards-tag-study-chip--none:hover { border-color: var(--wine-deep); background: rgba(74, 21, 11, 0.12); }
 .cards-tag-study-count { color: var(--text-dim); background: rgba(0, 0, 0, 0.06); }
 .card-row-tag { background: rgba(110, 36, 19, 0.06); border-color: var(--gold-dim); color: var(--wine); }
 .card-row-tag:hover { background: rgba(110, 36, 19, 0.12); border-color: var(--wine); color: var(--wine); }

@@ -330,8 +330,7 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
 
           {studyExpanded && tagPickerOpen && allTags.length > 0 && (
             <div className="cards-tag-study">
-              <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
-              <div className="cards-tag-study-chips">
+                  <div className="cards-tag-study-chips">
                 {noTagCount > 0 && (
                   <button
                     className="cards-tag-study-chip cards-tag-study-chip--none"
@@ -501,7 +500,6 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
 
       {studyExpanded && tagPickerOpen && deckTags.length > 0 && (
         <div className="cards-tag-study">
-          <span className="cards-tag-study-label">{t('cards.pickTag')}</span>
           <div className="cards-tag-study-chips">
             {noTagCount > 0 && (
               <button
