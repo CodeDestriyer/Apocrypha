@@ -552,6 +552,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
             >×</button>
           )}
         </div>
+        <button className="search-add-btn" onClick={() => setAdding(true)} aria-label={t('cards.newCard')}>+</button>
         {deckTags.length > 0 && (
           <button
             className={`search-filter-btn ${filterOpen ? 'active' : ''}`}
@@ -564,7 +565,6 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
             </svg>
           </button>
         )}
-        <button className="search-add-btn" onClick={() => setAdding(true)} aria-label={t('cards.newCard')}>+</button>
       </div>
 
       {filterOpen && deckTags.length > 0 && (
