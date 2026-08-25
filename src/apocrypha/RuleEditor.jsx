@@ -76,7 +76,9 @@ export function markersToHtml(text) {
 function inlineSerialize(node) {
   let s = '';
   node.childNodes.forEach((c) => {
-    if (c.nodeType === Node.TEXT_NODE) { s += c.textContent; return; }
+    // Strip zero-width spaces: they are only caret scaffolding (see the line
+    // break helper), never real content.
+    if (c.nodeType === Node.TEXT_NODE) { s += c.textContent.replace(/​/g, ''); return; }
     if (c.nodeType !== Node.ELEMENT_NODE) return;
     const tag = c.tagName;
     if (tag === 'BR') { s += '\n'; return; }
@@ -294,19 +296,39 @@ function blockFlowAt(editor, node) {
   if (!block) return null;
   return { block, flow: flow || block };
 }
-// Is the caret on an empty last/first line of the flow (i.e. nothing but a <br>
-// beyond it)? That is the second-Enter state that triggers the escape.
+// A node renders nothing if it's a <br>, an empty/zero-width text node, or an
+// empty inline element (the browser leaves an empty <strong> "style holder"
+// after a break next to bold text).
+function isBlank(n) {
+  if (!n) return true;
+  if (n.nodeName === 'BR') return true;
+  if (n.nodeType === Node.TEXT_NODE) return n.textContent.replace(/​/g, '') === '';
+  if (n.nodeType === Node.ELEMENT_NODE) return n.textContent.replace(/​/g, '') === '' && !n.querySelector('br, img');
+  return false;
+}
+// Does the flow end / start with a <br> once trailing / leading blank (non-br)
+// nodes are skipped? That is the empty-line state a second Enter escapes from.
+function endsWithBreak(flow) {
+  let n = flow.lastChild;
+  while (n && n.nodeName !== 'BR' && isBlank(n)) n = n.previousSibling;
+  return !!n && n.nodeName === 'BR';
+}
+function startsWithBreak(flow) {
+  let n = flow.firstChild;
+  while (n && n.nodeName !== 'BR' && isBlank(n)) n = n.nextSibling;
+  return !!n && n.nodeName === 'BR';
+}
 function atEmptyLastLine(flow, range) {
   const r = document.createRange();
   r.selectNodeContents(flow);
   try { r.setStart(range.endContainer, range.endOffset); } catch { return false; }
-  return r.toString() === '' && flow.lastChild && flow.lastChild.nodeName === 'BR';
+  return r.toString().replace(/​/g, '') === '' && endsWithBreak(flow);
 }
 function atEmptyFirstLine(flow, range) {
   const r = document.createRange();
   r.selectNodeContents(flow);
   try { r.setEnd(range.startContainer, range.startOffset); } catch { return false; }
-  return r.toString() === '' && flow.firstChild && flow.firstChild.nodeName === 'BR';
+  return r.toString().replace(/​/g, '') === '' && startsWithBreak(flow);
 }
 function tryEscapeBlock(editor) {
   const sel = window.getSelection();
@@ -323,8 +345,8 @@ function tryEscapeBlock(editor) {
     sel.removeAllRanges(); sel.addRange(r);
   };
   if (atEmptyLastLine(flow, range)) {
-    while (flow.lastChild && flow.lastChild.nodeName === 'BR') flow.lastChild.remove();
-    while (block.nextSibling && block.nextSibling.nodeName === 'BR') block.nextSibling.remove();
+    while (isBlank(flow.lastChild) && flow.lastChild) flow.lastChild.remove();
+    while (block.nextSibling && isBlank(block.nextSibling)) block.nextSibling.remove();
     const next = block.nextSibling;
     if (next && next.nodeName !== 'BR') landIn(next); // real line already there
     else {
@@ -336,8 +358,8 @@ function tryEscapeBlock(editor) {
     return true;
   }
   if (atEmptyFirstLine(flow, range)) {
-    while (flow.firstChild && flow.firstChild.nodeName === 'BR') flow.firstChild.remove();
-    while (block.previousSibling && block.previousSibling.nodeName === 'BR') block.previousSibling.remove();
+    while (isBlank(flow.firstChild) && flow.firstChild) flow.firstChild.remove();
+    while (block.previousSibling && isBlank(block.previousSibling)) block.previousSibling.remove();
     const holder = document.createElement('div');
     holder.appendChild(makeBr());
     editor.insertBefore(holder, block);
@@ -345,6 +367,43 @@ function tryEscapeBlock(editor) {
     return true;
   }
   return false;
+}
+
+// The line's flow container: the editor, or a column / box the caret sits in.
+function lineFlow(editor, node) {
+  let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  while (el && el !== editor && !isCol(el) && !isBox(el)) el = el.parentNode;
+  return el || editor;
+}
+// Insert a line break that breaks OUT of any inline formatting (bold / box /
+// mark), so the new line isn't bold and the markers close on the line we left
+// (the two-** bleed the user spotted). The caret lands in a fresh plain text
+// node so typing doesn't inherit the bold style of the line above.
+function insertBreakOutOfInline(editor) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  const flow = lineFlow(editor, range.startContainer);
+  const br = makeBr();
+  range.insertNode(br);
+  // Bubble the br up to the flow level, splitting each inline wrapper so the
+  // content before it stays wrapped and the content after moves to a clone.
+  while (br.parentNode && br.parentNode !== flow) {
+    const parent = br.parentNode;
+    const after = document.createElement(parent.tagName);
+    if (parent.className) after.className = parent.className;
+    let sib = br.nextSibling;
+    while (sib) { const nx = sib.nextSibling; after.appendChild(sib); sib = nx; }
+    parent.parentNode.insertBefore(br, parent.nextSibling);
+    if (after.childNodes.length) parent.parentNode.insertBefore(after, br.nextSibling);
+    if (!parent.childNodes.length) parent.remove();
+  }
+  const zwsp = document.createTextNode('​');
+  br.parentNode.insertBefore(zwsp, br.nextSibling);
+  const r = document.createRange();
+  r.setStart(zwsp, 1); r.collapse(true);
+  sel.removeAllRanges(); sel.addRange(r);
 }
 
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
@@ -391,8 +450,9 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onSubmit?.(); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Double Enter on an empty line inside a block breaks out of it.
-      if (!tryEscapeBlock(ref.current)) document.execCommand('insertLineBreak');
+      // Double Enter on an empty line inside a block breaks out of it; otherwise
+      // a line break that steps out of any bold/box/mark so the new line is plain.
+      if (!tryEscapeBlock(ref.current)) insertBreakOutOfInline(ref.current);
       emit();
       return;
     }
