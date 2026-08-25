@@ -122,49 +122,23 @@ function renderRuleBody(text) {
   return blocks;
 }
 
-// A single accordion row: title header that toggles the body open in place,
-// giving rich bodies (tables/columns) the full page width. Edit/delete live
-// inside the expanded body so browsing stays a clean list of headers.
-function RuleRow({ rule, expanded, onToggle, onOpen, onEdit, onDelete, t }) {
+// A clickable rule card: title + short body preview. Clicking opens the rule
+// in its own isolated full-page view (no expand-in-place).
+function RuleCard({ rule, onOpen, t }) {
   return (
-    <div className={`rule-acc-item${expanded ? ' open' : ''}`}>
-      <button
-        className="rule-acc-head"
-        onClick={() => onToggle(rule.id)}
-        aria-expanded={expanded}
-      >
-        <span className="rule-acc-title">{rule.title || t('reglas.noBody')}</span>
-        <svg className="rule-acc-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="m6 9 6 6 6-6" />
-        </svg>
-      </button>
-      {expanded && (
-        <div className="rule-acc-body">
-          {rule.body
-            ? <div className="rule-read-body">{renderRuleBody(rule.body)}</div>
-            : <div className="empty-hint">{t('reglas.noBody')}</div>}
-          <div className="rule-acc-actions">
-            <button className="rule-acc-action rule-acc-action--open" onClick={() => onOpen(rule)}>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
-              </svg>
-              {t('reglas.openFull')}
-            </button>
-            <button className="rule-acc-action" onClick={() => onEdit(rule)}>{t('cards.editCard')}</button>
-            <button className="rule-acc-action rule-acc-action--danger" onClick={() => onDelete(rule.id)}>{t('cards.deleteCard')}</button>
-          </div>
-        </div>
-      )}
-    </div>
+    <button className="rule-card" onClick={() => onOpen(rule)}>
+      <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
+      {rule.body && <span className="rule-card-preview">{renderRuleBody(rule.body)}</span>}
+    </button>
   );
 }
 
 // Rules ("Reglas") — a store of Spanish grammar rules, shown as a full-width
-// accordion list: a rule's title toggles its body open in place (several may
-// be open at once), so tables and columns render at full width instead of
-// cramped tiles. Adding/editing drops into a focused editor page. Rules carry
-// an optional `group` label; when any rule has one the list splits into
-// labelled sections (a scaffold for fuller group management later).
+// list of clickable cards. Tapping a card opens that rule in its own isolated
+// full-page view (body at full width, edit/delete there); adding/editing drops
+// into a focused editor page. Rules carry an optional `group` label; when any
+// rule has one the list splits into labelled sections (a scaffold for fuller
+// group management later).
 // Each rule is { id, title, body, group?, created_at } on profile.rules.
 export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
@@ -188,18 +162,10 @@ export default function RulesSection({ rootOnBack }) {
   const [body, setBody] = useState('');
   const [group, setGroup] = useState('');
   const [query, setQuery] = useState('');
-  const [expanded, setExpanded] = useState(() => new Set());
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
   const readingRule = reading ? (rules.find((r) => r.id === reading) ?? null) : null;
   const isEditing = open === 'new' || !!currentRule;
-
-  const toggleExpanded = (id) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
 
   const openNew = () => { setReading(null); setTitle(''); setBody(''); setGroup(''); setOpen('new'); };
   const openFull = (r) => setReading(r.id);
@@ -331,16 +297,7 @@ export default function RulesSection({ rootOnBack }) {
     );
   } else {
     const renderRow = (r) => (
-      <RuleRow
-        key={r.id}
-        rule={r}
-        expanded={expanded.has(r.id)}
-        onToggle={toggleExpanded}
-        onOpen={openFull}
-        onEdit={editRule}
-        onDelete={removeRule}
-        t={t}
-      />
+      <RuleCard key={r.id} rule={r} onOpen={openFull} t={t} />
     );
     content = (
       <>

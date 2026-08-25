@@ -6132,7 +6132,7 @@ body {
 /* Note tiles are <button>s now — inherit the page font, not the UA default. */
 .rule-note { font-family: inherit; }
 
-/* ── Reglas: accordion list ─────────────────────────────── */
+/* ── Reglas: card list ──────────────────────────────────── */
 .rules-list { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
 
 /* Group sections (scaffold — appears only once rules carry a group) */
@@ -6154,39 +6154,39 @@ body {
   padding: 0 7px; line-height: 1.5;
 }
 
-.rule-acc-item {
+/* A clickable rule card — opens the isolated full-page view on tap */
+.rule-card {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 13px 15px;
   border: 1.5px solid var(--gold-dim);
   border-radius: 8px;
   background: var(--paper);
   box-shadow: 0 2px 6px rgba(42, 14, 8, 0.07);
-  overflow: hidden;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  color: var(--ink-soft);
+  font-family: inherit; text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s;
 }
-.rule-acc-item.open { border-color: var(--wine); box-shadow: 0 6px 16px rgba(42, 14, 8, 0.12); }
-
-.rule-acc-head {
-  width: 100%;
-  display: flex; align-items: center; gap: 10px;
-  padding: 13px 14px;
-  background: transparent; border: none;
+.rule-card:hover {
+  border-color: var(--wine); background: #ffffff;
+  box-shadow: 0 6px 16px rgba(42, 14, 8, 0.14); transform: translateY(-1px);
+}
+.rule-card:active { transform: translateY(0); }
+.rule-card-title {
   font-family: 'Cinzel', serif;
   font-size: 14px; letter-spacing: 0.02em; font-weight: 700;
-  color: var(--wine); text-align: left;
-  cursor: pointer;
+  color: var(--wine); overflow-wrap: anywhere;
 }
-.rule-acc-head:hover { background: rgba(110, 36, 19, 0.04); }
-.rule-acc-title { flex: 1; overflow-wrap: anywhere; }
-.rule-acc-chevron {
-  flex: none; color: var(--gold);
-  transition: transform 0.18s ease;
+.rule-card-preview {
+  display: block;
+  font-size: 13px; line-height: 1.45; color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  max-height: 42px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
 }
-.rule-acc-item.open .rule-acc-chevron { transform: rotate(180deg); }
 
-.rule-acc-body {
-  padding: 2px 16px 14px;
-  border-top: 1px solid var(--line);
-  color: var(--ink-soft);
-}
 .rule-acc-actions {
   display: flex; gap: 8px; justify-content: flex-end;
   margin-top: 14px; padding-top: 12px;
