@@ -6193,6 +6193,7 @@ body {
   border-top: 1px solid var(--line);
 }
 .rule-acc-action {
+  display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px;
   border: 1px solid var(--gold-dim); border-radius: 6px;
   background: transparent; color: var(--ink);
@@ -6200,6 +6201,8 @@ body {
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .rule-acc-action:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.rule-acc-action--open { color: var(--wine); border-color: var(--wine); margin-right: auto; }
+.rule-acc-action--open:hover { background: rgba(110, 36, 19, 0.08); }
 .rule-acc-action--danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(157, 59, 47, 0.08); }
 
 /* Focused rule — read view (Notion-style: open to read, edit via gear) */

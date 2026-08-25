@@ -125,7 +125,7 @@ function renderRuleBody(text) {
 // A single accordion row: title header that toggles the body open in place,
 // giving rich bodies (tables/columns) the full page width. Edit/delete live
 // inside the expanded body so browsing stays a clean list of headers.
-function RuleRow({ rule, expanded, onToggle, onEdit, onDelete, t }) {
+function RuleRow({ rule, expanded, onToggle, onOpen, onEdit, onDelete, t }) {
   return (
     <div className={`rule-acc-item${expanded ? ' open' : ''}`}>
       <button
@@ -144,6 +144,12 @@ function RuleRow({ rule, expanded, onToggle, onEdit, onDelete, t }) {
             ? <div className="rule-read-body">{renderRuleBody(rule.body)}</div>
             : <div className="empty-hint">{t('reglas.noBody')}</div>}
           <div className="rule-acc-actions">
+            <button className="rule-acc-action rule-acc-action--open" onClick={() => onOpen(rule)}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+              </svg>
+              {t('reglas.openFull')}
+            </button>
             <button className="rule-acc-action" onClick={() => onEdit(rule)}>{t('cards.editCard')}</button>
             <button className="rule-acc-action rule-acc-action--danger" onClick={() => onDelete(rule.id)}>{t('cards.deleteCard')}</button>
           </div>
@@ -177,6 +183,7 @@ export default function RulesSection({ rootOnBack }) {
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
   const [open, setOpen] = useState(null);          // null (list) | 'new' | ruleId (editing)
+  const [reading, setReading] = useState(null);    // null | ruleId (isolated full-page read)
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [group, setGroup] = useState('');
@@ -184,6 +191,7 @@ export default function RulesSection({ rootOnBack }) {
   const [expanded, setExpanded] = useState(() => new Set());
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
+  const readingRule = reading ? (rules.find((r) => r.id === reading) ?? null) : null;
   const isEditing = open === 'new' || !!currentRule;
 
   const toggleExpanded = (id) =>
@@ -193,9 +201,10 @@ export default function RulesSection({ rootOnBack }) {
       return next;
     });
 
-  const openNew = () => { setTitle(''); setBody(''); setGroup(''); setOpen('new'); };
-  const editRule = (r) => { setTitle(r.title ?? ''); setBody(r.body ?? ''); setGroup(r.group ?? ''); setOpen(r.id); };
-  const backToList = () => setOpen(null);
+  const openNew = () => { setReading(null); setTitle(''); setBody(''); setGroup(''); setOpen('new'); };
+  const openFull = (r) => setReading(r.id);
+  const editRule = (r) => { setReading(null); setTitle(r.title ?? ''); setBody(r.body ?? ''); setGroup(r.group ?? ''); setOpen(r.id); };
+  const backToList = () => { setOpen(null); setReading(null); };
 
   const saveNew = () => {
     const ti = title.trim(); const bo = body.trim(); const gr = group.trim();
@@ -257,6 +266,9 @@ export default function RulesSection({ rootOnBack }) {
   } else if (currentRule) {
     pageTitle = <span className="sub-title-deck">{currentRule.title || t('reglas.title')}</span>;
     onBack = backToList;
+  } else if (readingRule) {
+    pageTitle = <span className="sub-title-deck">{readingRule.title || t('reglas.title')}</span>;
+    onBack = backToList;
   } else {
     pageTitle = t('reglas.title');
     onBack = rootOnBack;
@@ -305,6 +317,18 @@ export default function RulesSection({ rootOnBack }) {
         </div>
       </div>
     );
+  } else if (readingRule) {
+    content = (
+      <div className="rule-read">
+        {readingRule.body
+          ? <div className="rule-read-body">{renderRuleBody(readingRule.body)}</div>
+          : <div className="empty-hint">{t('reglas.noBody')}</div>}
+        <div className="rule-acc-actions">
+          <button className="rule-acc-action" onClick={() => editRule(readingRule)}>{t('cards.editCard')}</button>
+          <button className="rule-acc-action rule-acc-action--danger" onClick={() => { removeRule(readingRule.id); backToList(); }}>{t('cards.deleteCard')}</button>
+        </div>
+      </div>
+    );
   } else {
     const renderRow = (r) => (
       <RuleRow
@@ -312,6 +336,7 @@ export default function RulesSection({ rootOnBack }) {
         rule={r}
         expanded={expanded.has(r.id)}
         onToggle={toggleExpanded}
+        onOpen={openFull}
         onEdit={editRule}
         onDelete={removeRule}
         t={t}

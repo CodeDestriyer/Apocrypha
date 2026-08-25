@@ -41,6 +41,7 @@ const DICT = {
   'reglas.groupLabel': 'Grupo',
   'reglas.groupPlaceholder': 'Sin grupo (p. ej. Verbos)',
   'reglas.ungrouped': 'Sin grupo',
+  'reglas.openFull': 'Abrir',
   'reglas.noBody': '(sin texto)',
   'reglas.bold': 'Negrita',
   'reglas.box': 'Recuadro',
