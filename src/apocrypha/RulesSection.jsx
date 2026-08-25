@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
+import RuleEditor from './RuleEditor.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -118,62 +119,6 @@ export default function RulesSection({ rootOnBack }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
 
-  // Right-click a selection in the editor to open a small formatting menu
-  // (one option for now: Negrita). Nothing selected → native browser menu.
-  const [ctxMenu, setCtxMenu] = useState(null); // { x, y, start, end }
-  const ctxRef = useRef(null);
-  useEffect(() => {
-    if (!ctxMenu) return;
-    const close = () => setCtxMenu(null);
-    const onDown = (e) => { if (ctxRef.current && !ctxRef.current.contains(e.target)) close(); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('scroll', close, true);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-      window.removeEventListener('scroll', close, true);
-    };
-  }, [ctxMenu]);
-
-  const openFormatMenu = (e) => {
-    const ta = e.currentTarget;
-    const s = ta.selectionStart ?? body.length, en = ta.selectionEnd ?? body.length;
-    e.preventDefault();
-    // With a selection → format it (bold/box/mark). On empty space → insert
-    // a block (table / divider) at the caret.
-    setCtxMenu({ x: e.clientX, y: e.clientY, start: s, end: en, hasSel: s !== en });
-  };
-  const wrapSelection = (openTok, closeTok) => {
-    if (!ctxMenu) return;
-    const { start: s, end: en } = ctxMenu;
-    const sel = body.slice(s, en);
-    const before = body.slice(0, s), after = body.slice(en);
-    const wrapped = sel.startsWith(openTok) && sel.endsWith(closeTok) && sel.length >= openTok.length + closeTok.length;
-    const next = wrapped
-      ? before + sel.slice(openTok.length, sel.length - closeTok.length) + after
-      : `${before}${openTok}${sel}${closeTok}${after}`;
-    setBody(next);
-    setCtxMenu(null);
-  };
-  const applyBold = () => wrapSelection('**', '**');
-  const applyBox = () => wrapSelection('[[', ']]');
-  const applyMark = () => wrapSelection('==', '==');
-
-  // Insert a block (table / divider) at the caret where the menu was opened.
-  const insertAt = (text) => {
-    if (!ctxMenu) return;
-    const pos = ctxMenu.start;
-    let before = body.slice(0, pos), after = body.slice(pos);
-    if (before && !before.endsWith('\n')) before += '\n';
-    if (after && !after.startsWith('\n')) after = '\n' + after;
-    setBody(before + text + after);
-    setCtxMenu(null);
-  };
-  const insertTable = () => insertAt('Columna 1 | Columna 2\ndato | dato');
-  const insertDivider = () => insertAt('---');
-
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
 
   const openNew = () => { setTitle(''); setBody(''); setEditMode(true); setMenuOpen(false); setOpen('new'); };
@@ -254,14 +199,12 @@ export default function RulesSection({ rootOnBack }) {
           maxLength={80}
         />
         <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
-        <textarea
-          className="cards-field-textarea"
-          value={body}
+        <RuleEditor
+          editKey={open === 'new' ? 'new' : currentRule.id}
+          initialValue={body}
+          onChange={setBody}
+          onSubmit={submit}
           placeholder={t('reglas.bodyPlaceholder')}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(); }}
-          onContextMenu={openFormatMenu}
-          rows={9}
         />
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
@@ -323,37 +266,6 @@ export default function RulesSection({ rootOnBack }) {
   return (
     <SubPage title={pageTitle} onBack={onBack} headerRight={headerRight}>
       {content}
-      {ctxMenu && (
-        <div className="rule-ctx-menu" ref={ctxRef} style={{ top: ctxMenu.y, left: ctxMenu.x }}>
-          {ctxMenu.hasSel ? (
-            <>
-              <button className="rule-ctx-item" onClick={applyBold}>
-                <span className="rule-ctx-b">B</span>
-                <span>{t('reglas.bold')}</span>
-              </button>
-              <button className="rule-ctx-item" onClick={applyBox}>
-                <span className="rule-ctx-box" aria-hidden="true" />
-                <span>{t('reglas.box')}</span>
-              </button>
-              <button className="rule-ctx-item" onClick={applyMark}>
-                <span className="rule-ctx-mark" aria-hidden="true" />
-                <span>{t('reglas.mark')}</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="rule-ctx-item" onClick={insertTable}>
-                <span className="rule-ctx-glyph" aria-hidden="true">▦</span>
-                <span>{t('reglas.table')}</span>
-              </button>
-              <button className="rule-ctx-item" onClick={insertDivider}>
-                <span className="rule-ctx-glyph" aria-hidden="true">—</span>
-                <span>{t('reglas.divider')}</span>
-              </button>
-            </>
-          )}
-        </div>
-      )}
     </SubPage>
   );
 }

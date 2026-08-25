@@ -6200,6 +6200,54 @@ body {
   display: inline-flex; align-items: center; justify-content: center;
   width: 18px; font-size: 15px; color: var(--ink);
 }
+/* WYSIWYG rule body editor (contentEditable) — mirrors .cards-field-textarea
+   framing but renders bold/box/mark markers live instead of showing them. */
+.rule-editor {
+  width: 100%;
+  min-height: 160px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline: none;
+  cursor: text;
+}
+.rule-editor:focus { border-color: var(--wine); }
+.rule-editor:empty:before {
+  content: attr(data-placeholder);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.rule-editor strong { font-weight: 700; }
+
+/* Floating format toolbar over the current selection (Notion-style) */
+.rule-fmt-bar {
+  position: fixed; z-index: 60;
+  transform: translate(-50%, calc(-100% - 8px));
+  display: flex; gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px rgba(42, 14, 8, 0.28);
+}
+.rule-fmt-btn {
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  border: none; border-radius: 6px;
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.rule-fmt-btn:hover { background: rgba(110, 36, 19, 0.08); }
+.rule-fmt-b { font-family: 'Cinzel', serif; font-weight: 700; font-size: 15px; color: var(--wine); }
+.rule-fmt-box { width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 3px; }
+.rule-fmt-mark { width: 16px; height: 16px; border-radius: 3px; background: rgba(240, 205, 90, 0.75); }
+
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .rule-read-body {
   white-space: pre-wrap;
