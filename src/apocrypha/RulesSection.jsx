@@ -232,9 +232,6 @@ function GroupVisor({ group, rules, collapsed, isDrop, dragging, renaming, nameD
           className="rule-koz-grip"
           aria-label={t('reglas.reorder')}
           onPointerDown={(e) => gdnd.down(e, group)}
-          onPointerMove={gdnd.move}
-          onPointerUp={gdnd.up}
-          onPointerCancel={gdnd.cancel}
         >
           <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
             <circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/>
@@ -375,46 +372,50 @@ export default function RulesSection({ rootOnBack }) {
     },
     cancel: resetDrag,
   };
+  // Group reorder uses window listeners (not pointer capture): the live reorder
+  // reshuffles the visor DOM nodes, which can drop capture on the grip in some
+  // browsers — window listeners still deliver move/up so the drop always lands.
   const gdnd = {
     down: (e, group) => {
       if (e.button != null && e.button !== 0) return;
-      e.preventDefault(); e.stopPropagation();
+      e.preventDefault();
       dragRef.current = { kind: 'group', id: group.id, pid: e.pointerId, title: group.name, started: false };
       groupOrderRef.current = groups.map((g) => g.id);
-      e.currentTarget.setPointerCapture?.(e.pointerId);
+
+      const onMove = (ev) => {
+        const d = dragRef.current;
+        if (d.kind !== 'group') return;
+        if (!d.started) { d.started = true; setDragGroupId(d.id); setGroupOrder(groupOrderRef.current); }
+        setGhost({ x: ev.clientX, y: ev.clientY, title: d.title });
+        const order = groupOrderRef.current || [];
+        let target = order.length - 1;
+        for (let i = 0; i < order.length; i++) {
+          const el = visorRefs.current.get(order[i]);
+          if (!el) continue;
+          const r = el.getBoundingClientRect();
+          if (ev.clientY < r.top + r.height / 2) { target = i; break; }
+        }
+        const cur = order.filter((id) => id !== d.id);
+        cur.splice(Math.max(0, Math.min(target, cur.length)), 0, d.id);
+        if (cur.length !== order.length || cur.some((id, i) => id !== order[i])) {
+          groupOrderRef.current = cur;
+          setGroupOrder(cur);
+        }
+      };
+      const onUp = () => {
+        const order = groupOrderRef.current;
+        if (dragRef.current.started && order) {
+          setGroups((gs) => order.map((id) => gs.find((g) => g.id === id)).filter(Boolean));
+        }
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        resetDrag();
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     },
-    move: (e) => {
-      const d = dragRef.current;
-      if (d.kind !== 'group' || e.pointerId !== d.pid) return;
-      e.preventDefault();
-      if (!d.started) { d.started = true; setDragGroupId(d.id); setGroupOrder(groupOrderRef.current); }
-      setGhost({ x: e.clientX, y: e.clientY, title: d.title });
-      // Live reorder: slot the dragged visor by the pointer against sibling rects.
-      const order = groupOrderRef.current || [];
-      let target = order.length - 1;
-      for (let i = 0; i < order.length; i++) {
-        const el = visorRefs.current.get(order[i]);
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (e.clientY < r.top + r.height / 2) { target = i; break; }
-      }
-      const cur = order.filter((id) => id !== d.id);
-      cur.splice(Math.max(0, Math.min(target, cur.length)), 0, d.id);
-      if (cur.some((id, i) => id !== order[i]) || cur.length !== order.length) {
-        groupOrderRef.current = cur;
-        setGroupOrder(cur);
-      }
-    },
-    up: (e) => {
-      const d = dragRef.current;
-      if (d.kind !== 'group' || e.pointerId !== d.pid) return;
-      const order = groupOrderRef.current;
-      if (d.started && order) {
-        setGroups((gs) => order.map((id) => gs.find((g) => g.id === id)).filter(Boolean));
-      }
-      resetDrag();
-    },
-    cancel: resetDrag,
   };
   const anyDrag = dragId != null || dragGroupId != null;
 

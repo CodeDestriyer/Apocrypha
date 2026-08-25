@@ -6256,6 +6256,7 @@ body {
   transition: box-shadow 0.15s, background 0.15s;
 }
 .rule-ungrouped.drop { box-shadow: 0 0 0 2px rgba(110, 36, 19, 0.15); background: rgba(110, 36, 19, 0.04); }
+.rules-list.dragging { user-select: none; -webkit-user-select: none; }
 .rules-list.dragging .rule-card-open { pointer-events: none; }
 
 /* Floating label that follows the pointer while dragging a rule */
