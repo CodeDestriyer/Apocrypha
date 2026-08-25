@@ -380,6 +380,13 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
       // Double Enter on an empty line inside a block breaks out of it.
       if (!tryEscapeBlock(ref.current)) document.execCommand('insertLineBreak');
       emit();
+      return;
+    }
+    if (e.key === 'Backspace') {
+      // On an empty edge line inside a block, Backspace breaks out too (a quick
+      // alternative to the second Enter, from any column). Elsewhere it deletes.
+      const sel = window.getSelection();
+      if (sel.isCollapsed && tryEscapeBlock(ref.current)) { e.preventDefault(); emit(); }
     }
   };
 
