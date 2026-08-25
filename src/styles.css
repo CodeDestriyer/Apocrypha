@@ -6201,7 +6201,19 @@ body {
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .rule-koz.drop { border-color: var(--wine); background: rgba(110, 36, 19, 0.08); box-shadow: 0 0 0 2px rgba(110, 36, 19, 0.15); }
+.rule-koz.dragging { opacity: 0.4; }
 .rule-koz-head { display: flex; align-items: center; }
+.rule-koz-grip {
+  flex: none;
+  display: grid; place-items: center;
+  width: 34px; align-self: stretch;
+  background: transparent; border: none;
+  color: var(--text-dim); cursor: grab;
+  touch-action: none;
+  transition: color 0.15s, background 0.15s;
+}
+.rule-koz-grip:hover { color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.rule-koz-grip:active { cursor: grabbing; }
 .rule-koz-toggle {
   flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 9px;

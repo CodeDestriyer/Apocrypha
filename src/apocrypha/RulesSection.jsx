@@ -11,6 +11,58 @@ const newId = () =>
 
 const UNGROUPED = '__ungrouped__';
 
+// Move a rule to `targetGroupId` (null = ungrouped) at position `index` among
+// that container's rules, rebuilding the global order so other rules keep their
+// relative places. Reorders within a container and moves between them alike.
+function moveRule(rules, dragId, targetGroupId, index) {
+  const dragged = rules.find((r) => r.id === dragId);
+  if (!dragged) return rules;
+  const base = rules.filter((r) => r.id !== dragId);
+  const members = base.filter((r) => (r.groupId ?? null) === (targetGroupId ?? null));
+  const moved = { ...dragged, groupId: targetGroupId ?? null };
+  let at;
+  if (members.length === 0) at = base.length;                       // empty container → tail
+  else if (index >= members.length) at = base.indexOf(members[members.length - 1]) + 1;
+  else at = base.indexOf(members[index]);
+  base.splice(at, 0, moved);
+  return base;
+}
+
+// Move the group at `dragId` to position `index` among the groups.
+function moveGroup(groups, dragId, index) {
+  const from = groups.findIndex((g) => g.id === dragId);
+  if (from < 0) return groups;
+  const next = groups.slice();
+  const [g] = next.splice(from, 1);
+  next.splice(Math.max(0, Math.min(index, next.length)), 0, g);
+  return next;
+}
+
+// Insertion index for a dragged rule within a drop-zone element, from pointer Y
+// (counts sibling cards whose midpoint sits above the pointer; skips the dragged
+// one so the index matches the container list minus the dragged rule).
+function ruleDropIndex(zoneEl, y, dragId) {
+  if (!zoneEl) return 0;
+  let index = 0;
+  for (const c of zoneEl.querySelectorAll('.rule-card[data-rule-id]')) {
+    if (c.getAttribute('data-rule-id') === dragId) continue;
+    const rect = c.getBoundingClientRect();
+    if (y > rect.top + rect.height / 2) index++; else break;
+  }
+  return index;
+}
+
+// Insertion index for a dragged group among the rendered visors, from pointer Y.
+function groupDropIndex(y, dragId) {
+  let index = 0;
+  for (const v of document.querySelectorAll('.rule-koz[data-group-id]')) {
+    if (v.getAttribute('data-group-id') === dragId) continue;
+    const rect = v.getBoundingClientRect();
+    if (y > rect.top + rect.height / 2) index++; else break;
+  }
+  return index;
+}
+
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
 // Rule bodies store inline formatting as markers: **bold**, [[boxed]] and
@@ -128,7 +180,7 @@ function renderRuleBody(text) {
 // it between the ungrouped top area and group visors (like reordering tareas).
 function RuleCard({ rule, dragging, dnd, onOpen, t }) {
   return (
-    <div className={`rule-card${dragging ? ' dragging' : ''}`}>
+    <div className={`rule-card${dragging ? ' dragging' : ''}`} data-rule-id={rule.id}>
       <button className="rule-card-open" onClick={() => onOpen(rule.id)}>
         <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
       </button>
@@ -153,11 +205,25 @@ function RuleCard({ rule, dragging, dnd, onOpen, t }) {
 // A group "visor" (козырёк): a collapsible header that holds rules. Clicking the
 // header folds/unfolds it (like the nav menu); its own gear renames/deletes it.
 // The whole visor is a drop zone — dragging a rule onto it assigns the group.
-function GroupVisor({ group, rules, collapsed, isDrop, renaming, nameDraft, menuOpen,
-  onToggle, onMenu, onStartRename, onRenameChange, onCommitRename, onDelete, children, t }) {
+function GroupVisor({ group, rules, collapsed, isDrop, dragging, renaming, nameDraft, menuOpen,
+  gdnd, onToggle, onMenu, onStartRename, onRenameChange, onCommitRename, onDelete, children, t }) {
   return (
-    <section className={`rule-koz${isDrop ? ' drop' : ''}`} data-dropzone={group.id}>
+    <section className={`rule-koz${isDrop ? ' drop' : ''}${dragging ? ' dragging' : ''}`} data-dropzone={group.id} data-group-id={group.id}>
       <div className="rule-koz-head">
+        <button
+          className="rule-koz-grip"
+          aria-label={t('reglas.reorder')}
+          onPointerDown={(e) => gdnd.down(e, group)}
+          onPointerMove={gdnd.move}
+          onPointerUp={gdnd.up}
+          onPointerCancel={gdnd.cancel}
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+            <circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/>
+            <circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/>
+            <circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/>
+          </svg>
+        </button>
         <button className="rule-koz-toggle" onClick={() => onToggle(group.id)} aria-expanded={!collapsed}>
           <svg className={`rule-koz-chevron${collapsed ? '' : ' open'}`} viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="m9 6 6 6-6 6" />
@@ -233,7 +299,6 @@ export default function RulesSection({ rootOnBack }) {
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const renameRule = (id, name) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, title: name } : x)));
-  const setRuleGroup = (id, groupId) => updateRule(id, { groupId });
 
   const renameGroup = (id, name) =>
     setGroups((g) => g.map((x) => (x.id === id ? { ...x, name } : x)));
@@ -282,51 +347,75 @@ export default function RulesSection({ rootOnBack }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [groupMenu]);
 
-  // ── Drag a rule between the ungrouped area and group visors ──
-  const dragRef = useRef({ id: null, pid: null, title: '' });
-  const dropRef = useRef(null);
-  const [dragId, setDragId] = useState(null);
-  const [ghost, setGhost] = useState(null);        // { x, y, title }
-  const [dropTarget, setDropTarget] = useState(null); // group id | UNGROUPED | null
+  // ── Drag: rules move/reorder between the top area and visors; groups reorder
+  const dragRef = useRef({ kind: null, id: null, pid: null, title: '', started: false });
+  const dropRef = useRef(null);        // rule drag: target container (group id | UNGROUPED)
+  const dropZoneRef = useRef(null);    // rule drag: the target drop-zone element
+  const [dragId, setDragId] = useState(null);         // rule being dragged
+  const [dragGroupId, setDragGroupId] = useState(null); // group being dragged
+  const [ghost, setGhost] = useState(null);           // { x, y, title }
+  const [dropTarget, setDropTarget] = useState(null); // highlighted rule container
 
   const resetDrag = () => {
-    dragRef.current = { id: null, pid: null, title: '', started: false };
-    dropRef.current = null;
-    setDragId(null); setGhost(null); setDropTarget(null);
+    dragRef.current = { kind: null, id: null, pid: null, title: '', started: false };
+    dropRef.current = null; dropZoneRef.current = null;
+    setDragId(null); setDragGroupId(null); setGhost(null); setDropTarget(null);
   };
   const dnd = {
     down: (e, rule) => {
       if (e.button != null && e.button !== 0) return;
-      dragRef.current = { id: rule.id, pid: e.pointerId, title: rule.title || t('reglas.noBody'), started: false };
-      dropRef.current = null;
+      dragRef.current = { kind: 'rule', id: rule.id, pid: e.pointerId, title: rule.title || t('reglas.noBody'), started: false };
+      dropRef.current = null; dropZoneRef.current = null;
       e.currentTarget.setPointerCapture?.(e.pointerId);
     },
     move: (e) => {
       const d = dragRef.current;
-      if (!d.id || e.pointerId !== d.pid) return;
+      if (d.kind !== 'rule' || e.pointerId !== d.pid) return;
       if (!d.started) { d.started = true; setDragId(d.id); }
       setGhost({ x: e.clientX, y: e.clientY, title: d.title });
       const el = document.elementFromPoint(e.clientX, e.clientY);
       const zone = el && el.closest ? el.closest('[data-dropzone]') : null;
+      dropZoneRef.current = zone;
       const tgt = zone ? zone.getAttribute('data-dropzone') : null;
       dropRef.current = tgt;
       setDropTarget(tgt);
     },
     up: (e) => {
       const d = dragRef.current;
-      if (!d.id || e.pointerId !== d.pid) return;
-      if (d.started) {
-        const tgt = dropRef.current;
-        if (tgt != null) {
-          const gid = tgt === UNGROUPED ? null : tgt;
-          const cur = rules.find((r) => r.id === d.id);
-          if (cur && (cur.groupId ?? null) !== gid) setRuleGroup(d.id, gid);
-        }
+      if (d.kind !== 'rule' || e.pointerId !== d.pid) return;
+      if (d.started && dropRef.current != null) {
+        const gid = dropRef.current === UNGROUPED ? null : dropRef.current;
+        const index = ruleDropIndex(dropZoneRef.current, e.clientY, d.id);
+        setRules((rs) => moveRule(rs, d.id, gid, index));
       }
       resetDrag();
     },
     cancel: resetDrag,
   };
+  const gdnd = {
+    down: (e, group) => {
+      if (e.button != null && e.button !== 0) return;
+      dragRef.current = { kind: 'group', id: group.id, pid: e.pointerId, title: group.name, started: false };
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    },
+    move: (e) => {
+      const d = dragRef.current;
+      if (d.kind !== 'group' || e.pointerId !== d.pid) return;
+      if (!d.started) { d.started = true; setDragGroupId(d.id); }
+      setGhost({ x: e.clientX, y: e.clientY, title: d.title });
+    },
+    up: (e) => {
+      const d = dragRef.current;
+      if (d.kind !== 'group' || e.pointerId !== d.pid) return;
+      if (d.started) {
+        const index = groupDropIndex(e.clientY, d.id);
+        setGroups((gs) => moveGroup(gs, d.id, index));
+      }
+      resetDrag();
+    },
+    cancel: resetDrag,
+  };
+  const anyDrag = dragId != null || dragGroupId != null;
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
   const readingRule = reading ? (rules.find((r) => r.id === reading) ?? null) : null;
@@ -513,7 +602,7 @@ export default function RulesSection({ rootOnBack }) {
         ) : q && ungrouped.length === 0 && groups.every((g) => groupRules(g.id).length === 0) ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
         ) : (
-          <div className={`rules-list${dragId ? ' dragging' : ''}`}>
+          <div className={`rules-list${anyDrag ? ' dragging' : ''}`}>
             {/* Ungrouped rules — bare blocks at the top; also a drop zone */}
             <div
               className={`rule-ungrouped${dropTarget === UNGROUPED ? ' drop' : ''}`}
@@ -536,9 +625,11 @@ export default function RulesSection({ rootOnBack }) {
                   rules={gr}
                   collapsed={!q && collapsed.has(g.id)}
                   isDrop={dropTarget === g.id}
+                  dragging={dragGroupId === g.id}
                   renaming={groupRenaming === g.id}
                   nameDraft={groupNameDraft}
                   menuOpen={groupMenu === g.id}
+                  gdnd={gdnd}
                   onToggle={toggleCollapse}
                   onMenu={setGroupMenu}
                   onStartRename={(grp) => { setGroupMenu(null); setGroupNameDraft(grp.name); setGroupRenaming(grp.id); }}
