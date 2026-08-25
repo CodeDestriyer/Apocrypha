@@ -128,7 +128,6 @@ function RuleCard({ rule, onOpen, t }) {
   return (
     <button className="rule-card" onClick={() => onOpen(rule)}>
       <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
-      {rule.body && <span className="rule-card-preview">{renderRuleBody(rule.body)}</span>}
     </button>
   );
 }
