@@ -275,6 +275,18 @@ function unwrapCols(editor, cols) {
   p.removeChild(cols);
 }
 
+// A block (columns / box) sitting first or last leaves nowhere to place the
+// caret above or below it. Keep an empty line on those edges so text can always
+// be written before and after a block. These empty edges are trimmed on save,
+// so they never reach storage — they're re-created on the next load.
+const isBlock = (n) => isCols(n) || isBox(n);
+function ensureEdges(editor) {
+  const first = editor.firstChild;
+  if (first && isBlock(first)) editor.insertBefore(makeBr(), first);
+  const last = editor.lastChild;
+  if (last && isBlock(last)) editor.appendChild(makeBr());
+}
+
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
   const { t } = useLang();
   const ref = useRef(null);
@@ -283,7 +295,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (el) el.innerHTML = markersToHtml(initialValue);
+    if (el) { el.innerHTML = markersToHtml(initialValue); ensureEdges(el); }
   }, [editKey]);
 
   const emit = () => { if (ref.current) onChange(domToMarkers(ref.current)); };
@@ -372,6 +384,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
       inlineToggle(el, range, kind);
     }
     el.normalize();
+    ensureEdges(el);
     if (selectAfter) {
       sel.removeAllRanges();
       const nr = document.createRange();
