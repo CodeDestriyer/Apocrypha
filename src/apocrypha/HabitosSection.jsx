@@ -111,7 +111,7 @@ export default function HabitosSection({ rootOnBack }) {
             const since = new Date(hb.since).getTime();
             const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
             return (
-              <li key={hb.id} className="habito-card">
+              <li key={hb.id} className={`habito-card${menuId === hb.id ? ' menu-open' : ''}`}>
                 <div className="habito-main">
                   <span className="habito-name">{hb.name}</span>
                   <span className="habito-since">{t('habits.since')} {fmtSince(hb.since)}</span>

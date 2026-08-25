@@ -6803,6 +6803,9 @@ body {
   color: var(--ink-soft);
 }
 .habito-gear { position: absolute; top: 10px; right: 10px; }
+/* Raise the card whose menu is open so its dropdown overlays the next card
+   instead of being covered by it. */
+.habito-card.menu-open { z-index: 30; }
 .habito-add { margin-top: 0; }
 
 /* Desktop: horizontal — big name on the left, day counter on the right,
