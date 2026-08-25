@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -10,6 +10,8 @@ const newId = () =>
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
 const UNGROUPED = '__ungrouped__';
+
+const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
 // Rule bodies store inline formatting as markers: **bold**, [[boxed]] and
 // ==highlight==. Render each as its own span (newlines are kept by the
@@ -154,33 +156,51 @@ export default function RulesSection({ rootOnBack }) {
   const removeRule = (id) => setRules((r) => r.filter((x) => x.id !== id));
   const updateRule = (id, patch) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const renameRule = (id, name) =>
+    setRules((r) => r.map((x) => (x.id === id ? { ...x, title: name } : x)));
 
   const [open, setOpen] = useState(null);          // null (list) | 'new' | ruleId (editing)
   const [reading, setReading] = useState(null);    // null | ruleId (isolated full-page read)
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [group, setGroup] = useState('');
   const [query, setQuery] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
   const readingRule = reading ? (rules.find((r) => r.id === reading) ?? null) : null;
   const isEditing = open === 'new' || !!currentRule;
 
-  const openNew = () => { setReading(null); setTitle(''); setBody(''); setGroup(''); setOpen('new'); };
-  const openFull = (r) => setReading(r.id);
-  const editRule = (r) => { setReading(null); setTitle(r.title ?? ''); setBody(r.body ?? ''); setGroup(r.group ?? ''); setOpen(r.id); };
-  const backToList = () => { setOpen(null); setReading(null); };
+  const openNew = () => { setReading(null); setTitle(''); setBody(''); setOpen('new'); };
+  const openFull = (r) => { setMenuOpen(false); setEditingName(false); setReading(r.id); };
+  const editRule = (r) => { setMenuOpen(false); setEditingName(false); setReading(null); setTitle(r.title ?? ''); setBody(r.body ?? ''); setOpen(r.id); };
+  const backToList = () => { setOpen(null); setReading(null); setMenuOpen(false); setEditingName(false); };
+
+  const commitRename = () => {
+    if (!readingRule) return;
+    renameRule(readingRule.id, nameDraft.trim() || readingRule.title);
+    setEditingName(false);
+  };
 
   const saveNew = () => {
-    const ti = title.trim(); const bo = body.trim(); const gr = group.trim();
+    const ti = title.trim(); const bo = body.trim();
     if (!ti && !bo) { backToList(); return; }
-    addRule(ti, bo, gr);
+    addRule(ti, bo, null);
     backToList();
   };
   const saveEdit = () => {
-    const ti = title.trim(); const bo = body.trim(); const gr = group.trim();
+    const ti = title.trim(); const bo = body.trim();
     if (!ti && !bo) return;
-    updateRule(currentRule.id, { title: ti, body: bo, group: gr || null });
+    updateRule(currentRule.id, { title: ti, body: bo });
     backToList();
   };
 
@@ -193,16 +213,6 @@ export default function RulesSection({ rootOnBack }) {
       (r.group ?? '').toLowerCase().includes(q)
     );
   }, [query, rules]);
-
-  // Known group names (for the editor's datalist), in first-seen order.
-  const groupNames = useMemo(() => {
-    const seen = [];
-    for (const r of rules) {
-      const g = (r.group ?? '').trim();
-      if (g && !seen.includes(g)) seen.push(g);
-    }
-    return seen;
-  }, [rules]);
 
   // Split the visible rules into ordered sections; the ungrouped bucket sinks
   // to the bottom. When no rule has a group the list renders flat (no headers).
@@ -223,8 +233,8 @@ export default function RulesSection({ rootOnBack }) {
   }, [visible, t]);
   const hasGroups = sections.some((s) => s.key !== UNGROUPED);
 
-  // ── Header (title / back) ────────────────────────────────────
-  let pageTitle, onBack;
+  // ── Header (title / back / gear) ─────────────────────────────
+  let pageTitle, onBack, headerRight = null;
   if (open === 'new') {
     pageTitle = t('reglas.new');
     onBack = backToList;
@@ -232,8 +242,41 @@ export default function RulesSection({ rootOnBack }) {
     pageTitle = <span className="sub-title-deck">{currentRule.title || t('reglas.title')}</span>;
     onBack = backToList;
   } else if (readingRule) {
-    pageTitle = <span className="sub-title-deck">{readingRule.title || t('reglas.title')}</span>;
     onBack = backToList;
+    pageTitle = editingName ? (
+      <input
+        className="sub-title-input"
+        value={nameDraft}
+        autoFocus
+        placeholder={t('reglas.titlePlaceholder')}
+        maxLength={80}
+        onChange={(e) => setNameDraft(e.target.value)}
+        onBlur={commitRename}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commitRename();
+          if (e.key === 'Escape') setEditingName(false);
+        }}
+      />
+    ) : (
+      <span className="sub-title-deck">{readingRule.title || t('reglas.title')}</span>
+    );
+    headerRight = (
+      <div className="cards-gear" ref={menuRef}>
+        <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('cards.cardSettings')}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d={GEAR_PATH}/>
+          </svg>
+        </button>
+        {menuOpen && (
+          <div className="cards-gear-menu cards-gear-menu--right">
+            <button className="cards-gear-item" onClick={() => editRule(readingRule)}>{t('cards.editCard')}</button>
+            <button className="cards-gear-item" onClick={() => { setMenuOpen(false); setNameDraft(readingRule.title ?? ''); setEditingName(true); }}>{t('cards.renameDeck')}</button>
+            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); removeRule(readingRule.id); backToList(); }}>{t('cards.deleteCard')}</button>
+          </div>
+        )}
+      </div>
+    );
   } else {
     pageTitle = t('reglas.title');
     onBack = rootOnBack;
@@ -254,18 +297,6 @@ export default function RulesSection({ rootOnBack }) {
           onChange={(e) => setTitle(e.target.value)}
           maxLength={80}
         />
-        <label className="cards-field-label">{t('reglas.groupLabel')}</label>
-        <input
-          className="cards-field-input"
-          value={group}
-          list="reglas-groups"
-          placeholder={t('reglas.groupPlaceholder')}
-          onChange={(e) => setGroup(e.target.value)}
-          maxLength={60}
-        />
-        <datalist id="reglas-groups">
-          {groupNames.map((g) => <option key={g} value={g} />)}
-        </datalist>
         <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
         <RuleEditor
           editKey={open === 'new' ? 'new' : currentRule.id}
@@ -288,10 +319,6 @@ export default function RulesSection({ rootOnBack }) {
         {readingRule.body
           ? <div className="rule-read-body">{renderRuleBody(readingRule.body)}</div>
           : <div className="empty-hint">{t('reglas.noBody')}</div>}
-        <div className="rule-acc-actions">
-          <button className="rule-acc-action" onClick={() => editRule(readingRule)}>{t('cards.editCard')}</button>
-          <button className="rule-acc-action rule-acc-action--danger" onClick={() => { removeRule(readingRule.id); backToList(); }}>{t('cards.deleteCard')}</button>
-        </div>
       </div>
     );
   } else {
@@ -348,7 +375,7 @@ export default function RulesSection({ rootOnBack }) {
   }
 
   return (
-    <SubPage title={pageTitle} onBack={onBack}>
+    <SubPage title={pageTitle} onBack={onBack} headerRight={headerRight}>
       {content}
     </SubPage>
   );
