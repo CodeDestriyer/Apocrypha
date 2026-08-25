@@ -6154,46 +6154,109 @@ body {
   padding: 0 7px; line-height: 1.5;
 }
 
-/* A clickable rule card — just the title; opens the isolated full-page view */
+/* A rule block — title opens the isolated page; grip drags it between groups */
 .rule-card {
+  display: flex; align-items: stretch;
   width: 100%;
-  padding: 14px 15px;
   border: 1.5px solid var(--gold-dim);
   border-radius: 8px;
   background: var(--paper);
   box-shadow: 0 2px 6px rgba(42, 14, 8, 0.07);
-  font-family: inherit; text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s, opacity 0.15s;
 }
 .rule-card:hover {
   border-color: var(--wine); background: #ffffff;
   box-shadow: 0 6px 16px rgba(42, 14, 8, 0.14); transform: translateY(-1px);
 }
-.rule-card:active { transform: translateY(0); }
+.rule-card.dragging { opacity: 0.4; }
+.rule-card-open {
+  flex: 1; min-width: 0;
+  padding: 14px 6px 14px 15px;
+  background: transparent; border: none;
+  font-family: inherit; text-align: left; cursor: pointer;
+}
 .rule-card-title {
   font-family: 'Cinzel', serif;
   font-size: 14px; letter-spacing: 0.02em; font-weight: 700;
   color: var(--wine); overflow-wrap: anywhere;
 }
+.rule-card-grip {
+  flex: none;
+  display: grid; place-items: center;
+  width: 40px;
+  background: transparent; border: none;
+  color: var(--text-dim); cursor: grab;
+  touch-action: none;
+  transition: color 0.15s, background 0.15s;
+}
+.rule-card-grip:hover { color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.rule-card-grip:active { cursor: grabbing; }
 
-.rule-acc-actions {
-  display: flex; gap: 8px; justify-content: flex-end;
-  margin-top: 14px; padding-top: 12px;
-  border-top: 1px solid var(--line);
+/* Group visor (козырёк) — collapsible container that holds rules + drop zone */
+.rule-koz {
+  border: 1.5px solid var(--gold-dim);
+  border-radius: 6px;
+  background: rgba(190, 158, 92, 0.06);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
-.rule-acc-action {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid var(--gold-dim); border-radius: 6px;
-  background: transparent; color: var(--ink);
-  font-family: inherit; font-size: 13px; cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+.rule-koz.drop { border-color: var(--wine); background: rgba(110, 36, 19, 0.08); box-shadow: 0 0 0 2px rgba(110, 36, 19, 0.15); }
+.rule-koz-head { display: flex; align-items: center; }
+.rule-koz-toggle {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 6px 11px 13px;
+  background: transparent; border: none;
+  font-family: 'Cinzel', serif;
+  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 700; color: var(--wine); text-align: left;
+  cursor: pointer;
 }
-.rule-acc-action:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
-.rule-acc-action--open { color: var(--wine); border-color: var(--wine); margin-right: auto; }
-.rule-acc-action--open:hover { background: rgba(110, 36, 19, 0.08); }
-.rule-acc-action--danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(157, 59, 47, 0.08); }
+.rule-koz-chevron { flex: none; color: var(--gold); transition: transform 0.18s ease; }
+.rule-koz-chevron.open { transform: rotate(90deg); }
+.rule-koz-name { flex: 1; overflow-wrap: anywhere; }
+.rule-koz-count {
+  flex: none; font-family: 'EB Garamond', serif;
+  font-size: 11px; letter-spacing: 0; text-transform: none;
+  color: var(--text-dim);
+  border: 1px solid var(--gold-dim); border-radius: 999px;
+  padding: 0 7px; line-height: 1.5;
+}
+.rule-koz-rename {
+  flex: 1; min-width: 0;
+  background: transparent; border: 1px solid var(--gold);
+  color: inherit; font: inherit; padding: 2px 6px; border-radius: 4px;
+}
+.rule-koz-gear { flex: none; margin-right: 6px; }
+.rule-koz-body {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 4px 10px 10px;
+}
+.rule-koz-empty {
+  padding: 14px; border: 1px dashed var(--gold-dim); border-radius: 6px;
+  color: var(--text-dim); text-align: center; font-size: 13px;
+}
+
+/* Ungrouped drop zone (bare blocks at the top) */
+.rule-ungrouped {
+  display: flex; flex-direction: column; gap: 8px;
+  border-radius: 8px;
+  transition: box-shadow 0.15s, background 0.15s;
+}
+.rule-ungrouped.drop { box-shadow: 0 0 0 2px rgba(110, 36, 19, 0.15); background: rgba(110, 36, 19, 0.04); }
+.rules-list.dragging .rule-card-open { pointer-events: none; }
+
+/* Floating label that follows the pointer while dragging a rule */
+.rule-drag-ghost {
+  position: fixed; z-index: 60;
+  transform: translate(12px, 12px);
+  padding: 8px 12px; max-width: 60vw;
+  border: 1.5px solid var(--wine); border-radius: 8px;
+  background: var(--paper); box-shadow: 0 10px 24px rgba(42, 14, 8, 0.28);
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--wine);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  pointer-events: none;
+}
 
 /* Focused rule — read view (Notion-style: open to read, edit via gear) */
 .rule-ctx-menu {

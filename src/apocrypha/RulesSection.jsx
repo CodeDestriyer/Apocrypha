@@ -124,33 +124,108 @@ function renderRuleBody(text) {
   return blocks;
 }
 
-// A clickable rule card: title + short body preview. Clicking opens the rule
-// in its own isolated full-page view (no expand-in-place).
-function RuleCard({ rule, onOpen, t }) {
+// A rule block: tap the title to open its isolated page; drag the grip to move
+// it between the ungrouped top area and group visors (like reordering tareas).
+function RuleCard({ rule, dragging, dnd, onOpen, t }) {
   return (
-    <button className="rule-card" onClick={() => onOpen(rule)}>
-      <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
-    </button>
+    <div className={`rule-card${dragging ? ' dragging' : ''}`}>
+      <button className="rule-card-open" onClick={() => onOpen(rule.id)}>
+        <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
+      </button>
+      <button
+        className="rule-card-grip"
+        aria-label={t('reglas.reorder')}
+        onPointerDown={(e) => dnd.down(e, rule)}
+        onPointerMove={dnd.move}
+        onPointerUp={dnd.up}
+        onPointerCancel={dnd.cancel}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/>
+          <circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/>
+          <circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/>
+        </svg>
+      </button>
+    </div>
   );
 }
 
-// Rules ("Reglas") — a store of Spanish grammar rules, shown as a full-width
-// list of clickable cards. Tapping a card opens that rule in its own isolated
-// full-page view (body at full width, edit/delete there); adding/editing drops
-// into a focused editor page. Rules carry an optional `group` label; when any
-// rule has one the list splits into labelled sections (a scaffold for fuller
-// group management later).
-// Each rule is { id, title, body, group?, created_at } on profile.rules.
+// A group "visor" (козырёк): a collapsible header that holds rules. Clicking the
+// header folds/unfolds it (like the nav menu); its own gear renames/deletes it.
+// The whole visor is a drop zone — dragging a rule onto it assigns the group.
+function GroupVisor({ group, rules, collapsed, isDrop, renaming, nameDraft, menuOpen,
+  onToggle, onMenu, onStartRename, onRenameChange, onCommitRename, onDelete, children, t }) {
+  return (
+    <section className={`rule-koz${isDrop ? ' drop' : ''}`} data-dropzone={group.id}>
+      <div className="rule-koz-head">
+        <button className="rule-koz-toggle" onClick={() => onToggle(group.id)} aria-expanded={!collapsed}>
+          <svg className={`rule-koz-chevron${collapsed ? '' : ' open'}`} viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+          {renaming ? (
+            <input
+              className="rule-koz-rename"
+              value={nameDraft}
+              autoFocus
+              placeholder={t('reglas.newGroup')}
+              maxLength={40}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => onRenameChange(e.target.value)}
+              onBlur={onCommitRename}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onCommitRename();
+                if (e.key === 'Escape') onCommitRename();
+              }}
+            />
+          ) : (
+            <span className="rule-koz-name">{group.name}</span>
+          )}
+          <span className="rule-koz-count">{rules.length}</span>
+        </button>
+        <div className="cards-gear rule-koz-gear">
+          <button className="cards-gear-btn cards-gear-btn--sm" onClick={() => onMenu(menuOpen ? null : group.id)} aria-label={t('cards.deckSettings')}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d={GEAR_PATH}/>
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="cards-gear-menu cards-gear-menu--right">
+              <button className="cards-gear-item" onClick={() => onStartRename(group)}>{t('cards.renameDeck')}</button>
+              <button className="cards-gear-item cards-gear-item--danger" onClick={() => onDelete(group.id)}>{t('reglas.deleteGroup')}</button>
+            </div>
+          )}
+        </div>
+      </div>
+      {!collapsed && (
+        <div className="rule-koz-body">
+          {rules.length ? children : <div className="rule-koz-empty">{t('reglas.groupEmpty')}</div>}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Rules ("Reglas") — a store of Spanish grammar rules. The list shows rule
+// blocks (tap to open an isolated full-page view) that can be organised into
+// collapsible group visors; drag a rule's grip to move it between the ungrouped
+// top area and the visors. Groups are empty-capable and managed via gears.
+// Rule:  { id, title, body, groupId?, created_at } on profile.rules
+// Group: { id, name }                              on profile.rule_groups
 export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
   const rules = profile.rules ?? [];
+  const groups = profile.rule_groups ?? [];
 
   const setRules = (updater) =>
     update((curr) => ({ rules: updater(curr.rules ?? []) }));
-  const addRule = (title, body, group) =>
+  const setGroups = (updater) =>
+    update((curr) => ({ rule_groups: updater(curr.rule_groups ?? []) }));
+
+  const addRule = (title, body) =>
     setRules((r) => [
-      { id: newId(), title, body, group: group || null, created_at: new Date().toISOString() },
+      { id: newId(), title, body, groupId: null, created_at: new Date().toISOString() },
       ...r,
     ]);
   const removeRule = (id) => setRules((r) => r.filter((x) => x.id !== id));
@@ -158,16 +233,41 @@ export default function RulesSection({ rootOnBack }) {
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const renameRule = (id, name) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, title: name } : x)));
+  const setRuleGroup = (id, groupId) => updateRule(id, { groupId });
+
+  const renameGroup = (id, name) =>
+    setGroups((g) => g.map((x) => (x.id === id ? { ...x, name } : x)));
+  const removeGroup = (id) => {
+    setGroups((g) => g.filter((x) => x.id !== id));
+    setRules((r) => r.map((x) => (x.groupId === id ? { ...x, groupId: null } : x)));
+  };
 
   const [open, setOpen] = useState(null);          // null (list) | 'new' | ruleId (editing)
   const [reading, setReading] = useState(null);    // null | ruleId (isolated full-page read)
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [query, setQuery] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // rule-page / list-header gear
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const menuRef = useRef(null);
+
+  // Group gear menu + inline rename (keyed by group id)
+  const [groupMenu, setGroupMenu] = useState(null);
+  const [groupRenaming, setGroupRenaming] = useState(null);
+  const [groupNameDraft, setGroupNameDraft] = useState('');
+
+  // Collapsed visors, persisted per-device
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('lr:ruleGroupsCollapsed') || '[]')); }
+    catch { return new Set(); }
+  });
+  const toggleCollapse = (id) => setCollapsed((prev) => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    try { localStorage.setItem('lr:ruleGroupsCollapsed', JSON.stringify([...next])); } catch { /* ignore */ }
+    return next;
+  });
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -175,15 +275,81 @@ export default function RulesSection({ rootOnBack }) {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
+  useEffect(() => {
+    if (!groupMenu) return;
+    const onDoc = (e) => { if (!e.target.closest || !e.target.closest('.rule-koz-gear')) setGroupMenu(null); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [groupMenu]);
+
+  // ── Drag a rule between the ungrouped area and group visors ──
+  const dragRef = useRef({ id: null, pid: null, title: '' });
+  const dropRef = useRef(null);
+  const [dragId, setDragId] = useState(null);
+  const [ghost, setGhost] = useState(null);        // { x, y, title }
+  const [dropTarget, setDropTarget] = useState(null); // group id | UNGROUPED | null
+
+  const resetDrag = () => {
+    dragRef.current = { id: null, pid: null, title: '', started: false };
+    dropRef.current = null;
+    setDragId(null); setGhost(null); setDropTarget(null);
+  };
+  const dnd = {
+    down: (e, rule) => {
+      if (e.button != null && e.button !== 0) return;
+      dragRef.current = { id: rule.id, pid: e.pointerId, title: rule.title || t('reglas.noBody'), started: false };
+      dropRef.current = null;
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    },
+    move: (e) => {
+      const d = dragRef.current;
+      if (!d.id || e.pointerId !== d.pid) return;
+      if (!d.started) { d.started = true; setDragId(d.id); }
+      setGhost({ x: e.clientX, y: e.clientY, title: d.title });
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const zone = el && el.closest ? el.closest('[data-dropzone]') : null;
+      const tgt = zone ? zone.getAttribute('data-dropzone') : null;
+      dropRef.current = tgt;
+      setDropTarget(tgt);
+    },
+    up: (e) => {
+      const d = dragRef.current;
+      if (!d.id || e.pointerId !== d.pid) return;
+      if (d.started) {
+        const tgt = dropRef.current;
+        if (tgt != null) {
+          const gid = tgt === UNGROUPED ? null : tgt;
+          const cur = rules.find((r) => r.id === d.id);
+          if (cur && (cur.groupId ?? null) !== gid) setRuleGroup(d.id, gid);
+        }
+      }
+      resetDrag();
+    },
+    cancel: resetDrag,
+  };
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
   const readingRule = reading ? (rules.find((r) => r.id === reading) ?? null) : null;
   const isEditing = open === 'new' || !!currentRule;
 
-  const openNew = () => { setReading(null); setTitle(''); setBody(''); setOpen('new'); };
-  const openFull = (r) => { setMenuOpen(false); setEditingName(false); setReading(r.id); };
+  const openNew = () => { setReading(null); setMenuOpen(false); setTitle(''); setBody(''); setOpen('new'); };
+  const openFull = (id) => { setMenuOpen(false); setEditingName(false); setReading(id); };
   const editRule = (r) => { setMenuOpen(false); setEditingName(false); setReading(null); setTitle(r.title ?? ''); setBody(r.body ?? ''); setOpen(r.id); };
   const backToList = () => { setOpen(null); setReading(null); setMenuOpen(false); setEditingName(false); };
+
+  const addGroup = () => {
+    const id = newId();
+    setGroups((g) => [...g, { id, name: t('reglas.newGroup') }]);
+    setMenuOpen(false);
+    setGroupNameDraft(t('reglas.newGroup'));
+    setGroupRenaming(id);
+  };
+  const commitGroupRename = () => {
+    if (!groupRenaming) return;
+    const nm = groupNameDraft.trim();
+    if (nm) renameGroup(groupRenaming, nm);
+    setGroupRenaming(null);
+  };
 
   const commitRename = () => {
     if (!readingRule) return;
@@ -194,7 +360,7 @@ export default function RulesSection({ rootOnBack }) {
   const saveNew = () => {
     const ti = title.trim(); const bo = body.trim();
     if (!ti && !bo) { backToList(); return; }
-    addRule(ti, bo, null);
+    addRule(ti, bo);
     backToList();
   };
   const saveEdit = () => {
@@ -204,34 +370,12 @@ export default function RulesSection({ rootOnBack }) {
     backToList();
   };
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return rules;
-    return rules.filter((r) =>
-      (r.title ?? '').toLowerCase().includes(q) ||
-      (r.body ?? '').toLowerCase().includes(q) ||
-      (r.group ?? '').toLowerCase().includes(q)
-    );
-  }, [query, rules]);
-
-  // Split the visible rules into ordered sections; the ungrouped bucket sinks
-  // to the bottom. When no rule has a group the list renders flat (no headers).
-  const sections = useMemo(() => {
-    const order = [];
-    const map = new Map();
-    for (const r of visible) {
-      const key = (r.group ?? '').trim() || UNGROUPED;
-      if (!map.has(key)) { map.set(key, []); order.push(key); }
-      map.get(key).push(r);
-    }
-    order.sort((a, b) => (a === UNGROUPED ? 1 : 0) - (b === UNGROUPED ? 1 : 0));
-    return order.map((key) => ({
-      key,
-      label: key === UNGROUPED ? t('reglas.ungrouped') : key,
-      rules: map.get(key),
-    }));
-  }, [visible, t]);
-  const hasGroups = sections.some((s) => s.key !== UNGROUPED);
+  // Search filter (drag/visors only in the unfiltered view).
+  const q = query.trim().toLowerCase();
+  const matches = (r) =>
+    !q || (r.title ?? '').toLowerCase().includes(q) || (r.body ?? '').toLowerCase().includes(q);
+  const ungrouped = rules.filter((r) => r.groupId == null && matches(r));
+  const groupRules = (gid) => rules.filter((r) => r.groupId === gid && matches(r));
 
   // ── Header (title / back / gear) ─────────────────────────────
   let pageTitle, onBack, headerRight = null;
@@ -280,6 +424,21 @@ export default function RulesSection({ rootOnBack }) {
   } else {
     pageTitle = t('reglas.title');
     onBack = rootOnBack;
+    headerRight = (
+      <div className="cards-gear" ref={menuRef}>
+        <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('cards.cardSettings')}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d={GEAR_PATH}/>
+          </svg>
+        </button>
+        {menuOpen && (
+          <div className="cards-gear-menu cards-gear-menu--right">
+            <button className="cards-gear-item" onClick={addGroup}>{t('reglas.addGroup')}</button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   // ── Body ─────────────────────────────────────────────────────
@@ -322,8 +481,8 @@ export default function RulesSection({ rootOnBack }) {
       </div>
     );
   } else {
-    const renderRow = (r) => (
-      <RuleCard key={r.id} rule={r} onOpen={openFull} t={t} />
+    const renderCard = (r) => (
+      <RuleCard key={r.id} rule={r} dragging={dragId === r.id} dnd={dnd} onOpen={openFull} t={t} />
     );
     content = (
       <>
@@ -349,25 +508,55 @@ export default function RulesSection({ rootOnBack }) {
           <button className="search-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
         </div>
 
-        {rules.length === 0 ? (
+        {rules.length === 0 && groups.length === 0 ? (
           <div className="empty-hint">{t('reglas.empty')}</div>
-        ) : visible.length === 0 && query ? (
+        ) : q && ungrouped.length === 0 && groups.every((g) => groupRules(g.id).length === 0) ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
-        ) : hasGroups ? (
-          <div className="rules-list">
-            {sections.map((s) => (
-              <section key={s.key} className="rule-group">
-                <div className="rule-group-head">
-                  <span className="rule-group-name">{s.label}</span>
-                  <span className="rule-group-count">{s.rules.length}</span>
-                </div>
-                {s.rules.map(renderRow)}
-              </section>
-            ))}
-          </div>
         ) : (
-          <div className="rules-list">
-            {visible.map(renderRow)}
+          <div className={`rules-list${dragId ? ' dragging' : ''}`}>
+            {/* Ungrouped rules — bare blocks at the top; also a drop zone */}
+            <div
+              className={`rule-ungrouped${dropTarget === UNGROUPED ? ' drop' : ''}`}
+              data-dropzone={UNGROUPED}
+            >
+              {ungrouped.map(renderCard)}
+              {dragId && ungrouped.length === 0 && (
+                <div className="rule-koz-empty">{t('reglas.groupEmpty')}</div>
+              )}
+            </div>
+
+            {/* Group visors */}
+            {groups.map((g) => {
+              const gr = groupRules(g.id);
+              if (q && gr.length === 0) return null;
+              return (
+                <GroupVisor
+                  key={g.id}
+                  group={g}
+                  rules={gr}
+                  collapsed={!q && collapsed.has(g.id)}
+                  isDrop={dropTarget === g.id}
+                  renaming={groupRenaming === g.id}
+                  nameDraft={groupNameDraft}
+                  menuOpen={groupMenu === g.id}
+                  onToggle={toggleCollapse}
+                  onMenu={setGroupMenu}
+                  onStartRename={(grp) => { setGroupMenu(null); setGroupNameDraft(grp.name); setGroupRenaming(grp.id); }}
+                  onRenameChange={setGroupNameDraft}
+                  onCommitRename={commitGroupRename}
+                  onDelete={(id) => { setGroupMenu(null); removeGroup(id); }}
+                  t={t}
+                >
+                  {gr.map(renderCard)}
+                </GroupVisor>
+              );
+            })}
+          </div>
+        )}
+
+        {ghost && (
+          <div className="rule-drag-ghost" style={{ left: ghost.x, top: ghost.y }}>
+            {ghost.title}
           </div>
         )}
       </>
