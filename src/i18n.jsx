@@ -55,6 +55,7 @@ const DICT = {
   'weight.week': 'Esta semana',
   'weight.prevWeek': 'Semana anterior',
   'weight.nextWeek': 'Semana siguiente',
+  'weight.invalid': 'Introduce un peso entre 2 y 400 kg',
   'weight.weekNoData': 'Sin registros esta semana',
   'weight.noChange': 'Sin cambios',
   'habits.title': 'Hábitos',

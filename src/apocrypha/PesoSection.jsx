@@ -14,9 +14,13 @@ const fmtDate = (iso) => {
   try { return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
   catch { return iso; }
 };
+// Plausible human body-weight range (kg). Guards against typos like a missing
+// decimal point (92.9 → 929) that would otherwise blow up the chart's Y axis.
+const MIN_WEIGHT = 2;
+const MAX_WEIGHT = 400;
 const parseWeight = (raw) => {
   const n = Number(String(raw).replace(',', '.'));
-  if (!Number.isFinite(n) || n <= 0) return null;
+  if (!Number.isFinite(n) || n < MIN_WEIGHT || n > MAX_WEIGHT) return null;
   return Math.round(n * 10) / 10;
 };
 
@@ -250,7 +254,7 @@ export default function PesoSection({ rootOnBack }) {
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
                 />
-                <button className="cards-primary-btn peso-save" onClick={submit} disabled={!draft.trim()}>
+                <button className="cards-primary-btn peso-save" onClick={submit} disabled={parseWeight(draft) == null}>
                   {t('body.save')}
                 </button>
                 <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(''); }} aria-label={t('cards.close')}>×</button>
@@ -271,6 +275,10 @@ export default function PesoSection({ rootOnBack }) {
             </>
           )}
         </div>
+
+        {adding && draft.trim() && parseWeight(draft) == null && (
+          <div className="peso-input-error">{t('weight.invalid')}</div>
+        )}
 
         {!adding && histOpen && log.length > 0 && (
           <ul className="peso-history">
