@@ -6378,8 +6378,9 @@ body {
 .tareas-item.done { background: transparent; }
 .tareas-item.missed { background: rgba(192, 57, 43, 0.07); border-color: rgba(192, 57, 43, 0.3); }
 .tareas-item.dragging {
+  position: relative; z-index: 5;
   border-color: var(--wine);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
   background: var(--paper);
 }
 .tareas-drag {

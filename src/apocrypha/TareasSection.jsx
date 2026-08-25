@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -110,6 +110,34 @@ export default function TareasSection({ rootOnBack }) {
     const byId = new Map(items.map((x) => [x.id, x]));
     return drag.order.map((id) => byId.get(id)).filter(Boolean);
   };
+
+  // FLIP: after each reorder, glide every row from its previous position to its
+  // new one so the list rearranges smoothly instead of snapping. Runs after the
+  // DOM updates; skipped (and any leftover transforms cleared) when not dragging.
+  const flipPrev = useRef(new Map());
+  useLayoutEffect(() => {
+    const map = rowRefs.current;
+    if (!drag) {
+      map.forEach((el) => { if (el) { el.style.transition = ''; el.style.transform = ''; } });
+      flipPrev.current = new Map();
+      return;
+    }
+    const tops = new Map();
+    map.forEach((el, id) => { if (el) tops.set(id, el.getBoundingClientRect().top); });
+    tops.forEach((newTop, id) => {
+      const oldTop = flipPrev.current.get(id);
+      const el = map.get(id);
+      if (el && oldTop != null && oldTop !== newTop) {
+        el.style.transition = 'none';
+        el.style.transform = `translateY(${oldTop - newTop}px)`;
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 190ms cubic-bezier(0.2, 0, 0, 1)';
+          el.style.transform = '';
+        });
+      }
+    });
+    flipPrev.current = tops;
+  });
 
   const add = () => {
     const title = draft.trim();
