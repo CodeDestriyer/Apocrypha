@@ -6174,6 +6174,16 @@ body {
   border-radius: 3px; padding: 0 3px;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
+/* Big frame around whole lines — a "main rule" callout (border only). Used in
+   the read view and inside the live editor alike. */
+.rule-block-box {
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 10px 0;
+}
+.rule-note-body .rule-block-box { padding: 4px 7px; margin: 5px 0; border-radius: 4px; }
+
 /* Block formatting: paragraphs, dividers and pipe tables */
 .rule-para { white-space: pre-wrap; }
 .rule-para + .rule-table, .rule-table + .rule-para,

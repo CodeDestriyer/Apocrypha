@@ -2,9 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
 
 // WYSIWYG body editor for a rule. The stored value is the same marker format
-// the read view uses (**bold**, [[box]], ==mark==) so search, Supabase and
-// renderRuleBody stay untouched — but here formatting is shown live: click
-// "bold" on a selection and the text is bold immediately, no asterisks.
+// the read view uses so search, Supabase and renderRuleBody stay untouched —
+// but here formatting is shown live: click "bold" on a selection and the text
+// is bold immediately, no asterisks.
+//
+// Inline markers: **bold**, [[box]] (a small frame around a word), ==mark==.
+// Block marker: a fenced [[[ … ]]] on their own lines is a big frame drawn
+// around whole lines (a "main rule" callout), produced by the box button when
+// the selection spans several lines.
 //
 // The contentEditable is UNCONTROLLED: its HTML is seeded once on mount and
 // never re-set from React, so the caret is never blown away. On every input we
@@ -13,9 +18,8 @@ import { useLang } from '../i18n.jsx';
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// Marker string → HTML for the editable surface. Mirrors renderRich(), but as
-// an HTML string with newlines as <br> (the editor is white-space: pre-wrap).
-export function markersToHtml(text) {
+// One logical line's markers → inline HTML. Mirrors renderRich().
+function inlineToHtml(text) {
   const str = String(text ?? '');
   const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==/g;
   let out = '', last = 0, m;
@@ -27,36 +31,84 @@ export function markersToHtml(text) {
     last = m.index + m[0].length;
   }
   if (last < str.length) out += esc(str.slice(last));
-  return out.replace(/\n/g, '<br>');
+  return out;
 }
 
-// DOM → marker string. Walks the tree: <strong>/<b> → **…**, .rule-box →
-// [[…]], <mark>/.rule-mark → ==…==, <br> → newline. <div>/<p> (only from a
-// paste that slipped through) act as line separators. Empty wrappers vanish.
+// Full marker string → editor HTML. Normal lines are joined by <br>; a
+// [[[ … ]]] fence becomes a <div class="rule-block-box"> (its own line break),
+// with no surrounding <br> so the round-trip through domToMarkers is stable.
+export function markersToHtml(text) {
+  const lines = String(text ?? '').split('\n');
+  let html = '', i = 0;
+  const run = [];
+  const flushRun = () => { if (run.length) { html += run.map(inlineToHtml).join('<br>'); run.length = 0; } };
+  while (i < lines.length) {
+    if (lines[i] === '[[[') {
+      flushRun();
+      i++;
+      const inner = [];
+      while (i < lines.length && lines[i] !== ']]]') { inner.push(lines[i]); i++; }
+      i++; // skip ]]]
+      html += `<div class="rule-block-box">${inner.map(inlineToHtml).join('<br>')}</div>`;
+    } else { run.push(lines[i]); i++; }
+  }
+  flushRun();
+  return html;
+}
+
+// Serialize the inline content of a node (text, <br>, inline formatting spans)
+// back to markers, with <br> as newline. Used for a line-run and for a box's
+// inner content alike.
+function inlineSerialize(node) {
+  let s = '';
+  node.childNodes.forEach((c) => {
+    if (c.nodeType === Node.TEXT_NODE) { s += c.textContent; return; }
+    if (c.nodeType !== Node.ELEMENT_NODE) return;
+    const tag = c.tagName;
+    if (tag === 'BR') { s += '\n'; return; }
+    const inner = inlineSerialize(c);
+    if (tag === 'STRONG' || tag === 'B') s += inner ? `**${inner}**` : '';
+    else if (c.classList.contains('rule-box')) s += inner ? `[[${inner}]]` : '';
+    else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += inner ? `==${inner}==` : '';
+    else s += inner;
+  });
+  return s;
+}
+
+const isBox = (c) =>
+  c.nodeType === Node.ELEMENT_NODE && c.tagName === 'DIV' && c.classList.contains('rule-block-box');
+
+// Editor DOM → marker string. Block boxes become [[[ … ]]] fences on their own
+// lines; everything else is inline content split into lines by <br>.
 function domToMarkers(root) {
-  const walk = (node) => {
-    let s = '';
-    node.childNodes.forEach((c) => {
-      if (c.nodeType === Node.TEXT_NODE) { s += c.textContent; return; }
-      if (c.nodeType !== Node.ELEMENT_NODE) return;
-      const tag = c.tagName;
-      if (tag === 'BR') { s += '\n'; return; }
-      const inner = walk(c);
-      if (tag === 'STRONG' || tag === 'B') s += inner ? `**${inner}**` : '';
-      else if (c.classList.contains('rule-box')) s += inner ? `[[${inner}]]` : '';
-      else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += inner ? `==${inner}==` : '';
-      else if (tag === 'DIV' || tag === 'P') { if (s && !s.endsWith('\n')) s += '\n'; s += inner; }
-      else s += inner;
-    });
-    return s;
-  };
-  return walk(root);
+  const out = [];
+  let cur = '';
+  const flush = () => { out.push(cur); cur = ''; };
+  root.childNodes.forEach((c) => {
+    if (isBox(c)) {
+      if (cur !== '') flush();
+      out.push('[[[');
+      inlineSerialize(c).split('\n').forEach((l) => out.push(l));
+      out.push(']]]');
+    } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
+      flush();
+    } else if (c.nodeType === Node.ELEMENT_NODE && (c.tagName === 'DIV' || c.tagName === 'P')) {
+      if (cur !== '') flush();
+      cur += inlineSerialize(c);
+    } else {
+      const tmp = document.createElement('span');
+      tmp.appendChild(c.cloneNode(true));
+      cur += inlineSerialize(tmp);
+    }
+  });
+  if (cur !== '' || out.length === 0) out.push(cur);
+  return out.join('\n');
 }
 
+// ── inline formatting (bold / box / mark) within a single line ──────────────
 const KIND_TAG = { bold: 'STRONG', box: 'SPAN', mark: 'MARK' };
 const KIND_CLASS = { box: 'rule-box', mark: 'rule-mark' };
 
-// Does node sit inside a formatting element of `kind`, still within the editor?
 function enclosingFormat(node, kind, editor) {
   let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
   while (el && el !== editor) {
@@ -66,38 +118,92 @@ function enclosingFormat(node, kind, editor) {
   }
   return null;
 }
-
-// Replace an element with its own children (remove the formatting wrapper).
 function unwrap(el) {
   const parent = el.parentNode;
   while (el.firstChild) parent.insertBefore(el.firstChild, el);
   parent.removeChild(el);
 }
-
-// Strip nested wrappers of the same kind so we never produce **a**b** soup.
 function stripNested(el, kind) {
   const sel = KIND_CLASS[kind]
     ? `${KIND_TAG[kind].toLowerCase()}.${KIND_CLASS[kind]}`
     : KIND_TAG[kind].toLowerCase();
   el.querySelectorAll(sel).forEach(unwrap);
 }
+function inlineToggle(editor, range, kind) {
+  const existing = enclosingFormat(range.commonAncestorContainer, kind, editor);
+  if (existing) { unwrap(existing); return; }
+  const node = document.createElement(KIND_TAG[kind]);
+  if (KIND_CLASS[kind]) node.className = KIND_CLASS[kind];
+  try {
+    node.appendChild(range.extractContents());
+    stripNested(node, kind);
+    range.insertNode(node);
+  } catch { /* range crosses awkward boundaries — leave it */ }
+}
+
+// ── block box (big frame around whole lines) ────────────────────────────────
+function topIndex(editor, container) {
+  let n = container;
+  while (n && n.parentNode !== editor) n = n.parentNode;
+  return Array.from(editor.childNodes).indexOf(n);
+}
+function enclosingBox(node, editor) {
+  let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  while (el && el !== editor) { if (isBox(el)) return el; el = el.parentNode; }
+  return null;
+}
+function unwrapBox(editor, box) {
+  const p = box.parentNode;
+  const before = box.previousSibling, after = box.nextSibling;
+  if (before && before.nodeName !== 'BR') p.insertBefore(document.createElement('br'), box);
+  while (box.firstChild) p.insertBefore(box.firstChild, box);
+  if (after && after.nodeName !== 'BR') p.insertBefore(document.createElement('br'), box);
+  p.removeChild(box);
+}
+// The selection spans more than one visual line at the editor's top level.
+function isMultiLine(editor, range) {
+  const kids = Array.from(editor.childNodes);
+  const lineOf = (container) => {
+    const idx = topIndex(editor, container);
+    let ln = 0;
+    for (let k = 0; k < idx; k++) if (kids[k].nodeName === 'BR') ln++;
+    return ln;
+  };
+  return lineOf(range.startContainer) !== lineOf(range.endContainer);
+}
+// Wrap every whole line the selection touches into one block box. Returns it.
+function wrapLinesInBox(editor, range) {
+  const kids = Array.from(editor.childNodes);
+  let i = topIndex(editor, range.startContainer), j = topIndex(editor, range.endContainer);
+  if (i < 0 || j < 0) return null;
+  if (i > j) { const t = i; i = j; j = t; }
+  while (i > 0 && kids[i - 1].nodeName !== 'BR') i--;
+  while (j < kids.length - 1 && kids[j + 1].nodeName !== 'BR') j++;
+  const box = document.createElement('div');
+  box.className = 'rule-block-box';
+  const ref = kids[j + 1] || null;
+  const frag = document.createDocumentFragment();
+  for (let k = i; k <= j; k++) frag.appendChild(kids[k]);
+  box.appendChild(frag);
+  editor.insertBefore(box, ref);
+  // The block div supplies its own line break; drop a redundant BR after it.
+  if (box.nextSibling && box.nextSibling.nodeName === 'BR') box.parentNode.removeChild(box.nextSibling);
+  return box;
+}
 
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
   const { t } = useLang();
   const ref = useRef(null);
-  const [bar, setBar] = useState(null); // { x, y } of the floating toolbar, or null
-  const [block, setBlock] = useState(null); // { x, y } block-insert menu, or null
+  const [bar, setBar] = useState(null);   // { x, y } floating format toolbar
+  const [block, setBlock] = useState(null); // { x, y } block-insert menu
 
-  // Seed the editable surface once per edited target (keyed by editKey).
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    el.innerHTML = markersToHtml(initialValue);
+    if (el) el.innerHTML = markersToHtml(initialValue);
   }, [editKey]);
 
   const emit = () => { if (ref.current) onChange(domToMarkers(ref.current)); };
 
-  // A selection lives inside the editor and actually spans something.
   const liveSelection = () => {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
@@ -125,45 +231,29 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     };
   }, []);
 
-  // Keep line breaks as <br> only — no <div>/<p> soup to serialize around.
   const onKeyDown = (e) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      onSubmit?.();
-      return;
-    }
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      document.execCommand('insertLineBreak');
-      emit();
-    }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onSubmit?.(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); document.execCommand('insertLineBreak'); emit(); }
   };
 
-  // Foreign HTML on paste is flattened to plain text.
   const onPaste = (e) => {
     e.preventDefault();
-    const text = e.clipboardData?.getData('text/plain') ?? '';
-    document.execCommand('insertText', false, text);
+    document.execCommand('insertText', false, e.clipboardData?.getData('text/plain') ?? '');
     emit();
   };
 
-  // Right-click with nothing selected → block-insert menu (table / divider).
-  // With a selection the floating format bar already covers formatting, so we
-  // let the native menu (copy/paste) through.
   const onContextMenu = (e) => {
-    if (liveSelection()) return;
+    if (liveSelection()) return; // selection → floating bar covers formatting
     e.preventDefault();
     ref.current?.focus();
     setBlock({ x: e.clientX, y: e.clientY });
   };
-
   const insertBlock = (text) => {
     ref.current?.focus();
     document.execCommand('insertText', false, `\n${text}\n`);
     setBlock(null);
     emit();
   };
-
   useEffect(() => {
     if (!block) return;
     const close = () => setBlock(null);
@@ -175,30 +265,30 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     };
   }, [block]);
 
-  // Toggle a format on the current selection, live.
-  const applyFormat = (kind) => {
+  // Toggle a format on the current selection, live. The box button is smart:
+  // a selection inside a box removes it; a multi-line selection makes a big
+  // block box; otherwise it frames the word inline.
+  const runFormat = (kind) => {
     const el = ref.current;
     const sel = liveSelection();
     if (!el || !sel) return;
     const range = sel.getRangeAt(0);
-    const existing = enclosingFormat(range.commonAncestorContainer, kind, el);
-    if (existing) {
-      unwrap(existing);
+    let selectAfter = null;
+    if (kind === 'box') {
+      const box = enclosingBox(range.commonAncestorContainer, el);
+      if (box) unwrapBox(el, box);
+      else if (isMultiLine(el, range)) selectAfter = wrapLinesInBox(el, range);
+      else inlineToggle(el, range, 'box');
     } else {
-      const tag = KIND_TAG[kind];
-      const node = document.createElement(tag);
-      if (KIND_CLASS[kind]) node.className = KIND_CLASS[kind];
-      try {
-        node.appendChild(range.extractContents());
-        stripNested(node, kind);
-        range.insertNode(node);
-        sel.removeAllRanges();
-        const nr = document.createRange();
-        nr.selectNodeContents(node);
-        sel.addRange(nr);
-      } catch { return; }
+      inlineToggle(el, range, kind);
     }
     el.normalize();
+    if (selectAfter) {
+      sel.removeAllRanges();
+      const nr = document.createRange();
+      nr.selectNodeContents(selectAfter);
+      sel.addRange(nr);
+    }
     emit();
     syncToolbar();
   };
@@ -207,9 +297,8 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     <button
       type="button"
       className="rule-fmt-btn"
-      // Keep the selection: prevent the toolbar from stealing focus on press.
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => applyFormat(kind)}
+      onMouseDown={(e) => e.preventDefault()} // keep the selection on press
+      onClick={() => runFormat(kind)}
       aria-label={label}
       title={label}
     >

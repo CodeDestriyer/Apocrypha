@@ -74,10 +74,27 @@ function renderRuleBody(text) {
     const buf = table; table = [];
     blocks.push(<RuleTable key={`t${key++}`} rows={buf} />);
   };
-  for (const line of lines) {
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line === '[[[') {
+      // A big frame around whole lines (a "main rule" callout).
+      flushPara(); flushTable();
+      i++;
+      const inner = [];
+      while (i < lines.length && lines[i] !== ']]]') { inner.push(lines[i]); i++; }
+      i++; // skip ]]]
+      blocks.push(
+        <div key={`b${key++}`} className="rule-block-box">
+          {inner.map((ln, ii) => <span key={ii}>{ii > 0 && <br />}{renderRich(ln)}</span>)}
+        </div>
+      );
+      continue;
+    }
     if (/^\s*-{3,}\s*$/.test(line)) { flushPara(); flushTable(); blocks.push(<hr key={`h${key++}`} className="rule-hr" />); }
     else if (line.includes('|')) { flushPara(); table.push(line); }
     else { flushTable(); para.push(line); }
+    i++;
   }
   flushPara(); flushTable();
   return blocks;
