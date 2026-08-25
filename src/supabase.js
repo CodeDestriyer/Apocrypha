@@ -122,6 +122,7 @@ export async function createProfile(name) {
     decks: [],
     rules: [],
     rule_groups: [],
+    rule_layout: [],
     habits: [],
     weight_log: [],
     weight_goal: null,
