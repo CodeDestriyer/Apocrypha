@@ -77,6 +77,28 @@ function renderRuleBody(text) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
+    if (line === '[[[cols') {
+      // Whole-line blocks laid out side by side (columns split by |||).
+      flushPara(); flushTable();
+      i++;
+      const cols = []; let col = [];
+      while (i < lines.length && lines[i] !== ']]]') {
+        if (lines[i] === '|||') { cols.push(col); col = []; } else col.push(lines[i]);
+        i++;
+      }
+      cols.push(col);
+      i++; // skip ]]]
+      blocks.push(
+        <div key={`c${key++}`} className="rule-cols">
+          {cols.map((c, ci) => (
+            <div key={ci} className="rule-col">
+              {c.map((ln, ii) => <span key={ii}>{ii > 0 && <br />}{renderRich(ln)}</span>)}
+            </div>
+          ))}
+        </div>
+      );
+      continue;
+    }
     if (line === '[[[') {
       // A big frame around whole lines (a "main rule" callout).
       flushPara(); flushTable();

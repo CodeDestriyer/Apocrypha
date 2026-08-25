@@ -35,15 +35,29 @@ function inlineToHtml(text) {
 }
 
 // Full marker string → editor HTML. Normal lines are joined by <br>; a
-// [[[ … ]]] fence becomes a <div class="rule-block-box"> (its own line break),
-// with no surrounding <br> so the round-trip through domToMarkers is stable.
+// [[[ … ]]] fence becomes a <div class="rule-block-box"> and a [[[cols … ]]]
+// fence (columns split by ||| lines) a <div class="rule-cols"> of columns.
+// Blocks carry no surrounding <br> so the round-trip through domToMarkers is
+// stable.
 export function markersToHtml(text) {
   const lines = String(text ?? '').split('\n');
   let html = '', i = 0;
   const run = [];
   const flushRun = () => { if (run.length) { html += run.map(inlineToHtml).join('<br>'); run.length = 0; } };
   while (i < lines.length) {
-    if (lines[i] === '[[[') {
+    if (lines[i] === '[[[cols') {
+      flushRun();
+      i++;
+      const cols = []; let col = [];
+      while (i < lines.length && lines[i] !== ']]]') {
+        if (lines[i] === '|||') { cols.push(col); col = []; } else col.push(lines[i]);
+        i++;
+      }
+      cols.push(col);
+      i++; // skip ]]]
+      html += `<div class="rule-cols">${cols.map((c) =>
+        `<div class="rule-col">${c.map(inlineToHtml).join('<br>')}</div>`).join('')}</div>`;
+    } else if (lines[i] === '[[[') {
       flushRun();
       i++;
       const inner = [];
@@ -77,15 +91,28 @@ function inlineSerialize(node) {
 
 const isBox = (c) =>
   c.nodeType === Node.ELEMENT_NODE && c.tagName === 'DIV' && c.classList.contains('rule-block-box');
+const isCols = (c) =>
+  c.nodeType === Node.ELEMENT_NODE && c.tagName === 'DIV' && c.classList.contains('rule-cols');
+const isCol = (c) =>
+  c.nodeType === Node.ELEMENT_NODE && c.tagName === 'DIV' && c.classList.contains('rule-col');
 
-// Editor DOM → marker string. Block boxes become [[[ … ]]] fences on their own
-// lines; everything else is inline content split into lines by <br>.
+// Editor DOM → marker string. Block boxes become [[[ … ]]] fences and column
+// layouts [[[cols … ]]] fences (columns separated by |||) on their own lines;
+// everything else is inline content split into lines by <br>.
 function domToMarkers(root) {
   const out = [];
   let cur = '';
   const flush = () => { out.push(cur); cur = ''; };
   root.childNodes.forEach((c) => {
-    if (isBox(c)) {
+    if (isCols(c)) {
+      if (cur !== '') flush();
+      out.push('[[[cols');
+      Array.from(c.children).filter(isCol).forEach((col, ci) => {
+        if (ci > 0) out.push('|||');
+        inlineSerialize(col).split('\n').forEach((l) => out.push(l));
+      });
+      out.push(']]]');
+    } else if (isBox(c)) {
       if (cur !== '') flush();
       out.push('[[[');
       inlineSerialize(c).split('\n').forEach((l) => out.push(l));
@@ -191,6 +218,63 @@ function wrapLinesInBox(editor, range) {
   return box;
 }
 
+// ── columns (whole-line blocks laid out side by side) ───────────────────────
+const makeBr = () => document.createElement('br');
+function enclosingCols(node, editor) {
+  let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  while (el && el !== editor) { if (isCols(el)) return el; el = el.parentNode; }
+  return null;
+}
+// Wrap the whole lines the selection touches into a columns block, splitting
+// into columns on blank lines (a blank line = two consecutive <br>). Returns it.
+function wrapLinesInCols(editor, range) {
+  const kids = Array.from(editor.childNodes);
+  let i = topIndex(editor, range.startContainer), j = topIndex(editor, range.endContainer);
+  if (i < 0 || j < 0) return null;
+  if (i > j) { const t = i; i = j; j = t; }
+  while (i > 0 && kids[i - 1].nodeName !== 'BR') i--;
+  while (j < kids.length - 1 && kids[j + 1].nodeName !== 'BR') j++;
+  const nodes = [];
+  for (let k = i; k <= j; k++) nodes.push(kids[k]);
+  const ref = kids[j + 1] || null;
+  const cols = document.createElement('div');
+  cols.className = 'rule-cols';
+  let col = document.createElement('div');
+  col.className = 'rule-col';
+  const pushCol = () => {
+    if (col.childNodes.length) cols.appendChild(col);
+    col = document.createElement('div');
+    col.className = 'rule-col';
+  };
+  for (let n = 0; n < nodes.length; n++) {
+    const node = nodes[n];
+    if (node.nodeName === 'BR' && nodes[n + 1] && nodes[n + 1].nodeName === 'BR') {
+      // blank line = column break: drop this and the following separator BRs
+      pushCol();
+      node.remove(); n++; nodes[n].remove();
+      while (nodes[n + 1] && nodes[n + 1].nodeName === 'BR') { n++; nodes[n].remove(); }
+      continue;
+    }
+    col.appendChild(node);
+  }
+  pushCol();
+  if (!cols.children.length) return null; // nothing to lay out
+  editor.insertBefore(cols, ref);
+  // The block supplies its own break; drop any blank line left right after it.
+  while (cols.nextSibling && cols.nextSibling.nodeName === 'BR') cols.parentNode.removeChild(cols.nextSibling);
+  return cols;
+}
+function unwrapCols(editor, cols) {
+  const p = cols.parentNode;
+  if (cols.previousSibling && cols.previousSibling.nodeName !== 'BR') p.insertBefore(makeBr(), cols);
+  Array.from(cols.children).filter(isCol).forEach((col, ci) => {
+    if (ci > 0) { p.insertBefore(makeBr(), cols); p.insertBefore(makeBr(), cols); } // blank line between
+    while (col.firstChild) p.insertBefore(col.firstChild, cols);
+  });
+  if (cols.nextSibling && cols.nextSibling.nodeName !== 'BR') p.insertBefore(makeBr(), cols);
+  p.removeChild(cols);
+}
+
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
   const { t } = useLang();
   const ref = useRef(null);
@@ -279,6 +363,11 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
       if (box) unwrapBox(el, box);
       else if (isMultiLine(el, range)) selectAfter = wrapLinesInBox(el, range);
       else inlineToggle(el, range, 'box');
+    } else if (kind === 'cols') {
+      const cols = enclosingCols(range.commonAncestorContainer, el);
+      if (cols) unwrapCols(el, cols);
+      else if (isMultiLine(el, range)) selectAfter = wrapLinesInCols(el, range);
+      // single-line selection: columns need several lines — do nothing
     } else {
       inlineToggle(el, range, kind);
     }
@@ -333,6 +422,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           {btn('bold', t('reglas.bold'), <span className="rule-fmt-b">B</span>)}
           {btn('box', t('reglas.box'), <span className="rule-fmt-box" aria-hidden="true" />)}
           {btn('mark', t('reglas.mark'), <span className="rule-fmt-mark" aria-hidden="true" />)}
+          {btn('cols', t('reglas.cols'), <span className="rule-fmt-cols" aria-hidden="true"><i /><i /></span>)}
         </div>
       )}
       {block && (

@@ -42,6 +42,7 @@ const DICT = {
   'reglas.bold': 'Negrita',
   'reglas.box': 'Recuadro',
   'reglas.mark': 'Resaltar',
+  'reglas.cols': 'Columnas',
   'reglas.table': 'Tabla',
   'reglas.divider': 'Línea',
   'nav.body': 'Cuerpo',
