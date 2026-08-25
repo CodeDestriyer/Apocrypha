@@ -275,16 +275,62 @@ function unwrapCols(editor, cols) {
   p.removeChild(cols);
 }
 
-// A block (columns / box) sitting first or last leaves nowhere to place the
-// caret above or below it. Keep an empty line on those edges so text can always
-// be written before and after a block. These empty edges are trimmed on save,
-// so they never reach storage — they're re-created on the next load.
-const isBlock = (n) => isCols(n) || isBox(n);
-function ensureEdges(editor) {
-  const first = editor.firstChild;
-  if (first && isBlock(first)) editor.insertBefore(makeBr(), first);
-  const last = editor.lastChild;
-  if (last && isBlock(last)) editor.appendChild(makeBr());
+// Enter-to-escape a block. A block (columns / box) can trap the caret: pressing
+// Enter inside a column just grows the column. Instead, a double Enter breaks
+// out — the first Enter drops an empty line, the second (on that empty line)
+// exits the block to a normal line below it (or above, at the top edge). This
+// is how you write text before/after a block, and how a whole-rule columns
+// block stops being a trap.
+function blockFlowAt(editor, node) {
+  let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  let flow = null, block = null;
+  while (el && el !== editor) {
+    if (isCol(el)) flow = el;
+    if (isCols(el) || isBox(el)) { block = el; break; }
+    el = el.parentNode;
+  }
+  if (!block) return null;
+  return { block, flow: flow || block };
+}
+// Is the caret on an empty last/first line of the flow (i.e. nothing but a <br>
+// beyond it)? That is the second-Enter state that triggers the escape.
+function atEmptyLastLine(flow, range) {
+  const r = document.createRange();
+  r.selectNodeContents(flow);
+  try { r.setStart(range.endContainer, range.endOffset); } catch { return false; }
+  return r.toString() === '' && flow.lastChild && flow.lastChild.nodeName === 'BR';
+}
+function atEmptyFirstLine(flow, range) {
+  const r = document.createRange();
+  r.selectNodeContents(flow);
+  try { r.setEnd(range.startContainer, range.startOffset); } catch { return false; }
+  return r.toString() === '' && flow.firstChild && flow.firstChild.nodeName === 'BR';
+}
+function tryEscapeBlock(editor) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !sel.isCollapsed) return false;
+  const range = sel.getRangeAt(0);
+  const bf = blockFlowAt(editor, range.startContainer);
+  if (!bf) return false;
+  const { block, flow } = bf;
+  if (atEmptyLastLine(flow, range)) {
+    while (flow.lastChild && flow.lastChild.nodeName === 'BR') flow.lastChild.remove();
+    if (!block.nextSibling) editor.appendChild(makeBr());
+    const r = document.createRange();
+    r.setStartAfter(block); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    return true;
+  }
+  if (atEmptyFirstLine(flow, range)) {
+    while (flow.firstChild && flow.firstChild.nodeName === 'BR') flow.firstChild.remove();
+    const br = makeBr();
+    editor.insertBefore(br, block);
+    const r = document.createRange();
+    r.setStartBefore(br); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    return true;
+  }
+  return false;
 }
 
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
@@ -295,7 +341,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (el) { el.innerHTML = markersToHtml(initialValue); ensureEdges(el); }
+    if (el) el.innerHTML = markersToHtml(initialValue);
   }, [editKey]);
 
   const emit = () => { if (ref.current) onChange(domToMarkers(ref.current)); };
@@ -329,7 +375,12 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onSubmit?.(); return; }
-    if (e.key === 'Enter') { e.preventDefault(); document.execCommand('insertLineBreak'); emit(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Double Enter on an empty line inside a block breaks out of it.
+      if (!tryEscapeBlock(ref.current)) document.execCommand('insertLineBreak');
+      emit();
+    }
   };
 
   const onPaste = (e) => {
@@ -384,7 +435,6 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
       inlineToggle(el, range, kind);
     }
     el.normalize();
-    ensureEdges(el);
     if (selectAfter) {
       sel.removeAllRanges();
       const nr = document.createRange();
