@@ -120,8 +120,10 @@ function domToMarkers(root) {
     } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
       flush();
     } else if (c.nodeType === Node.ELEMENT_NODE && (c.tagName === 'DIV' || c.tagName === 'P')) {
+      // A top-level div/p is a plain line (the escape landing line, or pasted
+      // block); drop its trailing placeholder <br>.
       if (cur !== '') flush();
-      cur += inlineSerialize(c);
+      inlineSerialize(c).replace(/\n$/, '').split('\n').forEach((l) => out.push(l));
     } else {
       const tmp = document.createElement('span');
       tmp.appendChild(c.cloneNode(true));
@@ -313,21 +315,33 @@ function tryEscapeBlock(editor) {
   const bf = blockFlowAt(editor, range.startContainer);
   if (!bf) return false;
   const { block, flow } = bf;
+  // Land the caret in a dedicated block-level line OUTSIDE the block's flex, so
+  // typing there can never reflow the columns.
+  const landIn = (holder) => {
+    const r = document.createRange();
+    r.setStart(holder, 0); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+  };
   if (atEmptyLastLine(flow, range)) {
     while (flow.lastChild && flow.lastChild.nodeName === 'BR') flow.lastChild.remove();
-    if (!block.nextSibling) editor.appendChild(makeBr());
-    const r = document.createRange();
-    r.setStartAfter(block); r.collapse(true);
-    sel.removeAllRanges(); sel.addRange(r);
+    while (block.nextSibling && block.nextSibling.nodeName === 'BR') block.nextSibling.remove();
+    const next = block.nextSibling;
+    if (next && next.nodeName !== 'BR') landIn(next); // real line already there
+    else {
+      const holder = document.createElement('div');
+      holder.appendChild(makeBr());
+      editor.insertBefore(holder, block.nextSibling);
+      landIn(holder);
+    }
     return true;
   }
   if (atEmptyFirstLine(flow, range)) {
     while (flow.firstChild && flow.firstChild.nodeName === 'BR') flow.firstChild.remove();
-    const br = makeBr();
-    editor.insertBefore(br, block);
-    const r = document.createRange();
-    r.setStartBefore(br); r.collapse(true);
-    sel.removeAllRanges(); sel.addRange(r);
+    while (block.previousSibling && block.previousSibling.nodeName === 'BR') block.previousSibling.remove();
+    const holder = document.createElement('div');
+    holder.appendChild(makeBr());
+    editor.insertBefore(holder, block);
+    landIn(holder);
     return true;
   }
   return false;
