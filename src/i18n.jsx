@@ -24,6 +24,7 @@ const DICT = {
   'tareas.yesterday': 'Ayer',
   'tareas.tomorrow': 'Mañana',
   'tareas.edit': 'Editar',
+  'tareas.reorder': 'Reordenar',
   'tareas.typeLabel': 'Tipo',
   'tareas.type.spanish': 'Español',
   'tareas.type.varkanis': 'varkanis.com',

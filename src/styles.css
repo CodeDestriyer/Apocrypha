@@ -6377,6 +6377,21 @@ body {
 }
 .tareas-item.done { background: transparent; }
 .tareas-item.missed { background: rgba(192, 57, 43, 0.07); border-color: rgba(192, 57, 43, 0.3); }
+.tareas-item.dragging {
+  border-color: var(--wine);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  background: var(--paper);
+}
+.tareas-drag {
+  flex: none;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border: none; background: transparent; padding: 0;
+  color: var(--text-dim); cursor: grab;
+  touch-action: none; /* let the handle own the gesture, not the page scroll */
+}
+.tareas-drag:hover { color: var(--wine); }
+.tareas-drag:active { cursor: grabbing; }
 .tareas-check {
   flex: none;
   width: 30px; height: 30px;

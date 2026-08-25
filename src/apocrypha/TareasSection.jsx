@@ -51,6 +51,66 @@ export default function TareasSection({ rootOnBack }) {
 
   const goDay = (delta) => { setDay((d) => shiftISO(d, delta)); setMenuId(null); setEditId(null); };
 
+  // ---- Drag-to-reorder ----------------------------------------------------
+  // Rows render in profile.tasks order (within each type group). Dragging a row
+  // rewrites that array so the new order persists. Pointer-based so it works
+  // with touch (mobile PWA); a drag stays inside one list (a type group, or the
+  // flat past-day list) and never changes a task's type.
+  const rowRefs = useRef(new Map());
+  const setRowRef = (id) => (el) => { if (el) rowRefs.current.set(id, el); else rowRefs.current.delete(id); };
+  const [drag, setDrag] = useState(null); // { listKey, order:[ids], id } while dragging
+  const dragPid = useRef(null);
+
+  // Rewrite tasks so the given list's ids take `orderIds` order, leaving every
+  // other task (other days/types) exactly where it is.
+  const commitOrder = (orderIds) => setTasks((l) => {
+    const set = new Set(orderIds);
+    const byId = new Map(l.map((x) => [x.id, x]));
+    const queue = orderIds.map((id) => byId.get(id)).filter(Boolean);
+    let qi = 0;
+    return l.map((x) => (set.has(x.id) ? queue[qi++] : x));
+  });
+
+  const onDragStart = (e, listKey, ids, id) => {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    dragPid.current = e.pointerId;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setMenuId(null); setEditId(null);
+    setDrag({ listKey, order: [...ids], id });
+  };
+  const onDragMove = (e) => {
+    if (!drag || e.pointerId !== dragPid.current) return;
+    e.preventDefault();
+    const y = e.clientY;
+    const rects = drag.order
+      .map((id) => { const el = rowRefs.current.get(id); return el ? { id, r: el.getBoundingClientRect() } : null; })
+      .filter(Boolean);
+    let target = rects.length - 1;
+    for (let i = 0; i < rects.length; i++) {
+      if (y < rects[i].r.top + rects[i].r.height / 2) { target = i; break; }
+    }
+    const cur = [...drag.order];
+    const from = cur.indexOf(drag.id);
+    if (from === -1) return;
+    cur.splice(from, 1);
+    cur.splice(target, 0, drag.id);
+    if (cur.some((id, i) => id !== drag.order[i])) setDrag({ ...drag, order: cur });
+  };
+  const onDragEnd = (e) => {
+    if (!drag) return;
+    if (e && e.pointerId != null && e.pointerId !== dragPid.current) return;
+    commitOrder(drag.order);
+    setDrag(null);
+    dragPid.current = null;
+  };
+  // While dragging, an active list shows its rows in the live drag order.
+  const orderedItems = (items, listKey) => {
+    if (!drag || drag.listKey !== listKey) return items;
+    const byId = new Map(items.map((x) => [x.id, x]));
+    return drag.order.map((id) => byId.get(id)).filter(Boolean);
+  };
+
   const add = () => {
     const title = draft.trim();
     if (!title) return;
@@ -91,7 +151,7 @@ export default function TareasSection({ rootOnBack }) {
 
   const dayLabel = fmtDate(day);
 
-  const renderTask = (task) => {
+  const renderTask = (task, listKey, ids) => {
     const ty = typeOf(task);
     if (editId === task.id) {
       return (
@@ -116,7 +176,11 @@ export default function TareasSection({ rootOnBack }) {
       );
     }
     return (
-      <li key={task.id} className={`tareas-item ${task.done ? 'done' : ''} ${task.missed ? 'missed' : ''}`}>
+      <li
+        key={task.id}
+        ref={setRowRef(task.id)}
+        className={`tareas-item ${task.done ? 'done' : ''} ${task.missed ? 'missed' : ''} ${drag && drag.id === task.id ? 'dragging' : ''}`}
+      >
         <button
           className="tareas-check"
           onClick={() => toggle(task.id)}
@@ -146,6 +210,19 @@ export default function TareasSection({ rootOnBack }) {
             </div>
           )}
         </div>
+        <button
+          className="tareas-drag"
+          aria-label={t('tareas.reorder')}
+          title={t('tareas.reorder')}
+          onPointerDown={(e) => onDragStart(e, listKey, ids, task.id)}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+          onPointerCancel={onDragEnd}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 8h16M4 12h16M4 16h16" />
+          </svg>
+        </button>
       </li>
     );
   };
@@ -195,21 +272,30 @@ export default function TareasSection({ rootOnBack }) {
             {showTypePicker && typePicker(draftType, setDraftType)}
 
             <div className="tareas-groups">
-              {isPast ? (
-                <ul className="tareas-list">
-                  {groups.flatMap((g) => g.items).map((task) => renderTask(task))}
-                </ul>
-              ) : (
-                groups.map((g) => (
-                  <div className="tareas-group" key={g.type}>
-                    <div className="tareas-group-label" style={{ color: TASK_TYPES[g.type].color }}>
-                      {t(TASK_TYPES[g.type].labelKey)}
+              {isPast ? (() => {
+                const flat = groups.flatMap((g) => g.items);
+                const lk = `${day}::flat`;
+                const ids = flat.map((x) => x.id);
+                return (
+                  <ul className="tareas-list">
+                    {orderedItems(flat, lk).map((task) => renderTask(task, lk, ids))}
+                  </ul>
+                );
+              })() : (
+                groups.map((g) => {
+                  const lk = `${day}::${g.type}`;
+                  const ids = g.items.map((x) => x.id);
+                  return (
+                    <div className="tareas-group" key={g.type}>
+                      <div className="tareas-group-label" style={{ color: TASK_TYPES[g.type].color }}>
+                        {t(TASK_TYPES[g.type].labelKey)}
+                      </div>
+                      <ul className="tareas-list">
+                        {orderedItems(g.items, lk).map((task) => renderTask(task, lk, ids))}
+                      </ul>
                     </div>
-                    <ul className="tareas-list">
-                      {g.items.map((task) => renderTask(task))}
-                    </ul>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </>
