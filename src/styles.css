@@ -6132,6 +6132,76 @@ body {
 /* Note tiles are <button>s now — inherit the page font, not the UA default. */
 .rule-note { font-family: inherit; }
 
+/* ── Reglas: accordion list ─────────────────────────────── */
+.rules-list { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Group sections (scaffold — appears only once rules carry a group) */
+.rule-group { display: flex; flex-direction: column; gap: 8px; }
+.rule-group + .rule-group { margin-top: 20px; }
+.rule-group-head {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 0 2px 6px;
+  border-bottom: 1px solid var(--gold-dim);
+}
+.rule-group-name {
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 600; color: var(--wine);
+}
+.rule-group-count {
+  font-size: 11px; color: var(--text-dim);
+  border: 1px solid var(--gold-dim); border-radius: 999px;
+  padding: 0 7px; line-height: 1.5;
+}
+
+.rule-acc-item {
+  border: 1.5px solid var(--gold-dim);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 2px 6px rgba(42, 14, 8, 0.07);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rule-acc-item.open { border-color: var(--wine); box-shadow: 0 6px 16px rgba(42, 14, 8, 0.12); }
+
+.rule-acc-head {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 14px;
+  background: transparent; border: none;
+  font-family: 'Cinzel', serif;
+  font-size: 14px; letter-spacing: 0.02em; font-weight: 700;
+  color: var(--wine); text-align: left;
+  cursor: pointer;
+}
+.rule-acc-head:hover { background: rgba(110, 36, 19, 0.04); }
+.rule-acc-title { flex: 1; overflow-wrap: anywhere; }
+.rule-acc-chevron {
+  flex: none; color: var(--gold);
+  transition: transform 0.18s ease;
+}
+.rule-acc-item.open .rule-acc-chevron { transform: rotate(180deg); }
+
+.rule-acc-body {
+  padding: 2px 16px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+.rule-acc-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.rule-acc-action {
+  padding: 6px 14px;
+  border: 1px solid var(--gold-dim); border-radius: 6px;
+  background: transparent; color: var(--ink);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.rule-acc-action:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
+.rule-acc-action--danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(157, 59, 47, 0.08); }
+
 /* Focused rule — read view (Notion-style: open to read, edit via gear) */
 .rule-ctx-menu {
   position: fixed; z-index: 50;

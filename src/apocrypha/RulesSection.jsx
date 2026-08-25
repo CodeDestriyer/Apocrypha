@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -9,7 +9,7 @@ const newId = () =>
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
-const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
+const UNGROUPED = '__ungrouped__';
 
 // Rule bodies store inline formatting as markers: **bold**, [[boxed]] and
 // ==highlight==. Render each as its own span (newlines are kept by the
@@ -122,11 +122,44 @@ function renderRuleBody(text) {
   return blocks;
 }
 
-// Rules ("Reglas") — a store of Spanish grammar rules, shown as a
-// Notion/Keep-style grid of square note tiles. Opening a tile drops into a
-// focused page (the grid is hidden): existing rules open in read mode, with
-// edit/delete tucked behind the header gear; the add tile opens a blank
-// editor. Each rule is { id, title, body, created_at } on profile.rules.
+// A single accordion row: title header that toggles the body open in place,
+// giving rich bodies (tables/columns) the full page width. Edit/delete live
+// inside the expanded body so browsing stays a clean list of headers.
+function RuleRow({ rule, expanded, onToggle, onEdit, onDelete, t }) {
+  return (
+    <div className={`rule-acc-item${expanded ? ' open' : ''}`}>
+      <button
+        className="rule-acc-head"
+        onClick={() => onToggle(rule.id)}
+        aria-expanded={expanded}
+      >
+        <span className="rule-acc-title">{rule.title || t('reglas.noBody')}</span>
+        <svg className="rule-acc-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {expanded && (
+        <div className="rule-acc-body">
+          {rule.body
+            ? <div className="rule-read-body">{renderRuleBody(rule.body)}</div>
+            : <div className="empty-hint">{t('reglas.noBody')}</div>}
+          <div className="rule-acc-actions">
+            <button className="rule-acc-action" onClick={() => onEdit(rule)}>{t('cards.editCard')}</button>
+            <button className="rule-acc-action rule-acc-action--danger" onClick={() => onDelete(rule.id)}>{t('cards.deleteCard')}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Rules ("Reglas") — a store of Spanish grammar rules, shown as a full-width
+// accordion list: a rule's title toggles its body open in place (several may
+// be open at once), so tables and columns render at full width instead of
+// cramped tiles. Adding/editing drops into a focused editor page. Rules carry
+// an optional `group` label; when any rule has one the list splits into
+// labelled sections (a scaffold for fuller group management later).
+// Each rule is { id, title, body, group?, created_at } on profile.rules.
 export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -134,88 +167,96 @@ export default function RulesSection({ rootOnBack }) {
 
   const setRules = (updater) =>
     update((curr) => ({ rules: updater(curr.rules ?? []) }));
-  const addRule = (title, body) =>
+  const addRule = (title, body, group) =>
     setRules((r) => [
-      { id: newId(), title, body, created_at: new Date().toISOString() },
+      { id: newId(), title, body, group: group || null, created_at: new Date().toISOString() },
       ...r,
     ]);
   const removeRule = (id) => setRules((r) => r.filter((x) => x.id !== id));
   const updateRule = (id, patch) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
-  const [open, setOpen] = useState(null);       // null (grid) | 'new' | ruleId
-  const [editMode, setEditMode] = useState(false); // focused existing rule: read vs edit
+  const [open, setOpen] = useState(null);          // null (list) | 'new' | ruleId (editing)
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [group, setGroup] = useState('');
   const [query, setQuery] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [menuOpen]);
+  const [expanded, setExpanded] = useState(() => new Set());
 
   const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
+  const isEditing = open === 'new' || !!currentRule;
 
-  const openNew = () => { setTitle(''); setBody(''); setEditMode(true); setMenuOpen(false); setOpen('new'); };
-  const openRule = (r) => { setEditMode(false); setMenuOpen(false); setOpen(r.id); };
-  const backToGrid = () => { setOpen(null); setEditMode(false); setMenuOpen(false); };
-  const startEdit = () => { setTitle(currentRule?.title ?? ''); setBody(currentRule?.body ?? ''); setMenuOpen(false); setEditMode(true); };
+  const toggleExpanded = (id) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const openNew = () => { setTitle(''); setBody(''); setGroup(''); setOpen('new'); };
+  const editRule = (r) => { setTitle(r.title ?? ''); setBody(r.body ?? ''); setGroup(r.group ?? ''); setOpen(r.id); };
+  const backToList = () => setOpen(null);
 
   const saveNew = () => {
-    const ti = title.trim(); const bo = body.trim();
-    if (!ti && !bo) { backToGrid(); return; }
-    addRule(ti, bo);
-    backToGrid();
+    const ti = title.trim(); const bo = body.trim(); const gr = group.trim();
+    if (!ti && !bo) { backToList(); return; }
+    addRule(ti, bo, gr);
+    backToList();
   };
   const saveEdit = () => {
-    const ti = title.trim(); const bo = body.trim();
+    const ti = title.trim(); const bo = body.trim(); const gr = group.trim();
     if (!ti && !bo) return;
-    updateRule(currentRule.id, { title: ti, body: bo });
-    setEditMode(false);
+    updateRule(currentRule.id, { title: ti, body: bo, group: gr || null });
+    backToList();
   };
-  const deleteCurrent = () => { removeRule(currentRule.id); backToGrid(); };
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rules;
     return rules.filter((r) =>
       (r.title ?? '').toLowerCase().includes(q) ||
-      (r.body ?? '').toLowerCase().includes(q)
+      (r.body ?? '').toLowerCase().includes(q) ||
+      (r.group ?? '').toLowerCase().includes(q)
     );
   }, [query, rules]);
 
-  const isEditing = open === 'new' || (currentRule && editMode);
+  // Known group names (for the editor's datalist), in first-seen order.
+  const groupNames = useMemo(() => {
+    const seen = [];
+    for (const r of rules) {
+      const g = (r.group ?? '').trim();
+      if (g && !seen.includes(g)) seen.push(g);
+    }
+    return seen;
+  }, [rules]);
 
-  // ── Header (title / back / gear) ─────────────────────────────
-  let pageTitle, onBack, headerRight = null;
+  // Split the visible rules into ordered sections; the ungrouped bucket sinks
+  // to the bottom. When no rule has a group the list renders flat (no headers).
+  const sections = useMemo(() => {
+    const order = [];
+    const map = new Map();
+    for (const r of visible) {
+      const key = (r.group ?? '').trim() || UNGROUPED;
+      if (!map.has(key)) { map.set(key, []); order.push(key); }
+      map.get(key).push(r);
+    }
+    order.sort((a, b) => (a === UNGROUPED ? 1 : 0) - (b === UNGROUPED ? 1 : 0));
+    return order.map((key) => ({
+      key,
+      label: key === UNGROUPED ? t('reglas.ungrouped') : key,
+      rules: map.get(key),
+    }));
+  }, [visible, t]);
+  const hasGroups = sections.some((s) => s.key !== UNGROUPED);
+
+  // ── Header (title / back) ────────────────────────────────────
+  let pageTitle, onBack;
   if (open === 'new') {
     pageTitle = t('reglas.new');
-    onBack = backToGrid;
+    onBack = backToList;
   } else if (currentRule) {
     pageTitle = <span className="sub-title-deck">{currentRule.title || t('reglas.title')}</span>;
-    onBack = backToGrid;
-    if (!editMode) {
-      headerRight = (
-        <div className="cards-gear" ref={menuRef}>
-          <button className="cards-gear-btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('cards.cardSettings')}>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3"/>
-              <path d={GEAR_PATH}/>
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="cards-gear-menu cards-gear-menu--right">
-              <button className="cards-gear-item" onClick={startEdit}>{t('cards.editCard')}</button>
-              <button className="cards-gear-item cards-gear-item--danger" onClick={deleteCurrent}>{t('cards.deleteCard')}</button>
-            </div>
-          )}
-        </div>
-      );
-    }
+    onBack = backToList;
   } else {
     pageTitle = t('reglas.title');
     onBack = rootOnBack;
@@ -225,7 +266,6 @@ export default function RulesSection({ rootOnBack }) {
   let content;
   if (isEditing) {
     const submit = open === 'new' ? saveNew : saveEdit;
-    const cancel = open === 'new' ? backToGrid : () => setEditMode(false);
     content = (
       <div className="cards-panel">
         <label className="cards-field-label">{t('reglas.titleLabel')}</label>
@@ -237,6 +277,18 @@ export default function RulesSection({ rootOnBack }) {
           onChange={(e) => setTitle(e.target.value)}
           maxLength={80}
         />
+        <label className="cards-field-label">{t('reglas.groupLabel')}</label>
+        <input
+          className="cards-field-input"
+          value={group}
+          list="reglas-groups"
+          placeholder={t('reglas.groupPlaceholder')}
+          onChange={(e) => setGroup(e.target.value)}
+          maxLength={60}
+        />
+        <datalist id="reglas-groups">
+          {groupNames.map((g) => <option key={g} value={g} />)}
+        </datalist>
         <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
         <RuleEditor
           editKey={open === 'new' ? 'new' : currentRule.id}
@@ -246,22 +298,25 @@ export default function RulesSection({ rootOnBack }) {
           placeholder={t('reglas.bodyPlaceholder')}
         />
         <div className="cards-panel-actions">
-          <button className="cards-secondary-btn" onClick={cancel}>{t('cards.cancel')}</button>
+          <button className="cards-secondary-btn" onClick={backToList}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={submit} disabled={!title.trim() && !body.trim()}>
             {t('cards.save')}
           </button>
         </div>
       </div>
     );
-  } else if (currentRule) {
-    content = (
-      <div className="rule-read">
-        {currentRule.body
-          ? <div className="rule-read-body">{renderRuleBody(currentRule.body)}</div>
-          : <div className="empty-hint">{t('reglas.noBody')}</div>}
-      </div>
-    );
   } else {
+    const renderRow = (r) => (
+      <RuleRow
+        key={r.id}
+        rule={r}
+        expanded={expanded.has(r.id)}
+        onToggle={toggleExpanded}
+        onEdit={editRule}
+        onDelete={removeRule}
+        t={t}
+      />
+    );
     content = (
       <>
         <div className="search-add-row">
@@ -286,16 +341,25 @@ export default function RulesSection({ rootOnBack }) {
           <button className="search-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
         </div>
 
-        {visible.length === 0 && query ? (
+        {rules.length === 0 ? (
+          <div className="empty-hint">{t('reglas.empty')}</div>
+        ) : visible.length === 0 && query ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
-        ) : (
-          <div className="rules-grid">
-            {visible.map((r) => (
-              <button key={r.id} className="rule-note" onClick={() => openRule(r)}>
-                {r.title && <div className="rule-note-title">{r.title}</div>}
-                {r.body && <div className="rule-note-body">{renderRuleBody(r.body)}</div>}
-              </button>
+        ) : hasGroups ? (
+          <div className="rules-list">
+            {sections.map((s) => (
+              <section key={s.key} className="rule-group">
+                <div className="rule-group-head">
+                  <span className="rule-group-name">{s.label}</span>
+                  <span className="rule-group-count">{s.rules.length}</span>
+                </div>
+                {s.rules.map(renderRow)}
+              </section>
             ))}
+          </div>
+        ) : (
+          <div className="rules-list">
+            {visible.map(renderRow)}
           </div>
         )}
       </>
@@ -303,7 +367,7 @@ export default function RulesSection({ rootOnBack }) {
   }
 
   return (
-    <SubPage title={pageTitle} onBack={onBack} headerRight={headerRight}>
+    <SubPage title={pageTitle} onBack={onBack}>
       {content}
     </SubPage>
   );
