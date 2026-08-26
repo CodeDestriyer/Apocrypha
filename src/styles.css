@@ -5599,6 +5599,73 @@ body {
   .study-card-note::before { width: 44px; margin-bottom: 10px; }
 }
 
+/* Back-side photo during study: stack image over the translation, note stays
+   pinned to the bottom. */
+.study-card-back { flex-direction: column; gap: 16px; }
+.study-card-img {
+  max-width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 158, 92, 0.4);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.8);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+@media (max-width: 640px) {
+  .study-card-img { max-height: 180px; }
+}
+
+/* ─── Cards: back-side image picker (add/edit forms) ─── */
+.card-img-field { display: flex; flex-direction: column; gap: 8px; }
+.card-img-drop {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 18px 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px dashed rgba(190, 158, 92, 0.4);
+  border-radius: 6px;
+  text-align: center;
+  cursor: text;
+  transition: border-color 0.15s;
+}
+.card-img-drop:focus,
+.card-img-drop:focus-within { outline: none; border-color: var(--gold); }
+.card-img-drop--busy { opacity: 0.7; }
+.card-img-drop-hint {
+  font-family: 'Cinzel', serif;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #8a7d63;
+}
+.card-img-choose { flex: 0 0 auto; max-width: none; padding: 8px 16px; }
+.card-img-preview {
+  position: relative;
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+}
+.card-img-preview img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid rgba(190, 158, 92, 0.4);
+  display: block;
+}
+.card-img-remove {
+  position: absolute;
+  top: -8px; right: -8px;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: #1a130a;
+  border: 1px solid rgba(190, 158, 92, 0.6);
+  color: #f5f0e1;
+  font-size: 16px; line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.card-img-remove:hover { border-color: var(--gold); color: var(--gold); }
+
 /* ─── Cards: search in deck ─────────────────────────── */
 .cards-search { display: flex; justify-content: flex-end; }
 .cards-search-btn {
@@ -6109,6 +6176,15 @@ body {
 .cards-grade-btn--forgot:hover { background: rgba(163, 63, 46, 0.14); border-color: rgba(163, 63, 46, 0.6); }
 .cards-grade-btn--knew { color: #3f7a42; background: rgba(63, 122, 66, 0.08); border-color: rgba(63, 122, 66, 0.4); }
 .cards-grade-btn--knew:hover { background: rgba(63, 122, 66, 0.14); border-color: rgba(63, 122, 66, 0.6); }
+
+/* ── Tarjetas: back-side image (light theme) ────────────── */
+.study-card-img { border-color: var(--gold-dim); box-shadow: 0 8px 20px -12px rgba(42, 14, 8, 0.4); }
+.card-img-drop { background: #ffffff; border-color: var(--gold-dim); }
+.card-img-drop:focus, .card-img-drop:focus-within { border-color: var(--wine); }
+.card-img-drop-hint { color: var(--text-dim); }
+.card-img-preview img { border-color: var(--gold-dim); }
+.card-img-remove { background: #ffffff; border-color: var(--gold-dim); color: var(--wine); }
+.card-img-remove:hover { border-color: var(--wine); color: var(--wine); }
 
 /* ── Reglas: note grid ──────────────────────────────────── */
 .rule-note {

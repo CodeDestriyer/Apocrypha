@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
+import { uploadCardImage, deleteCardImage } from '../supabase.js';
 import SubPage from './SubPage.jsx';
 
 const newId = () =>
@@ -113,20 +114,26 @@ export default function CardsSection({ rootOnBack }) {
   const renameDeck = (id, name) =>
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, name } : x)));
 
-  const addCard = (deckId, front, back, note, tags) => {
+  const addCard = (deckId, front, back, note, tags, image) => {
     const f = front.trim(); const b = back.trim();
     if (!f || !b) return;
     const card = { id: newId(), front: f, back: b, box: 1, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 };
     if (note && note.trim()) card.note = note.trim();
     if (tags && tags.length) card.tags = tags;
+    if (image) card.backImage = image;
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: [...x.cards, card] }
       : x));
   };
-  const removeCard = (deckId, cardId) =>
+  const removeCard = (deckId, cardId) => {
+    // Best-effort: drop the card's back-side image from storage before removing
+    // the card so it doesn't orphan in the bucket.
+    const gone = (decks.find((x) => x.id === deckId)?.cards ?? []).find((c) => c.id === cardId);
+    if (gone?.backImage) deleteCardImage(gone.backImage);
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: x.cards.filter((c) => c.id !== cardId) }
       : x));
+  };
   const updateCard = (deckId, cardId, patch) =>
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: x.cards.map((c) => c.id === cardId ? { ...c, ...patch } : c) }
@@ -408,14 +415,16 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
 }
 
 function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
-  const _draftDefault = { front: '', back: '', note: '', tags: [], adding: false, noteOpen: false, tagsOpen: false };
+  const _draftDefault = { front: '', back: '', note: '', tags: [], image: null, adding: false, noteOpen: false, tagsOpen: false, imageOpen: false };
   const draft = _drafts.get(deck.id) ?? _draftDefault;
   const [front, _setFront] = useState(draft.front);
   const [back, _setBack] = useState(draft.back);
   const [note, _setNote] = useState(draft.note);
   const [tags, _setTags] = useState(draft.tags ?? []);
+  const [image, _setImage] = useState(draft.image ?? null);
   const [noteOpen, _setNoteOpen] = useState(draft.noteOpen);
   const [tagsOpen, _setTagsOpen] = useState(draft.tagsOpen ?? false);
+  const [imageOpen, _setImageOpen] = useState(draft.imageOpen ?? false);
   const [adding, _setAdding] = useState(draft.adding);
   const persist = (patch) => {
     const cur = _drafts.get(deck.id) ?? _draftDefault;
@@ -426,8 +435,10 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   const setBack = (v) => { persist({ back: v }); _setBack(v); };
   const setNote = (v) => { persist({ note: v }); _setNote(v); };
   const setTags = (v) => { persist({ tags: v }); _setTags(v); };
+  const setImage = (v) => { persist({ image: v }); _setImage(v); };
   const setNoteOpen = (v) => { persist({ noteOpen: v }); _setNoteOpen(v); };
   const setTagsOpen = (v) => { persist({ tagsOpen: v }); _setTagsOpen(v); };
+  const setImageOpen = (v) => { persist({ imageOpen: v }); _setImageOpen(v); };
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
   const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
@@ -441,17 +452,26 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
     return deck.cards.find((c) => (c.front ?? '').trim().toLowerCase() === f) ?? null;
   }, [front, deck.cards]);
 
-  const closeAdd = () => {
+  // Clear the draft without touching storage (used after a successful save,
+  // where the uploaded image now belongs to the card).
+  const resetAdd = () => {
     setAdding(false);
-    setFront(''); setBack(''); setNote(''); setTags([]); setNoteOpen(false); setTagsOpen(false);
+    setFront(''); setBack(''); setNote(''); setTags([]); setImage(null);
+    setNoteOpen(false); setTagsOpen(false); setImageOpen(false);
     _drafts.delete(deck.id);
     _saveSS();
+  };
+  // Cancel: an image uploaded during this draft was never attached to a card,
+  // so delete it from the bucket before discarding the draft.
+  const closeAdd = () => {
+    if (image) deleteCardImage(image);
+    resetAdd();
   };
 
   const submitCard = () => {
     if (!front.trim() || !back.trim() || duplicate) return;
-    onAddCard(front, back, note.trim() || undefined, tags);
-    closeAdd();
+    onAddCard(front, back, note.trim() || undefined, tags, image);
+    resetAdd();
   };
 
   const [query, setQuery] = useState('');
@@ -641,7 +661,19 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
               <TagInput tags={tags} onChange={setTags} suggestions={allDeckTags} t={t} />
             </>
           )}
-          {(!noteOpen || !tagsOpen) && (
+          {imageOpen && (
+            <>
+              <div className="cards-note-head">
+                <label className="cards-field-label">{t('cards.image')}</label>
+                <button
+                  className="cards-note-collapse"
+                  onClick={() => { if (image) deleteCardImage(image); setImage(null); setImageOpen(false); }}
+                >{t('cards.hide')}</button>
+              </div>
+              <CardImageField image={image} onChange={setImage} t={t} />
+            </>
+          )}
+          {(!noteOpen || !tagsOpen || !imageOpen) && (
             <div className="cards-extra-row">
               {!noteOpen && (
                 <button className="cards-extra-btn" onClick={() => setNoteOpen(true)}>
@@ -651,6 +683,11 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
               {!tagsOpen && (
                 <button className="cards-extra-btn" onClick={() => setTagsOpen(true)}>
                   <span className="cards-extra-plus">#</span> {t('cards.addTags')}
+                </button>
+              )}
+              {!imageOpen && (
+                <button className="cards-extra-btn" onClick={() => setImageOpen(true)}>
+                  <span className="cards-extra-plus">▣</span> {t('cards.addImage')}
                 </button>
               )}
             </div>
@@ -694,8 +731,10 @@ function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
   const [back, setBack] = useState(card.back);
   const [note, setNote] = useState(card.note ?? '');
   const [tags, setTags] = useState(card.tags ?? []);
+  const [image, setImage] = useState(card.backImage ?? null);
   const [noteOpen, setNoteOpen] = useState(!!card.note);
   const [tagsOpen, setTagsOpen] = useState((card.tags?.length ?? 0) > 0);
+  const [imageOpen, setImageOpen] = useState(!!card.backImage);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -709,11 +748,20 @@ function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
     setFront(card.front); setBack(card.back);
     setNote(card.note ?? ''); setNoteOpen(!!card.note);
     setTags(card.tags ?? []); setTagsOpen((card.tags?.length ?? 0) > 0);
+    setImage(card.backImage ?? null); setImageOpen(!!card.backImage);
     setEditing(true);
   };
   const save = () => {
     if (!front.trim() || !back.trim()) return;
-    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null, tags });
+    // Image changed → the previously saved one is now orphaned; drop it.
+    if (card.backImage && card.backImage !== image) deleteCardImage(card.backImage);
+    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null, tags, backImage: image || null });
+    setEditing(false);
+  };
+  // Cancel: an image freshly uploaded during this edit (not the card's saved
+  // one) never got attached, so remove it from storage.
+  const cancelEdit = () => {
+    if (image && image !== card.backImage) deleteCardImage(image);
     setEditing(false);
   };
 
@@ -757,7 +805,19 @@ function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
             <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
           </>
         )}
-        {(!noteOpen || !tagsOpen) && (
+        {imageOpen && (
+          <>
+            <div className="cards-note-head">
+              <label className="cards-field-label">{t('cards.image')}</label>
+              <button
+                className="cards-note-collapse"
+                onClick={() => { if (image && image !== card.backImage) deleteCardImage(image); setImage(null); setImageOpen(false); }}
+              >{t('cards.hide')}</button>
+            </div>
+            <CardImageField image={image} onChange={setImage} t={t} />
+          </>
+        )}
+        {(!noteOpen || !tagsOpen || !imageOpen) && (
           <div className="cards-extra-row">
             {!noteOpen && (
               <button className="cards-extra-btn" onClick={() => setNoteOpen(true)}>
@@ -769,10 +829,15 @@ function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
                 <span className="cards-extra-plus">#</span> {t('cards.addTags')}
               </button>
             )}
+            {!imageOpen && (
+              <button className="cards-extra-btn" onClick={() => setImageOpen(true)}>
+                <span className="cards-extra-plus">▣</span> {t('cards.addImage')}
+              </button>
+            )}
           </div>
         )}
         <div className="cards-panel-actions">
-          <button className="cards-secondary-btn" onClick={() => setEditing(false)}>{t('cards.cancel')}</button>
+          <button className="cards-secondary-btn" onClick={cancelEdit}>{t('cards.cancel')}</button>
           <button className="cards-primary-btn" onClick={save} disabled={!front.trim() || !back.trim()}>{t('cards.save')}</button>
         </div>
       </li>
@@ -877,6 +942,86 @@ function TagInput({ tags, onChange, suggestions = [], t }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Back-side image picker for the add/edit forms. Desktop-only input paths:
+//  • paste (Ctrl+V) into the focusable drop zone;
+//  • "choose file" button → native file dialog.
+// On success the file is uploaded to the `card-images` bucket and the parent
+// gets the public URL. Viewing (the <img> preview + StudyView) works anywhere.
+function CardImageField({ image, onChange, t }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const fileRef = useRef(null);
+
+  const handleFile = async (file) => {
+    if (!file || !file.type?.startsWith('image/')) return;
+    setErr('');
+    setBusy(true);
+    try {
+      const url = await uploadCardImage(file);
+      onChange(url);
+    } catch (e) {
+      console.error('card image upload failed', e);
+      setErr(t('cards.imageError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onPaste = (e) => {
+    const items = e.clipboardData?.items ?? [];
+    for (const it of items) {
+      if (it.type?.startsWith('image/')) {
+        const file = it.getAsFile();
+        if (file) { e.preventDefault(); handleFile(file); return; }
+      }
+    }
+  };
+
+  if (image) {
+    return (
+      <div className="card-img-field">
+        <div className="card-img-preview">
+          <img src={image} alt="" />
+          <button
+            type="button"
+            className="card-img-remove"
+            onClick={() => onChange(null)}
+            aria-label={t('cards.removeImage')}
+          >×</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card-img-field">
+      <div
+        className={`card-img-drop ${busy ? 'card-img-drop--busy' : ''}`}
+        tabIndex={0}
+        onPaste={onPaste}
+      >
+        <span className="card-img-drop-hint">
+          {busy ? t('cards.imageUploading') : t('cards.imageHint')}
+        </span>
+        <button
+          type="button"
+          className="cards-secondary-btn card-img-choose"
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+        >{t('cards.chooseFile')}</button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handleFile(f); }}
+      />
+      {err && <div className="cards-dup-warn">{err}</div>}
     </div>
   );
 }
@@ -1062,6 +1207,9 @@ function StudyView({ deck, studyKey, onGrade, t }) {
         >
           <div className="study-card-face study-card-front">{card.front}</div>
           <div className="study-card-face study-card-back">
+            {card.backImage && (
+              <img className="study-card-img" src={card.backImage} alt="" loading="lazy" />
+            )}
             <div className="study-card-back-main">{card.back}</div>
             {card.note && <div className="study-card-note">{card.note}</div>}
           </div>

@@ -175,6 +175,54 @@ export async function uploadLooksPhoto(file) {
   return `${data.publicUrl}?v=${Date.now()}`;
 }
 
+// Flashcard back-side images live in the public `card-images` bucket, one
+// folder per user (RLS keys writes to `auth.uid()` as the first path segment).
+// The card only stores the resulting public URL in `card.backImage`.
+const CARD_IMAGES_BUCKET = 'card-images';
+
+const MIME_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
+export async function uploadCardImage(file) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No user');
+  // Pasted blobs often have no filename, so derive the extension from the mime
+  // type first and fall back to the name.
+  const ext =
+    MIME_EXT[file.type] ||
+    (file.name?.split('.').pop() || 'jpg').toLowerCase();
+  const rand = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : String(Date.now()) + Math.random().toString(36).slice(2, 8);
+  const path = `${user.id}/${rand}.${ext}`;
+  const { error } = await supabase.storage
+    .from(CARD_IMAGES_BUCKET)
+    .upload(path, file, { upsert: false, contentType: file.type });
+  if (error) throw error;
+  const { data } = supabase.storage.from(CARD_IMAGES_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// Best-effort cleanup: derive the storage path back out of a public URL and
+// remove the object. Failures are swallowed — an orphaned image is harmless.
+export async function deleteCardImage(url) {
+  if (!url || typeof url !== 'string') return;
+  const marker = `/${CARD_IMAGES_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return;
+  const path = decodeURIComponent(url.slice(idx + marker.length).split('?')[0]);
+  if (!path) return;
+  try {
+    await supabase.storage.from(CARD_IMAGES_BUCKET).remove([path]);
+  } catch (e) {
+    console.error('card image delete failed', e);
+  }
+}
+
 export async function saveProfile(patch) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No user');
