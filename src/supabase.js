@@ -223,6 +223,92 @@ export async function deleteCardImage(url) {
   }
 }
 
+// ── Rule persistence: concurrency-safe merge ────────────────────────────────
+// The three rule columns (rules, rule_groups, rule_layout) are whole-array JSON
+// blobs. Writing them as a plain overwrite means a stale session (an old tab, a
+// second device) can clobber rules another session added. To prevent that, rule
+// saves go through a 3-way merge: `base` = what this session last saw synced
+// with the DB, `mine` = this session's current copy, `theirs` = the row's live
+// value fetched right before writing. Nothing is dropped unless this session
+// deleted it (present in base, absent from mine); local edits win for items this
+// session still has; items only another session has are kept.
+
+export const RULE_COLUMNS = ['rules', 'rule_groups', 'rule_layout'];
+
+// Fetch just the rule columns' live values (used as `theirs` in the merge).
+export async function fetchRuleColumns() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No user');
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('rules, rule_groups, rule_layout')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data || { rules: [], rule_groups: [], rule_layout: [] };
+}
+
+// 3-way merge of an array of objects with a stable `id` (rules, rule_groups).
+export function mergeArrayById(base, mine, theirs) {
+  base = Array.isArray(base) ? base : [];
+  mine = Array.isArray(mine) ? mine : [];
+  theirs = Array.isArray(theirs) ? theirs : [];
+  const mineMap = new Map(mine.filter((x) => x && x.id != null).map((x) => [x.id, x]));
+  // Items this session deleted: in the synced baseline but no longer in mine.
+  const deletedLocally = new Set(
+    base.filter((x) => x && x.id != null && !mineMap.has(x.id)).map((x) => x.id)
+  );
+  const out = [];
+  const placed = new Set();
+  for (const t of theirs) {
+    if (!t || t.id == null) continue;
+    if (deletedLocally.has(t.id)) continue;   // honour this session's deletions
+    out.push(mineMap.get(t.id) ?? t);         // local edit wins when we have it
+    placed.add(t.id);
+  }
+  // Local-only items (added here, not yet on the server). Prepend to match the
+  // app's "new rule appears at the top" behaviour, keeping local order.
+  const additions = mine.filter((x) => x && x.id != null && !placed.has(x.id));
+  return [...additions, ...out];
+}
+
+// 3-way merge of the layout array ({ t, id } entries, no editable fields).
+export function mergeLayout(base, mine, theirs) {
+  const key = (e) => e.t + ':' + e.id;
+  base = Array.isArray(base) ? base : [];
+  mine = Array.isArray(mine) ? mine : [];
+  theirs = Array.isArray(theirs) ? theirs : [];
+  const mineKeys = new Set(mine.filter((e) => e && e.id != null && e.t != null).map(key));
+  const deletedLocally = new Set(
+    base.filter((e) => e && e.id != null && e.t != null && !mineKeys.has(key(e))).map(key)
+  );
+  const out = [];
+  const placed = new Set();
+  for (const t of theirs) {
+    if (!t || t.id == null || t.t == null) continue;
+    const k = key(t);
+    if (deletedLocally.has(k)) continue;
+    out.push(t);
+    placed.add(k);
+  }
+  const additions = mine.filter((e) => e && e.id != null && e.t != null && !placed.has(key(e)));
+  return [...additions, ...out];
+}
+
+// Build a rule-column patch by merging the pending local values against the
+// row's live DB values. `base`/`mine` are the synced baseline and current local
+// copies of the whole profile.
+export async function mergeRulePatch(patch, base, mine) {
+  const theirs = await fetchRuleColumns();
+  const b = base || {}, m = mine || {};
+  return {
+    ...patch,
+    rules: mergeArrayById(b.rules, m.rules, theirs.rules),
+    rule_groups: mergeArrayById(b.rule_groups, m.rule_groups, theirs.rule_groups),
+    rule_layout: mergeLayout(b.rule_layout, m.rule_layout, theirs.rule_layout),
+  };
+}
+
 export async function saveProfile(patch) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No user');
