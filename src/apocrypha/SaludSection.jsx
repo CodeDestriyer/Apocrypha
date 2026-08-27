@@ -39,7 +39,7 @@ export default function SaludSection({ rootOnBack }) {
           <span className="nav-summary">—</span>
         </button>
         <button className="nav-card" onClick={() => setSub('habitos')}>
-          <span className="nav-icon">⏳</span>
+          <span className="nav-icon">⊘</span>
           <span className="nav-label">{t('habits.title')}</span>
           <span className="nav-summary">{habitCount || '—'}</span>
         </button>
