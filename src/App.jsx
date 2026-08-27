@@ -310,7 +310,7 @@ function DesktopSidebar({ view, setView }) {
                 className={`desktop-nav-item desktop-subnav-item ${view === 'habitos' ? 'active' : ''}`}
                 onClick={() => setView('habitos')}
               >
-                <span className="desktop-nav-icon">⏳</span>
+                <span className="desktop-nav-icon">⊘</span>
                 <span>{t('habits.title')}</span>
               </button>
             </div>
