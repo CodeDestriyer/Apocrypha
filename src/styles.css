@@ -6254,7 +6254,7 @@ body {
 }
 .rule-card-title {
   font-family: 'Cinzel', serif;
-  font-size: 14px; letter-spacing: 0.02em; font-weight: 700;
+  font-size: 13px; letter-spacing: 0.02em; font-weight: 600;
   color: var(--wine); overflow-wrap: anywhere;
 }
 .rule-card-grip {
@@ -6296,8 +6296,8 @@ body {
   padding: 11px 6px 11px 13px;
   background: transparent; border: none;
   font-family: 'Cinzel', serif;
-  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
-  font-weight: 700; color: var(--wine); text-align: left;
+  font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 800; color: var(--wine); text-align: left;
   cursor: pointer;
 }
 .rule-koz-chevron { flex: none; color: var(--gold); transition: transform 0.18s ease; }
