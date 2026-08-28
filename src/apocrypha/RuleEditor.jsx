@@ -70,6 +70,17 @@ export function markersToHtml(text) {
   return html;
 }
 
+// Wrap an inline run in delimiters WITHOUT ever crossing a newline: a bold /
+// box / mark that spans several lines is emitted as the marker reopened on each
+// line (`==a==\n==b==`), because the reader parses inline markers per line — a
+// marker left open across a `\n` would render as literal `==`/`**` text.
+function wrapInline(inner, open, close) {
+  return inner
+    .split('\n')
+    .map((seg) => (seg ? open + seg + close : ''))
+    .join('\n');
+}
+
 // Serialize the inline content of a node (text, <br>, inline formatting spans)
 // back to markers, with <br> as newline. Used for a line-run and for a box's
 // inner content alike.
@@ -83,9 +94,9 @@ function inlineSerialize(node) {
     const tag = c.tagName;
     if (tag === 'BR') { s += '\n'; return; }
     const inner = inlineSerialize(c);
-    if (tag === 'STRONG' || tag === 'B') s += inner ? `**${inner}**` : '';
-    else if (c.classList.contains('rule-box')) s += inner ? `[[${inner}]]` : '';
-    else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += inner ? `==${inner}==` : '';
+    if (tag === 'STRONG' || tag === 'B') s += wrapInline(inner, '**', '**');
+    else if (c.classList.contains('rule-box')) s += wrapInline(inner, '[[', ']]');
+    else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += wrapInline(inner, '==', '==');
     else s += inner;
   });
   return s;
