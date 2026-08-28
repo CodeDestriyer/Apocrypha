@@ -18,16 +18,18 @@ import { useLang } from '../i18n.jsx';
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// One logical line's markers → inline HTML. Mirrors renderRich().
+// One logical line's markers → inline HTML. Mirrors renderRich(), including its
+// recursion so nested markers (e.g. bold inside a mark, `==**x**==`) seed as
+// nested elements rather than literal ** text.
 function inlineToHtml(text) {
   const str = String(text ?? '');
   const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==/g;
   let out = '', last = 0, m;
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) out += esc(str.slice(last, m.index));
-    if (m[1] !== undefined) out += `<strong>${esc(m[1])}</strong>`;
-    else if (m[2] !== undefined) out += `<span class="rule-box">${esc(m[2])}</span>`;
-    else out += `<mark class="rule-mark">${esc(m[3])}</mark>`;
+    if (m[1] !== undefined) out += `<strong>${inlineToHtml(m[1])}</strong>`;
+    else if (m[2] !== undefined) out += `<span class="rule-box">${inlineToHtml(m[2])}</span>`;
+    else out += `<mark class="rule-mark">${inlineToHtml(m[3])}</mark>`;
     last = m.index + m[0].length;
   }
   if (last < str.length) out += esc(str.slice(last));

@@ -87,17 +87,19 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 
 // Rule bodies store inline formatting as markers: **bold**, [[boxed]] and
 // ==highlight==. Render each as its own span (newlines are kept by the
-// container's white-space: pre-wrap).
-function renderRich(text) {
+// container's white-space: pre-wrap). Markers nest — a marked span can also be
+// bold (`==**x**==`) — so each match's inner content is rendered recursively.
+function renderRich(text, kp = 'r') {
   const str = String(text ?? '');
   const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==/g;
   const out = [];
   let last = 0, m, key = 0;
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) out.push(str.slice(last, m.index));
-    if (m[1] !== undefined) out.push(<strong key={key++}>{m[1]}</strong>);
-    else if (m[2] !== undefined) out.push(<span key={key++} className="rule-box">{m[2]}</span>);
-    else out.push(<mark key={key++} className="rule-mark">{m[3]}</mark>);
+    const k = `${kp}-${key++}`;
+    if (m[1] !== undefined) out.push(<strong key={k}>{renderRich(m[1], k)}</strong>);
+    else if (m[2] !== undefined) out.push(<span key={k} className="rule-box">{renderRich(m[2], k)}</span>);
+    else out.push(<mark key={k} className="rule-mark">{renderRich(m[3], k)}</mark>);
     last = m.index + m[0].length;
   }
   if (last < str.length) out.push(str.slice(last));
