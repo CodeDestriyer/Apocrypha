@@ -130,17 +130,50 @@ function RuleTable({ rows }) {
   );
 }
 
-// Block-level rendering of a rule body: pipe tables, `---` dividers, and
-// paragraphs of inline-formatted text (line breaks preserved).
+// ── Block-fence helpers (shared shape with RuleEditor's parser) ──────────────
+// Blocks are fenced on their own lines: `[[[` … `]]]` (a box) and `[[[cols` …
+// `]]]` (columns, cells split by `|||`). They nest, so scanning must balance
+// openers against closers by depth instead of stopping at the first `]]]`.
+const isFenceOpen = (l) => l === '[[[' || l === '[[[cols';
+// Index of the `]]]` that closes the fence opened at `open` (or the array end).
+export function matchFenceClose(lines, open) {
+  let depth = 0;
+  for (let k = open; k < lines.length; k++) {
+    if (isFenceOpen(lines[k])) depth++;
+    else if (lines[k] === ']]]' && --depth === 0) return k;
+  }
+  return lines.length;
+}
+// Split a columns block's inner lines on the `|||` separators at THIS depth
+// (a `|||` inside a nested fence belongs to that fence, not this split).
+export function splitColumns(inner) {
+  const cols = []; let col = [], depth = 0;
+  for (const ln of inner) {
+    if (isFenceOpen(ln)) { depth++; col.push(ln); }
+    else if (ln === ']]]') { depth--; col.push(ln); }
+    else if (ln === '|||' && depth === 0) { cols.push(col); col = []; }
+    else col.push(ln);
+  }
+  cols.push(col);
+  return cols;
+}
+// A column that is just a "+" gets its own class so it can render big/centered.
+const isPlusOnly = (cellLines) => cellLines.join('\n').trim() === '+';
+
+// Block-level rendering of a rule body: nested box/columns fences, pipe tables,
+// `---` dividers, and paragraphs of inline-formatted text (breaks preserved).
 function renderRuleBody(text) {
-  const lines = String(text ?? '').split('\n');
+  return renderBlocks(String(text ?? '').split('\n'), 'b');
+}
+
+function renderBlocks(lines, kp) {
   const blocks = [];
   let para = [], table = [], key = 0;
   const flushPara = () => {
     if (!para.length) return;
     const buf = para; para = [];
     blocks.push(
-      <div key={`p${key++}`} className="rule-para">
+      <div key={`${kp}p${key++}`} className="rule-para">
         {buf.map((ln, i) => <span key={i}>{i > 0 && <br />}{renderRich(ln)}</span>)}
       </div>
     );
@@ -148,48 +181,39 @@ function renderRuleBody(text) {
   const flushTable = () => {
     if (!table.length) return;
     const buf = table; table = [];
-    blocks.push(<RuleTable key={`t${key++}`} rows={buf} />);
+    blocks.push(<RuleTable key={`${kp}t${key++}`} rows={buf} />);
   };
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     if (line === '[[[cols') {
-      // Whole-line blocks laid out side by side (columns split by |||).
       flushPara(); flushTable();
-      i++;
-      const cols = []; let col = [];
-      while (i < lines.length && lines[i] !== ']]]') {
-        if (lines[i] === '|||') { cols.push(col); col = []; } else col.push(lines[i]);
-        i++;
-      }
-      cols.push(col);
-      i++; // skip ]]]
+      const j = matchFenceClose(lines, i);
+      const cols = splitColumns(lines.slice(i + 1, j));
+      const k = `${kp}c${key++}`;
       blocks.push(
-        <div key={`c${key++}`} className="rule-cols">
+        <div key={k} className="rule-cols">
           {cols.map((c, ci) => (
-            <div key={ci} className="rule-col">
-              {c.map((ln, ii) => <span key={ii}>{ii > 0 && <br />}{renderRich(ln)}</span>)}
+            <div key={ci} className={`rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}`}>
+              {renderBlocks(c, `${k}-${ci}`)}
             </div>
           ))}
         </div>
       );
+      i = j + 1;
       continue;
     }
     if (line === '[[[') {
-      // A big frame around whole lines (a "main rule" callout).
       flushPara(); flushTable();
-      i++;
-      const inner = [];
-      while (i < lines.length && lines[i] !== ']]]') { inner.push(lines[i]); i++; }
-      i++; // skip ]]]
+      const j = matchFenceClose(lines, i);
+      const k = `${kp}b${key++}`;
       blocks.push(
-        <div key={`b${key++}`} className="rule-block-box">
-          {inner.map((ln, ii) => <span key={ii}>{ii > 0 && <br />}{renderRich(ln)}</span>)}
-        </div>
+        <div key={k} className="rule-block-box">{renderBlocks(lines.slice(i + 1, j), k)}</div>
       );
+      i = j + 1;
       continue;
     }
-    if (/^\s*-{3,}\s*$/.test(line)) { flushPara(); flushTable(); blocks.push(<hr key={`h${key++}`} className="rule-hr" />); }
+    if (/^\s*-{3,}\s*$/.test(line)) { flushPara(); flushTable(); blocks.push(<hr key={`${kp}h${key++}`} className="rule-hr" />); }
     else if (line.includes('|')) { flushPara(); table.push(line); }
     else { flushTable(); para.push(line); }
     i++;

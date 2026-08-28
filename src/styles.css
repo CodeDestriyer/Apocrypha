@@ -6402,11 +6402,16 @@ body {
 }
 .rule-note-body .rule-block-box { padding: 4px 7px; margin: 5px 0; border-radius: 4px; }
 
-/* Columns — whole-line blocks laid out side by side; wrap on narrow screens. */
-.rule-cols { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: flex-start; margin: 10px 0; }
+/* Columns — whole-line blocks laid out side by side; wrap on narrow screens.
+   Centred vertically so a "+" / short cell lines up with a tall framed cell. */
+.rule-cols { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: center; margin: 10px 0; }
 .rule-col { flex: 1 1 auto; min-width: 120px; }
+/* A cell that is only a "+" (a connector between two cells): big and centred,
+   sized to the glyph rather than sharing the row's width. */
+.rule-col--plus { flex: 0 0 auto; min-width: 0; font-size: 1.9em; font-weight: 600; line-height: 1; text-align: center; }
 .rule-note-body .rule-cols { gap: 6px 14px; margin: 5px 0; }
 .rule-note-body .rule-col { min-width: 70px; }
+.rule-note-body .rule-col--plus { min-width: 0; font-size: 1.5em; }
 
 /* Block formatting: paragraphs, dividers and pipe tables */
 .rule-para { white-space: pre-wrap; }

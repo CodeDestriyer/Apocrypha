@@ -36,36 +36,57 @@ function inlineToHtml(text) {
   return out;
 }
 
+// ── Block-fence helpers (mirror RulesSection's parser) ──────────────────────
+// `[[[` … `]]]` (box) and `[[[cols` … `]]]` (columns, cells split by `|||`)
+// nest, so scanning balances openers against closers by depth.
+const isFenceOpen = (l) => l === '[[[' || l === '[[[cols';
+function matchFenceClose(lines, open) {
+  let depth = 0;
+  for (let k = open; k < lines.length; k++) {
+    if (isFenceOpen(lines[k])) depth++;
+    else if (lines[k] === ']]]' && --depth === 0) return k;
+  }
+  return lines.length;
+}
+function splitColumns(inner) {
+  const cols = []; let col = [], depth = 0;
+  for (const ln of inner) {
+    if (isFenceOpen(ln)) { depth++; col.push(ln); }
+    else if (ln === ']]]') { depth--; col.push(ln); }
+    else if (ln === '|||' && depth === 0) { cols.push(col); col = []; }
+    else col.push(ln);
+  }
+  cols.push(col);
+  return cols;
+}
+const isPlusOnly = (cellLines) => cellLines.join('\n').trim() === '+';
+
 // Full marker string → editor HTML. Normal lines are joined by <br>; a
 // [[[ … ]]] fence becomes a <div class="rule-block-box"> and a [[[cols … ]]]
 // fence (columns split by ||| lines) a <div class="rule-cols"> of columns.
-// Blocks carry no surrounding <br> so the round-trip through domToMarkers is
-// stable.
+// Fences nest (e.g. a box as a column cell), so cells/box bodies are parsed
+// recursively. Blocks carry no surrounding <br> so the round-trip through
+// domToMarkers is stable.
 export function markersToHtml(text) {
-  const lines = String(text ?? '').split('\n');
+  return blocksToHtml(String(text ?? '').split('\n'));
+}
+function blocksToHtml(lines) {
   let html = '', i = 0;
   const run = [];
   const flushRun = () => { if (run.length) { html += run.map(inlineToHtml).join('<br>'); run.length = 0; } };
   while (i < lines.length) {
     if (lines[i] === '[[[cols') {
       flushRun();
-      i++;
-      const cols = []; let col = [];
-      while (i < lines.length && lines[i] !== ']]]') {
-        if (lines[i] === '|||') { cols.push(col); col = []; } else col.push(lines[i]);
-        i++;
-      }
-      cols.push(col);
-      i++; // skip ]]]
+      const j = matchFenceClose(lines, i);
+      const cols = splitColumns(lines.slice(i + 1, j));
       html += `<div class="rule-cols">${cols.map((c) =>
-        `<div class="rule-col">${c.map(inlineToHtml).join('<br>')}</div>`).join('')}</div>`;
+        `<div class="rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}">${blocksToHtml(c)}</div>`).join('')}</div>`;
+      i = j + 1;
     } else if (lines[i] === '[[[') {
       flushRun();
-      i++;
-      const inner = [];
-      while (i < lines.length && lines[i] !== ']]]') { inner.push(lines[i]); i++; }
-      i++; // skip ]]]
-      html += `<div class="rule-block-box">${inner.map(inlineToHtml).join('<br>')}</div>`;
+      const j = matchFenceClose(lines, i);
+      html += `<div class="rule-block-box">${blocksToHtml(lines.slice(i + 1, j))}</div>`;
+      i = j + 1;
     } else { run.push(lines[i]); i++; }
   }
   flushRun();
@@ -124,13 +145,14 @@ function domToMarkers(root) {
       out.push('[[[cols');
       Array.from(c.children).filter(isCol).forEach((col, ci) => {
         if (ci > 0) out.push('|||');
-        inlineSerialize(col).split('\n').forEach((l) => out.push(l));
+        // Recurse: a cell may itself hold a box fence, not just inline text.
+        domToMarkers(col).split('\n').forEach((l) => out.push(l));
       });
       out.push(']]]');
     } else if (isBox(c)) {
       if (cur !== '') flush();
       out.push('[[[');
-      inlineSerialize(c).split('\n').forEach((l) => out.push(l));
+      domToMarkers(c).split('\n').forEach((l) => out.push(l));
       out.push(']]]');
     } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
       flush();
