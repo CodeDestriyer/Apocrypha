@@ -249,50 +249,58 @@ export async function fetchRuleColumns() {
 }
 
 // 3-way merge of an array of objects with a stable `id` (rules, rule_groups).
+// This session's order and edits win: we keep `mine` as-is (so a local reorder
+// survives the save), then append only the items another session added — those
+// present in `theirs` but never in our synced baseline. Items in `base` but no
+// longer in `mine` were deleted here and stay gone.
 export function mergeArrayById(base, mine, theirs) {
   base = Array.isArray(base) ? base : [];
   mine = Array.isArray(mine) ? mine : [];
   theirs = Array.isArray(theirs) ? theirs : [];
-  const mineMap = new Map(mine.filter((x) => x && x.id != null).map((x) => [x.id, x]));
-  // Items this session deleted: in the synced baseline but no longer in mine.
-  const deletedLocally = new Set(
-    base.filter((x) => x && x.id != null && !mineMap.has(x.id)).map((x) => x.id)
-  );
+  const baseIds = new Set(base.filter((x) => x && x.id != null).map((x) => x.id));
   const out = [];
   const placed = new Set();
+  // Mine's items and order win (covers local reorders, edits and additions).
+  for (const x of mine) {
+    if (!x || x.id == null || placed.has(x.id)) continue;
+    out.push(x);
+    placed.add(x.id);
+  }
+  // Append items only another session has: in theirs, not in mine, and never in
+  // our baseline (so it's a genuine remote add, not something we deleted).
   for (const t of theirs) {
-    if (!t || t.id == null) continue;
-    if (deletedLocally.has(t.id)) continue;   // honour this session's deletions
-    out.push(mineMap.get(t.id) ?? t);         // local edit wins when we have it
+    if (!t || t.id == null || placed.has(t.id)) continue;
+    if (baseIds.has(t.id)) continue;          // deleted locally → honour deletion
+    out.push(t);
     placed.add(t.id);
   }
-  // Local-only items (added here, not yet on the server). Prepend to match the
-  // app's "new rule appears at the top" behaviour, keeping local order.
-  const additions = mine.filter((x) => x && x.id != null && !placed.has(x.id));
-  return [...additions, ...out];
+  return out;
 }
 
 // 3-way merge of the layout array ({ t, id } entries, no editable fields).
+// Same rule as mergeArrayById: mine's order wins so a local reorder isn't
+// clobbered by the DB's order; remote-only entries are appended.
 export function mergeLayout(base, mine, theirs) {
   const key = (e) => e.t + ':' + e.id;
+  const valid = (e) => e && e.id != null && e.t != null;
   base = Array.isArray(base) ? base : [];
   mine = Array.isArray(mine) ? mine : [];
   theirs = Array.isArray(theirs) ? theirs : [];
-  const mineKeys = new Set(mine.filter((e) => e && e.id != null && e.t != null).map(key));
-  const deletedLocally = new Set(
-    base.filter((e) => e && e.id != null && e.t != null && !mineKeys.has(key(e))).map(key)
-  );
+  const baseKeys = new Set(base.filter(valid).map(key));
   const out = [];
   const placed = new Set();
-  for (const t of theirs) {
-    if (!t || t.id == null || t.t == null) continue;
-    const k = key(t);
-    if (deletedLocally.has(k)) continue;
-    out.push(t);
-    placed.add(k);
+  for (const e of mine) {
+    if (!valid(e) || placed.has(key(e))) continue;
+    out.push(e);
+    placed.add(key(e));
   }
-  const additions = mine.filter((e) => e && e.id != null && e.t != null && !placed.has(key(e)));
-  return [...additions, ...out];
+  for (const t of theirs) {
+    if (!valid(t) || placed.has(key(t))) continue;
+    if (baseKeys.has(key(t))) continue;       // deleted locally → honour deletion
+    out.push(t);
+    placed.add(key(t));
+  }
+  return out;
 }
 
 // Build a rule-column patch by merging the pending local values against the
