@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { supabase, getSession, loadProfile, createProfile, saveProfile, mergeRulePatch, RULE_COLUMNS } from './supabase.js';
+import { supabase, getSession, loadProfile, createProfile, saveProfile, mergeProfilePatch, MERGEABLE_COLUMNS } from './supabase.js';
 
 const ProfileContext = createContext(null);
 
@@ -160,39 +160,41 @@ export function ProfileProvider({ children }) {
     if (!toSave || Object.keys(toSave).length === 0) return;
     pendingPatch.current = {};
 
-    // Rule columns go through a 3-way merge against the row's live value so a
-    // stale session can't clobber rules another session added; everything else
-    // saves as a plain patch.
-    const touchesRules = RULE_COLUMNS.some((k) => k in toSave);
-    const build = touchesRules
-      ? mergeRulePatch(toSave, syncedRef.current, latestRef.current)
+    // Mergeable columns (rules, tasks, decks…) go through a 3-way merge against
+    // the row's live value so a stale session can't clobber items another device
+    // added; everything else saves as a plain patch.
+    const needsMerge = MERGEABLE_COLUMNS.some((k) => k in toSave);
+    const build = needsMerge
+      ? mergeProfilePatch(toSave, syncedRef.current, latestRef.current)
       : Promise.resolve(toSave);
 
     return build
       .catch((e) => {
-        // If fetching the live rules for the merge fails, fall back to the plain
+        // If fetching the live values for the merge fails, fall back to the plain
         // patch rather than dropping the save entirely.
-        console.error('rule merge failed, saving local copy', e);
+        console.error('merge failed, saving local copy', e);
         return toSave;
       })
       .then((patch) => saveProfile(patch))
       .then((saved) => {
         if (!saved) return;
-        // The saved row is the merged truth. Advance the sync baseline, and if no
-        // newer rule edit is already queued, reflect merged rule columns into the
-        // UI so rules added elsewhere show up (without clobbering in-flight edits).
+        // The saved row is the merged truth. Advance the sync baseline, then
+        // reflect merged columns back into the UI so items added elsewhere show
+        // up — but only for columns without a newer edit already queued, so we
+        // don't clobber an in-flight local change.
         syncedRef.current = saved;
-        const rulePending = RULE_COLUMNS.some((k) => k in pendingPatch.current);
-        if (touchesRules && !rulePending) {
-          setProfile((curr) => {
-            const next = { ...curr };
-            for (const k of RULE_COLUMNS) next[k] = saved[k];
-            latestRef.current = next;
-            return next;
-          });
-        } else {
+        const reflect = MERGEABLE_COLUMNS.filter((k) => k in toSave && !(k in pendingPatch.current));
+        if (reflect.length === 0) {
           latestRef.current = { ...latestRef.current, ...saved };
+          return;
         }
+        setProfile((curr) => {
+          if (!curr) return curr;
+          const next = { ...curr };
+          for (const k of reflect) next[k] = saved[k];
+          latestRef.current = next;
+          return next;
+        });
       })
       .catch((e) => {
         console.error('save failed', e);

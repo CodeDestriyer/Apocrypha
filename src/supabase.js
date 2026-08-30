@@ -317,6 +317,75 @@ export async function mergeRulePatch(patch, base, mine) {
   };
 }
 
+// 3-way merge of the decks array. Decks merge by id like any other {id} array,
+// but a deck also carries its own `cards` array — so for a deck that exists on
+// both sides we recursively merge its cards by id (against the baseline deck's
+// cards). That way two devices each adding cards to the SAME deck both keep
+// their additions, instead of one device's whole deck object clobbering the
+// other. Deck-level fields (name, etc.) follow the usual rule: mine wins.
+export function mergeDecks(base, mine, theirs) {
+  base = Array.isArray(base) ? base : [];
+  mine = Array.isArray(mine) ? mine : [];
+  theirs = Array.isArray(theirs) ? theirs : [];
+  const byId = (arr) => new Map(arr.filter((x) => x && x.id != null).map((x) => [x.id, x]));
+  const baseMap = byId(base);
+  const theirsMap = byId(theirs);
+  const baseIds = new Set(baseMap.keys());
+  const out = [];
+  const placed = new Set();
+  // Mine's decks and order win; for decks also present remotely, merge cards.
+  for (const d of mine) {
+    if (!d || d.id == null || placed.has(d.id)) continue;
+    const t = theirsMap.get(d.id);
+    if (t) {
+      const b = baseMap.get(d.id);
+      out.push({ ...d, cards: mergeArrayById(b?.cards, d.cards, t.cards) });
+    } else {
+      out.push(d);
+    }
+    placed.add(d.id);
+  }
+  // Append decks only another session added (in theirs, never in our baseline).
+  for (const t of theirs) {
+    if (!t || t.id == null || placed.has(t.id)) continue;
+    if (baseIds.has(t.id)) continue;            // deleted locally → honour deletion
+    out.push(t);
+    placed.add(t.id);
+  }
+  return out;
+}
+
+// Columns that get a 3-way merge on save instead of a blind overwrite, so
+// concurrent edits from another device aren't clobbered. Each is an array of
+// objects with a stable `id` (decks additionally nest cards; rule_layout uses a
+// composite key).
+export const MERGEABLE_COLUMNS = ['rules', 'rule_groups', 'rule_layout', 'tasks', 'decks'];
+
+// Build a save patch by merging the pending local values of any mergeable column
+// against the row's live DB values. Fetches only the columns actually touched.
+// `base`/`mine` are the synced baseline and current local copies of the profile.
+export async function mergeProfilePatch(patch, base, mine) {
+  const touched = MERGEABLE_COLUMNS.filter((k) => k in patch);
+  if (!touched.length) return patch;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No user');
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(touched.join(', '))
+    .eq('id', user.id)
+    .maybeSingle();
+  if (error) throw error;
+  const theirs = data || {};
+  const b = base || {}, m = mine || {};
+  const out = { ...patch };
+  for (const k of touched) {
+    if (k === 'rule_layout') out[k] = mergeLayout(b[k], m[k], theirs[k]);
+    else if (k === 'decks') out[k] = mergeDecks(b[k], m[k], theirs[k]);
+    else out[k] = mergeArrayById(b[k], m[k], theirs[k]); // rules, rule_groups, tasks
+  }
+  return out;
+}
+
 export async function saveProfile(patch) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No user');
