@@ -6,7 +6,8 @@ import { useLang } from '../i18n.jsx';
 // but here formatting is shown live: click "bold" on a selection and the text
 // is bold immediately, no asterisks.
 //
-// Inline markers: **bold**, [[box]] (a small frame around a word), ==mark==.
+// Inline markers: **bold**, __italic__, [[box]] (a small frame around a word),
+// ==mark==. They nest, so a run can be several at once (`**__x__**`).
 // Block marker: a fenced [[[ … ]]] on their own lines is a big frame drawn
 // around whole lines (a "main rule" callout), produced by the box button when
 // the selection spans several lines.
@@ -23,13 +24,14 @@ const esc = (s) =>
 // nested elements rather than literal ** text.
 function inlineToHtml(text) {
   const str = String(text ?? '');
-  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==/g;
+  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|__([\s\S]+?)__/g;
   let out = '', last = 0, m;
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) out += esc(str.slice(last, m.index));
     if (m[1] !== undefined) out += `<strong>${inlineToHtml(m[1])}</strong>`;
     else if (m[2] !== undefined) out += `<span class="rule-box">${inlineToHtml(m[2])}</span>`;
-    else out += `<mark class="rule-mark">${inlineToHtml(m[3])}</mark>`;
+    else if (m[3] !== undefined) out += `<mark class="rule-mark">${inlineToHtml(m[3])}</mark>`;
+    else out += `<em>${inlineToHtml(m[4])}</em>`;
     last = m.index + m[0].length;
   }
   if (last < str.length) out += esc(str.slice(last));
@@ -118,6 +120,7 @@ function inlineSerialize(node) {
     if (tag === 'BR') { s += '\n'; return; }
     const inner = inlineSerialize(c);
     if (tag === 'STRONG' || tag === 'B') s += wrapInline(inner, '**', '**');
+    else if (tag === 'EM' || tag === 'I') s += wrapInline(inner, '__', '__');
     else if (c.classList.contains('rule-box')) s += wrapInline(inner, '[[', ']]');
     else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += wrapInline(inner, '==', '==');
     else s += inner;
@@ -172,7 +175,7 @@ function domToMarkers(root) {
 }
 
 // ── inline formatting (bold / box / mark) within a single line ──────────────
-const KIND_TAG = { bold: 'STRONG', box: 'SPAN', mark: 'MARK' };
+const KIND_TAG = { bold: 'STRONG', italic: 'EM', box: 'SPAN', mark: 'MARK' };
 const KIND_CLASS = { box: 'rule-box', mark: 'rule-mark' };
 
 function enclosingFormat(node, kind, editor) {
@@ -599,6 +602,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           onMouseDown={(e) => e.preventDefault()}
         >
           {btn('bold', t('reglas.bold'), <span className="rule-fmt-b">B</span>)}
+          {btn('italic', t('reglas.italic'), <span className="rule-fmt-i">I</span>)}
           {btn('box', t('reglas.box'), <span className="rule-fmt-box" aria-hidden="true" />)}
           {btn('mark', t('reglas.mark'), <span className="rule-fmt-mark" aria-hidden="true" />)}
           {btn('cols', t('reglas.cols'), <span className="rule-fmt-cols" aria-hidden="true"><i /><i /></span>)}

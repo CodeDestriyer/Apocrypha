@@ -85,13 +85,14 @@ function topBlockIndex(y, selfKey) {
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
-// Rule bodies store inline formatting as markers: **bold**, [[boxed]] and
-// ==highlight==. Render each as its own span (newlines are kept by the
-// container's white-space: pre-wrap). Markers nest — a marked span can also be
-// bold (`==**x**==`) — so each match's inner content is rendered recursively.
+// Rule bodies store inline formatting as markers: **bold**, __italic__,
+// [[boxed]] and ==highlight==. Render each as its own span (newlines are kept
+// by the container's white-space: pre-wrap). Markers nest — a marked span can
+// also be bold-and-italic (`==***x***==`, i.e. `==**__x__**==`) — so each
+// match's inner content is rendered recursively.
 function renderRich(text, kp = 'r') {
   const str = String(text ?? '');
-  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==/g;
+  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|__([\s\S]+?)__/g;
   const out = [];
   let last = 0, m, key = 0;
   while ((m = re.exec(str)) !== null) {
@@ -99,7 +100,8 @@ function renderRich(text, kp = 'r') {
     const k = `${kp}-${key++}`;
     if (m[1] !== undefined) out.push(<strong key={k}>{renderRich(m[1], k)}</strong>);
     else if (m[2] !== undefined) out.push(<span key={k} className="rule-box">{renderRich(m[2], k)}</span>);
-    else out.push(<mark key={k} className="rule-mark">{renderRich(m[3], k)}</mark>);
+    else if (m[3] !== undefined) out.push(<mark key={k} className="rule-mark">{renderRich(m[3], k)}</mark>);
+    else out.push(<em key={k}>{renderRich(m[4], k)}</em>);
     last = m.index + m[0].length;
   }
   if (last < str.length) out.push(str.slice(last));
