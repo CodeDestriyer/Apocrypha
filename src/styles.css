@@ -4990,6 +4990,64 @@ body {
 .cards-study { display: flex; flex-direction: column; gap: 16px; align-items: stretch; min-height: 70vh; }
 .cards-progress { text-align: center; font-family: 'Cinzel', serif; color: #cbbf9f; letter-spacing: 0.18em; font-size: 13px; }
 
+/* "Repasadas" indicator, now a toggle for the session's unknown-words list. */
+.cards-progress-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.cards-progress-btn:hover,
+.cards-progress-btn.active { background: rgba(110, 36, 19, 0.07); }
+.cards-progress-badge {
+  font-family: system-ui, sans-serif;
+  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  padding: 0 5px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 9px;
+  color: #a33f2e;
+  background: rgba(163, 63, 46, 0.12);
+}
+.cards-forgot-panel {
+  align-self: stretch;
+  max-height: 34vh;
+  overflow-y: auto;
+  margin: 2px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--cream);
+}
+.cards-forgot-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.cards-forgot-list { list-style: none; margin: 0; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+.cards-forgot-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+.cards-forgot-item:nth-child(odd) { background: rgba(0, 0, 0, 0.03); }
+.cards-forgot-front { font-weight: 600; color: var(--ink); word-break: break-word; }
+.cards-forgot-back { color: var(--text-dim); text-align: right; word-break: break-word; }
+
 .study-card-stage {
   position: relative;
   perspective: 1800px;
