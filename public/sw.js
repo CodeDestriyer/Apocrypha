@@ -3,7 +3,10 @@
 // latest hashed JS/CSS). Cached /index.html serves only as offline fallback.
 // Never cache hashed JS/CSS chunks — they're immutable and content-addressed.
 
-const CACHE = 'varkanis-shell-v6';
+// __BUILD_ID__ is stamped with a unique id at build time (see vite.config.js),
+// so every deploy ships a byte-different sw.js. That's what makes the installed
+// PWA's update check pick up the new worker and refresh to the latest build.
+const CACHE = 'varkanis-shell-__BUILD_ID__';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/varkanis-logo-192.png', '/varkanis-logo-512.png'];
 
 self.addEventListener('install', (e) => {

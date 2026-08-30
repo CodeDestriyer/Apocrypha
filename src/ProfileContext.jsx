@@ -25,6 +25,12 @@ export function ProfileProvider({ children }) {
   const syncedRef = useRef(null);
   const latestRef = useRef(null);
   const setSynced = (p) => { syncedRef.current = p; latestRef.current = p; };
+  // For the background refresh-on-focus (B1): a live mirror of `status` so the
+  // visibility handler can read it without re-subscribing, and a throttle stamp
+  // so rapid tab focus toggles don't hammer the DB.
+  const statusRef = useRef(status);
+  statusRef.current = status;
+  const lastRefreshRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -215,12 +221,48 @@ export function ProfileProvider({ children }) {
     }
   };
 
+  // Background refresh (B1): when the app comes back to the foreground, quietly
+  // reload the profile from the DB and fold in any columns that changed on
+  // another device — WITHOUT remounting (no status flip) so the current view
+  // and in-progress UI state (open deck, study index) survive. Columns with an
+  // unsaved local edit still queued are left untouched so we never clobber the
+  // user's own pending changes.
+  const refreshFromServer = async () => {
+    if (document.visibilityState !== 'visible') return;
+    if (statusRef.current !== 'ready' || !currentUserId.current) return;
+    const now = Date.now();
+    if (now - lastRefreshRef.current < 4000) return; // throttle rapid focus toggles
+    lastRefreshRef.current = now;
+    try {
+      const fresh = await loadProfile();
+      if (!fresh || !currentUserId.current) return;
+      const pending = pendingPatch.current;
+      setProfile((curr) => {
+        if (!curr) return curr;
+        const next = { ...curr };
+        for (const k of Object.keys(fresh)) {
+          if (k in pending) continue; // keep unsaved local edits for this column
+          next[k] = fresh[k];
+        }
+        latestRef.current = next;
+        return next;
+      });
+      syncedRef.current = fresh;
+    } catch (e) {
+      console.error('background profile refresh failed', e);
+    }
+  };
+
   // Flush pending changes when the tab is hidden or the page is unloading —
   // covers navigating away, closing, and the service-worker update reload that
   // fires on refocus (window.location.reload in main.jsx). Without this the
-  // trailing debounced save is lost on every such transition.
+  // trailing debounced save is lost on every such transition. On the way back
+  // to visible we also pull fresh data (see refreshFromServer above).
   useEffect(() => {
-    const onVisibility = () => { if (document.visibilityState === 'hidden') flushNow(); };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushNow();
+      else if (document.visibilityState === 'visible') refreshFromServer();
+    };
     window.addEventListener('pagehide', flushNow);
     window.addEventListener('lr:flush-save', flushNow);
     document.addEventListener('visibilitychange', onVisibility);
