@@ -268,7 +268,11 @@ function enclosingCols(node, editor) {
   return null;
 }
 // Wrap the whole lines the selection touches into a columns block, splitting
-// into columns on blank lines (a blank line = two consecutive <br>). Returns it.
+// into columns on blank lines. A blank line is two <br> with nothing rendered
+// between them — but a freshly typed one carries caret scaffolding (a zero-width
+// text node, an empty style-holder inline) between the <br>s, so the second <br>
+// is found by skipping blank nodes, not by requiring the two to be adjacent.
+// Returns the new columns block.
 function wrapLinesInCols(editor, range) {
   const kids = Array.from(editor.childNodes);
   let i = topIndex(editor, range.startContainer), j = topIndex(editor, range.endContainer);
@@ -288,14 +292,26 @@ function wrapLinesInCols(editor, range) {
     col = document.createElement('div');
     col.className = 'rule-col';
   };
+  // A node that renders nothing and isn't itself a line break — caret
+  // scaffolding the browser leaves between the two <br>s of a blank line.
+  const isFiller = (node) => node && node.nodeName !== 'BR' && isBlank(node);
   for (let n = 0; n < nodes.length; n++) {
     const node = nodes[n];
-    if (node.nodeName === 'BR' && nodes[n + 1] && nodes[n + 1].nodeName === 'BR') {
-      // blank line = column break: drop this and the following separator BRs
-      pushCol();
-      node.remove(); n++; nodes[n].remove();
-      while (nodes[n + 1] && nodes[n + 1].nodeName === 'BR') { n++; nodes[n].remove(); }
-      continue;
+    if (node.nodeName === 'BR') {
+      // A second <br>, possibly with only filler between it and this one, marks
+      // a blank line = column break. Look past the filler to find it.
+      let p = n + 1;
+      while (isFiller(nodes[p])) p++;
+      if (nodes[p] && nodes[p].nodeName === 'BR') {
+        pushCol();
+        for (let q = n; q <= p; q++) nodes[q].remove(); // both <br>s + the filler
+        n = p;
+        // Consume any further blank lines (extra <br>/filler runs) between cols.
+        while (nodes[n + 1] && (nodes[n + 1].nodeName === 'BR' || isFiller(nodes[n + 1]))) {
+          n++; nodes[n].remove();
+        }
+        continue;
+      }
     }
     col.appendChild(node);
   }
