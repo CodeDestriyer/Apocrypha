@@ -160,6 +160,8 @@ const DICT = {
   'name.placeholder': 'Nombre',
   'btn.enter': 'Entrar',
   'btn.loginGoogle': 'Entrar con Google',
+  'install.button': 'Instalar Apocrypha',
+  'install.iosHint': 'Toca el botón Compartir de Safari y elige «Añadir a pantalla de inicio».',
   'goal.placeholder': 'Objetivo',
   'goal.add': '+ objetivo',
   'goal.deadline': 'Fecha límite',

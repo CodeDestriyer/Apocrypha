@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signInWithGoogle } from './supabase.js';
 import { useLang } from './i18n.jsx';
+import InstallAppButton from './InstallAppButton.jsx';
 
 export default function LoginScreen() {
   const { t } = useLang();
@@ -25,6 +26,7 @@ export default function LoginScreen() {
           <span>{busy ? '…' : t('btn.loginGoogle')}</span>
         </button>
         {err && <div className="error-text">{err}</div>}
+        <InstallAppButton variant="login" />
       </div>
     </div>
   );

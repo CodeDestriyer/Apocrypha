@@ -1541,6 +1541,29 @@ body {
 .ghost-btn:hover { color: var(--text); border-color: var(--gold-dim); }
 .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* Install-as-app control (login screen + in-app settings menu). */
+.install-block { margin-top: 12px; }
+.install-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.install-glyph { font-size: 16px; line-height: 1; }
+.install-ios-hint {
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  text-align: center;
+  border: 1px dashed rgba(127, 184, 199, 0.25);
+  border-radius: 8px;
+}
+/* Row variant inside the ⚙ settings dropdown reuses .settings-row spacing. */
+.install-row .settings-row-value { opacity: 0.8; }
+
 .add-goal {
   display: grid;
   gap: 8px;
