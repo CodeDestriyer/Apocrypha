@@ -6821,6 +6821,43 @@ body {
 .tareas-edit { display: flex; flex-direction: column; gap: 10px; }
 .tareas-edit .tareas-type-picker { margin: 0; }
 .tareas-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+/* Day note ("how the day went") — collapsed pill / note card / textarea, sits
+   under the day's task groups, separated by the same hairline as task groups. */
+.tareas-note {
+  margin-top: 22px; padding-top: 20px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: center;
+}
+.tareas-note-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px;
+  border: 1px dashed var(--wine); border-radius: 999px;
+  background: transparent; color: var(--wine); cursor: pointer;
+  font-family: 'EB Garamond', serif; font-size: 15px;
+  opacity: 0.75; transition: opacity 0.15s, background 0.15s;
+}
+.tareas-note-toggle:hover { opacity: 1; background: rgba(110, 36, 19, 0.05); }
+.tareas-note-plus { font-size: 16px; line-height: 1; }
+.tareas-note-card {
+  width: 100%; text-align: left;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--paper);
+  cursor: pointer; transition: border-color 0.15s;
+}
+.tareas-note-card:hover { border-color: var(--wine); }
+.tareas-note-label {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5;
+}
+.tareas-note-text {
+  font-family: 'EB Garamond', serif; font-size: 16px; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5;
+}
+.tareas-note-input {
+  width: 100%; resize: vertical; min-height: 76px;
+  font-family: 'EB Garamond', serif; font-size: 16px; line-height: 1.5;
+}
 .weight-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .weight-card-title {
   font-family: 'Cinzel', serif;

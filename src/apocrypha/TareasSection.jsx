@@ -40,6 +40,8 @@ export default function TareasSection({ rootOnBack }) {
   const [editId, setEditId] = useState(null);   // task being edited
   const [editText, setEditText] = useState('');
   const [editType, setEditType] = useState(DEFAULT_TYPE);
+  const [noteOpen, setNoteOpen] = useState(false); // day-note editor expanded?
+  const [noteDraft, setNoteDraft] = useState('');
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function TareasSection({ rootOnBack }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuId]);
 
-  const goDay = (delta) => { setDay((d) => shiftISO(d, delta)); setMenuId(null); setEditId(null); };
+  const goDay = (delta) => { setDay((d) => shiftISO(d, delta)); setMenuId(null); setEditId(null); setNoteOpen(false); };
 
   // ---- Drag-to-reorder ----------------------------------------------------
   // Rows render in profile.tasks order (within each type group). Dragging a row
@@ -178,6 +180,29 @@ export default function TareasSection({ rootOnBack }) {
   const restDay = isRestDay(day);
 
   const dayLabel = fmtDate(day);
+
+  // ---- Day note ("how the day went") --------------------------------------
+  // One free-text note per day, kept as a { [day]: text } map on
+  // profile.day_notes. Only offered on today and past days — a note is a
+  // retrospective, so future days don't show it. Collapsed by default: a small
+  // "＋ Nota del día" pill (or the note's text when one exists) expands into a
+  // textarea that autosaves on blur.
+  const dayNotes = (profile.day_notes && typeof profile.day_notes === 'object') ? profile.day_notes : {};
+  const note = typeof dayNotes[day] === 'string' ? dayNotes[day] : '';
+  const noteAvailable = day <= todayISO();
+  const openNote = () => { setNoteDraft(note); setNoteOpen(true); };
+  const saveNote = () => {
+    const text = noteDraft.trim();
+    if (text !== note) {
+      update((curr) => {
+        const map = (curr.day_notes && typeof curr.day_notes === 'object') ? curr.day_notes : {};
+        const next = { ...map };
+        if (text) next[day] = text; else delete next[day];
+        return { day_notes: next };
+      });
+    }
+    setNoteOpen(false);
+  };
 
   const renderTask = (task, listKey, ids) => {
     const ty = typeOf(task);
@@ -326,6 +351,33 @@ export default function TareasSection({ rootOnBack }) {
                 })
               )}
             </div>
+
+            {noteAvailable && (
+              <div className="tareas-note">
+                {noteOpen ? (
+                  <textarea
+                    className="cards-field-input tareas-note-input"
+                    value={noteDraft}
+                    autoFocus
+                    rows={3}
+                    placeholder={t('tareas.notePlaceholder')}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    onBlur={saveNote}
+                    onKeyDown={(e) => { if (e.key === 'Escape') { setNoteOpen(false); } }}
+                    maxLength={2000}
+                  />
+                ) : note ? (
+                  <button className="tareas-note-card" onClick={openNote}>
+                    <span className="tareas-note-label">{t('tareas.noteLabel')}</span>
+                    <span className="tareas-note-text">{note}</span>
+                  </button>
+                ) : (
+                  <button className="tareas-note-toggle" onClick={openNote}>
+                    <span className="tareas-note-plus" aria-hidden="true">＋</span> {t('tareas.noteAdd')}
+                  </button>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
