@@ -176,7 +176,10 @@ function renderBlocks(lines, kp) {
     const buf = para; para = [];
     blocks.push(
       <div key={`${kp}p${key++}`} className="rule-para">
-        {buf.map((ln, i) => <span key={i}>{i > 0 && <br />}{renderRich(ln)}</span>)}
+        {/* A blank line (e.g. a paragraph gap between two boxes) must still take
+            a line's height — empty content collapses to zero, so hold it open
+            with a non-breaking space. */}
+        {buf.map((ln, i) => <span key={i}>{i > 0 && <br />}{ln === '' ? ' ' : renderRich(ln)}</span>)}
       </div>
     );
   };

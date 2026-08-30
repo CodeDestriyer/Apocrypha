@@ -75,7 +75,17 @@ export function markersToHtml(text) {
 function blocksToHtml(lines) {
   let html = '', i = 0;
   const run = [];
-  const flushRun = () => { if (run.length) { html += run.map(inlineToHtml).join('<br>'); run.length = 0; } };
+  const flushRun = () => {
+    if (!run.length) return;
+    // Joining lines with <br> makes an all-blank run (the paragraph gap between
+    // two blocks) collapse to '' — no node, so the caret has no line to sit on
+    // and domToMarkers can't recover the blank. Emit one <br> per blank line so
+    // the gap shows in the editor and round-trips back to the same blank lines.
+    html += run.every((l) => l === '')
+      ? '<br>'.repeat(run.length)
+      : run.map(inlineToHtml).join('<br>');
+    run.length = 0;
+  };
   while (i < lines.length) {
     if (lines[i] === '[[[cols') {
       flushRun();
