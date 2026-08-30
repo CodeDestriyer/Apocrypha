@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
+import InstallAppButton from '../InstallAppButton.jsx';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
 import { typeOf, TaskShape, todayISO, taskDay, TYPE_ORDER } from './taskTypes.jsx';
 
@@ -115,6 +116,7 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
             <span>{t('settings.modules')}</span>
             <span className="settings-row-value">›</span>
           </button>
+          <InstallAppButton variant="row" />
           <div className="settings-sep" />
           <button className="settings-row settings-logout" onClick={() => signOut()}>
             <span>{t('settings.logout')}</span>
