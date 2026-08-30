@@ -1071,6 +1071,13 @@ function StudyView({ deck, studyKey, onGrade, t }) {
   const [shown, _setShown] = useState(!!saved?.shown);
   const [reviewed, setReviewed] = useState(saved?.reviewed ?? 0);
   const [known, setKnown] = useState(saved?.known ?? 0);
+  // Words marked "No lo sabía" (forgot) during THIS session, newest first, as
+  // {id, front, back} snapshots. Lives in the persisted study state so the list
+  // survives tab switches / reloads exactly like the rest of the progress, and
+  // is wiped when the session ends. `showForgot` is view-only local state, so
+  // toggling the panel never touches study progress.
+  const [forgot, setForgot] = useState(saved?.forgot ?? []);
+  const [showForgot, setShowForgot] = useState(false);
 
   const [dragX, setDragX] = useState(0);
   const [animDir, setAnimDir] = useState(0);
@@ -1080,7 +1087,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
 
   // Persist a partial study state, keeping the rest from the current render.
   const persist = (patch) => {
-    _study.set(key, { currentId, shown, reviewed, known, drawBoxes, ...patch });
+    _study.set(key, { currentId, shown, reviewed, known, drawBoxes, forgot, ...patch });
     _saveSS();
   };
   const setCurrentId = (v) => { persist({ currentId: v }); _setCurrentId(v); };
@@ -1125,6 +1132,14 @@ function StudyView({ deck, studyKey, onGrade, t }) {
       ...drawBoxes,
       [card.id]: knewIt ? nextBox : (drawBoxes[card.id] ?? box),
     };
+    // Track this session's unknown words: "No lo sabía" adds the card (deduped,
+    // newest first); "Lo sabía" drops it — the panel shows the words still to
+    // learn, not a permanent log of every miss.
+    const nextForgot = knewIt
+      ? forgot.filter((w) => w.id !== card.id)
+      : (forgot.some((w) => w.id === card.id)
+          ? forgot
+          : [{ id: card.id, front: card.front, back: card.back }, ...forgot]);
     const next = pickCard(deck.cards, card.id, (c) => nextDraw[c.id] ?? (c.box ?? 1));
     const nextState = {
       currentId: next ? next.id : null,
@@ -1132,6 +1147,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
       reviewed: reviewed + 1,
       known: known + (knewIt ? 1 : 0),
       drawBoxes: nextDraw,
+      forgot: nextForgot,
     };
     _study.set(key, nextState);
     _saveSS();
@@ -1140,6 +1156,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
     setReviewed(nextState.reviewed);
     setKnown(nextState.known);
     setDrawBoxes(nextDraw);
+    setForgot(nextForgot);
   };
 
   // knewIt → swipe right (dir +1); forgot → swipe left (dir -1)
@@ -1184,7 +1201,32 @@ function StudyView({ deck, studyKey, onGrade, t }) {
 
   return (
     <div className="cards-study">
-      <div className="cards-progress">{t('cards.reviewed')}: {reviewed} · {known} ✓</div>
+      <button
+        type="button"
+        className={`cards-progress cards-progress-btn ${showForgot ? 'active' : ''}`}
+        onClick={() => setShowForgot((s) => !s)}
+        aria-expanded={showForgot}
+      >
+        {t('cards.reviewed')}: {reviewed} · {known} ✓
+        {forgot.length > 0 && <span className="cards-progress-badge">{forgot.length}</span>}
+      </button>
+
+      {showForgot && (
+        <div className="cards-forgot-panel">
+          {forgot.length === 0 ? (
+            <div className="cards-forgot-empty">{t('cards.forgotEmpty')}</div>
+          ) : (
+            <ul className="cards-forgot-list">
+              {forgot.map((w) => (
+                <li key={w.id} className="cards-forgot-item">
+                  <span className="cards-forgot-front">{w.front}</span>
+                  <span className="cards-forgot-back">{w.back}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div
         className="study-card-stage"
