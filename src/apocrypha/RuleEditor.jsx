@@ -470,6 +470,31 @@ function insertBreakOutOfInline(editor) {
   sel.removeAllRanges(); sel.addRange(r);
 }
 
+// Typing "- " at the START of a line turns it into a bullet item on the spot:
+// the dash becomes "• " so the line reads as a list item live (the read view
+// then hangs the wrapped text under the first letter). It fires only when the
+// dash is the first thing on its line — so a mid-line "hacer - hecho" separator
+// is left alone — and works inside columns/boxes too, since it only rewrites the
+// caret's own text node. Returns true when it converted (the space is swallowed).
+function tryBulletConvert(editor) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !sel.isCollapsed) return false;
+  const tn = sel.getRangeAt(0).startContainer;
+  const off = sel.getRangeAt(0).startOffset;
+  if (!editor.contains(tn) || tn.nodeType !== Node.TEXT_NODE) return false;
+  if (off < 1 || tn.textContent[off - 1] !== '-') return false;
+  // Only blank caret scaffolding may precede the dash on this line.
+  if (tn.textContent.slice(0, off - 1).replace(/​/g, '').trim() !== '') return false;
+  let p = tn.previousSibling;
+  while (p && p.nodeName !== 'BR' && isBlank(p)) p = p.previousSibling;
+  if (p && p.nodeName !== 'BR') return false; // real content earlier on the line
+  tn.textContent = '• ' + tn.textContent.slice(off); // drop dash + leading blanks
+  const r = document.createRange();
+  r.setStart(tn, 2); r.collapse(true); // caret after "• "
+  sel.removeAllRanges(); sel.addRange(r);
+  return true;
+}
+
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
   const { t } = useLang();
   const ref = useRef(null);
@@ -512,6 +537,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onSubmit?.(); return; }
+    if (e.key === ' ' && tryBulletConvert(ref.current)) { e.preventDefault(); emit(); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
       // Double Enter on an empty line inside a block breaks out of it; otherwise

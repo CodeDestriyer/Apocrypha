@@ -219,6 +219,9 @@ function renderBlocks(lines, kp) {
       continue;
     }
     if (/^\s*-{3,}\s*$/.test(line)) { flushPara(); flushTable(); blocks.push(<hr key={`${kp}h${key++}`} className="rule-hr" />); }
+    // A "• …" line is a bullet item: its own row so the wrapped text hangs under
+    // the first letter (see .rule-li). The bullet stays part of the text.
+    else if (/^•\s/.test(line)) { flushPara(); flushTable(); blocks.push(<div key={`${kp}li${key++}`} className="rule-li">{renderRich(line)}</div>); }
     else if (line.includes('|')) { flushPara(); table.push(line); }
     else { flushTable(); para.push(line); }
     i++;

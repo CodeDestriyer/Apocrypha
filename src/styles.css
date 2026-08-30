@@ -6421,6 +6421,11 @@ body {
 
 /* Block formatting: paragraphs, dividers and pipe tables */
 .rule-para { white-space: pre-wrap; }
+/* Bullet item ("• …"): hanging indent so a wrapped line aligns under the first
+   letter, not under the dot. The bullet sits at the row's left edge. */
+.rule-li { white-space: pre-wrap; padding-left: 1.35em; text-indent: -1.35em; }
+.rule-li + .rule-li { margin-top: 2px; }
+.rule-note-body .rule-li { padding-left: 1.1em; text-indent: -1.1em; }
 .rule-para + .rule-table, .rule-table + .rule-para,
 .rule-para + .rule-hr, .rule-hr + .rule-para { margin-top: 4px; }
 .rule-hr {
