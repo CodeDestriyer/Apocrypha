@@ -6411,6 +6411,10 @@ body {
 /* A cell that is only a "+" (a connector between two cells): big and centred,
    sized to the glyph rather than sharing the row's width. */
 .rule-col--plus { flex: 0 0 auto; min-width: 0; font-size: 1.9em; font-weight: 600; line-height: 1; text-align: center; }
+/* Put the "+" geometrically in the middle: give the cells on either side of it
+   an equal share of the row, so the connector sits dead centre between them. */
+.rule-col:has(+ .rule-col--plus),
+.rule-col--plus + .rule-col { flex: 1 1 0; min-width: 0; }
 .rule-note-body .rule-cols { gap: 6px 14px; margin: 5px 0; }
 .rule-note-body .rule-col { min-width: 70px; }
 .rule-note-body .rule-col--plus { min-width: 0; font-size: 1.5em; }
