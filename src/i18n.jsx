@@ -48,6 +48,7 @@ const DICT = {
   'reglas.reorder': 'Mover',
   'reglas.noBody': '(sin texto)',
   'reglas.bold': 'Negrita',
+  'reglas.italic': 'Cursiva',
   'reglas.box': 'Recuadro',
   'reglas.mark': 'Resaltar',
   'reglas.cols': 'Columnas',
