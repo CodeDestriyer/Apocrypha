@@ -5722,6 +5722,7 @@ body {
   font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   color: #8a7d63;
 }
+.card-img-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .card-img-choose { flex: 0 0 auto; max-width: none; padding: 8px 16px; }
 .card-img-preview {
   position: relative;

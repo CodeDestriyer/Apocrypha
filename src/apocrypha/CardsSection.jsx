@@ -946,9 +946,14 @@ function TagInput({ tags, onChange, suggestions = [], t }) {
   );
 }
 
-// Back-side image picker for the add/edit forms. Desktop-only input paths:
-//  • paste (Ctrl+V) into the focusable drop zone;
-//  • "choose file" button → native file dialog.
+// Back-side image picker for the add/edit forms. Input paths:
+//  • "choose file" button → native picker. With accept="image/*" this offers the
+//    photo library / gallery on iOS and Android (and the camera on iOS), plus
+//    the file dialog on desktop.
+//  • "paste" button → reads an image straight from the clipboard via the async
+//    Clipboard API, so paste works on touch devices where you can't focus the
+//    drop zone and press Ctrl+V;
+//  • Ctrl+V into the focusable drop zone (desktop).
 // On success the file is uploaded to the `card-images` bucket and the parent
 // gets the public URL. Viewing (the <img> preview + StudyView) works anywhere.
 function CardImageField({ image, onChange, t }) {
@@ -981,6 +986,31 @@ function CardImageField({ image, onChange, t }) {
     }
   };
 
+  // Tappable paste for touch devices: read the first image on the clipboard
+  // through the async Clipboard API (needs the user gesture this button
+  // provides). Falls back to a hint when the browser blocks it or there's no
+  // image to paste.
+  const pasteFromClipboard = async () => {
+    setErr('');
+    try {
+      if (!navigator.clipboard?.read) { setErr(t('cards.pasteUnsupported')); return; }
+      const items = await navigator.clipboard.read();
+      for (const it of items) {
+        const type = it.types.find((tp) => tp.startsWith('image/'));
+        if (type) {
+          const blob = await it.getType(type);
+          const ext = type.split('/')[1] || 'png';
+          handleFile(new File([blob], `pasted.${ext}`, { type }));
+          return;
+        }
+      }
+      setErr(t('cards.pasteEmpty'));
+    } catch (e) {
+      console.error('clipboard read failed', e);
+      setErr(t('cards.pasteUnsupported'));
+    }
+  };
+
   if (image) {
     return (
       <div className="card-img-field">
@@ -1007,12 +1037,20 @@ function CardImageField({ image, onChange, t }) {
         <span className="card-img-drop-hint">
           {busy ? t('cards.imageUploading') : t('cards.imageHint')}
         </span>
-        <button
-          type="button"
-          className="cards-secondary-btn card-img-choose"
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-        >{t('cards.chooseFile')}</button>
+        <div className="card-img-actions">
+          <button
+            type="button"
+            className="cards-secondary-btn card-img-choose"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+          >{t('cards.chooseFile')}</button>
+          <button
+            type="button"
+            className="cards-secondary-btn card-img-choose"
+            onClick={pasteFromClipboard}
+            disabled={busy}
+          >{t('cards.paste')}</button>
+        </div>
       </div>
       <input
         ref={fileRef}
