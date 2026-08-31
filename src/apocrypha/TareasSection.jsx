@@ -320,7 +320,42 @@ export default function TareasSection({ rootOnBack }) {
                 maxLength={120}
               />
               <button className="tareas-add-btn" onClick={add} disabled={!draft.trim()} aria-label={t('tareas.add')}>+</button>
+              {noteAvailable && (
+                <button
+                  className={`tareas-note-btn ${note ? 'has-note' : ''}`}
+                  onClick={() => (noteOpen ? saveNote() : openNote())}
+                  aria-label={t('tareas.noteAdd')}
+                  title={t('tareas.noteAdd')}
+                  aria-pressed={noteOpen}
+                >
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="6" y="3" width="13" height="18" rx="2" />
+                    <path d="M6 7.5H3.5M6 12H3.5M6 16.5H3.5" />
+                    <path d="M10 8h5M10 12h5M10 16h3" />
+                  </svg>
+                </button>
+              )}
             </div>
+
+            {noteAvailable && noteOpen && (
+              <textarea
+                className="cards-field-input tareas-note-input"
+                value={noteDraft}
+                autoFocus
+                rows={3}
+                placeholder={t('tareas.notePlaceholder')}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                onBlur={saveNote}
+                onKeyDown={(e) => { if (e.key === 'Escape') setNoteOpen(false); }}
+                maxLength={2000}
+              />
+            )}
+            {noteAvailable && !noteOpen && note && (
+              <button className="tareas-note-card" onClick={openNote}>
+                <span className="tareas-note-label">{t('tareas.noteLabel')}</span>
+                <span className="tareas-note-text">{note}</span>
+              </button>
+            )}
 
             {showTypePicker && typePicker(draftType, setDraftType)}
 
@@ -351,33 +386,6 @@ export default function TareasSection({ rootOnBack }) {
                 })
               )}
             </div>
-
-            {noteAvailable && (
-              <div className="tareas-note">
-                {noteOpen ? (
-                  <textarea
-                    className="cards-field-input tareas-note-input"
-                    value={noteDraft}
-                    autoFocus
-                    rows={3}
-                    placeholder={t('tareas.notePlaceholder')}
-                    onChange={(e) => setNoteDraft(e.target.value)}
-                    onBlur={saveNote}
-                    onKeyDown={(e) => { if (e.key === 'Escape') { setNoteOpen(false); } }}
-                    maxLength={2000}
-                  />
-                ) : note ? (
-                  <button className="tareas-note-card" onClick={openNote}>
-                    <span className="tareas-note-label">{t('tareas.noteLabel')}</span>
-                    <span className="tareas-note-text">{note}</span>
-                  </button>
-                ) : (
-                  <button className="tareas-note-toggle" onClick={openNote}>
-                    <span className="tareas-note-plus" aria-hidden="true">＋</span> {t('tareas.noteAdd')}
-                  </button>
-                )}
-              </div>
-            )}
           </>
         )}
       </div>

@@ -6821,27 +6821,32 @@ body {
 .tareas-edit { display: flex; flex-direction: column; gap: 10px; }
 .tareas-edit .tareas-type-picker { margin: 0; }
 .tareas-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
-/* Day note ("how the day went") — collapsed pill / note card / textarea, sits
-   under the day's task groups, separated by the same hairline as task groups. */
-.tareas-note {
-  margin-top: 22px; padding-top: 20px;
-  border-top: 1px solid var(--line);
-  display: flex; justify-content: center;
+/* Day note ("how the day went"). The trigger is an icon button beside the "+"
+   in the add row — same footprint, but white with wine outline + notebook glyph
+   — and opening it reveals the textarea (and, when a note exists, a read card)
+   right under the add row. */
+.tareas-note-btn {
+  flex: none;
+  width: 48px;
+  display: grid; place-items: center;
+  border: 1px solid var(--wine); border-radius: 6px;
+  background: #ffffff; color: var(--wine);
+  cursor: pointer; position: relative;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.tareas-note-toggle {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 18px;
-  border: 1px dashed var(--wine); border-radius: 999px;
-  background: transparent; color: var(--wine); cursor: pointer;
-  font-family: 'EB Garamond', serif; font-size: 15px;
-  opacity: 0.75; transition: opacity 0.15s, background 0.15s;
+.tareas-note-btn svg { display: block; }
+.tareas-note-btn:hover { background: rgba(110, 36, 19, 0.07); }
+/* A note exists for the day → tint the button and mark it with a wine dot. */
+.tareas-note-btn.has-note { background: rgba(110, 36, 19, 0.1); }
+.tareas-note-btn.has-note::after {
+  content: ''; position: absolute; top: 5px; right: 5px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--wine);
 }
-.tareas-note-toggle:hover { opacity: 1; background: rgba(110, 36, 19, 0.05); }
-.tareas-note-plus { font-size: 16px; line-height: 1; }
 .tareas-note-card {
   width: 100%; text-align: left;
   display: flex; flex-direction: column; gap: 6px;
-  padding: 12px 14px;
+  padding: 12px 14px; margin-top: 8px;
   border: 1px solid var(--line); border-radius: 6px; background: var(--paper);
   cursor: pointer; transition: border-color 0.15s;
 }
@@ -6855,7 +6860,7 @@ body {
   white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5;
 }
 .tareas-note-input {
-  width: 100%; resize: vertical; min-height: 76px;
+  width: 100%; resize: vertical; min-height: 76px; margin-top: 8px;
   font-family: 'EB Garamond', serif; font-size: 16px; line-height: 1.5;
 }
 .weight-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
