@@ -521,12 +521,78 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
   const [bar, setBar] = useState(null);   // { x, y } floating format toolbar
   const [block, setBlock] = useState(null); // { x, y } block-insert menu
 
+  // ── Undo / redo ──────────────────────────────────────────────────────────
+  // The native browser undo is unusable here: we mutate the DOM directly (block
+  // wrapping, line breaks, bullet conversion) instead of via execCommand, which
+  // corrupts its history. So we keep our own: a stack of innerHTML snapshots.
+  // Rapid typing coalesces into ~one checkpoint per COALESCE_MS so a single
+  // Ctrl+Z steps back a word-ish chunk, while each block op is its own step.
+  const undoStack = useRef([]);
+  const redoStack = useRef([]);
+  const lastHtml = useRef('');       // last committed innerHTML (the redo/undo pivot)
+  const lastPushTs = useRef(0);
+  const MAX_HISTORY = 200;
+  const COALESCE_MS = 400;
+  // Force the NEXT emit to start a fresh undo step (used before block ops so they
+  // never fold into a preceding typing burst).
+  const checkpoint = () => { lastPushTs.current = 0; };
+
   useLayoutEffect(() => {
     const el = ref.current;
-    if (el) el.innerHTML = markersToHtml(initialValue);
+    if (el) {
+      el.innerHTML = markersToHtml(initialValue);
+      lastHtml.current = el.innerHTML;
+      undoStack.current = [];
+      redoStack.current = [];
+      lastPushTs.current = 0;
+    }
   }, [editKey]);
 
-  const emit = () => { if (ref.current) onChange(domToMarkers(ref.current)); };
+  const emit = () => {
+    const el = ref.current;
+    if (!el) return;
+    const html = el.innerHTML;
+    if (html !== lastHtml.current) {
+      const now = Date.now();
+      if (now - lastPushTs.current > COALESCE_MS) {
+        undoStack.current.push(lastHtml.current);
+        if (undoStack.current.length > MAX_HISTORY) undoStack.current.shift();
+        lastPushTs.current = now;
+      }
+      redoStack.current = []; // any fresh edit invalidates the redo branch
+      lastHtml.current = html;
+    }
+    onChange(domToMarkers(el));
+  };
+
+  const placeCaretEnd = (el) => {
+    try {
+      const r = document.createRange();
+      r.selectNodeContents(el); r.collapse(false);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    } catch { /* selection may be unavailable — ignore */ }
+  };
+  const restore = (html) => {
+    const el = ref.current;
+    if (el == null) return;
+    el.innerHTML = html;
+    lastHtml.current = html;
+    lastPushTs.current = 0;
+    el.focus();
+    placeCaretEnd(el);
+    onChange(domToMarkers(el));
+    setBar(null);
+  };
+  const undo = () => {
+    if (!undoStack.current.length) return;
+    redoStack.current.push(lastHtml.current);
+    restore(undoStack.current.pop());
+  };
+  const redo = () => {
+    if (!redoStack.current.length) return;
+    undoStack.current.push(lastHtml.current);
+    restore(redoStack.current.pop());
+  };
 
   const liveSelection = () => {
     const sel = window.getSelection();
@@ -556,12 +622,25 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
   }, []);
 
   const onKeyDown = (e) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onSubmit?.(); return; }
-    if (e.key === ' ' && tryBulletConvert(ref.current)) { e.preventDefault(); emit(); return; }
+    const mod = e.ctrlKey || e.metaKey;
+    // Undo / redo (native history is broken here — see the undo stack above).
+    // Match by physical key (e.code) so it fires on any layout — on a Cyrillic
+    // layout Ctrl+Z reports e.key='я', not 'z'.
+    const isZ = e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z';
+    const isY = e.code === 'KeyY' || e.key === 'y' || e.key === 'Y';
+    if (mod && isZ) {
+      e.preventDefault();
+      if (e.shiftKey) redo(); else undo();
+      return;
+    }
+    if (mod && !e.shiftKey && isY) { e.preventDefault(); redo(); return; }
+    if (e.key === 'Enter' && mod) { e.preventDefault(); onSubmit?.(); return; }
+    if (e.key === ' ' && tryBulletConvert(ref.current)) { e.preventDefault(); checkpoint(); emit(); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
       // Double Enter on an empty line inside a block breaks out of it; otherwise
       // a line break that steps out of any bold/box/mark so the new line is plain.
+      checkpoint(); // a line break / block escape is its own undo step
       if (!tryEscapeBlock(ref.current)) insertBreakOutOfInline(ref.current);
       emit();
       return;
@@ -570,12 +649,13 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
       // On an empty edge line inside a block, Backspace breaks out too (a quick
       // alternative to the second Enter, from any column). Elsewhere it deletes.
       const sel = window.getSelection();
-      if (sel.isCollapsed && tryEscapeBlock(ref.current)) { e.preventDefault(); emit(); }
+      if (sel.isCollapsed && tryEscapeBlock(ref.current)) { e.preventDefault(); checkpoint(); emit(); }
     }
   };
 
   const onPaste = (e) => {
     e.preventDefault();
+    checkpoint(); // a paste is its own undo step
     document.execCommand('insertText', false, e.clipboardData?.getData('text/plain') ?? '');
     emit();
   };
@@ -588,6 +668,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
   };
   const insertBlock = (text) => {
     ref.current?.focus();
+    checkpoint(); // inserting a table/divider is its own undo step
     document.execCommand('insertText', false, `\n${text}\n`);
     setBlock(null);
     emit();
@@ -616,6 +697,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     // an existing box still works: those always hold real text.
     if (isEmptyContent(sel.toString()) && !enclosingBox(range.commonAncestorContainer, el)
         && !enclosingCols(range.commonAncestorContainer, el)) return;
+    checkpoint(); // a box/mark/cols toggle is its own undo step
     let selectAfter = null;
     if (kind === 'box') {
       const box = enclosingBox(range.commonAncestorContainer, el);
