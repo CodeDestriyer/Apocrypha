@@ -1133,13 +1133,15 @@ function StudyView({ deck, studyKey, onGrade, t }) {
       [card.id]: knewIt ? nextBox : (drawBoxes[card.id] ?? box),
     };
     // Track this session's unknown words: "No lo sabía" adds the card (deduped,
-    // newest first); "Lo sabía" drops it — the panel shows the words still to
-    // learn, not a permanent log of every miss.
+    // newest first). The panel is a log of every word you marked as unknown this
+    // session — grading it "Lo sabía" afterwards does NOT drop it, it just flags
+    // the entry as learned (shown with a check) so the record of what you missed
+    // survives. A word you knew from the start never enters the list.
     const nextForgot = knewIt
-      ? forgot.filter((w) => w.id !== card.id)
+      ? forgot.map((w) => (w.id === card.id ? { ...w, learned: true } : w))
       : (forgot.some((w) => w.id === card.id)
-          ? forgot
-          : [{ id: card.id, front: card.front, back: card.back }, ...forgot]);
+          ? forgot.map((w) => (w.id === card.id ? { ...w, learned: false } : w))
+          : [{ id: card.id, front: card.front, back: card.back, learned: false }, ...forgot]);
     const next = pickCard(deck.cards, card.id, (c) => nextDraw[c.id] ?? (c.box ?? 1));
     const nextState = {
       currentId: next ? next.id : null,
@@ -1218,8 +1220,11 @@ function StudyView({ deck, studyKey, onGrade, t }) {
           ) : (
             <ul className="cards-forgot-list">
               {forgot.map((w) => (
-                <li key={w.id} className="cards-forgot-item">
-                  <span className="cards-forgot-front">{w.front}</span>
+                <li key={w.id} className={`cards-forgot-item ${w.learned ? 'cards-forgot-item--learned' : ''}`}>
+                  <span className="cards-forgot-front">
+                    {w.learned && <span className="cards-forgot-check" aria-hidden="true">✓</span>}
+                    {w.front}
+                  </span>
                   <span className="cards-forgot-back">{w.back}</span>
                 </li>
               ))}
