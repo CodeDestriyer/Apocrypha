@@ -85,6 +85,13 @@ function topBlockIndex(y, selfKey) {
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
+// A run whose only characters are marker delimiters or whitespace carries no
+// real content — used to drop EMPTY boxes / marks / fences so a stray frame (an
+// outline around nothing, a mark that just tints a line start) never renders,
+// even if one is still sitting in older stored data.
+const STRUCTURAL = /\[\[\[cols|\[\[\[|\]\]\]|\|\|\||\[\[|\]\]|\*\*|__|==|[\s\u200B]/g;
+const isEmptyContent = (s) => String(s ?? '').replace(STRUCTURAL, '') === '';
+
 // Rule bodies store inline formatting as markers: **bold**, __italic__,
 // [[boxed]] and ==highlight==. Render each as its own span (newlines are kept
 // by the container's white-space: pre-wrap). Markers nest — a marked span can
@@ -99,8 +106,8 @@ function renderRich(text, kp = 'r') {
     if (m.index > last) out.push(str.slice(last, m.index));
     const k = `${kp}-${key++}`;
     if (m[1] !== undefined) out.push(<strong key={k}>{renderRich(m[1], k)}</strong>);
-    else if (m[2] !== undefined) out.push(<span key={k} className="rule-box">{renderRich(m[2], k)}</span>);
-    else if (m[3] !== undefined) out.push(<mark key={k} className="rule-mark">{renderRich(m[3], k)}</mark>);
+    else if (m[2] !== undefined) out.push(isEmptyContent(m[2]) ? m[2] : <span key={k} className="rule-box">{renderRich(m[2], k)}</span>);
+    else if (m[3] !== undefined) out.push(isEmptyContent(m[3]) ? m[3] : <mark key={k} className="rule-mark">{renderRich(m[3], k)}</mark>);
     else out.push(<em key={k}>{renderRich(m[4], k)}</em>);
     last = m.index + m[0].length;
   }
@@ -192,29 +199,35 @@ function renderBlocks(lines, kp) {
   while (i < lines.length) {
     const line = lines[i];
     if (line === '[[[cols') {
-      flushPara(); flushTable();
       const j = matchFenceClose(lines, i);
-      const cols = splitColumns(lines.slice(i + 1, j));
-      const k = `${kp}c${key++}`;
-      blocks.push(
-        <div key={k} className="rule-cols">
-          {cols.map((c, ci) => (
-            <div key={ci} className={`rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}`}>
-              {renderBlocks(c, `${k}-${ci}`)}
-            </div>
-          ))}
-        </div>
-      );
+      const inner = lines.slice(i + 1, j);
+      if (!isEmptyContent(inner.join('\n'))) {
+        flushPara(); flushTable();
+        const cols = splitColumns(inner);
+        const k = `${kp}c${key++}`;
+        blocks.push(
+          <div key={k} className="rule-cols">
+            {cols.map((c, ci) => (
+              <div key={ci} className={`rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}`}>
+                {renderBlocks(c, `${k}-${ci}`)}
+              </div>
+            ))}
+          </div>
+        );
+      }
       i = j + 1;
       continue;
     }
     if (line === '[[[') {
-      flushPara(); flushTable();
       const j = matchFenceClose(lines, i);
-      const k = `${kp}b${key++}`;
-      blocks.push(
-        <div key={k} className="rule-block-box">{renderBlocks(lines.slice(i + 1, j), k)}</div>
-      );
+      const inner = lines.slice(i + 1, j);
+      if (!isEmptyContent(inner.join('\n'))) {
+        flushPara(); flushTable();
+        const k = `${kp}b${key++}`;
+        blocks.push(
+          <div key={k} className="rule-block-box">{renderBlocks(inner, k)}</div>
+        );
+      }
       i = j + 1;
       continue;
     }

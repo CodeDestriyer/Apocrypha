@@ -19,6 +19,13 @@ import { useLang } from '../i18n.jsx';
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// A run whose only characters are marker delimiters or whitespace carries no
+// real content. Used everywhere to drop EMPTY boxes / marks / fences so a stray
+// frame (an outline around nothing, a mark that just tints a line start) can
+// never be created, rendered, or round-tripped.
+const STRUCTURAL = /\[\[\[cols|\[\[\[|\]\]\]|\|\|\||\[\[|\]\]|\*\*|__|==|[\s\u200B]/g;
+const isEmptyContent = (s) => String(s ?? '').replace(STRUCTURAL, '') === '';
+
 // One logical line's markers → inline HTML. Mirrors renderRich(), including its
 // recursion so nested markers (e.g. bold inside a mark, `==**x**==`) seed as
 // nested elements rather than literal ** text.
@@ -29,8 +36,8 @@ function inlineToHtml(text) {
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) out += esc(str.slice(last, m.index));
     if (m[1] !== undefined) out += `<strong>${inlineToHtml(m[1])}</strong>`;
-    else if (m[2] !== undefined) out += `<span class="rule-box">${inlineToHtml(m[2])}</span>`;
-    else if (m[3] !== undefined) out += `<mark class="rule-mark">${inlineToHtml(m[3])}</mark>`;
+    else if (m[2] !== undefined) out += isEmptyContent(m[2]) ? esc(m[2]) : `<span class="rule-box">${inlineToHtml(m[2])}</span>`;
+    else if (m[3] !== undefined) out += isEmptyContent(m[3]) ? esc(m[3]) : `<mark class="rule-mark">${inlineToHtml(m[3])}</mark>`;
     else out += `<em>${inlineToHtml(m[4])}</em>`;
     last = m.index + m[0].length;
   }
@@ -88,16 +95,22 @@ function blocksToHtml(lines) {
   };
   while (i < lines.length) {
     if (lines[i] === '[[[cols') {
-      flushRun();
       const j = matchFenceClose(lines, i);
-      const cols = splitColumns(lines.slice(i + 1, j));
-      html += `<div class="rule-cols">${cols.map((c) =>
-        `<div class="rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}">${blocksToHtml(c)}</div>`).join('')}</div>`;
+      const inner = lines.slice(i + 1, j);
+      if (!isEmptyContent(inner.join('\n'))) {
+        flushRun();
+        const cols = splitColumns(inner);
+        html += `<div class="rule-cols">${cols.map((c) =>
+          `<div class="rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}">${blocksToHtml(c)}</div>`).join('')}</div>`;
+      }
       i = j + 1;
     } else if (lines[i] === '[[[') {
-      flushRun();
       const j = matchFenceClose(lines, i);
-      html += `<div class="rule-block-box">${blocksToHtml(lines.slice(i + 1, j))}</div>`;
+      const inner = lines.slice(i + 1, j);
+      if (!isEmptyContent(inner.join('\n'))) {
+        flushRun();
+        html += `<div class="rule-block-box">${blocksToHtml(inner)}</div>`;
+      }
       i = j + 1;
     } else { run.push(lines[i]); i++; }
   }
@@ -124,15 +137,15 @@ function inlineSerialize(node) {
   node.childNodes.forEach((c) => {
     // Strip zero-width spaces: they are only caret scaffolding (see the line
     // break helper), never real content.
-    if (c.nodeType === Node.TEXT_NODE) { s += c.textContent.replace(/​/g, ''); return; }
+    if (c.nodeType === Node.TEXT_NODE) { s += c.textContent.replace(/\u200B/g, ''); return; }
     if (c.nodeType !== Node.ELEMENT_NODE) return;
     const tag = c.tagName;
     if (tag === 'BR') { s += '\n'; return; }
     const inner = inlineSerialize(c);
     if (tag === 'STRONG' || tag === 'B') s += wrapInline(inner, '**', '**');
     else if (tag === 'EM' || tag === 'I') s += wrapInline(inner, '__', '__');
-    else if (c.classList.contains('rule-box')) s += wrapInline(inner, '[[', ']]');
-    else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += wrapInline(inner, '==', '==');
+    else if (c.classList.contains('rule-box')) s += isEmptyContent(inner) ? inner : wrapInline(inner, '[[', ']]');
+    else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += isEmptyContent(inner) ? inner : wrapInline(inner, '==', '==');
     else s += inner;
   });
   return s;
@@ -154,19 +167,26 @@ function domToMarkers(root) {
   const flush = () => { out.push(cur); cur = ''; };
   root.childNodes.forEach((c) => {
     if (isCols(c)) {
-      if (cur !== '') flush();
-      out.push('[[[cols');
-      Array.from(c.children).filter(isCol).forEach((col, ci) => {
-        if (ci > 0) out.push('|||');
-        // Recurse: a cell may itself hold a box fence, not just inline text.
-        domToMarkers(col).split('\n').forEach((l) => out.push(l));
-      });
-      out.push(']]]');
+      // Serialize cells first so a columns block with nothing real in any cell
+      // is dropped instead of round-tripping as an empty frame.
+      const cells = Array.from(c.children).filter(isCol).map((col) => domToMarkers(col));
+      if (cells.some((s) => !isEmptyContent(s))) {
+        if (cur !== '') flush();
+        out.push('[[[cols');
+        cells.forEach((s, ci) => {
+          if (ci > 0) out.push('|||');
+          s.split('\n').forEach((l) => out.push(l));
+        });
+        out.push(']]]');
+      }
     } else if (isBox(c)) {
-      if (cur !== '') flush();
-      out.push('[[[');
-      domToMarkers(c).split('\n').forEach((l) => out.push(l));
-      out.push(']]]');
+      const body = domToMarkers(c);
+      if (!isEmptyContent(body)) {
+        if (cur !== '') flush();
+        out.push('[[[');
+        body.split('\n').forEach((l) => out.push(l));
+        out.push(']]]');
+      }
     } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
       flush();
     } else if (c.nodeType === Node.ELEMENT_NODE && (c.tagName === 'DIV' || c.tagName === 'P')) {
@@ -366,8 +386,8 @@ function blockFlowAt(editor, node) {
 function isBlank(n) {
   if (!n) return true;
   if (n.nodeName === 'BR') return true;
-  if (n.nodeType === Node.TEXT_NODE) return n.textContent.replace(/​/g, '') === '';
-  if (n.nodeType === Node.ELEMENT_NODE) return n.textContent.replace(/​/g, '') === '' && !n.querySelector('br, img');
+  if (n.nodeType === Node.TEXT_NODE) return n.textContent.replace(/\u200B/g, '') === '';
+  if (n.nodeType === Node.ELEMENT_NODE) return n.textContent.replace(/\u200B/g, '') === '' && !n.querySelector('br, img');
   return false;
 }
 // Does the flow end / start with a <br> once trailing / leading blank (non-br)
@@ -386,13 +406,13 @@ function atEmptyLastLine(flow, range) {
   const r = document.createRange();
   r.selectNodeContents(flow);
   try { r.setStart(range.endContainer, range.endOffset); } catch { return false; }
-  return r.toString().replace(/​/g, '') === '' && endsWithBreak(flow);
+  return r.toString().replace(/\u200B/g, '') === '' && endsWithBreak(flow);
 }
 function atEmptyFirstLine(flow, range) {
   const r = document.createRange();
   r.selectNodeContents(flow);
   try { r.setEnd(range.startContainer, range.startOffset); } catch { return false; }
-  return r.toString().replace(/​/g, '') === '' && startsWithBreak(flow);
+  return r.toString().replace(/\u200B/g, '') === '' && startsWithBreak(flow);
 }
 function tryEscapeBlock(editor) {
   const sel = window.getSelection();
@@ -463,7 +483,7 @@ function insertBreakOutOfInline(editor) {
     if (after.childNodes.length) parent.parentNode.insertBefore(after, br.nextSibling);
     if (!parent.childNodes.length) parent.remove();
   }
-  const zwsp = document.createTextNode('​');
+  const zwsp = document.createTextNode('\u200B');
   br.parentNode.insertBefore(zwsp, br.nextSibling);
   const r = document.createRange();
   r.setStart(zwsp, 1); r.collapse(true);
@@ -484,7 +504,7 @@ function tryBulletConvert(editor) {
   if (!editor.contains(tn) || tn.nodeType !== Node.TEXT_NODE) return false;
   if (off < 1 || tn.textContent[off - 1] !== '-') return false;
   // Only blank caret scaffolding may precede the dash on this line.
-  if (tn.textContent.slice(0, off - 1).replace(/​/g, '').trim() !== '') return false;
+  if (tn.textContent.slice(0, off - 1).replace(/\u200B/g, '').trim() !== '') return false;
   let p = tn.previousSibling;
   while (p && p.nodeName !== 'BR' && isBlank(p)) p = p.previousSibling;
   if (p && p.nodeName !== 'BR') return false; // real content earlier on the line
@@ -591,6 +611,11 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     const sel = liveSelection();
     if (!el || !sel) return;
     const range = sel.getRangeAt(0);
+    // Nothing but whitespace selected → there is nothing to frame or mark, so
+    // don't create an empty box/mark/block (the stray-outline bug). Unwrapping
+    // an existing box still works: those always hold real text.
+    if (isEmptyContent(sel.toString()) && !enclosingBox(range.commonAncestorContainer, el)
+        && !enclosingCols(range.commonAncestorContainer, el)) return;
     let selectAfter = null;
     if (kind === 'box') {
       const box = enclosingBox(range.commonAncestorContainer, el);
