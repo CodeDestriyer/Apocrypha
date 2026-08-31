@@ -7217,3 +7217,71 @@ body {
 .desktop-content .habito-count { align-items: center; margin-right: 40px; }
 .desktop-content .habito-days { font-size: 44px; }
 .desktop-content .habito-gear { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); }
+
+/* ── Peso: "regla" — draggable weight ruler (replaces the number field) ── */
+.peso-ruler { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.peso-ruler-readout { display: flex; align-items: baseline; gap: 6px; }
+.peso-ruler-value {
+  font-family: 'Cinzel', serif; font-size: 40px; font-weight: 700; line-height: 1;
+  color: var(--ink); background: transparent; border: none; padding: 0;
+  cursor: text; letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.peso-ruler--compact .peso-ruler-value { font-size: 28px; }
+.peso-ruler-unit { font-family: 'Cinzel', serif; font-size: 15px; color: var(--text-dim); }
+.peso-ruler--compact .peso-ruler-unit { font-size: 13px; }
+.peso-ruler-input {
+  width: 5ch; font-family: 'Cinzel', serif; font-size: 40px; font-weight: 700; line-height: 1;
+  color: var(--ink); background: transparent; border: none; border-bottom: 2px solid var(--wine);
+  text-align: center; padding: 0; font-variant-numeric: tabular-nums;
+}
+.peso-ruler--compact .peso-ruler-input { font-size: 28px; }
+.peso-ruler-input:focus { outline: none; }
+
+.peso-ruler-track {
+  position: relative; width: 100%; height: 62px; overflow: hidden;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  cursor: grab;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(74,21,11,0.04), rgba(74,21,11,0) 55%),
+    var(--paper);
+  border: 1px solid var(--line);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+}
+.peso-ruler--compact .peso-ruler-track { height: 48px; }
+.peso-ruler-track:active { cursor: grabbing; }
+.peso-ruler-track:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+
+.peso-ruler-strip { position: absolute; inset: 0; }
+.peso-ruler-tick {
+  position: absolute; bottom: 8px; width: 1.5px; height: 12px;
+  background: var(--gold-dim); transform: translateX(-50%);
+}
+.peso-ruler-tick.mid { height: 18px; }
+.peso-ruler-tick.major { height: 26px; width: 2px; background: var(--wine); }
+.peso-ruler--compact .peso-ruler-tick { bottom: 6px; height: 9px; }
+.peso-ruler--compact .peso-ruler-tick.mid { height: 13px; }
+.peso-ruler--compact .peso-ruler-tick.major { height: 20px; }
+.peso-ruler-tick-label {
+  position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; color: var(--text-dim); font-variant-numeric: tabular-nums;
+  white-space: nowrap; pointer-events: none;
+}
+.peso-ruler--compact .peso-ruler-tick-label { top: -13px; font-size: 9px; }
+
+/* Fixed center needle marking the selected value */
+.peso-ruler-needle {
+  position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px;
+  transform: translateX(-50%);
+  background: var(--wine); border-radius: 2px;
+  box-shadow: 0 0 0 3px rgba(74,21,11,0.08);
+}
+.peso-ruler-needle::before {
+  content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid var(--wine);
+}
+
+.peso-add-slide--ruler { display: flex; flex-direction: column; gap: 12px; }
