@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -120,11 +120,14 @@ export default function PesoSection({ rootOnBack }) {
 
   const [draft, setDraft] = useState(null); // numeric weight being dialed on the ruler
   const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
-  const [adding, setAdding] = useState(false);            // "+" reveals the input
-  const [histOpen, setHistOpen] = useState(false);        // history is collapsed by default
-  const [goalDraft, setGoalDraft] = useState(null); // numeric goal on the ruler
+  const [adding, setAdding] = useState(false);            // "+" reveals the ruler
+  const [showHistory, setShowHistory] = useState(false);  // full history sub-screen (from settings)
+  const [goalDraft, setGoalDraft] = useState('');         // plain goal input (string)
   const [menuOpen, setMenuOpen] = useState(false);        // weight settings gear (header)
   const menuRef = useRef(null);
+  // Square "+" button: sized to the weekly widget's height so it reads square.
+  const weekRef = useRef(null);
+  const [sqSize, setSqSize] = useState(0);
 
   // Horizontal swipe on the week block → change week (right = older, left = newer).
   const weekTouch = useRef({ x: 0, y: 0, active: false, locked: null });
@@ -157,6 +160,17 @@ export default function PesoSection({ rootOnBack }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
 
+  // Track the weekly widget's height so the adjacent "+" can be a true square.
+  useLayoutEffect(() => {
+    const el = weekRef.current;
+    if (!el) return;
+    setSqSize(el.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setSqSize(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [log.length, adding, showHistory]);
+
   const setLog = (updater) =>
     update((curr) => ({ weight_log: updater(Array.isArray(curr.weight_log) ? curr.weight_log : []) }));
 
@@ -171,7 +185,7 @@ export default function PesoSection({ rootOnBack }) {
   const remove = (id) => setLog((l) => l.filter((e) => e.id !== id));
 
   const rulerStart = (latest && latest.weight) || goal || 70;
-  const toggleMenu = () => { if (!menuOpen) setGoalDraft(goal != null ? goal : rulerStart); setMenuOpen((o) => !o); };
+  const toggleMenu = () => { if (!menuOpen) setGoalDraft(goal != null ? String(goal) : ''); setMenuOpen((o) => !o); };
   const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setMenuOpen(false); };
   const clearGoal = () => { update({ weight_goal: null }); setMenuOpen(false); };
 
@@ -188,23 +202,144 @@ export default function PesoSection({ rootOnBack }) {
       {menuOpen && (
         <div className="cards-gear-menu cards-gear-menu--right peso-gear-menu">
           <label className="cards-field-label">{t('body.goal')}</label>
-          <WeightRuler
-            compact
-            value={goalDraft}
-            onChange={setGoalDraft}
-            unit={unit}
-            defaultValue={rulerStart}
-          />
+          <div className="peso-gear-row">
+            <input
+              className="cards-field-input peso-gear-input"
+              type="number" inputMode="decimal" step="0.1" min="0" autoFocus
+              value={goalDraft}
+              placeholder={t('body.goalPlaceholder')}
+              onChange={(e) => setGoalDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setMenuOpen(false); }}
+            />
+            <span className="peso-input-unit">{unit}</span>
+          </div>
           <div className="peso-gear-actions">
             {goal != null && (
               <button className="cards-secondary-btn peso-gear-clear" onClick={clearGoal}>{t('body.delete')}</button>
             )}
             <button className="cards-primary-btn peso-gear-save" onClick={saveGoal}>{t('body.save')}</button>
           </div>
+          <button
+            className="peso-gear-history"
+            onClick={() => { setMenuOpen(false); setShowHistory(true); }}
+          >
+            <span className="peso-history-title">{t('body.history')}</span>
+            <span className="peso-history-count">{log.length}</span>
+            <span className="peso-history-caret" aria-hidden="true">›</span>
+          </button>
         </div>
       )}
     </div>
   );
+
+  // Full history lives on its own screen, opened from the settings gear.
+  if (showHistory) {
+    return (
+      <SubPage title={t('body.history')} onBack={() => setShowHistory(false)}>
+        {history.length === 0 ? (
+          <p className="peso-current-empty">{t('weight.weekNoData')}</p>
+        ) : (
+          <ul className="peso-history peso-history--page">
+            {history.map((e) => (
+              <li key={e.id} className="peso-entry">
+                <span className="peso-entry-w">{e.weight} {unit}</span>
+                <span className="peso-entry-date">{fmtDate(e.date)}</span>
+                <button className="peso-entry-del" onClick={() => remove(e.id)} aria-label={t('body.delete')}>×</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </SubPage>
+    );
+  }
+
+  // The add-weight ruler, revealed just under the graph by the "+" button.
+  const addBlock = adding ? (
+    <div className="peso-add-slide peso-add-slide--ruler">
+      <WeightRuler value={draft} onChange={setDraft} unit={unit} defaultValue={rulerStart} />
+      <div className="peso-input-row peso-input-row--bar">
+        <label
+          className="peso-datechip"
+          onClick={(e) => { const inp = e.currentTarget.querySelector('input'); try { inp?.showPicker?.(); } catch {} }}
+        >
+          <svg className="peso-datechip-ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4.5" width="18" height="16.5" rx="2"/>
+            <path d="M3 9h18M8 2.5v4M16 2.5v4"/>
+          </svg>
+          <span className="peso-datechip-text">{entryDate === todayISO() ? t('weight.today') : fmtDate(entryDate)}</span>
+          <input
+            className="peso-datechip-input"
+            type="date"
+            value={entryDate}
+            max={todayISO()}
+            onChange={(e) => setEntryDate(e.target.value || todayISO())}
+            aria-label="fecha"
+          />
+        </label>
+        <button className="cards-primary-btn peso-save" onClick={submit} disabled={parseWeight(draft) == null}>
+          {t('body.save')}
+        </button>
+        <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(null); }} aria-label={t('cards.close')}>×</button>
+      </div>
+    </div>
+  ) : null;
+
+  const weekWidget = (() => {
+    const total = week.total != null ? Math.round(week.total * 10) / 10 : null;
+    const dir = total == null || total === 0 ? 'flat' : total > 0 ? 'down' : 'up';
+    const weekLabel = weekOffset === 0
+      ? t('weight.week')
+      : `${fmtDate(week.days[0].iso)} – ${fmtDate(week.days[6].iso)}`;
+    return (
+      <div
+        ref={weekRef}
+        className="peso-week"
+        onTouchStart={onWeekTouchStart}
+        onTouchMove={onWeekTouchMove}
+        onTouchEnd={onWeekTouchEnd}
+        onTouchCancel={onWeekTouchEnd}
+      >
+        <div className="peso-week-head">
+          <div className="peso-week-nav-group">
+            <button className="peso-week-nav" onClick={goPrevWeek} aria-label={t('weight.prevWeek')}>‹</button>
+            <span className="peso-week-title">{weekLabel}</span>
+            <button className="peso-week-nav" onClick={goNextWeek} disabled={weekOffset === 0} aria-label={t('weight.nextWeek')}>›</button>
+          </div>
+          {total == null ? (
+            <span className="peso-week-total peso-week-total--flat">—</span>
+          ) : (
+            <span className={`peso-week-total peso-week-total--${dir}`}>
+              {dir !== 'flat' && (
+                <span className="peso-week-arrow" aria-hidden="true">{dir === 'down' ? '▼' : '▲'}</span>
+              )}
+              {dir === 'flat' ? t('weight.noChange') : `${Math.abs(total)} ${unit}`}
+            </span>
+          )}
+        </div>
+        <div className="peso-week-days">
+          {week.days.map((d) => {
+            const dd = fmtDelta(d.delta);
+            const cls = d.delta == null || d.delta === 0 ? 'flat' : d.delta < 0 ? 'down' : 'up';
+            return (
+              <div
+                key={d.iso}
+                className={`peso-week-day${d.weight != null ? ' has' : ''}${d.isToday ? ' today' : ''}`}
+              >
+                <span className="peso-week-dow">{d.letter}</span>
+                {d.weight != null && dd != null ? (
+                  <span className={`peso-week-delta peso-week-delta--${cls}`}>{dd}</span>
+                ) : d.weight != null ? (
+                  <span className="peso-week-dot" aria-hidden="true" />
+                ) : (
+                  <span className="peso-week-delta peso-week-delta--empty" aria-hidden="true">·</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  })();
 
   return (
     <SubPage title={t('weight.title')} onBack={rootOnBack} headerRight={headerRight}>
@@ -221,123 +356,31 @@ export default function PesoSection({ rootOnBack }) {
           <WeightGraph log={log} goal={goal} />
         )}
 
-        <div className="peso-bar">
-          {adding ? (
-            <div className="peso-add-slide peso-add-slide--ruler">
-              <WeightRuler
-                value={draft}
-                onChange={setDraft}
-                unit={unit}
-                defaultValue={rulerStart}
-              />
-              <div className="peso-input-row peso-input-row--bar">
-                <label
-                  className="peso-datechip"
-                  onClick={(e) => { const inp = e.currentTarget.querySelector('input'); try { inp?.showPicker?.(); } catch {} }}
-                >
-                  <svg className="peso-datechip-ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="3" y="4.5" width="18" height="16.5" rx="2"/>
-                    <path d="M3 9h18M8 2.5v4M16 2.5v4"/>
-                  </svg>
-                  <span className="peso-datechip-text">{entryDate === todayISO() ? t('weight.today') : fmtDate(entryDate)}</span>
-                  <input
-                    className="peso-datechip-input"
-                    type="date"
-                    value={entryDate}
-                    max={todayISO()}
-                    onChange={(e) => setEntryDate(e.target.value || todayISO())}
-                    aria-label="fecha"
-                  />
-                </label>
-                <button className="cards-primary-btn peso-save" onClick={submit} disabled={parseWeight(draft) == null}>
-                  {t('body.save')}
-                </button>
-                <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(null); }} aria-label={t('cards.close')}>×</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              {log.length > 0 && (
-                <button className="peso-history-toggle" onClick={() => setHistOpen((o) => !o)} aria-expanded={histOpen}>
-                  <span className="peso-history-title">{t('body.history')}</span>
-                  <span className="peso-history-count">{log.length}</span>
-                  <span className={`peso-history-caret ${histOpen ? 'open' : ''}`} aria-hidden="true">›</span>
-                </button>
-              )}
-              <button className="peso-anadir-btn" onClick={() => { setDraft(rulerStart); setAdding(true); }} aria-label={t('weight.add')}>
-                <span className="peso-anadir-plus">+</span>
-              </button>
-            </>
-          )}
-        </div>
+        {addBlock}
 
-        {!adding && histOpen && log.length > 0 && (
-          <ul className="peso-history">
-            {history.map((e) => (
-              <li key={e.id} className="peso-entry">
-                <span className="peso-entry-w">{e.weight} {unit}</span>
-                <span className="peso-entry-date">{fmtDate(e.date)}</span>
-                <button className="peso-entry-del" onClick={() => remove(e.id)} aria-label={t('body.delete')}>×</button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {log.length > 0 && (() => {
-          const total = week.total != null ? Math.round(week.total * 10) / 10 : null;
-          const dir = total == null || total === 0 ? 'flat' : total > 0 ? 'down' : 'up';
-          const weekLabel = weekOffset === 0
-            ? t('weight.week')
-            : `${fmtDate(week.days[0].iso)} – ${fmtDate(week.days[6].iso)}`;
-          return (
-            <div
-              className="peso-week"
-              onTouchStart={onWeekTouchStart}
-              onTouchMove={onWeekTouchMove}
-              onTouchEnd={onWeekTouchEnd}
-              onTouchCancel={onWeekTouchEnd}
+        {log.length > 0 ? (
+          <div className="peso-bottom">
+            {weekWidget}
+            <button
+              className={`peso-anadir-btn peso-anadir-btn--square${adding ? ' is-active' : ''}`}
+              style={sqSize ? { width: sqSize, height: sqSize, flexBasis: sqSize } : undefined}
+              onClick={() => { if (!adding) setDraft(rulerStart); setAdding((a) => !a); }}
+              aria-label={t('weight.add')}
+              aria-expanded={adding}
             >
-              <div className="peso-week-head">
-                <div className="peso-week-nav-group">
-                  <button className="peso-week-nav" onClick={goPrevWeek} aria-label={t('weight.prevWeek')}>‹</button>
-                  <span className="peso-week-title">{weekLabel}</span>
-                  <button className="peso-week-nav" onClick={goNextWeek} disabled={weekOffset === 0} aria-label={t('weight.nextWeek')}>›</button>
-                </div>
-                {total == null ? (
-                  <span className="peso-week-total peso-week-total--flat">—</span>
-                ) : (
-                  <span className={`peso-week-total peso-week-total--${dir}`}>
-                    {dir !== 'flat' && (
-                      <span className="peso-week-arrow" aria-hidden="true">{dir === 'down' ? '▼' : '▲'}</span>
-                    )}
-                    {dir === 'flat' ? t('weight.noChange') : `${Math.abs(total)} ${unit}`}
-                  </span>
-                )}
-              </div>
-              <div className="peso-week-days">
-                {week.days.map((d) => {
-                  const dd = fmtDelta(d.delta);
-                  const cls = d.delta == null || d.delta === 0 ? 'flat' : d.delta < 0 ? 'down' : 'up';
-                  return (
-                    <div
-                      key={d.iso}
-                      className={`peso-week-day${d.weight != null ? ' has' : ''}${d.isToday ? ' today' : ''}`}
-                    >
-                      <span className="peso-week-dow">{d.letter}</span>
-                      {d.weight != null && dd != null ? (
-                        <span className={`peso-week-delta peso-week-delta--${cls}`}>{dd}</span>
-                      ) : d.weight != null ? (
-                        <span className="peso-week-dot" aria-hidden="true" />
-                      ) : (
-                        <span className="peso-week-delta peso-week-delta--empty" aria-hidden="true">·</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
+              <span className="peso-anadir-plus">+</span>
+            </button>
+          </div>
+        ) : (!adding && (
+          <button
+            className="peso-anadir-btn peso-anadir-btn--wide"
+            onClick={() => { setDraft(rulerStart); setAdding(true); }}
+            aria-label={t('weight.add')}
+          >
+            <span className="peso-anadir-plus">+</span>
+            <span className="peso-anadir-text">{t('weight.add')}</span>
+          </button>
+        ))}
       </div>
     </SubPage>
   );

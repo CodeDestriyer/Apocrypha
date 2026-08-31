@@ -63,7 +63,7 @@ const DICT = {
   'weight.add': 'Añadir peso',
   'weight.tapEdit': 'toca otra vez',
   'weight.today': 'Hoy',
-  'weight.week': 'Esta semana',
+  'weight.week': 'Semana',
   'weight.prevWeek': 'Semana anterior',
   'weight.nextWeek': 'Semana siguiente',
   'weight.invalid': 'Introduce un peso entre 2 y 400 kg',

@@ -7131,13 +7131,17 @@ body {
 .peso-week-nav:hover { background: rgba(74, 21, 11, 0.08); }
 .peso-week-nav:disabled { opacity: 0.3; cursor: default; }
 .peso-week-title {
-  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.12em;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--text-dim);
-  white-space: nowrap;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
+.peso-week-head { gap: 8px; }
+.peso-week-nav-group { flex: 0 1 auto; }
 .peso-week-total {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-family: 'Cinzel', serif; font-size: 19px; font-weight: 700;
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700;
+  white-space: nowrap;
 }
 .peso-week-arrow { font-size: 12px; line-height: 1; }
 .peso-week-total--down { color: #3f7a4a; }
@@ -7293,3 +7297,41 @@ body {
 }
 
 .peso-add-slide--ruler { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Peso: bottom row — weekly summary + big square "add weight" button ── */
+.peso-bottom { display: flex; gap: 10px; align-items: stretch; }
+.peso-bottom .peso-week { flex: 1 1 auto; min-width: 0; margin-top: 0; }
+
+.peso-anadir-btn--square {
+  flex: 0 0 auto; align-self: stretch;
+  aspect-ratio: 1 / 1; /* fallback before JS measures the week's height */
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.peso-anadir-btn--square .peso-anadir-plus { font-size: 36px; }
+.peso-anadir-btn--square.is-active { background: var(--wine-deep); }
+
+/* Empty state (no weights yet): one wide add button after the graph slot */
+.peso-anadir-btn--wide {
+  flex: 0 0 auto; width: 100%; gap: 8px; padding: 14px;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.peso-anadir-btn--wide .peso-anadir-plus { font-size: 20px; }
+
+/* Ruler reveal drops in just under the graph */
+@keyframes peso-fade-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.peso-add-slide--ruler { animation: peso-fade-drop 0.2s ease; }
+
+/* Settings gear: "Historial" row that opens the full history screen */
+.peso-gear-history {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; margin-top: 4px; padding: 10px 12px;
+  background: transparent; border: 1px solid var(--line); border-radius: 8px;
+  cursor: pointer; text-align: left;
+}
+.peso-gear-history:hover { border-color: var(--gold-dim); }
+.peso-gear-history .peso-history-title { margin: 0; }
+.peso-gear-history .peso-history-caret { margin-left: auto; }
+
+.peso-history--page { margin-top: 4px; }
