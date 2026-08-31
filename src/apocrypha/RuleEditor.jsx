@@ -473,6 +473,7 @@ function insertBreakOutOfInline(editor) {
   range.insertNode(br);
   // Bubble the br up to the flow level, splitting each inline wrapper so the
   // content before it stays wrapped and the content after moves to a clone.
+  const hasReal = (n) => n.textContent.replace(/\u200B/g, '').trim() !== '';
   while (br.parentNode && br.parentNode !== flow) {
     const parent = br.parentNode;
     const after = document.createElement(parent.tagName);
@@ -480,14 +481,29 @@ function insertBreakOutOfInline(editor) {
     let sib = br.nextSibling;
     while (sib) { const nx = sib.nextSibling; after.appendChild(sib); sib = nx; }
     parent.parentNode.insertBefore(br, parent.nextSibling);
-    if (after.childNodes.length) parent.parentNode.insertBefore(after, br.nextSibling);
-    if (!parent.childNodes.length) parent.remove();
+    // Re-wrap the trailing content only when it actually holds text. An empty
+    // clone (the caret sat at the wrapper's end, so the "after" is just a
+    // zero-width space or a browser style-holder) would render as a stray
+    // formatted island on the new line — the yellow ==mark== sliver bug.
+    if (hasReal(after)) parent.parentNode.insertBefore(after, br.nextSibling);
+    if (!hasReal(parent) && !parent.querySelector('br, img')) parent.remove();
   }
   const zwsp = document.createTextNode('\u200B');
   br.parentNode.insertBefore(zwsp, br.nextSibling);
   const r = document.createRange();
   r.setStart(zwsp, 1); r.collapse(true);
   sel.removeAllRanges(); sel.addRange(r);
+  stripEmptyInlineFormats(editor);
+}
+
+// Safety net: remove any empty bold / italic / box / mark wrapper left in the
+// editor (an outline or a yellow ==mark== sliver around nothing). The caret
+// lives in a plain zero-width text node at flow level, never inside one of
+// these, so clearing them never strands the caret.
+function stripEmptyInlineFormats(editor) {
+  editor.querySelectorAll('mark.rule-mark, span.rule-box, strong, b, em, i').forEach((el) => {
+    if (el.textContent.replace(/\u200B/g, '').trim() === '' && !el.querySelector('br, img')) el.remove();
+  });
 }
 
 // Typing "- " at the START of a line turns it into a bullet item on the spot:
