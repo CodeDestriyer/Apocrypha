@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
+import WeightRuler from './WeightRuler.jsx';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
 
 const newId = () =>
@@ -117,11 +118,11 @@ export default function PesoSection({ rootOnBack }) {
     return { days, total, count: logged.length };
   }, [log, weekOffset]);
 
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(null); // numeric weight being dialed on the ruler
   const [entryDate, setEntryDate] = useState(todayISO()); // calendar; defaults to today
   const [adding, setAdding] = useState(false);            // "+" reveals the input
   const [histOpen, setHistOpen] = useState(false);        // history is collapsed by default
-  const [goalDraft, setGoalDraft] = useState('');
+  const [goalDraft, setGoalDraft] = useState(null); // numeric goal on the ruler
   const [menuOpen, setMenuOpen] = useState(false);        // weight settings gear (header)
   const menuRef = useRef(null);
 
@@ -165,12 +166,12 @@ export default function PesoSection({ rootOnBack }) {
     const date = entryDate || todayISO();
     const entry = { id: newId(), weight, date, created_at: new Date().toISOString() };
     setLog((l) => [entry, ...l]);
-    setDraft('');
-    // Keep the chosen date so backfilling a run of past days stays quick.
+    // Keep draft & the chosen date so backfilling a run of past days stays quick.
   };
   const remove = (id) => setLog((l) => l.filter((e) => e.id !== id));
 
-  const toggleMenu = () => { if (!menuOpen) setGoalDraft(goal != null ? String(goal) : ''); setMenuOpen((o) => !o); };
+  const rulerStart = (latest && latest.weight) || goal || 70;
+  const toggleMenu = () => { if (!menuOpen) setGoalDraft(goal != null ? goal : rulerStart); setMenuOpen((o) => !o); };
   const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setMenuOpen(false); };
   const clearGoal = () => { update({ weight_goal: null }); setMenuOpen(false); };
 
@@ -187,17 +188,13 @@ export default function PesoSection({ rootOnBack }) {
       {menuOpen && (
         <div className="cards-gear-menu cards-gear-menu--right peso-gear-menu">
           <label className="cards-field-label">{t('body.goal')}</label>
-          <div className="peso-gear-row">
-            <input
-              className="cards-field-input peso-gear-input"
-              type="number" inputMode="decimal" step="0.1" min="0" autoFocus
-              value={goalDraft}
-              placeholder={t('body.goalPlaceholder')}
-              onChange={(e) => setGoalDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setMenuOpen(false); }}
-            />
-            <span className="peso-input-unit">{unit}</span>
-          </div>
+          <WeightRuler
+            compact
+            value={goalDraft}
+            onChange={setGoalDraft}
+            unit={unit}
+            defaultValue={rulerStart}
+          />
           <div className="peso-gear-actions">
             {goal != null && (
               <button className="cards-secondary-btn peso-gear-clear" onClick={clearGoal}>{t('body.delete')}</button>
@@ -226,7 +223,13 @@ export default function PesoSection({ rootOnBack }) {
 
         <div className="peso-bar">
           {adding ? (
-            <div className="peso-add-slide">
+            <div className="peso-add-slide peso-add-slide--ruler">
+              <WeightRuler
+                value={draft}
+                onChange={setDraft}
+                unit={unit}
+                defaultValue={rulerStart}
+              />
               <div className="peso-input-row peso-input-row--bar">
                 <label
                   className="peso-datechip"
@@ -246,18 +249,10 @@ export default function PesoSection({ rootOnBack }) {
                     aria-label="fecha"
                   />
                 </label>
-                <input
-                  className="cards-field-input peso-input"
-                  type="number" inputMode="decimal" step="0.1" min="0" autoFocus
-                  value={draft}
-                  placeholder={unit}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
-                />
                 <button className="cards-primary-btn peso-save" onClick={submit} disabled={parseWeight(draft) == null}>
                   {t('body.save')}
                 </button>
-                <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(''); }} aria-label={t('cards.close')}>×</button>
+                <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(null); }} aria-label={t('cards.close')}>×</button>
               </div>
             </div>
           ) : (
@@ -269,16 +264,12 @@ export default function PesoSection({ rootOnBack }) {
                   <span className={`peso-history-caret ${histOpen ? 'open' : ''}`} aria-hidden="true">›</span>
                 </button>
               )}
-              <button className="peso-anadir-btn" onClick={() => setAdding(true)} aria-label={t('weight.add')}>
+              <button className="peso-anadir-btn" onClick={() => { setDraft(rulerStart); setAdding(true); }} aria-label={t('weight.add')}>
                 <span className="peso-anadir-plus">+</span>
               </button>
             </>
           )}
         </div>
-
-        {adding && draft.trim() && parseWeight(draft) == null && (
-          <div className="peso-input-error">{t('weight.invalid')}</div>
-        )}
 
         {!adding && histOpen && log.length > 0 && (
           <ul className="peso-history">
