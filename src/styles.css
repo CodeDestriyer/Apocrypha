@@ -5070,6 +5070,11 @@ body {
 .cards-forgot-item:nth-child(odd) { background: rgba(0, 0, 0, 0.03); }
 .cards-forgot-front { font-weight: 600; color: var(--ink); word-break: break-word; }
 .cards-forgot-back { color: var(--text-dim); text-align: right; word-break: break-word; }
+/* A word first missed then re-graded "knew" this session: kept in the list as a
+   record, dimmed with a check so it reads as done rather than still-to-learn. */
+.cards-forgot-item--learned .cards-forgot-front,
+.cards-forgot-item--learned .cards-forgot-back { color: var(--text-dim); opacity: 0.7; }
+.cards-forgot-check { color: #3f9142; font-weight: 700; margin-right: 6px; }
 
 .study-card-stage {
   position: relative;
@@ -5717,6 +5722,7 @@ body {
   font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   color: #8a7d63;
 }
+.card-img-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .card-img-choose { flex: 0 0 auto; max-width: none; padding: 8px 16px; }
 .card-img-preview {
   position: relative;
