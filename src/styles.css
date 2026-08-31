@@ -6974,9 +6974,9 @@ body {
 .pchart {
   position: relative;
   width: 100%; height: 220px;
-  /* Hero panel: heavier warm frame + wine accent edge + lift, so the graph
-     reads as the focal card rather than one more document rule. */
-  border: 1.5px solid var(--gold-dim); border-top: 3px solid var(--wine);
+  /* Hero panel: heavier warm frame + lift, so the graph reads as the focal
+     card rather than one more document rule. */
+  border: 1.5px solid var(--gold-dim);
   border-radius: 10px; background: var(--paper);
   box-shadow: var(--shadow);
   overflow: hidden;
@@ -7110,9 +7110,9 @@ body {
 .peso-week {
   display: flex; flex-direction: column; gap: 10px;
   margin-top: 4px; padding: 14px 14px 12px;
-  /* Secondary hero: elevated card with a brick accent edge — subordinate to
-     the graph, but with enough weight that the week total isn't forgotten. */
-  border: 1.5px solid var(--gold-dim); border-top: 2px solid var(--gold);
+  /* Secondary hero: elevated card — subordinate to the graph, but with enough
+     weight that the week total isn't forgotten. */
+  border: 1.5px solid var(--gold-dim);
   border-radius: 10px;
   background: var(--paper);
   box-shadow: var(--shadow);
@@ -7319,9 +7319,19 @@ body {
 }
 .peso-anadir-btn--wide .peso-anadir-plus { font-size: 20px; }
 
-/* Ruler reveal drops in just under the graph */
-@keyframes peso-fade-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-.peso-add-slide--ruler { animation: peso-fade-drop 0.2s ease; }
+/* Bottom slot: weekly widget and ruler swap horizontally on "+" ---------- */
+.peso-swap { position: relative; overflow: hidden; transition: height 0.28s ease; }
+.peso-swap-panel {
+  position: absolute; top: 0; left: 0; width: 100%;
+  transition: transform 0.28s ease;
+}
+/* Week starts centred; slides out to the left when adding. */
+.peso-swap-week { transform: translateX(0); }
+.peso-swap-week.is-hidden-left { transform: translateX(-101%); pointer-events: none; }
+/* Ruler waits off to the right; slides in to centre when adding. */
+.peso-swap-ruler { transform: translateX(101%); pointer-events: none; }
+.peso-swap-ruler.is-shown { transform: translateX(0); pointer-events: auto; }
+.peso-add-slide--ruler { display: flex; flex-direction: column; gap: 12px; }
 
 /* Settings gear: "Historial" row that opens the full history screen */
 .peso-gear-history {

@@ -128,6 +128,10 @@ export default function PesoSection({ rootOnBack }) {
   // Square "+" button: sized to the weekly widget's height so it reads square.
   const weekRef = useRef(null);
   const [sqSize, setSqSize] = useState(0);
+  // Horizontal swap between the weekly widget and the ruler in the bottom slot.
+  const weekPanelRef = useRef(null);
+  const rulerPanelRef = useRef(null);
+  const [swapH, setSwapH] = useState(0);
 
   // Horizontal swipe on the week block → change week (right = older, left = newer).
   const weekTouch = useRef({ x: 0, y: 0, active: false, locked: null });
@@ -169,7 +173,20 @@ export default function PesoSection({ rootOnBack }) {
     const ro = new ResizeObserver(() => setSqSize(el.offsetHeight));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [log.length, adding, showHistory]);
+  }, [log.length, showHistory]);
+
+  // The bottom slot's height follows whichever panel is showing (week vs
+  // ruler), so the horizontal swap doesn't leave dead space or clip.
+  useLayoutEffect(() => {
+    const wk = weekPanelRef.current, rl = rulerPanelRef.current;
+    if (!wk || !rl) return;
+    const apply = () => setSwapH(adding ? rl.offsetHeight : wk.offsetHeight);
+    apply();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(apply);
+    ro.observe(wk); ro.observe(rl);
+    return () => ro.disconnect();
+  }, [adding, log.length, showHistory]);
 
   const setLog = (updater) =>
     update((curr) => ({ weight_log: updater(Array.isArray(curr.weight_log) ? curr.weight_log : []) }));
@@ -253,8 +270,9 @@ export default function PesoSection({ rootOnBack }) {
     );
   }
 
-  // The add-weight ruler, revealed just under the graph by the "+" button.
-  const addBlock = adding ? (
+  // The add-weight ruler. Kept mounted so it can slide in/out of the bottom
+  // slot (swapping horizontally with the weekly widget) when "+" is pressed.
+  const addBlock = (
     <div className="peso-add-slide peso-add-slide--ruler">
       <WeightRuler value={draft} onChange={setDraft} unit={unit} defaultValue={rulerStart} />
       <div className="peso-input-row peso-input-row--bar">
@@ -282,7 +300,7 @@ export default function PesoSection({ rootOnBack }) {
         <button className="peso-add-close" onClick={() => { setAdding(false); setDraft(null); }} aria-label={t('cards.close')}>×</button>
       </div>
     </div>
-  ) : null;
+  );
 
   const weekWidget = (() => {
     const total = week.total != null ? Math.round(week.total * 10) / 10 : null;
@@ -356,22 +374,40 @@ export default function PesoSection({ rootOnBack }) {
           <WeightGraph log={log} goal={goal} />
         )}
 
-        {addBlock}
-
         {log.length > 0 ? (
-          <div className="peso-bottom">
-            {weekWidget}
-            <button
-              className={`peso-anadir-btn peso-anadir-btn--square${adding ? ' is-active' : ''}`}
-              style={sqSize ? { width: sqSize, height: sqSize, flexBasis: sqSize } : undefined}
-              onClick={() => { if (!adding) setDraft(rulerStart); setAdding((a) => !a); }}
-              aria-label={t('weight.add')}
-              aria-expanded={adding}
+          // Bottom slot: the weekly widget and the ruler swap horizontally.
+          // Tapping "+" slides the week out to the left and the ruler in from
+          // the right; the ruler's "×" slides it back.
+          <div className="peso-swap" style={swapH ? { height: swapH } : undefined}>
+            <div
+              ref={weekPanelRef}
+              className={`peso-swap-panel peso-swap-week${adding ? ' is-hidden-left' : ''}`}
+              aria-hidden={adding}
             >
-              <span className="peso-anadir-plus">+</span>
-            </button>
+              <div className="peso-bottom">
+                {weekWidget}
+                <button
+                  className="peso-anadir-btn peso-anadir-btn--square"
+                  style={sqSize ? { width: sqSize, height: sqSize, flexBasis: sqSize } : undefined}
+                  onClick={() => { setDraft(rulerStart); setAdding(true); }}
+                  aria-label={t('weight.add')}
+                  aria-expanded={adding}
+                >
+                  <span className="peso-anadir-plus">+</span>
+                </button>
+              </div>
+            </div>
+            <div
+              ref={rulerPanelRef}
+              className={`peso-swap-panel peso-swap-ruler${adding ? ' is-shown' : ''}`}
+              aria-hidden={!adding}
+            >
+              {addBlock}
+            </div>
           </div>
-        ) : (!adding && (
+        ) : adding ? (
+          addBlock
+        ) : (
           <button
             className="peso-anadir-btn peso-anadir-btn--wide"
             onClick={() => { setDraft(rulerStart); setAdding(true); }}
@@ -380,7 +416,7 @@ export default function PesoSection({ rootOnBack }) {
             <span className="peso-anadir-plus">+</span>
             <span className="peso-anadir-text">{t('weight.add')}</span>
           </button>
-        ))}
+        )}
       </div>
     </SubPage>
   );
