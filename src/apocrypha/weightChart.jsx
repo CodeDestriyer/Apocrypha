@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLang } from '../i18n.jsx';
 
 // Geometry for the weight line chart. Works in a 100×100 SVG box (rendered
 // with preserveAspectRatio="none" + non-scaling strokes), so the same paths
@@ -75,13 +76,30 @@ export function WeightSpark({ log, className = '' }) {
 // makes it a static read-only chart.
 const DAY = 864e5;
 export function WeightGraph({ log, goal, interactive = true, compact = false }) {
+  const { t: tr } = useLang();
   const ref = useRef(null);
+  const menuRef = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [domain, setDomain] = useState(null); // [t0,t1] visible time window, null = full
   const [yDomain, setYDomain] = useState(null); // [lo,hi] weight window, null = auto-fit
+  // Line vs. candlestick, remembered per browser. Candles are one-per-day:
+  // body = first→last weigh-in of the day (green when the day ended lower).
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem('peso.chartMode') === 'candle' ? 'candle' : 'line'; } catch { return 'line'; }
+  });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pickMode = (m) => { setMode(m); setMenuOpen(false); try { localStorage.setItem('peso.chartMode', m); } catch {} };
   const pointers = useRef(new Map());
   const gesture = useRef(null);
   const clipId = useRef('pchart-clip-' + Math.random().toString(36).slice(2)).current;
+
+  // Close the chart menu on an outside click.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -293,6 +311,37 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
       onDoubleClick: resetView,
     } : {};
 
+    // One candle per day: body = first→last weigh-in of the day (no wicks),
+    // green when the day closed lower (weight lost), red when higher. Candles
+    // are for the main chart only; the compact Hero cube always draws a line.
+    const showCandles = mode === 'candle' && !compact;
+    let candles = null;
+    if (showCandles) {
+      const dayMap = new Map();
+      for (const e of (Array.isArray(log) ? log : [])) {
+        const wv = Number(e.weight);
+        const dstr = e.date || (e.created_at ? String(e.created_at).slice(0, 10) : '');
+        const tt = Date.parse(dstr);
+        if (!Number.isFinite(wv) || !Number.isFinite(tt)) continue;
+        const ct = Date.parse(e.created_at || '') || 0;
+        const cur = dayMap.get(dstr);
+        if (!cur) dayMap.set(dstr, { t: tt, open: wv, close: wv, openCt: ct, closeCt: ct });
+        else {
+          if (ct < cur.openCt) { cur.open = wv; cur.openCt = ct; }
+          if (ct >= cur.closeCt) { cur.close = wv; cur.closeCt = ct; }
+        }
+      }
+      const dayPx = plotW / Math.max(1, (t1 - t0) / DAY);
+      const cw = Math.max(2, Math.min(16, dayPx * 0.62));
+      candles = [...dayMap.values()].sort((a, b) => a.t - b.t).map((c) => {
+        const yO = Y(c.open), yC = Y(c.close);
+        const top = Math.min(yO, yC);
+        const bh = Math.max(1.4, Math.abs(yO - yC));
+        const dir = c.close < c.open ? 'down' : c.close > c.open ? 'up' : 'flat';
+        return { key: c.t, x: X(c.t) - cw / 2, y: top, w: cw, h: bh, dir };
+      });
+    }
+
     svg = (
       <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="pchart-svg" role="img" {...handlers}>
         <defs><clipPath id={clipId}><rect x={padL} y={0} width={plotW} height={H} /></clipPath></defs>
@@ -307,8 +356,16 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
         ))}
         {gy != null && <line className="pchart-goal" x1={padL} y1={gy} x2={w - padR} y2={gy} />}
         <g clipPath={`url(#${clipId})`}>
-          <path className="pchart-line" d={line} />
-          {lastVisible && <circle className="pchart-dot" cx={last.x} cy={last.y} r={compact ? 2.6 : 3.5} />}
+          {showCandles ? (
+            candles.map((c) => (
+              <rect key={c.key} className={`pchart-candle pchart-candle--${c.dir}`} x={c.x} y={c.y} width={c.w} height={c.h} rx={1} />
+            ))
+          ) : (
+            <>
+              <path className="pchart-line" d={line} />
+              {lastVisible && <circle className="pchart-dot" cx={last.x} cy={last.y} r={compact ? 2.6 : 3.5} />}
+            </>
+          )}
         </g>
       </svg>
     );
@@ -317,6 +374,27 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
   return (
     <div className={`pchart ${compact ? 'pchart--compact' : ''} ${interactive ? '' : 'pchart--static'}`} ref={ref}>
       {svg}
+      {interactive && !compact && (
+        <div className="pchart-gear" ref={menuRef}>
+          <button
+            className="pchart-gear-btn"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={tr('weight.chartView')}
+            aria-expanded={menuOpen}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="pchart-menu">
+              <button className={`pchart-menu-item${mode === 'line' ? ' is-active' : ''}`} onClick={() => pickMode('line')}>{tr('weight.chartLine')}</button>
+              <button className={`pchart-menu-item${mode === 'candle' ? ' is-active' : ''}`} onClick={() => pickMode('candle')}>{tr('weight.chartCandle')}</button>
+            </div>
+          )}
+        </div>
+      )}
       {interactive && (domain || yDomain) && (
         <button className="pchart-reset" onClick={resetView} aria-label="reset">⟲</button>
       )}

@@ -7053,6 +7053,33 @@ body {
 .pchart-goal { stroke: #3f8a45; stroke-width: 1.4; stroke-dasharray: 5 3; opacity: 0.9; }
 .pchart-line { fill: none; stroke: var(--wine); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
 .pchart-dot { fill: var(--wine); stroke: var(--paper); stroke-width: 1.5; }
+/* Candlestick mode: one candle per day, green when the day closed lower
+   (weight lost), red when higher — matching the weekly widget's colors. */
+.pchart-candle { stroke: none; }
+.pchart-candle--down { fill: #3f7a4a; }
+.pchart-candle--up   { fill: var(--danger); }
+.pchart-candle--flat { fill: var(--gold-dim); }
+/* Chart view gear (line vs. candles), top-left so it clears the reset ⟲. */
+.pchart-gear { position: absolute; top: 6px; left: 6px; }
+.pchart-gear-btn {
+  width: 26px; height: 26px; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--cream); color: var(--wine); cursor: pointer;
+}
+.pchart-gear-btn:hover { border-color: var(--gold-dim); background: #efe7df; }
+.pchart-menu {
+  position: absolute; top: 30px; left: 0; z-index: 5;
+  display: flex; flex-direction: column; min-width: 108px;
+  border: 1px solid var(--gold-dim); border-radius: 8px;
+  background: var(--paper); box-shadow: var(--shadow); overflow: hidden;
+}
+.pchart-menu-item {
+  padding: 8px 12px; text-align: left; background: none; border: none;
+  font-family: 'Inter', 'EB Garamond', sans-serif; font-size: 13px;
+  color: var(--text); cursor: pointer;
+}
+.pchart-menu-item:hover { background: var(--cream); }
+.pchart-menu-item.is-active { color: var(--wine); font-weight: 600; background: #efe7df; }
 
 .peso-input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .peso-date {
