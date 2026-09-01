@@ -311,9 +311,10 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
       onDoubleClick: resetView,
     } : {};
 
-    // One candle per day: body = first→last weigh-in of the day (no wicks),
-    // green when the day closed lower (weight lost), red when higher. Candles
-    // are for the main chart only; the compact Hero cube always draws a line.
+    // One candle per day, day-over-day: open = previous logged day's weight,
+    // close = this day's weight (the day's last weigh-in). Green when the day
+    // ended lower (weight lost), red when higher. This gives real bodies even
+    // when you weigh once a day. Main chart only; Hero cube stays a line.
     const showCandles = mode === 'candle' && !compact;
     let candles = null;
     if (showCandles) {
@@ -325,20 +326,19 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
         if (!Number.isFinite(wv) || !Number.isFinite(tt)) continue;
         const ct = Date.parse(e.created_at || '') || 0;
         const cur = dayMap.get(dstr);
-        if (!cur) dayMap.set(dstr, { t: tt, open: wv, close: wv, openCt: ct, closeCt: ct });
-        else {
-          if (ct < cur.openCt) { cur.open = wv; cur.openCt = ct; }
-          if (ct >= cur.closeCt) { cur.close = wv; cur.closeCt = ct; }
-        }
+        if (!cur || ct >= cur.ct) dayMap.set(dstr, { t: tt, w: wv, ct });
       }
+      const daysArr = [...dayMap.values()].sort((a, b) => a.t - b.t);
       const dayPx = plotW / Math.max(1, (t1 - t0) / DAY);
-      const cw = Math.max(2, Math.min(16, dayPx * 0.62));
-      candles = [...dayMap.values()].sort((a, b) => a.t - b.t).map((c) => {
-        const yO = Y(c.open), yC = Y(c.close);
+      const cw = Math.max(2.5, Math.min(16, dayPx * 0.7));
+      candles = daysArr.map((d, i) => {
+        const open = i > 0 ? daysArr[i - 1].w : d.w; // first candle has no prior day → flat
+        const close = d.w;
+        const yO = Y(open), yC = Y(close);
         const top = Math.min(yO, yC);
         const bh = Math.max(1.4, Math.abs(yO - yC));
-        const dir = c.close < c.open ? 'down' : c.close > c.open ? 'up' : 'flat';
-        return { key: c.t, x: X(c.t) - cw / 2, y: top, w: cw, h: bh, dir };
+        const dir = close < open ? 'down' : close > open ? 'up' : 'flat';
+        return { key: d.t, x: X(d.t) - cw / 2, y: top, w: cw, h: bh, dir };
       });
     }
 
