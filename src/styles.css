@@ -6488,6 +6488,15 @@ body {
   max-width: 100%;
 }
 .rule-note-body .rule-block-box { padding: 4px 7px; margin: 5px 0; border-radius: 4px; }
+/* Nested blocks combine (a box around columns, columns inside a box): the outer
+   block's padding already spaces things, so drop the inner block's edge margins
+   that would otherwise double it up. */
+.rule-block-box > .rule-cols:first-child,
+.rule-col > .rule-block-box:first-child,
+.rule-block-box > .rule-block-box:first-child { margin-top: 0; }
+.rule-block-box > .rule-cols:last-child,
+.rule-col > .rule-block-box:last-child,
+.rule-block-box > .rule-block-box:last-child { margin-bottom: 0; }
 
 /* Columns — whole-line blocks laid out side by side; wrap on narrow screens.
    Centred vertically so a "+" / short cell lines up with a tall framed cell. */

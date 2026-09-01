@@ -157,6 +157,28 @@ const isCols = (c) =>
   c.nodeType === Node.ELEMENT_NODE && c.tagName === 'DIV' && c.classList.contains('rule-cols');
 const isCol = (c) =>
   c.nodeType === Node.ELEMENT_NODE && c.tagName === 'DIV' && c.classList.contains('rule-col');
+// A whole-line block: a columns layout or a block box. Boxes and columns nest,
+// so these are the nodes the wrappers may find sitting on a line and must treat
+// as one atomic unit (never split, never half-swallow into a neighbouring line).
+const isBlockNode = (c) => !!c && (isCols(c) || isBox(c));
+
+// The direct child of `flow` that `container` lives under (or null if container
+// isn't inside flow). `flow` is the editor, or a column / box the caret sits in
+// — see lineFlow — so this is "which line-level node of the current flow".
+function topChild(flow, container) {
+  let n = container;
+  while (n && n.parentNode !== flow) n = n.parentNode;
+  return n && n.parentNode === flow ? n : null;
+}
+// Does the selection sit on a whole-line block (columns / box) of its flow? True
+// when either end lands on such a node — the case where a box button should frame
+// the WHOLE block (e.g. draw a box around an existing columns layout) rather than
+// treat it as an inline word. A word inside a column has its flow narrowed to
+// that column, so its ends are plain text there and this stays false.
+function coversBlock(flow, range) {
+  return isBlockNode(topChild(flow, range.startContainer)) ||
+         isBlockNode(topChild(flow, range.endContainer));
+}
 
 // Editor DOM → marker string. Block boxes become [[[ … ]]] fences and column
 // layouts [[[cols … ]]] fences (columns separated by |||) on their own lines;
@@ -241,10 +263,8 @@ function inlineToggle(editor, range, kind) {
 }
 
 // ── block box (big frame around whole lines) ────────────────────────────────
-function topIndex(editor, container) {
-  let n = container;
-  while (n && n.parentNode !== editor) n = n.parentNode;
-  return Array.from(editor.childNodes).indexOf(n);
+function topIndex(flow, container) {
+  return Array.from(flow.childNodes).indexOf(topChild(flow, container));
 }
 function enclosingBox(node, editor) {
   let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
@@ -259,32 +279,39 @@ function unwrapBox(editor, box) {
   if (after && after.nodeName !== 'BR') p.insertBefore(document.createElement('br'), box);
   p.removeChild(box);
 }
-// The selection spans more than one visual line at the editor's top level.
-function isMultiLine(editor, range) {
-  const kids = Array.from(editor.childNodes);
+// The selection spans more than one visual line at `flow`'s top level (the flow
+// is the editor, or a column / box the selection sits inside — so this measures
+// lines within the current block, letting columns be made inside a box).
+function isMultiLine(flow, range) {
+  const kids = Array.from(flow.childNodes);
   const lineOf = (container) => {
-    const idx = topIndex(editor, container);
+    const idx = topIndex(flow, container);
     let ln = 0;
     for (let k = 0; k < idx; k++) if (kids[k].nodeName === 'BR') ln++;
     return ln;
   };
   return lineOf(range.startContainer) !== lineOf(range.endContainer);
 }
-// Wrap every whole line the selection touches into one block box. Returns it.
-function wrapLinesInBox(editor, range) {
-  const kids = Array.from(editor.childNodes);
-  let i = topIndex(editor, range.startContainer), j = topIndex(editor, range.endContainer);
+// Wrap every whole line the selection touches into one block box, inside `flow`
+// (the editor or the column/box the selection lives in). A whole-line block
+// (columns / another box) counts as one line: the extension neither splits it
+// nor reaches past it into a neighbouring line, so framing a columns layout
+// boxes exactly that layout — this is how columns get wrapped in a box. Returns
+// the new box.
+function wrapLinesInBox(flow, range) {
+  const kids = Array.from(flow.childNodes);
+  let i = topIndex(flow, range.startContainer), j = topIndex(flow, range.endContainer);
   if (i < 0 || j < 0) return null;
   if (i > j) { const t = i; i = j; j = t; }
-  while (i > 0 && kids[i - 1].nodeName !== 'BR') i--;
-  while (j < kids.length - 1 && kids[j + 1].nodeName !== 'BR') j++;
+  while (i > 0 && !isBlockNode(kids[i]) && !isBlockNode(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
+  while (j < kids.length - 1 && !isBlockNode(kids[j]) && !isBlockNode(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
   const box = document.createElement('div');
   box.className = 'rule-block-box';
   const ref = kids[j + 1] || null;
   const frag = document.createDocumentFragment();
   for (let k = i; k <= j; k++) frag.appendChild(kids[k]);
   box.appendChild(frag);
-  editor.insertBefore(box, ref);
+  flow.insertBefore(box, ref);
   // The block div supplies its own line break; drop a redundant BR after it.
   if (box.nextSibling && box.nextSibling.nodeName === 'BR') box.parentNode.removeChild(box.nextSibling);
   return box;
@@ -302,14 +329,16 @@ function enclosingCols(node, editor) {
 // between them — but a freshly typed one carries caret scaffolding (a zero-width
 // text node, an empty style-holder inline) between the <br>s, so the second <br>
 // is found by skipping blank nodes, not by requiring the two to be adjacent.
-// Returns the new columns block.
-function wrapLinesInCols(editor, range) {
-  const kids = Array.from(editor.childNodes);
-  let i = topIndex(editor, range.startContainer), j = topIndex(editor, range.endContainer);
+// Returns the new columns block. Works inside `flow` (the editor or a box the
+// selection sits in — so a multi-line selection inside a box becomes columns
+// within that box) and treats a nested whole-line block as one line.
+function wrapLinesInCols(flow, range) {
+  const kids = Array.from(flow.childNodes);
+  let i = topIndex(flow, range.startContainer), j = topIndex(flow, range.endContainer);
   if (i < 0 || j < 0) return null;
   if (i > j) { const t = i; i = j; j = t; }
-  while (i > 0 && kids[i - 1].nodeName !== 'BR') i--;
-  while (j < kids.length - 1 && kids[j + 1].nodeName !== 'BR') j++;
+  while (i > 0 && !isBlockNode(kids[i]) && !isBlockNode(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
+  while (j < kids.length - 1 && !isBlockNode(kids[j]) && !isBlockNode(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
   const nodes = [];
   for (let k = i; k <= j; k++) nodes.push(kids[k]);
   const ref = kids[j + 1] || null;
@@ -347,7 +376,7 @@ function wrapLinesInCols(editor, range) {
   }
   pushCol();
   if (!cols.children.length) return null; // nothing to lay out
-  editor.insertBefore(cols, ref);
+  flow.insertBefore(cols, ref);
   // The block supplies its own break; drop any blank line left right after it.
   while (cols.nextSibling && cols.nextSibling.nodeName === 'BR') cols.parentNode.removeChild(cols.nextSibling);
   return cols;
@@ -708,22 +737,29 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     const sel = liveSelection();
     if (!el || !sel) return;
     const range = sel.getRangeAt(0);
+    const cac = range.commonAncestorContainer;
     // Nothing but whitespace selected → there is nothing to frame or mark, so
     // don't create an empty box/mark/block (the stray-outline bug). Unwrapping
     // an existing box still works: those always hold real text.
-    if (isEmptyContent(sel.toString()) && !enclosingBox(range.commonAncestorContainer, el)
-        && !enclosingCols(range.commonAncestorContainer, el)) return;
+    if (isEmptyContent(sel.toString()) && !enclosingBox(cac, el)
+        && !enclosingCols(cac, el)) return;
     checkpoint(); // a box/mark/cols toggle is its own undo step
+    // The flow the selection lives in: the editor, or the column / box it sits
+    // inside. Boxing and columns act within that flow, so a box can be drawn
+    // around columns, and columns can be made inside a box — the two combine.
+    const flow = lineFlow(el, cac);
     let selectAfter = null;
     if (kind === 'box') {
-      const box = enclosingBox(range.commonAncestorContainer, el);
+      const box = enclosingBox(cac, el);
       if (box) unwrapBox(el, box);
-      else if (isMultiLine(el, range)) selectAfter = wrapLinesInBox(el, range);
+      // Multi-line selection, or a selection landing on a whole-line block
+      // (e.g. an existing columns layout): frame it as a block box.
+      else if (isMultiLine(flow, range) || coversBlock(flow, range)) selectAfter = wrapLinesInBox(flow, range);
       else inlineToggle(el, range, 'box');
     } else if (kind === 'cols') {
-      const cols = enclosingCols(range.commonAncestorContainer, el);
+      const cols = enclosingCols(cac, el);
       if (cols) unwrapCols(el, cols);
-      else if (isMultiLine(el, range)) selectAfter = wrapLinesInCols(el, range);
+      else if (isMultiLine(flow, range)) selectAfter = wrapLinesInCols(flow, range);
       // single-line selection: columns need several lines — do nothing
     } else {
       inlineToggle(el, range, kind);
