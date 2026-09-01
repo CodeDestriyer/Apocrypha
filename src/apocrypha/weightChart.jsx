@@ -331,15 +331,33 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
       const daysArr = [...dayMap.values()].sort((a, b) => a.t - b.t);
       const dayPx = plotW / Math.max(1, (t1 - t0) / DAY);
       const cw = Math.max(2.5, Math.min(16, dayPx * 0.7));
-      candles = daysArr.map((d, i) => {
-        const open = i > 0 ? daysArr[i - 1].w : d.w; // first candle has no prior day → flat
-        const close = d.w;
-        const yO = Y(open), yC = Y(close);
-        const top = Math.min(yO, yC);
-        const bh = Math.max(1.4, Math.abs(yO - yC));
-        const dir = close < open ? 'down' : close > open ? 'up' : 'flat';
-        return { key: d.t, x: X(d.t) - cw / 2, y: top, w: cw, h: bh, dir };
-      });
+      candles = [];
+      if (daysArr.length) {
+        // Walk every calendar day between the first and last weigh-in. Logged
+        // days get a day-over-day body; gap days (no weigh-in) get a flat doji
+        // carried forward from the last known weight, so the axis stays solid.
+        const wByDay = new Map(daysArr.map((d) => [d.t, d.w]));
+        const firstT = daysArr[0].t, lastT = daysArr[daysArr.length - 1].t;
+        let carry = null;
+        for (let tt = firstT; tt <= lastT; tt += DAY) {
+          const logged = wByDay.get(tt);
+          let open, close, dir;
+          if (logged != null) {
+            open = carry != null ? carry : logged; // first candle has no prior day → flat
+            close = logged;
+            dir = close < open ? 'down' : close > open ? 'up' : 'flat';
+            carry = close;
+          } else {
+            if (carry == null) continue;
+            open = close = carry; // gap day: flat doji at the carried weight
+            dir = 'flat';
+          }
+          const yO = Y(open), yC = Y(close);
+          const top = Math.min(yO, yC);
+          const bh = Math.max(1.4, Math.abs(yO - yC));
+          candles.push({ key: tt, x: X(tt) - cw / 2, y: top, w: cw, h: bh, dir });
+        }
+      }
     }
 
     svg = (
