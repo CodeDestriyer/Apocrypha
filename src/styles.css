@@ -6525,8 +6525,8 @@ body {
 .rule-para + .rule-table, .rule-table + .rule-para,
 .rule-para + .rule-hr, .rule-hr + .rule-para { margin-top: 4px; }
 .rule-hr {
-  border: none; height: 1px; margin: 12px 0;
-  background: var(--gold-dim); opacity: 0.7;
+  border: none; height: 2px; margin: 12px 0;
+  background: var(--ink); opacity: 1; border-radius: 1px;
 }
 .rule-table {
   border-collapse: collapse; width: 100%;

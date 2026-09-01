@@ -79,6 +79,10 @@ const isPlusOnly = (cellLines) => cellLines.join('\n').trim() === '+';
 // needed when rows are added or deleted). domToMarkers turns each <tr> back into
 // one `cell | cell` line, so the stored format never changes.
 const isTableLine = (l) => l.includes('|') && l !== '|||';
+// A `---` line is a horizontal divider (same rule as the read view). In the
+// editor it becomes a real <hr> so it shows as the finished line straight away,
+// not raw `---` text.
+const isDividerLine = (l) => /^\s*-{3,}\s*$/.test(l);
 // Split one stored table line into trimmed cells, dropping a leading/trailing
 // empty cell so `| a | b |` and `a | b` parse the same (mirrors RuleTable).
 function parseTableCells(line) {
@@ -153,7 +157,8 @@ function blocksToHtml(lines) {
         html += `<div class="rule-block-box">${blocksToHtml(inner)}</div>`;
       }
       i = j + 1;
-    } else if (isTableLine(lines[i])) { flushRun(); tbl.push(lines[i]); i++; }
+    } else if (isDividerLine(lines[i])) { flushRun(); flushTable(); html += '<hr class="rule-hr">'; i++; }
+    else if (isTableLine(lines[i])) { flushRun(); tbl.push(lines[i]); i++; }
     else { flushTable(); run.push(lines[i]); i++; }
   }
   flushRun(); flushTable();
@@ -223,10 +228,12 @@ function coversBlock(flow, range) {
 }
 
 const isTable = (c) => c.nodeType === Node.ELEMENT_NODE && c.tagName === 'TABLE';
+const isHr = (c) => c.nodeType === Node.ELEMENT_NODE && c.tagName === 'HR';
 // Whole-line nodes the box/columns wrappers must never split or half-swallow
-// into a neighbouring line: columns, a box, or a table. (Framing a WHOLE block —
-// coversBlock — stays columns/box only; a table has its own editing controls.)
-const isAtomicLine = (c) => isBlockNode(c) || isTable(c);
+// into a neighbouring line: columns, a box, a table, or a divider. (Framing a
+// WHOLE block — coversBlock — stays columns/box only; a table/divider is its
+// own atom the extension just stops at.)
+const isAtomicLine = (c) => isBlockNode(c) || isTable(c) || isHr(c);
 // A cell is single-line, so strip any stray break/zero-width scaffolding out of
 // its serialized text before it joins a `cell | cell` line.
 const cellMarkers = (cell) => inlineSerialize(cell).replace(/[\n\u200B]/g, '').trim();
@@ -269,6 +276,10 @@ function domToMarkers(root) {
         const cells = Array.from(tr.children).filter((x) => x.tagName === 'TD' || x.tagName === 'TH');
         if (cells.length) out.push(cells.map(cellMarkers).join(' | '));
       });
+    } else if (isHr(c)) {
+      // A divider is its own `---` line.
+      if (cur !== '') flush();
+      out.push('---');
     } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
       flush();
     } else if (c.nodeType === Node.ELEMENT_NODE && (c.tagName === 'DIV' || c.tagName === 'P')) {
@@ -475,6 +486,8 @@ function blockFlowAt(editor, node) {
 function isBlank(n) {
   if (!n) return true;
   if (n.nodeName === 'BR') return true;
+  // A divider / table renders no text but is real content, never blank scaffolding.
+  if (n.nodeName === 'HR' || n.nodeName === 'TABLE') return false;
   if (n.nodeType === Node.TEXT_NODE) return n.textContent.replace(/\u200B/g, '') === '';
   if (n.nodeType === Node.ELEMENT_NODE) return n.textContent.replace(/\u200B/g, '') === '' && !n.querySelector('br, img');
   return false;
@@ -914,12 +927,31 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     while (n && n.parentNode !== el) n = n.parentNode;
     return n && n.parentNode === el ? n : null;
   };
-  const insertBlock = (text) => {
+  // Drop a real <hr> divider on its own line at the caret, so it shows as the
+  // finished line at once (like the table), then land the caret on a plain line
+  // right after it to keep typing.
+  const insertDivider = () => {
+    const el = ref.current;
     ensureCaret();
     checkpoint(); // inserting a divider is its own undo step
-    document.execCommand('insertText', false, `\n${text}\n`);
+    const hr = document.createElement('hr');
+    hr.className = 'rule-hr';
+    const top = caretTopNode();
+    if (top) el.insertBefore(hr, top.nextSibling);
+    else el.appendChild(hr);
+    // A plain line after the divider to click/type into.
+    if (!hr.nextSibling || hr.nextSibling.nodeName !== 'DIV') {
+      const holder = document.createElement('div');
+      holder.appendChild(document.createElement('br'));
+      el.insertBefore(holder, hr.nextSibling);
+    }
+    const after = hr.nextSibling;
+    const r = document.createRange();
+    r.setStart(after, 0); r.collapse(true);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
     setBlock(null);
     emit();
+    syncBars();
   };
   // Drop a fresh editable table (2×2, header + one row) at the caret's line and
   // land the caret in its first cell.
@@ -1141,7 +1173,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
             <span>{t('reglas.table')}</span>
           </button>
           <button className="rule-ctx-item" onMouseDown={(e) => e.preventDefault()}
-            onClick={() => insertBlock('---')}>
+            onClick={insertDivider}>
             <span className="rule-ctx-glyph" aria-hidden="true">—</span>
             <span>{t('reglas.divider')}</span>
           </button>
