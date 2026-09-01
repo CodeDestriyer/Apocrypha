@@ -77,6 +77,8 @@ const DICT = {
   'weight.chartView': 'Vista',
   'weight.chartLine': 'Línea',
   'weight.chartCandle': 'Velas',
+  'weight.drawLine': 'Dibujar línea',
+  'weight.clearLines': 'Borrar líneas',
   'habits.title': 'Hábitos',
   'habits.placeholder': '¿Qué quieres dejar?',
   'habits.empty': 'Añade algo que quieras dejar y cuenta el tiempo sin recaer.',
