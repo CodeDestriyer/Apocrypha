@@ -7067,6 +7067,9 @@ body {
 /* User-drawn straight trend lines. */
 .pchart-trend { stroke: var(--gold-bright); stroke-width: 1.6; stroke-linecap: round; }
 .pchart-trend--draft { stroke-dasharray: 4 3; opacity: 0.75; }
+.pchart-trend-hit { fill: transparent; pointer-events: all; cursor: grab; }
+.pchart-trend-hit:active { cursor: grabbing; }
+.pchart-trend-handle { fill: var(--paper); stroke: var(--gold-bright); stroke-width: 1.8; pointer-events: none; }
 /* Chart view gear (line/candles + trend-line tool), in the top-right toolbar. */
 .pchart-gear { position: relative; }
 .pchart-gear-btn {

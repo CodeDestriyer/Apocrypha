@@ -259,7 +259,21 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
       gesture.current = { mode: 'pan', startX: e.clientX, startY: e.clientY, t0, t1, yLo, yHi };
     }
   };
+  // Grab one endpoint of an existing line to drag it (the other end stays put).
+  const onHandleDown = (e, idx, end) => {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    gesture.current = { mode: 'edit', idx, end, arr: null };
+  };
   const onPointerMove = (e) => {
+    if (gesture.current?.mode === 'edit') {
+      const { idx, end } = gesture.current;
+      const p = { t: xToTime(e.clientX), v: yToVal(e.clientY) };
+      const next = lines.map((ln, i) => (i === idx ? { ...ln, [end]: p } : ln));
+      gesture.current.arr = next;
+      setLines(next);
+      return;
+    }
     if (gesture.current?.mode === 'draw') {
       if (!drawRef.current) return;
       gesture.current.moved = true;
@@ -293,6 +307,12 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
     }
   };
   const onPointerUp = (e) => {
+    if (gesture.current?.mode === 'edit') {
+      const arr = gesture.current.arr;
+      gesture.current = null;
+      if (arr) saveLines(arr); // persist the moved endpoint
+      return;
+    }
     if (gesture.current?.mode === 'draw') {
       const dl = drawRef.current;
       const moved = gesture.current.moved;
@@ -429,6 +449,20 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
           {!compact && drawLine && (
             <line className="pchart-trend pchart-trend--draft" x1={X(drawLine.a.t)} y1={Y(drawLine.a.v)} x2={X(drawLine.b.t)} y2={Y(drawLine.b.v)} />
           )}
+          {/* Draggable endpoint handles: grab one to move that end only. The
+              wide transparent circle is the touch target; the dot is the mark. */}
+          {!compact && lines.map((ln, i) => (
+            ['a', 'b'].map((end) => (
+              <g key={`h${i}${end}`}>
+                <circle
+                  className="pchart-trend-hit"
+                  cx={X(ln[end].t)} cy={Y(ln[end].v)} r={13}
+                  onPointerDown={(e) => onHandleDown(e, i, end)}
+                />
+                <circle className="pchart-trend-handle" cx={X(ln[end].t)} cy={Y(ln[end].v)} r={4} />
+              </g>
+            ))
+          ))}
         </g>
       </svg>
     );
