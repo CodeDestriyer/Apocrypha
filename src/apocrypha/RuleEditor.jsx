@@ -994,7 +994,10 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
   };
   useEffect(() => {
     if (!block) return;
-    const close = () => setBlock(null);
+    // A mousedown INSIDE the menu must not close it: closing on that same
+    // mousedown unmounts the button before its click fires, so "Tabla" / the
+    // divider never ran (the "nothing happens" bug). Only an outside click closes.
+    const close = (e) => { if (e?.target?.closest?.('.rule-ctx-menu')) return; setBlock(null); };
     document.addEventListener('mousedown', close);
     window.addEventListener('scroll', close, true);
     return () => {

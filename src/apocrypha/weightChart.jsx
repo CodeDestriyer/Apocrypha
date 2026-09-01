@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLang } from '../i18n.jsx';
 
 // Geometry for the weight line chart. Works in a 100×100 SVG box (rendered
 // with preserveAspectRatio="none" + non-scaling strokes), so the same paths
@@ -75,13 +76,42 @@ export function WeightSpark({ log, className = '' }) {
 // makes it a static read-only chart.
 const DAY = 864e5;
 export function WeightGraph({ log, goal, interactive = true, compact = false }) {
+  const { t: tr } = useLang();
   const ref = useRef(null);
+  const menuRef = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [domain, setDomain] = useState(null); // [t0,t1] visible time window, null = full
   const [yDomain, setYDomain] = useState(null); // [lo,hi] weight window, null = auto-fit
+  // Line vs. candlestick, remembered per browser. Candles are one-per-day:
+  // body = first→last weigh-in of the day (green when the day ended lower).
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem('peso.chartMode') === 'candle' ? 'candle' : 'line'; } catch { return 'line'; }
+  });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pickMode = (m) => { setMode(m); setMenuOpen(false); try { localStorage.setItem('peso.chartMode', m); } catch {} };
+  // Trend-line tool (like a trading terminal): 'pan' = normal, 'draw' = drag to
+  // lay a straight line. Lines are stored in DATA coordinates ({t, v}) so they
+  // stay anchored while you pan/zoom and show in both line and candle views.
+  const [tool, setTool] = useState('pan');
+  const [lines, setLines] = useState(() => {
+    try { const a = JSON.parse(localStorage.getItem('peso.chartLines')); return Array.isArray(a) ? a : []; } catch { return []; }
+  });
+  const [drawLine, setDrawLine] = useState(null); // in-progress line while dragging
+  const drawRef = useRef(null);
+  const saveLines = (arr) => { setLines(arr); try { localStorage.setItem('peso.chartLines', JSON.stringify(arr)); } catch {} };
+  const toggleDraw = () => { setTool((x) => (x === 'draw' ? 'pan' : 'draw')); setMenuOpen(false); };
+  const clearLines = () => { saveLines([]); setMenuOpen(false); };
   const pointers = useRef(new Map());
   const gesture = useRef(null);
   const clipId = useRef('pchart-clip-' + Math.random().toString(36).slice(2)).current;
+
+  // Close the chart menu on an outside click.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [menuOpen]);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -207,6 +237,14 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
 
   const onPointerDown = (e) => {
     if (!pts.length) return;
+    if (tool === 'draw') {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      const p = { t: xToTime(e.clientX), v: yToVal(e.clientY) };
+      drawRef.current = { a: p, b: p };
+      gesture.current = { mode: 'draw', moved: false };
+      setDrawLine({ a: p, b: p });
+      return;
+    }
     e.currentTarget.setPointerCapture?.(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
@@ -222,6 +260,14 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
     }
   };
   const onPointerMove = (e) => {
+    if (gesture.current?.mode === 'draw') {
+      if (!drawRef.current) return;
+      gesture.current.moved = true;
+      const b = { t: xToTime(e.clientX), v: yToVal(e.clientY) };
+      drawRef.current = { a: drawRef.current.a, b };
+      setDrawLine({ a: drawRef.current.a, b });
+      return;
+    }
     if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const g = gesture.current;
@@ -247,6 +293,16 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
     }
   };
   const onPointerUp = (e) => {
+    if (gesture.current?.mode === 'draw') {
+      const dl = drawRef.current;
+      const moved = gesture.current.moved;
+      gesture.current = null;
+      drawRef.current = null;
+      setDrawLine(null);
+      // Only keep a line the user actually dragged out (ignore a stray tap).
+      if (dl && moved) saveLines([...lines, dl]);
+      return;
+    }
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 1) {
       const only = [...pointers.current.values()][0];
@@ -293,6 +349,55 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
       onDoubleClick: resetView,
     } : {};
 
+    // One candle per day, day-over-day: open = previous logged day's weight,
+    // close = this day's weight (the day's last weigh-in). Green when the day
+    // ended lower (weight lost), red when higher. This gives real bodies even
+    // when you weigh once a day. Main chart only; Hero cube stays a line.
+    const showCandles = mode === 'candle' && !compact;
+    let candles = null;
+    if (showCandles) {
+      const dayMap = new Map();
+      for (const e of (Array.isArray(log) ? log : [])) {
+        const wv = Number(e.weight);
+        const dstr = e.date || (e.created_at ? String(e.created_at).slice(0, 10) : '');
+        const tt = Date.parse(dstr);
+        if (!Number.isFinite(wv) || !Number.isFinite(tt)) continue;
+        const ct = Date.parse(e.created_at || '') || 0;
+        const cur = dayMap.get(dstr);
+        if (!cur || ct >= cur.ct) dayMap.set(dstr, { t: tt, w: wv, ct });
+      }
+      const daysArr = [...dayMap.values()].sort((a, b) => a.t - b.t);
+      const dayPx = plotW / Math.max(1, (t1 - t0) / DAY);
+      const cw = Math.max(2.5, Math.min(16, dayPx * 0.7));
+      candles = [];
+      if (daysArr.length) {
+        // Walk every calendar day between the first and last weigh-in. Logged
+        // days get a day-over-day body; gap days (no weigh-in) get a flat doji
+        // carried forward from the last known weight, so the axis stays solid.
+        const wByDay = new Map(daysArr.map((d) => [d.t, d.w]));
+        const firstT = daysArr[0].t, lastT = daysArr[daysArr.length - 1].t;
+        let carry = null;
+        for (let tt = firstT; tt <= lastT; tt += DAY) {
+          const logged = wByDay.get(tt);
+          let open, close, dir;
+          if (logged != null) {
+            open = carry != null ? carry : logged; // first candle has no prior day → flat
+            close = logged;
+            dir = close < open ? 'down' : close > open ? 'up' : 'flat';
+            carry = close;
+          } else {
+            if (carry == null) continue;
+            open = close = carry; // gap day: flat doji at the carried weight
+            dir = 'flat';
+          }
+          const yO = Y(open), yC = Y(close);
+          const top = Math.min(yO, yC);
+          const bh = Math.max(1.4, Math.abs(yO - yC));
+          candles.push({ key: tt, x: X(tt) - cw / 2, y: top, w: cw, h: bh, dir });
+        }
+      }
+    }
+
     svg = (
       <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="pchart-svg" role="img" {...handlers}>
         <defs><clipPath id={clipId}><rect x={padL} y={0} width={plotW} height={H} /></clipPath></defs>
@@ -307,18 +412,65 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
         ))}
         {gy != null && <line className="pchart-goal" x1={padL} y1={gy} x2={w - padR} y2={gy} />}
         <g clipPath={`url(#${clipId})`}>
-          <path className="pchart-line" d={line} />
-          {lastVisible && <circle className="pchart-dot" cx={last.x} cy={last.y} r={compact ? 2.6 : 3.5} />}
+          {showCandles ? (
+            candles.map((c) => (
+              <rect key={c.key} className={`pchart-candle pchart-candle--${c.dir}`} x={c.x} y={c.y} width={c.w} height={c.h} rx={1} />
+            ))
+          ) : (
+            <>
+              <path className="pchart-line" d={line} />
+              {lastVisible && <circle className="pchart-dot" cx={last.x} cy={last.y} r={compact ? 2.6 : 3.5} />}
+            </>
+          )}
+          {/* User-drawn straight trend lines (data-anchored, shown in both views). */}
+          {!compact && lines.map((ln, i) => (
+            <line key={`ln${i}`} className="pchart-trend" x1={X(ln.a.t)} y1={Y(ln.a.v)} x2={X(ln.b.t)} y2={Y(ln.b.v)} />
+          ))}
+          {!compact && drawLine && (
+            <line className="pchart-trend pchart-trend--draft" x1={X(drawLine.a.t)} y1={Y(drawLine.a.v)} x2={X(drawLine.b.t)} y2={Y(drawLine.b.v)} />
+          )}
         </g>
       </svg>
     );
   }
 
   return (
-    <div className={`pchart ${compact ? 'pchart--compact' : ''} ${interactive ? '' : 'pchart--static'}`} ref={ref}>
+    <div className={`pchart ${compact ? 'pchart--compact' : ''} ${interactive ? '' : 'pchart--static'}${tool === 'draw' ? ' is-drawing' : ''}`} ref={ref}>
       {svg}
-      {interactive && (domain || yDomain) && (
-        <button className="pchart-reset" onClick={resetView} aria-label="reset">⟲</button>
+      {interactive && (
+        // Top-right toolbar: reset (only when zoomed/panned) then the gear.
+        <div className="pchart-tools">
+          {(domain || yDomain) && (
+            <button className="pchart-reset" onClick={resetView} aria-label="reset">⟲</button>
+          )}
+          {!compact && (
+            <div className="pchart-gear" ref={menuRef}>
+              <button
+                className={`pchart-gear-btn${tool === 'draw' ? ' is-active' : ''}`}
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label={tr('weight.chartView')}
+                aria-expanded={menuOpen}
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
+              {menuOpen && (
+                <div className="pchart-menu">
+                  <div className="pchart-menu-label">{tr('weight.chartView')}</div>
+                  <button className={`pchart-menu-item${mode === 'line' ? ' is-active' : ''}`} onClick={() => pickMode('line')}>{tr('weight.chartLine')}</button>
+                  <button className={`pchart-menu-item${mode === 'candle' ? ' is-active' : ''}`} onClick={() => pickMode('candle')}>{tr('weight.chartCandle')}</button>
+                  <div className="pchart-menu-sep" />
+                  <button className={`pchart-menu-item${tool === 'draw' ? ' is-active' : ''}`} onClick={toggleDraw}>{tr('weight.drawLine')}</button>
+                  {lines.length > 0 && (
+                    <button className="pchart-menu-item" onClick={clearLines}>{tr('weight.clearLines')}</button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
