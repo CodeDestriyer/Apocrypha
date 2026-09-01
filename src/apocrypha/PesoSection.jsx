@@ -77,7 +77,8 @@ export default function PesoSection({ rootOnBack }) {
 
   // Shown week (Sun→Sat): one representative weight per day (the last
   // measurement that day), each day's delta vs. the previous logged
-  // measurement, and the week total (first − last logged that week).
+  // measurement, and the week-over-week total (last weigh-in before this
+  // week vs. the last weigh-in this week).
   const week = useMemo(() => {
     // Last measurement of each date, and dates in ascending order.
     const asc = [...log].sort((a, b) =>
@@ -111,9 +112,15 @@ export default function PesoSection({ rootOnBack }) {
       });
     }
     const logged = days.filter((d) => d.weight != null);
-    // Total per request: first − last logged this week (positive = lost).
-    const total = logged.length >= 2
-      ? logged[0].weight - logged[logged.length - 1].weight
+    // Week-over-week total: the last logged weight *before* this week vs. the
+    // last logged weight this week (positive = lost). This counts the
+    // carry-over from the previous weigh-in, so a single logged day this week
+    // is enough — unlike the old first−last-within-the-week total. Falls back
+    // to null (shown as "—") when there's no earlier weigh-in to compare to.
+    const prevRef = prevWeight(isoLocal(start));
+    const thisFinal = logged.length ? logged[logged.length - 1].weight : null;
+    const total = prevRef != null && thisFinal != null
+      ? prevRef - thisFinal
       : null;
     return { days, total, count: logged.length };
   }, [log, weekOffset]);
