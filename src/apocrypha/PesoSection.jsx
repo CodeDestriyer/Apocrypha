@@ -130,6 +130,7 @@ export default function PesoSection({ rootOnBack }) {
   const [adding, setAdding] = useState(false);            // "+" reveals the ruler
   const [showHistory, setShowHistory] = useState(false);  // full history sub-screen (from settings)
   const [goalDraft, setGoalDraft] = useState('');         // plain goal input (string)
+  const [editingGoal, setEditingGoal] = useState(false);  // goal input hidden behind a button until tapped
   const [menuOpen, setMenuOpen] = useState(false);        // weight settings gear (header)
   const menuRef = useRef(null);
   // Square "+" button: sized to the weekly widget's height so it reads square.
@@ -209,9 +210,10 @@ export default function PesoSection({ rootOnBack }) {
   const remove = (id) => setLog((l) => l.filter((e) => e.id !== id));
 
   const rulerStart = (latest && latest.weight) || goal || 70;
-  const toggleMenu = () => { if (!menuOpen) setGoalDraft(goal != null ? String(goal) : ''); setMenuOpen((o) => !o); };
-  const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setMenuOpen(false); };
-  const clearGoal = () => { update({ weight_goal: null }); setMenuOpen(false); };
+  const toggleMenu = () => { if (!menuOpen) { setGoalDraft(goal != null ? String(goal) : ''); setEditingGoal(false); } setMenuOpen((o) => !o); };
+  const openGoalEdit = () => { setGoalDraft(goal != null ? String(goal) : ''); setEditingGoal(true); };
+  const saveGoal = () => { update({ weight_goal: parseWeight(goalDraft) }); setEditingGoal(false); setMenuOpen(false); };
+  const clearGoal = () => { update({ weight_goal: null }); setEditingGoal(false); setMenuOpen(false); };
 
   const unit = t('body.unit');
 
@@ -225,24 +227,35 @@ export default function PesoSection({ rootOnBack }) {
       </button>
       {menuOpen && (
         <div className="cards-gear-menu cards-gear-menu--right peso-gear-menu">
-          <label className="cards-field-label">{t('body.goal')}</label>
-          <div className="peso-gear-row">
-            <input
-              className="cards-field-input peso-gear-input"
-              type="number" inputMode="decimal" step="0.1" min="0" autoFocus
-              value={goalDraft}
-              placeholder={t('body.goalPlaceholder')}
-              onChange={(e) => setGoalDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setMenuOpen(false); }}
-            />
-            <span className="peso-input-unit">{unit}</span>
-          </div>
-          <div className="peso-gear-actions">
-            {goal != null && (
-              <button className="cards-secondary-btn peso-gear-clear" onClick={clearGoal}>{t('body.delete')}</button>
-            )}
-            <button className="cards-primary-btn peso-gear-save" onClick={saveGoal}>{t('body.save')}</button>
-          </div>
+          {!editingGoal ? (
+            // Goal is tucked behind this button — tap it to reveal the input.
+            <button className="peso-gear-history peso-gear-goal-btn" onClick={openGoalEdit}>
+              <span className="peso-history-title">{t('body.goal')}</span>
+              <span className="peso-history-count">{goal != null ? `${goal} ${unit}` : '—'}</span>
+              <span className="peso-history-caret" aria-hidden="true">›</span>
+            </button>
+          ) : (
+            <>
+              <label className="cards-field-label">{t('body.goal')}</label>
+              <div className="peso-gear-row">
+                <input
+                  className="cards-field-input peso-gear-input"
+                  type="number" inputMode="decimal" step="0.1" min="0" autoFocus
+                  value={goalDraft}
+                  placeholder={t('body.goalPlaceholder')}
+                  onChange={(e) => setGoalDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(); if (e.key === 'Escape') setEditingGoal(false); }}
+                />
+                <span className="peso-input-unit">{unit}</span>
+              </div>
+              <div className="peso-gear-actions">
+                {goal != null && (
+                  <button className="cards-secondary-btn peso-gear-clear" onClick={clearGoal}>{t('body.delete')}</button>
+                )}
+                <button className="cards-primary-btn peso-gear-save" onClick={saveGoal}>{t('body.save')}</button>
+              </div>
+            </>
+          )}
           <button
             className="peso-gear-history"
             onClick={() => { setMenuOpen(false); setShowHistory(true); }}
