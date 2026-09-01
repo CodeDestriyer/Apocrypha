@@ -77,7 +77,8 @@ const DAY = 864e5;
 export function WeightGraph({ log, goal, interactive = true, compact = false }) {
   const ref = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [domain, setDomain] = useState(null); // [t0,t1] visible window, null = full
+  const [domain, setDomain] = useState(null); // [t0,t1] visible time window, null = full
+  const [yDomain, setYDomain] = useState(null); // [lo,hi] weight window, null = auto-fit
   const pointers = useRef(new Map());
   const gesture = useRef(null);
   const clipId = useRef('pchart-clip-' + Math.random().toString(36).slice(2)).current;
@@ -133,55 +134,123 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
     return t0 + ((x - padL) / plotW) * (t1 - t0);
   };
 
-  // Wheel zoom (native, non-passive so we can preventDefault).
+  // --- Y (weight) axis ---------------------------------------------------
+  // Auto-fit over the visible points by default (stretching toward the goal as
+  // the time axis zooms out); becomes a manual window once you pan/zoom
+  // vertically, so you can scroll up/down through the whole weight range.
+  const plotH = Math.max(1, H - padT - padB);
+  const visPts = pts.filter((p) => p.t >= t0 && p.t <= t1);
+  const srcPts = visPts.length ? visPts : pts;
+  let autoLo = 0, autoHi = 1;
+  if (srcPts.length) {
+    const ws = srcPts.map((p) => p.w);
+    let dMin = Math.min(...ws), dMax = Math.max(...ws);
+    if (dMax - dMin < 2) { const m = (dMin + dMax) / 2; dMin = m - 1; dMax = m + 1; }
+    const basePad = (dMax - dMin) * 0.12 || 0.5;
+    autoLo = dMin - basePad; autoHi = dMax + basePad;
+    if (goal != null && Number.isFinite(goal)) {
+      const zoomOut = Math.max(0, Math.min(1, (t1 - t0 - fullSpan) / (extSpan - fullSpan || 1)));
+      const gLo = Math.min(dMin, goal), gHi = Math.max(dMax, goal);
+      const gPad = (gHi - gLo) * 0.08 || 0.5;
+      autoLo = autoLo + (gLo - gPad - autoLo) * zoomOut;
+      autoHi = autoHi + (gHi + gPad - autoHi) * zoomOut;
+    }
+  }
+  // Absolute weight range you can pan/zoom into — comfortably covers 50–150 kg
+  // and widens if the data or goal sits outside it.
+  const allWs = pts.map((p) => p.w);
+  const dataLo = allWs.length ? Math.min(...allWs) : 70;
+  const dataHi = allWs.length ? Math.max(...allWs) : 70;
+  let yFloor = Math.min(20, dataLo - 5);
+  let yCeil = Math.max(300, dataHi + 5);
+  if (goal != null && Number.isFinite(goal)) { yFloor = Math.min(yFloor, goal - 5); yCeil = Math.max(yCeil, goal + 5); }
+  const yMinWin = 3;               // most you can zoom in (kg spanned)
+  const yMaxWin = yCeil - yFloor;  // most you can zoom out
+  const clampY = ([a, b]) => {
+    let span = b - a;
+    if (span < yMinWin) { const c = (a + b) / 2; a = c - yMinWin / 2; b = c + yMinWin / 2; span = yMinWin; }
+    if (span > yMaxWin) { const c = (a + b) / 2; a = c - yMaxWin / 2; b = c + yMaxWin / 2; span = yMaxWin; }
+    if (a < yFloor) { a = yFloor; b = a + span; }
+    if (b > yCeil) { b = yCeil; a = b - span; }
+    if (a < yFloor) a = yFloor;
+    return [a, b];
+  };
+  const [yLo, yHi] = yDomain ? clampY(yDomain) : [autoLo, autoHi];
+  const yToVal = (clientY) => {
+    const rect = ref.current?.getBoundingClientRect();
+    const y = clientY - (rect ? rect.top : 0);
+    return yLo + (1 - (y - padT) / plotH) * (yHi - yLo);
+  };
+  const resetView = () => { setDomain(null); setYDomain(null); };
+
+  // Wheel zoom (native, non-passive so we can preventDefault): time by
+  // default, weight when Shift is held.
   useEffect(() => {
     if (!interactive) return;
     const el = ref.current;
     if (!el || !pts.length) return;
     const onWheel = (e) => {
       e.preventDefault();
-      const tc = xToTime(e.clientX);
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1; // lines/pages → px
       const factor = Math.exp(e.deltaY * unit * 0.0025);
-      setDomain(clampDomain([tc - (tc - t0) * factor, tc + (t1 - tc) * factor]));
+      if (e.shiftKey) {
+        const vc = yToVal(e.clientY);
+        setYDomain(clampY([vc - (vc - yLo) * factor, vc + (yHi - vc) * factor]));
+      } else {
+        const tc = xToTime(e.clientX);
+        setDomain(clampDomain([tc - (tc - t0) * factor, tc + (t1 - tc) * factor]));
+      }
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [interactive, w, t0, t1, pts.length]);
+  }, [interactive, w, H, t0, t1, yLo, yHi, pts.length]);
 
   const onPointerDown = (e) => {
     if (!pts.length) return;
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    pointers.current.set(e.pointerId, e.clientX);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 2) {
-      const xs = [...pointers.current.values()];
-      gesture.current = { mode: 'pinch', startDist: Math.abs(xs[0] - xs[1]) || 1, t0, t1 };
+      const v = [...pointers.current.values()];
+      gesture.current = {
+        mode: 'pinch',
+        startDX: Math.abs(v[0].x - v[1].x) || 1,
+        startDY: Math.abs(v[0].y - v[1].y) || 1,
+        t0, t1, yLo, yHi,
+      };
     } else {
-      gesture.current = { mode: 'pan', startX: e.clientX, t0, t1 };
+      gesture.current = { mode: 'pan', startX: e.clientX, startY: e.clientY, t0, t1, yLo, yHi };
     }
   };
   const onPointerMove = (e) => {
     if (!pointers.current.has(e.pointerId)) return;
-    pointers.current.set(e.pointerId, e.clientX);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const g = gesture.current;
     if (!g) return;
+    const rect = ref.current?.getBoundingClientRect();
     if (g.mode === 'pinch' && pointers.current.size >= 2) {
-      const xs = [...pointers.current.values()];
-      const dist = Math.abs(xs[0] - xs[1]) || 1;
-      const scale = g.startDist / dist;
-      const rect = ref.current?.getBoundingClientRect();
-      const midX = (xs[0] + xs[1]) / 2 - (rect ? rect.left : 0);
+      const v = [...pointers.current.values()];
+      // Horizontal finger spread zooms time; vertical spread zooms weight.
+      const scaleX = g.startDX / (Math.abs(v[0].x - v[1].x) || 1);
+      const scaleY = g.startDY / (Math.abs(v[0].y - v[1].y) || 1);
+      const midX = (v[0].x + v[1].x) / 2 - (rect ? rect.left : 0);
+      const midY = (v[0].y + v[1].y) / 2 - (rect ? rect.top : 0);
       const tc = g.t0 + ((midX - padL) / plotW) * (g.t1 - g.t0);
-      setDomain(clampDomain([tc - (tc - g.t0) * scale, tc + (g.t1 - tc) * scale]));
+      const vc = g.yLo + (1 - (midY - padT) / plotH) * (g.yHi - g.yLo);
+      setDomain(clampDomain([tc - (tc - g.t0) * scaleX, tc + (g.t1 - tc) * scaleX]));
+      setYDomain(clampY([vc - (vc - g.yLo) * scaleY, vc + (g.yHi - vc) * scaleY]));
     } else if (g.mode === 'pan') {
       const dt = ((e.clientX - g.startX) / plotW) * (g.t1 - g.t0);
+      const dv = ((e.clientY - g.startY) / plotH) * (g.yHi - g.yLo);
       setDomain(clampDomain([g.t0 - dt, g.t1 - dt]));
+      // Drag down → reveal higher weights above (window slides up).
+      setYDomain(clampY([g.yLo + dv, g.yHi + dv]));
     }
   };
   const onPointerUp = (e) => {
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 1) {
-      gesture.current = { mode: 'pan', startX: [...pointers.current.values()][0], t0, t1 };
+      const only = [...pointers.current.values()][0];
+      gesture.current = { mode: 'pan', startX: only.x, startY: only.y, t0, t1, yLo, yHi };
     } else if (pointers.current.size === 0) {
       gesture.current = null;
     }
@@ -189,24 +258,8 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
 
   let svg = null;
   if (w > 0 && H > 0 && pts.length) {
-    const vis = pts.filter((p) => p.t >= t0 && p.t <= t1);
-    const src = vis.length ? vis : pts;
-    const ws = src.map((p) => p.w);
-    let dMin = Math.min(...ws), dMax = Math.max(...ws);
-    if (dMax - dMin < 2) { const m = (dMin + dMax) / 2; dMin = m - 1; dMax = m + 1; }
-    const basePad = (dMax - dMin) * 0.12 || 0.5;
-    let yLo = dMin - basePad, yHi = dMax + basePad;
-    // As you zoom OUT, stretch the Y axis toward the goal so the green goal
-    // line comes into view; at default zoom the axis stays tight on the data.
-    if (goal != null && Number.isFinite(goal)) {
-      const zoomOut = Math.max(0, Math.min(1, (t1 - t0 - fullSpan) / (extSpan - fullSpan || 1)));
-      const gLo = Math.min(dMin, goal), gHi = Math.max(dMax, goal);
-      const gPad = (gHi - gLo) * 0.08 || 0.5;
-      yLo = yLo + (gLo - gPad - yLo) * zoomOut;
-      yHi = yHi + (gHi + gPad - yHi) * zoomOut;
-    }
     const X = (t) => (pts.length === 1 ? padL + plotW / 2 : padL + ((t - t0) / (t1 - t0 || 1)) * plotW);
-    const Y = (v) => padT + (1 - (v - yLo) / (yHi - yLo)) * (H - padT - padB);
+    const Y = (v) => padT + (1 - (v - yLo) / (yHi - yLo)) * plotH;
     const coords = pts.map((p) => ({ x: X(p.t), y: Y(p.w), t: p.t }));
     const line = coords.map((c, i) => `${i ? 'L' : 'M'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
     const last = coords[coords.length - 1];
@@ -237,7 +290,7 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
     const gy = (goal != null && Number.isFinite(goal) && goal >= yLo && goal <= yHi) ? Y(goal) : null;
     const handlers = interactive ? {
       onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp,
-      onDoubleClick: () => setDomain(null),
+      onDoubleClick: resetView,
     } : {};
 
     svg = (
@@ -264,8 +317,8 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
   return (
     <div className={`pchart ${compact ? 'pchart--compact' : ''} ${interactive ? '' : 'pchart--static'}`} ref={ref}>
       {svg}
-      {interactive && domain && (
-        <button className="pchart-reset" onClick={() => setDomain(null)} aria-label="reset">⟲</button>
+      {interactive && (domain || yDomain) && (
+        <button className="pchart-reset" onClick={resetView} aria-label="reset">⟲</button>
       )}
     </div>
   );
