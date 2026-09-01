@@ -6572,6 +6572,45 @@ body {
   pointer-events: none;
 }
 .rule-editor strong { font-weight: 700; }
+/* Editable table inside the editor: sized to its content, header look on the
+   first row (no <th> so add/remove row never re-tags cells), and cells that
+   stay clickable even when empty. */
+.rule-table--edit { width: fit-content; max-width: 100%; margin: 10px 0; }
+.rule-table--edit td { min-width: 64px; cursor: text; outline: none; }
+.rule-table--edit tr:first-child td {
+  font-weight: 700; color: var(--ink); background: rgba(190, 158, 92, 0.14);
+}
+
+/* Floating table toolbar (add / remove row & column) — same shell as the format
+   bar, anchored to the table's top-left. */
+.rule-table-bar { transform: translate(0, calc(-100% - 8px)); }
+.rule-tbi {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+}
+.rule-tbi i {
+  width: 14px; height: 14px;
+  border: 1.4px solid var(--ink); border-radius: 2px;
+}
+/* Horizontal hint lines = rows; vertical hint lines = columns. */
+.rule-tbi-rows i {
+  background:
+    linear-gradient(var(--ink), var(--ink)) 0 4px / 100% 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 8px / 100% 1px no-repeat;
+}
+.rule-tbi-cols i {
+  background:
+    linear-gradient(var(--ink), var(--ink)) 4px 0 / 1px 100% no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 8px 0 / 1px 100% no-repeat;
+}
+.rule-tbi b {
+  position: absolute; right: -4px; bottom: -4px;
+  min-width: 11px; height: 11px; padding: 0 1px;
+  display: grid; place-items: center;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 11px; line-height: 1;
+  color: var(--wine); background: var(--paper); border-radius: 6px;
+}
 
 /* Floating format toolbar over the current selection (Notion-style) */
 .rule-fmt-bar {

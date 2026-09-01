@@ -70,18 +70,54 @@ function splitColumns(inner) {
 }
 const isPlusOnly = (cellLines) => cellLines.join('\n').trim() === '+';
 
+// ── Pipe tables ─────────────────────────────────────────────────────────────
+// A maximal run of consecutive lines that each contain a `|` is a table (same
+// rule as the read view). In the EDITOR the run becomes a real, editable
+// <table> so it looks and behaves like a spreadsheet (Tab/Enter navigation,
+// add/remove rows & columns) instead of showing raw `a | b` text. The first row
+// is the header (styled via CSS `tr:first-child`, so no <th>/<td> swapping is
+// needed when rows are added or deleted). domToMarkers turns each <tr> back into
+// one `cell | cell` line, so the stored format never changes.
+const isTableLine = (l) => l.includes('|') && l !== '|||';
+// Split one stored table line into trimmed cells, dropping a leading/trailing
+// empty cell so `| a | b |` and `a | b` parse the same (mirrors RuleTable).
+function parseTableCells(line) {
+  let cells = line.split('|').map((c) => c.trim());
+  if (cells.length && cells[0] === '') cells = cells.slice(1);
+  if (cells.length && cells[cells.length - 1] === '') cells = cells.slice(0, -1);
+  return cells;
+}
+// A run of table lines → an editable <table>. Every row is padded to the widest
+// row so the grid is rectangular; an empty cell gets a <br> so the caret can
+// land in it (the <br> serializes back to nothing).
+function tableToHtml(rows) {
+  const grid = rows.map(parseTableCells);
+  const width = Math.max(1, ...grid.map((r) => r.length));
+  let html = '<table class="rule-table rule-table--edit"><tbody>';
+  for (const row of grid) {
+    html += '<tr>';
+    for (let c = 0; c < width; c++) {
+      const cell = row[c] ?? '';
+      html += `<td>${cell === '' ? '<br>' : inlineToHtml(cell)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
 // Full marker string → editor HTML. Normal lines are joined by <br>; a
-// [[[ … ]]] fence becomes a <div class="rule-block-box"> and a [[[cols … ]]]
-// fence (columns split by ||| lines) a <div class="rule-cols"> of columns.
-// Fences nest (e.g. a box as a column cell), so cells/box bodies are parsed
-// recursively. Blocks carry no surrounding <br> so the round-trip through
-// domToMarkers is stable.
+// [[[ … ]]] fence becomes a <div class="rule-block-box">, a [[[cols … ]]]
+// fence (columns split by ||| lines) a <div class="rule-cols"> of columns, and a
+// run of pipe lines an editable <table>. Fences nest (e.g. a box as a column
+// cell), so cells/box bodies are parsed recursively. Blocks carry no surrounding
+// <br> so the round-trip through domToMarkers is stable.
 export function markersToHtml(text) {
   return blocksToHtml(String(text ?? '').split('\n'));
 }
 function blocksToHtml(lines) {
   let html = '', i = 0;
-  const run = [];
+  const run = [], tbl = [];
   const flushRun = () => {
     if (!run.length) return;
     // Joining lines with <br> makes an all-blank run (the paragraph gap between
@@ -93,12 +129,17 @@ function blocksToHtml(lines) {
       : run.map(inlineToHtml).join('<br>');
     run.length = 0;
   };
+  const flushTable = () => {
+    if (!tbl.length) return;
+    html += tableToHtml(tbl);
+    tbl.length = 0;
+  };
   while (i < lines.length) {
     if (lines[i] === '[[[cols') {
       const j = matchFenceClose(lines, i);
       const inner = lines.slice(i + 1, j);
       if (!isEmptyContent(inner.join('\n'))) {
-        flushRun();
+        flushRun(); flushTable();
         const cols = splitColumns(inner);
         html += `<div class="rule-cols">${cols.map((c) =>
           `<div class="rule-col${isPlusOnly(c) ? ' rule-col--plus' : ''}">${blocksToHtml(c)}</div>`).join('')}</div>`;
@@ -108,13 +149,14 @@ function blocksToHtml(lines) {
       const j = matchFenceClose(lines, i);
       const inner = lines.slice(i + 1, j);
       if (!isEmptyContent(inner.join('\n'))) {
-        flushRun();
+        flushRun(); flushTable();
         html += `<div class="rule-block-box">${blocksToHtml(inner)}</div>`;
       }
       i = j + 1;
-    } else { run.push(lines[i]); i++; }
+    } else if (isTableLine(lines[i])) { flushRun(); tbl.push(lines[i]); i++; }
+    else { flushTable(); run.push(lines[i]); i++; }
   }
-  flushRun();
+  flushRun(); flushTable();
   return html;
 }
 
@@ -180,6 +222,15 @@ function coversBlock(flow, range) {
          isBlockNode(topChild(flow, range.endContainer));
 }
 
+const isTable = (c) => c.nodeType === Node.ELEMENT_NODE && c.tagName === 'TABLE';
+// Whole-line nodes the box/columns wrappers must never split or half-swallow
+// into a neighbouring line: columns, a box, or a table. (Framing a WHOLE block —
+// coversBlock — stays columns/box only; a table has its own editing controls.)
+const isAtomicLine = (c) => isBlockNode(c) || isTable(c);
+// A cell is single-line, so strip any stray break/zero-width scaffolding out of
+// its serialized text before it joins a `cell | cell` line.
+const cellMarkers = (cell) => inlineSerialize(cell).replace(/[\n\u200B]/g, '').trim();
+
 // Editor DOM → marker string. Block boxes become [[[ … ]]] fences and column
 // layouts [[[cols … ]]] fences (columns separated by |||) on their own lines;
 // everything else is inline content split into lines by <br>.
@@ -209,6 +260,15 @@ function domToMarkers(root) {
         body.split('\n').forEach((l) => out.push(l));
         out.push(']]]');
       }
+    } else if (isTable(c)) {
+      // Each <tr> becomes one `cell | cell` line. A table always carries at
+      // least one `|`, so it round-trips through blocksToHtml as a table even
+      // when every cell is empty.
+      if (cur !== '') flush();
+      c.querySelectorAll('tr').forEach((tr) => {
+        const cells = Array.from(tr.children).filter((x) => x.tagName === 'TD' || x.tagName === 'TH');
+        if (cells.length) out.push(cells.map(cellMarkers).join(' | '));
+      });
     } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
       flush();
     } else if (c.nodeType === Node.ELEMENT_NODE && (c.tagName === 'DIV' || c.tagName === 'P')) {
@@ -303,8 +363,8 @@ function wrapLinesInBox(flow, range) {
   let i = topIndex(flow, range.startContainer), j = topIndex(flow, range.endContainer);
   if (i < 0 || j < 0) return null;
   if (i > j) { const t = i; i = j; j = t; }
-  while (i > 0 && !isBlockNode(kids[i]) && !isBlockNode(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
-  while (j < kids.length - 1 && !isBlockNode(kids[j]) && !isBlockNode(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
+  while (i > 0 && !isAtomicLine(kids[i]) && !isAtomicLine(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
+  while (j < kids.length - 1 && !isAtomicLine(kids[j]) && !isAtomicLine(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
   const box = document.createElement('div');
   box.className = 'rule-block-box';
   const ref = kids[j + 1] || null;
@@ -337,8 +397,8 @@ function wrapLinesInCols(flow, range) {
   let i = topIndex(flow, range.startContainer), j = topIndex(flow, range.endContainer);
   if (i < 0 || j < 0) return null;
   if (i > j) { const t = i; i = j; j = t; }
-  while (i > 0 && !isBlockNode(kids[i]) && !isBlockNode(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
-  while (j < kids.length - 1 && !isBlockNode(kids[j]) && !isBlockNode(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
+  while (i > 0 && !isAtomicLine(kids[i]) && !isAtomicLine(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
+  while (j < kids.length - 1 && !isAtomicLine(kids[j]) && !isAtomicLine(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
   const nodes = [];
   for (let k = i; k <= j; k++) nodes.push(kids[k]);
   const ref = kids[j + 1] || null;
@@ -560,11 +620,77 @@ function tryBulletConvert(editor) {
   return true;
 }
 
+// ── Editable-table mechanics (spreadsheet-like) ─────────────────────────────
+// The <table> lives at the editor's top level. Every cell is a <td> (the header
+// look comes from CSS on the first row), so adding or deleting rows never has to
+// re-tag cells. Navigation and row/column edits below all operate on the live
+// DOM; the caller serializes + snapshots afterwards.
+function enclosingCell(node, editor) {
+  let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  while (el && el !== editor) {
+    if (el.tagName === 'TD' || el.tagName === 'TH') return el;
+    el = el.parentNode;
+  }
+  return null;
+}
+const tableRows = (table) => Array.from(table.querySelectorAll('tr'));
+const cellCount = (tr) => Array.from(tr.children).filter((x) => x.tagName === 'TD' || x.tagName === 'TH').length;
+function cellPos(cell) {
+  const tr = cell.parentNode;
+  const table = tr.closest('table');
+  const rows = tableRows(table);
+  return { table, rows, tr, r: rows.indexOf(tr), c: Array.from(tr.children).indexOf(cell) };
+}
+// A fresh empty cell carries a <br> so the caret can enter it; the <br>
+// serializes back to nothing (see cellMarkers).
+function makeCell() {
+  const td = document.createElement('td');
+  td.appendChild(document.createElement('br'));
+  return td;
+}
+function caretToEnd(node) {
+  if (!node) return;
+  const r = document.createRange();
+  r.selectNodeContents(node); r.collapse(false);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+function caretToStart(node) {
+  if (!node) return;
+  const r = document.createRange();
+  r.selectNodeContents(node); r.collapse(true);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+// Is the collapsed caret at the very start of its cell? (Used so Backspace at a
+// cell's edge hops to the previous cell instead of letting the browser merge
+// cells and wreck the table.)
+function caretAtCellStart(cell, range) {
+  const r = document.createRange();
+  r.selectNodeContents(cell);
+  try { r.setEnd(range.startContainer, range.startOffset); } catch { return false; }
+  return r.toString().replace(/\u200B/g, '') === '';
+}
+// Insert an empty row after `tr`, matching the table's column count; returns it.
+function insertRowAfter(table, tr) {
+  const cols = cellCount(tableRows(table)[0] || tr);
+  const nr = document.createElement('tr');
+  for (let c = 0; c < cols; c++) nr.appendChild(makeCell());
+  tr.parentNode.insertBefore(nr, tr.nextSibling);
+  return nr;
+}
+// Insert an empty cell after column `c` in every row.
+function insertColAfter(table, c) {
+  tableRows(table).forEach((tr) => {
+    const ref = tr.children[c];
+    tr.insertBefore(makeCell(), ref ? ref.nextSibling : null);
+  });
+}
+
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
   const { t } = useLang();
   const ref = useRef(null);
   const [bar, setBar] = useState(null);   // { x, y } floating format toolbar
   const [block, setBlock] = useState(null); // { x, y } block-insert menu
+  const [tableUi, setTableUi] = useState(null); // { x, y } table controls (caret in a cell)
 
   // ── Undo / redo ──────────────────────────────────────────────────────────
   // The native browser undo is unusable here: we mutate the DOM directly (block
@@ -655,10 +781,24 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     setBar({ x: rect.left + rect.width / 2, y: rect.top });
   };
 
+  // Table controls: shown whenever the caret sits inside a table cell (collapsed
+  // or not), anchored to the table's top-left. Kept separate from the format bar
+  // so it also appears with just a caret, not only on a selection.
+  const syncTableUi = () => {
+    const el = ref.current;
+    const sel = window.getSelection();
+    if (!el || !sel || !sel.rangeCount || !el.contains(sel.anchorNode)) { setTableUi(null); return; }
+    const cell = enclosingCell(sel.anchorNode, el);
+    if (!cell) { setTableUi(null); return; }
+    const rect = cell.closest('table').getBoundingClientRect();
+    setTableUi({ x: rect.left, y: rect.top });
+  };
+  const syncBars = () => { syncToolbar(); syncTableUi(); };
+
   useEffect(() => {
-    const onSel = () => syncToolbar();
+    const onSel = () => syncBars();
     document.addEventListener('selectionchange', onSel);
-    const hide = () => setBar(null);
+    const hide = () => { setBar(null); setTableUi(null); };
     window.addEventListener('scroll', hide, true);
     return () => {
       document.removeEventListener('selectionchange', onSel);
@@ -680,6 +820,48 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     }
     if (mod && !e.shiftKey && isY) { e.preventDefault(); redo(); return; }
     if (e.key === 'Enter' && mod) { e.preventDefault(); onSubmit?.(); return; }
+
+    // ── Spreadsheet keys, only when the caret is inside a table cell ──────────
+    const cell = enclosingCell(window.getSelection().anchorNode, ref.current);
+    if (cell) {
+      const { table, rows, r, c } = cellPos(cell);
+      if (e.key === 'Tab') {
+        e.preventDefault(); checkpoint();
+        if (!e.shiftKey) {
+          // Next cell → next row's first cell → a brand-new row at the end.
+          if (c < cellCount(cell.parentNode) - 1) caretToEnd(cell.parentNode.children[c + 1]);
+          else if (r < rows.length - 1) caretToEnd(rows[r + 1].children[0]);
+          else caretToEnd(insertRowAfter(table, cell.parentNode).children[0]);
+        } else {
+          if (c > 0) caretToEnd(cell.parentNode.children[c - 1]);
+          else if (r > 0) caretToEnd(rows[r - 1].children[rows[r - 1].children.length - 1]);
+        }
+        emit(); syncBars();
+        return;
+      }
+      if (e.key === 'Enter') {
+        // Enter moves down a row (Excel-style); on the last row it grows the
+        // table. Cells stay single-line, so no in-cell line breaks.
+        e.preventDefault(); checkpoint();
+        const below = r < rows.length - 1 ? rows[r + 1] : insertRowAfter(table, cell.parentNode);
+        caretToEnd(below.children[c] || below.children[0]);
+        emit(); syncBars();
+        return;
+      }
+      if (e.key === 'Backspace') {
+        const sel = window.getSelection();
+        // At a cell's start, hop to the previous cell instead of letting the
+        // browser merge cells and corrupt the table structure.
+        if (sel.isCollapsed && caretAtCellStart(cell, sel.getRangeAt(0))) {
+          e.preventDefault();
+          if (c > 0) caretToEnd(cell.parentNode.children[c - 1]);
+          else if (r > 0) caretToEnd(rows[r - 1].children[rows[r - 1].children.length - 1]);
+          syncBars();
+          return;
+        }
+      }
+    }
+
     if (e.key === ' ' && tryBulletConvert(ref.current)) { e.preventDefault(); checkpoint(); emit(); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -711,12 +893,72 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     ref.current?.focus();
     setBlock({ x: e.clientX, y: e.clientY });
   };
+  // A right-click in empty space doesn't place the caret, so execCommand-based
+  // inserts had nothing to insert into and silently no-op'd. Guarantee a caret
+  // inside the editor (falling back to its end) before any insert.
+  const ensureCaret = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.focus();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !el.contains(sel.anchorNode)) placeCaretEnd(el);
+  };
+  // The top-level child of the editor that currently holds the caret, so a block
+  // can be dropped on its own line right after it (never nested inside inline
+  // formatting). Null when the editor is empty / the caret is loose.
+  const caretTopNode = () => {
+    const el = ref.current;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !el.contains(sel.anchorNode)) return null;
+    let n = sel.getRangeAt(0).startContainer;
+    while (n && n.parentNode !== el) n = n.parentNode;
+    return n && n.parentNode === el ? n : null;
+  };
   const insertBlock = (text) => {
-    ref.current?.focus();
-    checkpoint(); // inserting a table/divider is its own undo step
+    ensureCaret();
+    checkpoint(); // inserting a divider is its own undo step
     document.execCommand('insertText', false, `\n${text}\n`);
     setBlock(null);
     emit();
+  };
+  // Drop a fresh editable table (2×2, header + one row) at the caret's line and
+  // land the caret in its first cell.
+  const insertTable = () => {
+    const el = ref.current;
+    ensureCaret();
+    checkpoint();
+    // Seed the header row with placeholder text and leave one empty data row.
+    // A fully-empty table can't round-trip (` | ` lines collapse on reload), and
+    // a header row is the spreadsheet-standard starting point anyway.
+    const table = document.createElement('table');
+    table.className = 'rule-table rule-table--edit';
+    const tbody = document.createElement('tbody');
+    const headTexts = [t('reglas.tableColHead', { n: 1 }), t('reglas.tableColHead', { n: 2 })];
+    const head = document.createElement('tr');
+    headTexts.forEach((txt) => { const td = document.createElement('td'); td.textContent = txt; head.appendChild(td); });
+    tbody.appendChild(head);
+    const body = document.createElement('tr');
+    body.appendChild(makeCell());
+    body.appendChild(makeCell());
+    tbody.appendChild(body);
+    table.appendChild(tbody);
+    const top = caretTopNode();
+    if (top) el.insertBefore(table, top.nextSibling);
+    else el.appendChild(table);
+    // Ensure there's a plain line after the table to click/type into.
+    if (!table.nextSibling || table.nextSibling.nodeName !== 'DIV') {
+      const holder = document.createElement('div');
+      holder.appendChild(document.createElement('br'));
+      el.insertBefore(holder, table.nextSibling);
+    }
+    // Select the first header cell so typing replaces the placeholder at once.
+    const first = table.querySelector('td');
+    const sr = document.createRange();
+    sr.selectNodeContents(first);
+    const ssel = window.getSelection(); ssel.removeAllRanges(); ssel.addRange(sr);
+    setBlock(null);
+    emit();
+    syncBars();
   };
   useEffect(() => {
     if (!block) return;
@@ -788,6 +1030,66 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     </button>
   );
 
+  // Run a table edit on the cell the caret is in, then serialize + snapshot.
+  // onMouseDown-preventDefault on the buttons keeps the caret in that cell.
+  const withCell = (fn) => {
+    const el = ref.current;
+    const cell = el && enclosingCell(window.getSelection().anchorNode, el);
+    if (!cell) return;
+    el.focus();
+    checkpoint(); // each row/column edit is its own undo step
+    fn(cell);
+    emit();
+    syncBars();
+  };
+  const addRow = () => withCell((cell) => {
+    const { table, tr, c } = cellPos(cell);
+    const nr = insertRowAfter(table, tr);
+    caretToEnd(nr.children[c] || nr.children[0]);
+  });
+  const addCol = () => withCell((cell) => {
+    const { table, c } = cellPos(cell);
+    insertColAfter(table, c);
+    caretToEnd(cell.nextSibling); // the new cell sits right after this one
+  });
+  const delRow = () => withCell((cell) => {
+    const { table, rows, tr, r, c } = cellPos(cell);
+    if (rows.length <= 1) { removeTable(table); return; }
+    tr.remove();
+    const target = rows[r + 1] || rows[r - 1];
+    caretToEnd(target.children[Math.min(c, target.children.length - 1)]);
+  });
+  const delCol = () => withCell((cell) => {
+    const { table, tr, c } = cellPos(cell);
+    // A table needs ≥2 columns to survive as pipe text (one `|`); below that,
+    // drop the whole table rather than leave an unrepresentable single column.
+    if (cellCount(tableRows(table)[0]) <= 2) { removeTable(table); return; }
+    tableRows(table).forEach((row) => { if (row.children[c]) row.children[c].remove(); });
+    caretToEnd(tr.children[Math.min(c, tr.children.length - 1)]);
+  });
+  // Replace the table with an empty line and drop the toolbar.
+  const removeTable = (table) => {
+    const holder = document.createElement('div');
+    holder.appendChild(document.createElement('br'));
+    table.parentNode.insertBefore(holder, table);
+    table.remove();
+    caretToStart(holder);
+    setTableUi(null);
+  };
+
+  const tblBtn = (label, onClick, glyph) => (
+    <button
+      type="button"
+      className="rule-fmt-btn"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+    >
+      {glyph}
+    </button>
+  );
+
   return (
     <>
       <div
@@ -798,13 +1100,13 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
         role="textbox"
         aria-multiline="true"
         data-placeholder={placeholder}
-        onInput={emit}
+        onInput={() => { emit(); syncTableUi(); }}
         onKeyDown={onKeyDown}
         onPaste={onPaste}
-        onKeyUp={syncToolbar}
-        onMouseUp={syncToolbar}
+        onKeyUp={syncBars}
+        onMouseUp={syncBars}
         onContextMenu={onContextMenu}
-        onBlur={() => setBar(null)}
+        onBlur={() => { setBar(null); setTableUi(null); }}
       />
       {bar && (
         <div
@@ -819,10 +1121,22 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           {btn('cols', t('reglas.cols'), <span className="rule-fmt-cols" aria-hidden="true"><i /><i /></span>)}
         </div>
       )}
+      {tableUi && (
+        <div
+          className="rule-fmt-bar rule-table-bar"
+          style={{ top: tableUi.y, left: tableUi.x }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {tblBtn(t('reglas.rowAdd'), addRow, <span className="rule-tbi rule-tbi-rows"><i /><b>+</b></span>)}
+          {tblBtn(t('reglas.rowDel'), delRow, <span className="rule-tbi rule-tbi-rows"><i /><b>−</b></span>)}
+          {tblBtn(t('reglas.colAdd'), addCol, <span className="rule-tbi rule-tbi-cols"><i /><b>+</b></span>)}
+          {tblBtn(t('reglas.colDel'), delCol, <span className="rule-tbi rule-tbi-cols"><i /><b>−</b></span>)}
+        </div>
+      )}
       {block && (
         <div className="rule-ctx-menu" style={{ position: 'fixed', top: block.y, left: block.x }}>
           <button className="rule-ctx-item" onMouseDown={(e) => e.preventDefault()}
-            onClick={() => insertBlock('Columna 1 | Columna 2\ndato | dato')}>
+            onClick={insertTable}>
             <span className="rule-ctx-glyph" aria-hidden="true">▦</span>
             <span>{t('reglas.table')}</span>
           </button>
