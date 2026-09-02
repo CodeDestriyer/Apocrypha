@@ -122,15 +122,11 @@ export function markersToHtml(text) {
 function blocksToHtml(lines) {
   let html = '', i = 0;
   const run = [], tbl = [];
+  // A run only ever holds NON-blank lines now (blank lines are emitted as their
+  // own holder <div>, see the loop below), so a plain <br>-join is enough.
   const flushRun = () => {
     if (!run.length) return;
-    // Joining lines with <br> makes an all-blank run (the paragraph gap between
-    // two blocks) collapse to '' — no node, so the caret has no line to sit on
-    // and domToMarkers can't recover the blank. Emit one <br> per blank line so
-    // the gap shows in the editor and round-trips back to the same blank lines.
-    html += run.every((l) => l === '')
-      ? '<br>'.repeat(run.length)
-      : run.map(inlineToHtml).join('<br>');
+    html += run.map(inlineToHtml).join('<br>');
     run.length = 0;
   };
   const flushTable = () => {
@@ -159,6 +155,13 @@ function blocksToHtml(lines) {
       i = j + 1;
     } else if (isDividerLine(lines[i])) { flushRun(); flushTable(); html += '<hr class="rule-hr">'; i++; }
     else if (isTableLine(lines[i])) { flushRun(); tbl.push(lines[i]); i++; }
+    // A blank line (paragraph gap) becomes its own holder <div><br></div>. A bare
+    // <br> right before a block is swallowed by the block's own line start, so the
+    // gap the user saved before a box vanished on re-open ("space slips" bug); a
+    // holder div takes a real line's height and shows the gap. It also round-trips
+    // cleanly: domToMarkers reads the empty div as one blank line, without the
+    // extra blank that a <br>-before-a-block used to gain on every reload.
+    else if (lines[i] === '') { flushRun(); flushTable(); html += '<div><br></div>'; i++; }
     else { flushTable(); run.push(lines[i]); i++; }
   }
   flushRun(); flushTable();
@@ -245,12 +248,13 @@ function domToMarkers(root) {
   const out = [];
   let cur = '';
   // A <br> right before a block (box / columns / table) marks a blank line the
-  // user put there for spacing. The block branches only flush a NON-empty
-  // pending line, so without this that blank line was dropped — and because the
-  // seed step (blocksToHtml) re-emits it as a single trailing <br>, every
-  // save→reload cycle ate one blank line until the gap vanished (the "space
-  // before a box isn't applied" bug). Flushing the empty line when the previous
-  // node was a <br> keeps such blanks stable across the round-trip.
+  // user put there for spacing — Enter inserts a bare <br>, so a gap typed just
+  // above a box arrives as one. The block branches only flush a NON-empty pending
+  // line, so without this that blank line was dropped and the gap vanished on
+  // save. Flushing the empty line when the previous node was a <br> keeps such
+  // blanks. (The seed step, blocksToHtml, instead emits a holder <div><br></div>
+  // for a blank line, which this loop's DIV branch reads back as one blank line
+  // without going through here — so a seeded gap round-trips without drift.)
   let lastWasBr = false;
   const flush = () => { out.push(cur); cur = ''; };
   root.childNodes.forEach((c) => {
