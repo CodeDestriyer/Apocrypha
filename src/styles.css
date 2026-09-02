@@ -5300,6 +5300,18 @@ body {
 .search-filter-btn:hover { background: rgba(74, 21, 11, 0.08); }
 .search-filter-btn.active { background: var(--wine); color: var(--cream); }
 .cards-tag-filter { margin-top: 10px; }
+/* Cross-deck search box on the deck list mirrors the per-deck search row but
+   needs its own vertical rhythm (the deck list isn't a flex-gap column). */
+.search-add-row--decklist { margin-bottom: 14px; }
+.search-add-row--decklist + .cards-tag-filter { margin-top: -2px; margin-bottom: 14px; }
+/* Deck badge shown on a search result so you can see which folder it lives in. */
+.card-row-deck {
+  display: inline-flex; align-items: center;
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 2px 9px; border-radius: 999px;
+  background: rgba(110, 36, 19, 0.1); color: var(--wine);
+  border: 1px solid var(--gold-dim);
+}
 .cards-tag-study-chip.active { background: var(--wine); border-color: var(--wine); color: var(--cream); }
 .cards-tag-study-chip.active .cards-tag-study-count { color: var(--cream); background: rgba(0, 0, 0, 0.2); }
 
@@ -6161,6 +6173,10 @@ body {
 /* ── Tarjetas: deck view controls ───────────────────────── */
 .cards-study-btn { border: 1px solid var(--wine); background: var(--wine); color: var(--cream); border-radius: 4px; }
 .cards-study-btn:hover { background: var(--wine-deep); }
+/* Inside a deck the "Estudiar" button is outlined (not filled) so it reads as
+   secondary next to the filled global study button on the deck list. */
+.cards-study-btn--outline { background: transparent; color: var(--wine); border: 1px solid var(--wine); }
+.cards-study-btn--outline:hover:not(:disabled) { background: rgba(110, 36, 19, 0.06); }
 .cards-gear-btn { background: var(--cream); border-color: var(--line); color: var(--wine); }
 .cards-gear-btn:hover { background: #efe7df; color: var(--wine-deep); }
 .cards-gear-btn--sm { background: transparent; border-color: transparent; color: var(--text-dim); }
