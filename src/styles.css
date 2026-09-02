@@ -6175,8 +6175,8 @@ body {
 .cards-study-btn:hover { background: var(--wine-deep); }
 /* Inside a deck the "Estudiar" button is outlined (not filled) so it reads as
    secondary next to the filled global study button on the deck list. */
-.cards-study-btn--outline { background: transparent; color: var(--wine); border: 1px solid var(--wine); }
-.cards-study-btn--outline:hover:not(:disabled) { background: rgba(110, 36, 19, 0.06); }
+.cards-study-btn--outline { background: rgba(110, 36, 19, 0.1); color: var(--wine); border: 2px solid var(--wine); }
+.cards-study-btn--outline:hover:not(:disabled) { background: rgba(110, 36, 19, 0.18); }
 .cards-gear-btn { background: var(--cream); border-color: var(--line); color: var(--wine); }
 .cards-gear-btn:hover { background: #efe7df; color: var(--wine-deep); }
 .cards-gear-btn--sm { background: transparent; border-color: transparent; color: var(--text-dim); }
