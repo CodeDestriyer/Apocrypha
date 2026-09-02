@@ -237,6 +237,14 @@ const cellMarkers = (cell) => inlineSerialize(cell).replace(/[\n\u200B]/g, '').t
 function domToMarkers(root) {
   const out = [];
   let cur = '';
+  // A <br> right before a block (box / columns / table) marks a blank line the
+  // user put there for spacing. The block branches only flush a NON-empty
+  // pending line, so without this that blank line was dropped — and because the
+  // seed step (blocksToHtml) re-emits it as a single trailing <br>, every
+  // save→reload cycle ate one blank line until the gap vanished (the "space
+  // before a box isn't applied" bug). Flushing the empty line when the previous
+  // node was a <br> keeps such blanks stable across the round-trip.
+  let lastWasBr = false;
   const flush = () => { out.push(cur); cur = ''; };
   root.childNodes.forEach((c) => {
     if (isCols(c)) {
@@ -244,7 +252,7 @@ function domToMarkers(root) {
       // is dropped instead of round-tripping as an empty frame.
       const cells = Array.from(c.children).filter(isCol).map((col) => domToMarkers(col));
       if (cells.some((s) => !isEmptyContent(s))) {
-        if (cur !== '') flush();
+        if (cur !== '' || lastWasBr) flush();
         out.push('[[[cols');
         cells.forEach((s, ci) => {
           if (ci > 0) out.push('|||');
@@ -255,7 +263,7 @@ function domToMarkers(root) {
     } else if (isBox(c)) {
       const body = domToMarkers(c);
       if (!isEmptyContent(body)) {
-        if (cur !== '') flush();
+        if (cur !== '' || lastWasBr) flush();
         out.push('[[[');
         body.split('\n').forEach((l) => out.push(l));
         out.push(']]]');
@@ -264,13 +272,15 @@ function domToMarkers(root) {
       // Each <tr> becomes one `cell | cell` line. A table always carries at
       // least one `|`, so it round-trips through blocksToHtml as a table even
       // when every cell is empty.
-      if (cur !== '') flush();
+      if (cur !== '' || lastWasBr) flush();
       c.querySelectorAll('tr').forEach((tr) => {
         const cells = Array.from(tr.children).filter((x) => x.tagName === 'TD' || x.tagName === 'TH');
         if (cells.length) out.push(cells.map(cellMarkers).join(' | '));
       });
     } else if (c.nodeType === Node.ELEMENT_NODE && c.tagName === 'BR') {
       flush();
+      lastWasBr = true;
+      return;
     } else if (c.nodeType === Node.ELEMENT_NODE && (c.tagName === 'DIV' || c.tagName === 'P')) {
       // A top-level div/p is a plain line (the escape landing line, or pasted
       // block); drop its trailing placeholder <br>.
@@ -281,6 +291,7 @@ function domToMarkers(root) {
       tmp.appendChild(c.cloneNode(true));
       cur += inlineSerialize(tmp);
     }
+    lastWasBr = false; // only the <br> branch (which returns early) sets it true
   });
   if (cur !== '' || out.length === 0) out.push(cur);
   return out.join('\n');
