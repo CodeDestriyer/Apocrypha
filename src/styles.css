@@ -5300,6 +5300,18 @@ body {
 .search-filter-btn:hover { background: rgba(74, 21, 11, 0.08); }
 .search-filter-btn.active { background: var(--wine); color: var(--cream); }
 .cards-tag-filter { margin-top: 10px; }
+/* Cross-deck search box on the deck list mirrors the per-deck search row but
+   needs its own vertical rhythm (the deck list isn't a flex-gap column). */
+.search-add-row--decklist { margin-bottom: 14px; }
+.search-add-row--decklist + .cards-tag-filter { margin-top: -2px; margin-bottom: 14px; }
+/* Deck badge shown on a search result so you can see which folder it lives in. */
+.card-row-deck {
+  display: inline-flex; align-items: center;
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 2px 9px; border-radius: 999px;
+  background: rgba(110, 36, 19, 0.1); color: var(--wine);
+  border: 1px solid var(--gold-dim);
+}
 .cards-tag-study-chip.active { background: var(--wine); border-color: var(--wine); color: var(--cream); }
 .cards-tag-study-chip.active .cards-tag-study-count { color: var(--cream); background: rgba(0, 0, 0, 0.2); }
 
@@ -6161,6 +6173,10 @@ body {
 /* ── Tarjetas: deck view controls ───────────────────────── */
 .cards-study-btn { border: 1px solid var(--wine); background: var(--wine); color: var(--cream); border-radius: 4px; }
 .cards-study-btn:hover { background: var(--wine-deep); }
+/* Inside a deck the "Estudiar" button is outlined (not filled) so it reads as
+   secondary next to the filled global study button on the deck list. */
+.cards-study-btn--outline { background: rgba(110, 36, 19, 0.1); color: var(--wine); border: 2px solid var(--wine); }
+.cards-study-btn--outline:hover:not(:disabled) { background: rgba(110, 36, 19, 0.18); }
 .cards-gear-btn { background: var(--cream); border-color: var(--line); color: var(--wine); }
 .cards-gear-btn:hover { background: #efe7df; color: var(--wine-deep); }
 .cards-gear-btn--sm { background: transparent; border-color: transparent; color: var(--text-dim); }
@@ -6525,8 +6541,8 @@ body {
 .rule-para + .rule-table, .rule-table + .rule-para,
 .rule-para + .rule-hr, .rule-hr + .rule-para { margin-top: 4px; }
 .rule-hr {
-  border: none; height: 1px; margin: 12px 0;
-  background: var(--gold-dim); opacity: 0.7;
+  border: none; height: 2px; margin: 12px 0;
+  background: var(--ink); opacity: 1; border-radius: 1px;
 }
 .rule-table {
   border-collapse: collapse; width: 100%;
@@ -7040,8 +7056,13 @@ body {
 .pchart--static { cursor: default; touch-action: auto; }
 .pchart--compact .pchart-ylabel, .pchart--compact .pchart-xlabel { font-size: 8px; }
 .pchart-svg { display: block; }
+.pchart.is-drawing { cursor: crosshair; }
+/* Top-right toolbar: reset ⟲ then the view gear, side by side. */
+.pchart-tools {
+  position: absolute; top: 6px; right: 6px; z-index: 5;
+  display: flex; align-items: flex-start; gap: 6px;
+}
 .pchart-reset {
-  position: absolute; top: 6px; right: 6px;
   width: 26px; height: 26px; display: grid; place-items: center;
   border: 1px solid var(--line); border-radius: 6px;
   background: var(--cream); color: var(--wine);
@@ -7059,20 +7080,32 @@ body {
 .pchart-candle--down { fill: #3f7a4a; }
 .pchart-candle--up   { fill: var(--danger); }
 .pchart-candle--flat { fill: var(--gold-dim); }
-/* Chart view gear (line vs. candles), top-left so it clears the reset ⟲. */
-.pchart-gear { position: absolute; top: 6px; left: 6px; }
+/* User-drawn straight trend lines. */
+.pchart-trend { stroke: var(--gold-bright); stroke-width: 1.6; stroke-linecap: round; }
+.pchart-trend--draft { stroke-dasharray: 4 3; opacity: 0.75; }
+.pchart-trend-hit { fill: transparent; pointer-events: all; cursor: grab; }
+.pchart-trend-hit:active { cursor: grabbing; }
+.pchart-trend-handle { fill: var(--paper); stroke: var(--gold-bright); stroke-width: 1.8; pointer-events: none; }
+/* Chart view gear (line/candles + trend-line tool), in the top-right toolbar. */
+.pchart-gear { position: relative; }
 .pchart-gear-btn {
   width: 26px; height: 26px; display: grid; place-items: center;
   border: 1px solid var(--line); border-radius: 6px;
   background: var(--cream); color: var(--wine); cursor: pointer;
 }
 .pchart-gear-btn:hover { border-color: var(--gold-dim); background: #efe7df; }
+.pchart-gear-btn.is-active { border-color: var(--wine); color: var(--paper); background: var(--wine); }
 .pchart-menu {
-  position: absolute; top: 30px; left: 0; z-index: 5;
-  display: flex; flex-direction: column; min-width: 108px;
+  position: absolute; top: 30px; right: 0; z-index: 6;
+  display: flex; flex-direction: column; min-width: 128px;
   border: 1px solid var(--gold-dim); border-radius: 8px;
   background: var(--paper); box-shadow: var(--shadow); overflow: hidden;
 }
+.pchart-menu-label {
+  padding: 7px 12px 4px; font-family: 'Cinzel', serif; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
+}
+.pchart-menu-sep { height: 1px; margin: 4px 0; background: var(--line); }
 .pchart-menu-item {
   padding: 8px 12px; text-align: left; background: none; border: none;
   font-family: 'Inter', 'EB Garamond', sans-serif; font-size: 13px;

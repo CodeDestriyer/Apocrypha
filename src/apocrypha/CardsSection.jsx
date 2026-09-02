@@ -142,6 +142,13 @@ export default function CardsSection({ rootOnBack }) {
   // unique, so patch the card wherever it lives without needing its deck id.
   const updateCardAnywhere = (cardId, patch) =>
     setDecks((d) => d.map((x) => ({ ...x, cards: x.cards.map((c) => c.id === cardId ? { ...c, ...patch } : c) })));
+  // Same idea for removal — used by the cross-deck search on the deck list.
+  const removeCardAnywhere = (cardId) => {
+    let gone = null;
+    for (const x of decks) { const f = x.cards.find((c) => c.id === cardId); if (f) { gone = f; break; } }
+    if (gone?.backImage) deleteCardImage(gone.backImage);
+    setDecks((d) => d.map((x) => ({ ...x, cards: x.cards.filter((c) => c.id !== cardId) })));
+  };
 
   // Hashtags are shared across every deck: suggestions come from all decks,
   // not just the one being edited.
@@ -253,10 +260,13 @@ export default function CardsSection({ rootOnBack }) {
     body = (
       <DeckList
         decks={decks}
+        allDeckTags={allDeckTags}
         onOpen={(id) => setOpenDeckId(id)}
         onAdd={addDeck}
         onStudyAll={() => startStudy(ALL_DECKS)}
         onStudyAllTag={(tag) => startStudy(ALL_DECKS, tag)}
+        onEditCardAnywhere={(cardId, patch) => updateCardAnywhere(cardId, patch)}
+        onRemoveCardAnywhere={(cardId) => removeCardAnywhere(cardId)}
         t={t}
       />
     );
@@ -269,11 +279,20 @@ export default function CardsSection({ rootOnBack }) {
   );
 }
 
-function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
+function DeckList({ decks, allDeckTags = [], onOpen, onAdd, onStudyAll, onStudyAllTag, onEditCardAnywhere, onRemoveCardAnywhere, t }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [studyExpanded, setStudyExpanded] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
+
+  // Cross-deck search: the deck list gets the same search box as an individual
+  // deck, but it looks through the cards of every folder at once. Tapping a tag
+  // chip (from a result card or the filter panel) drives the same `query` as
+  // typing `#tag`, exactly like the per-deck search.
+  const [query, setQuery] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const onFilterTag = (tg) =>
+    setQuery((q) => (q.replace(/^#/, '') === tg ? '' : `#${tg}`));
 
   const totalCards = useMemo(() => decks.reduce((s, d) => s + d.cards.length, 0), [decks]);
   const allTags = useMemo(() => {
@@ -287,6 +306,28 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
     () => decks.reduce((s, d) => s + d.cards.filter(cardHasNoTag).length, 0),
     [decks],
   );
+
+  const searching = query.trim().length > 0;
+  // Flatten every card with the deck it belongs to, then apply the exact same
+  // matching used inside a deck (front / back / note / tag).
+  const searchResults = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const qTag = q.replace(/^#+/, '');
+    const out = [];
+    for (const d of decks) {
+      for (const c of d.cards) {
+        if (
+          (c.front ?? '').toLowerCase().includes(q) ||
+          (c.back ?? '').toLowerCase().includes(q) ||
+          (c.note ?? '').toLowerCase().includes(q) ||
+          (c.tags ?? []).some((tg) => tg.includes(qTag))
+        ) out.push({ card: c, deckId: d.id, deckName: d.name });
+      }
+    }
+    // Newest first within each deck, mirroring the per-deck list order.
+    return out.reverse();
+  }, [query, decks]);
 
   const submit = () => {
     if (!name.trim()) return;
@@ -361,7 +402,83 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
         </div>
       )}
 
-      {adding && (
+      {totalCards > 0 && (
+        <div className="search-add-row search-add-row--decklist">
+          <div className="cards-search open">
+            <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m20 20-3.5-3.5"/>
+            </svg>
+            <input
+              className="cards-search-input"
+              placeholder={t('cards.searchPlaceholder')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
+            />
+            {query && (
+              <button
+                className="cards-search-close"
+                onClick={() => setQuery('')}
+                aria-label={t('cards.close')}
+              >×</button>
+            )}
+          </div>
+          {allTags.length > 0 && (
+            <button
+              className={`search-filter-btn ${filterOpen ? 'active' : ''}`}
+              onClick={() => setFilterOpen((o) => !o)}
+              aria-label={t('cards.filterTags')}
+              title={t('cards.filterTags')}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
+      {filterOpen && allTags.length > 0 && (
+        <div className="cards-tag-study cards-tag-filter">
+          <div className="cards-tag-study-chips">
+            {allTags.map((tg) => {
+              const active = query.replace(/^#/, '') === tg;
+              return (
+                <button
+                  key={tg}
+                  className={`cards-tag-study-chip ${active ? 'active' : ''}`}
+                  onClick={() => onFilterTag(tg)}
+                >
+                  #{tg}<span className="cards-tag-study-count">{tagCount(tg)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {searching && (
+        <ul className="cards-list">
+          {searchResults.length === 0 && (
+            <li className="cards-search-empty">{t('cards.searchEmpty')}</li>
+          )}
+          {searchResults.map(({ card, deckName }) => (
+            <CardRow
+              key={card.id}
+              card={card}
+              deckName={deckName}
+              allTags={allDeckTags}
+              onTagClick={(tg) => setQuery((q) => (q.replace(/^#/, '') === tg ? '' : `#${tg}`))}
+              onRemove={() => onRemoveCardAnywhere(card.id)}
+              onUpdate={(patch) => onEditCardAnywhere(card.id, patch)}
+              t={t}
+            />
+          ))}
+        </ul>
+      )}
+
+      {!searching && adding && (
         <div className="cards-panel">
           <label className="cards-field-label">{t('cards.newDeck')}</label>
           <input
@@ -387,24 +504,26 @@ function DeckList({ decks, onOpen, onAdd, onStudyAll, onStudyAllTag, t }) {
         </div>
       )}
 
-      <ul className="skills">
-        {decks.map((d) => {
-          const due = dueCountFor(d);
-          return (
-            <li key={d.id} className="skill deck-row" onClick={() => onOpen(d.id)} role="button">
-              <div className="skill-head">
-                <span className="skill-name">{d.name}</span>
-                <span className="deck-counts">
-                  <span className="deck-due">{due}</span>
-                  <span className="deck-total">/ {d.cards.length}</span>
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {!searching && (
+        <ul className="skills">
+          {decks.map((d) => {
+            const due = dueCountFor(d);
+            return (
+              <li key={d.id} className="skill deck-row" onClick={() => onOpen(d.id)} role="button">
+                <div className="skill-head">
+                  <span className="skill-name">{d.name}</span>
+                  <span className="deck-counts">
+                    <span className="deck-due">{due}</span>
+                    <span className="deck-total">/ {d.cards.length}</span>
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-      {decks.length === 0 && !adding && (
+      {!searching && decks.length === 0 && !adding && (
         <button className="cards-big-add cards-big-add--deck" onClick={() => setAdding(true)}>
           <span className="cards-big-add-plus">+</span>
           <span>{t('cards.newDeck')}</span>
@@ -500,7 +619,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
     <div className="cards-deck">
       {!studyExpanded ? (
         <button
-          className="cards-study-btn"
+          className="cards-study-btn cards-study-btn--outline"
           onClick={() => { if (deckTags.length) setStudyExpanded(true); else onStudy(); }}
           disabled={dueCount === 0}
         >
@@ -724,7 +843,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   );
 }
 
-function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
+function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, onUpdate, t }) {
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [front, setFront] = useState(card.front);
@@ -870,9 +989,10 @@ function CardRow({ card, allTags = [], onTagClick, onRemove, onUpdate, t }) {
           </div>
         )}
       </div>
-      {(card.tags?.length ?? 0) > 0 && (
+      {(deckName || (card.tags?.length ?? 0) > 0) && (
         <div className="card-row-tags">
-          {card.tags.map((tg) => (
+          {deckName && <span className="card-row-deck">{deckName}</span>}
+          {(card.tags ?? []).map((tg) => (
             <button
               key={tg}
               type="button"
