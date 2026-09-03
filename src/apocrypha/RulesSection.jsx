@@ -9,74 +9,128 @@ const newId = () =>
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
-const cssId = (s) =>
-  (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&');
+// The rule list is a TREE stored in profile.rule_layout. Each node is either a
+// rule leaf { t:'r', id } or a group folder { t:'g', id, children:[…nodes] }.
+// Groups nest inside groups to any depth ("папки в папках"); rules are leaves
+// that live at the top level or inside any group. The rules / rule_groups arrays
+// hold only CONTENT (title/body, name) keyed by id — the tree alone defines the
+// order and the nesting.
+const nodeKey = (n) => n.t + ':' + n.id;
 
-// The top-level list mixes two block kinds in one order, stored in
-// profile.rule_layout as [{ t:'r'|'g', id }] — 'r' = an ungrouped rule, 'g' = a
-// group visor. Grouped rules live inside their visor (order from the rules
-// array), not in the layout.
+// Old flat layout → tree (one-time migration). The old format listed only
+// top-level entries and kept each rule's container in rule.groupId, with grouped
+// rules absent from the layout. Detect it by a group entry with no children
+// array, and rebuild each group's children from groupId.
+function toTree(layout, rules, groups) {
+  const list = layout || [];
+  const isOld = list.some((e) => e && e.t === 'g' && !Array.isArray(e.children));
+  if (!isOld) return list;
+  return list.map((e) =>
+    e.t === 'g'
+      ? { t: 'g', id: e.id, children: rules.filter((r) => (r.groupId ?? null) === e.id).map((r) => ({ t: 'r', id: r.id })) }
+      : { t: 'r', id: e.id }
+  );
+}
 
-// Reconcile a stored layout against the live rules/groups: keep valid entries in
-// order, append new groups at the bottom, prepend new ungrouped rules at the top.
-function reconcileLayout(layout, rules, groups) {
+// Reconcile a stored tree against the live rules/groups: drop nodes whose id no
+// longer exists, dedupe, recurse into groups; then prepend brand-new rules and
+// append brand-new groups at the top level so nothing created elsewhere is lost.
+function reconcileTree(tree, rules, groups) {
+  const ruleIds = new Set(rules.map((r) => r.id));
   const groupIds = new Set(groups.map((g) => g.id));
-  const ungrouped = rules.filter((r) => (r.groupId ?? null) == null);
-  const ungroupedIds = new Set(ungrouped.map((r) => r.id));
   const seen = new Set();
-  const out = [];
-  for (const e of (layout || [])) {
-    if (!e || !e.id) continue;
-    const key = e.t + ':' + e.id;
-    if (seen.has(key)) continue;
-    if (e.t === 'g' && groupIds.has(e.id)) { out.push({ t: 'g', id: e.id }); seen.add(key); }
-    else if (e.t === 'r' && ungroupedIds.has(e.id)) { out.push({ t: 'r', id: e.id }); seen.add(key); }
+  const walk = (nodes) => {
+    const out = [];
+    for (const n of (nodes || [])) {
+      if (!n || !n.id) continue;
+      const key = nodeKey(n);
+      if (seen.has(key)) continue;
+      if (n.t === 'g' && groupIds.has(n.id)) { seen.add(key); out.push({ t: 'g', id: n.id, children: walk(n.children) }); }
+      else if (n.t === 'r' && ruleIds.has(n.id)) { seen.add(key); out.push({ t: 'r', id: n.id }); }
+    }
+    return out;
+  };
+  const pruned = walk(tree);
+  const missingRules = rules.filter((r) => !seen.has('r:' + r.id)).map((r) => ({ t: 'r', id: r.id }));
+  const missingGroups = groups.filter((g) => !seen.has('g:' + g.id)).map((g) => ({ t: 'g', id: g.id, children: [] }));
+  return [...missingRules, ...pruned, ...missingGroups];
+}
+
+function sameTree(a, b) {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  return a.every((n, i) => b[i] && n.t === b[i].t && n.id === b[i].id &&
+    (n.t !== 'g' || sameTree(n.children || [], b[i].children || [])));
+}
+
+// ── Pure tree edits (return new arrays) ──────────────────────────────────────
+// `key` is a node key like 'g:123'; `containerId` is a group id, or null for the
+// top level.
+function findNode(nodes, key) {
+  for (const n of (nodes || [])) {
+    if (nodeKey(n) === key) return n;
+    if (n.t === 'g') { const f = findNode(n.children, key); if (f) return f; }
   }
-  for (const g of groups) if (!seen.has('g:' + g.id)) { out.push({ t: 'g', id: g.id }); seen.add('g:' + g.id); }
-  const missing = ungrouped.filter((r) => !seen.has('r:' + r.id)).map((r) => ({ t: 'r', id: r.id }));
-  return [...missing, ...out];
+  return null;
+}
+// True if `key` is `node` itself or anywhere in its subtree — the guard that
+// stops a group being dropped into itself or one of its own descendants.
+function nodeContains(node, key) {
+  if (nodeKey(node) === key) return true;
+  return node.t === 'g' && (node.children || []).some((c) => nodeContains(c, key));
+}
+function removeNode(nodes, key) {
+  const out = [];
+  for (const n of (nodes || [])) {
+    if (nodeKey(n) === key) continue;
+    out.push(n.t === 'g' ? { ...n, children: removeNode(n.children, key) } : n);
+  }
+  return out;
+}
+function insertNode(nodes, containerId, index, node) {
+  if (containerId == null) {
+    const out = (nodes || []).slice();
+    out.splice(Math.max(0, Math.min(index, out.length)), 0, node);
+    return out;
+  }
+  return (nodes || []).map((n) => {
+    if (n.t !== 'g') return n;
+    if (n.id === containerId) {
+      const kids = (n.children || []).slice();
+      kids.splice(Math.max(0, Math.min(index, kids.length)), 0, node);
+      return { ...n, children: kids };
+    }
+    return { ...n, children: insertNode(n.children, containerId, index, node) };
+  });
+}
+// Delete a group but keep its contents: splice its children into its own place
+// one level up (so deleting a folder never loses the rules inside it).
+function dissolveGroup(nodes, gid) {
+  const out = [];
+  for (const n of (nodes || [])) {
+    if (n.t === 'g' && n.id === gid) { out.push(...(n.children || [])); continue; }
+    out.push(n.t === 'g' ? { ...n, children: dissolveGroup(n.children, gid) } : n);
+  }
+  return out;
+}
+// Every rule id anywhere in a subtree (for the group's rule count).
+function collectRuleIds(nodes, acc = []) {
+  for (const n of (nodes || [])) {
+    if (n.t === 'r') acc.push(n.id);
+    else if (n.t === 'g') collectRuleIds(n.children, acc);
+  }
+  return acc;
 }
 
-function sameLayout(a, b) {
-  if (!a || !b || a.length !== b.length) return false;
-  return a.every((e, i) => e.t === b[i].t && e.id === b[i].id);
-}
-
-// Move a rule into `targetGroupId` (null = ungrouped) at position `index` among
-// that container's rules, rebuilding the rules array so others keep their order.
-function moveRule(rules, dragId, targetGroupId, index) {
-  const dragged = rules.find((r) => r.id === dragId);
-  if (!dragged) return rules;
-  const base = rules.filter((r) => r.id !== dragId);
-  const members = base.filter((r) => (r.groupId ?? null) === (targetGroupId ?? null));
-  const moved = { ...dragged, groupId: targetGroupId ?? null };
-  let at;
-  if (members.length === 0) at = base.length;
-  else if (index >= members.length) at = base.indexOf(members[members.length - 1]) + 1;
-  else at = base.indexOf(members[index]);
-  base.splice(at, 0, moved);
-  return base;
-}
-
-// Insertion index for a dragged rule among the cards inside a drop-zone element,
-// from pointer Y (skips the dragged card so it matches the container minus it).
-function ruleDropIndex(zoneEl, y, dragId) {
+// Insertion index among a zone's DIRECT child nodes, from pointer Y (skips the
+// dragged node so the index matches the container without it). Only direct
+// children carry `data-node-key`, so nested groups' cards are ignored here.
+function childDropIndex(zoneEl, y, selfKey) {
   if (!zoneEl) return 0;
   let index = 0;
-  for (const c of zoneEl.querySelectorAll('.rule-card[data-rule-id]')) {
-    if (c.getAttribute('data-rule-id') === dragId) continue;
+  for (const c of zoneEl.querySelectorAll(':scope > [data-node-key]')) {
+    if (c.getAttribute('data-node-key') === selfKey) continue;
     const rect = c.getBoundingClientRect();
-    if (y > rect.top + rect.height / 2) index++; else break;
-  }
-  return index;
-}
-
-// Insertion index among the top-level blocks (both kinds), from pointer Y.
-function topBlockIndex(y, selfKey) {
-  let index = 0;
-  for (const el of document.querySelectorAll('[data-top-block]')) {
-    if (el.getAttribute('data-top-block') === selfKey) continue;
-    const rect = el.getBoundingClientRect();
     if (y > rect.top + rect.height / 2) index++; else break;
   }
   return index;
@@ -247,15 +301,15 @@ function renderBlocks(lines, kp) {
 }
 
 // A rule block: tap the title to open its isolated page; drag the grip to move
-// it around the list — reorder at the top level, or into/within a group visor.
-// `topBlock` (e.g. "r:<id>") is set only for ungrouped rules that sit at the top
-// level, so the drag can measure them as top-level blocks.
-function RuleCard({ rule, dragging, topBlock, onGrip, onOpen, t }) {
+// it around the list — reorder among its siblings, or into any group folder.
+// `data-node-key` marks it as a direct child of its container so the drop index
+// can measure it (nested cards deeper down are skipped by the :scope selector).
+function RuleCard({ rule, dragging, onGrip, onOpen, t }) {
   return (
     <div
       className={`rule-card${dragging ? ' dragging' : ''}`}
       data-rule-id={rule.id}
-      {...(topBlock ? { 'data-top-block': topBlock } : {})}
+      data-node-key={'r:' + rule.id}
     >
       <button className="rule-card-open" onClick={() => onOpen(rule.id)}>
         <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
@@ -280,10 +334,10 @@ function RuleCard({ rule, dragging, topBlock, onGrip, onOpen, t }) {
 // A group "visor" (козырёк): a collapsible header that holds rules. Clicking the
 // header folds/unfolds it (like the nav menu); its own gear renames/deletes it.
 // The whole visor is a drop zone — dragging a rule onto it assigns the group.
-function GroupVisor({ group, rules, collapsed, isDrop, dragging, renaming, nameDraft, menuOpen,
+function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming, nameDraft, menuOpen,
   onGrip, onToggle, onMenu, onStartRename, onRenameChange, onCommitRename, onDelete, children, t }) {
   return (
-    <section className={`rule-koz${isDrop ? ' drop' : ''}${dragging ? ' dragging' : ''}`} data-group-id={group.id} data-top-block={'g:' + group.id}>
+    <section className={`rule-koz${isDrop ? ' drop' : ''}${dragging ? ' dragging' : ''}`} data-group-id={group.id} data-node-key={'g:' + group.id}>
       <div className="rule-koz-head">
         <button className="rule-koz-toggle" onClick={() => onToggle(group.id)} aria-expanded={!collapsed}>
           <svg className={`rule-koz-chevron${collapsed ? '' : ' open'}`} viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -307,7 +361,7 @@ function GroupVisor({ group, rules, collapsed, isDrop, dragging, renaming, nameD
           ) : (
             <span className="rule-koz-name">{group.name}</span>
           )}
-          <span className="rule-koz-count">{rules.length}</span>
+          <span className="rule-koz-count">{count}</span>
         </button>
         <div className="cards-gear rule-koz-gear">
           <button className="cards-gear-btn cards-gear-btn--sm" onClick={() => onMenu(menuOpen ? null : group.id)} aria-label={t('cards.deckSettings')}>
@@ -339,20 +393,21 @@ function GroupVisor({ group, rules, collapsed, isDrop, dragging, renaming, nameD
       </div>
       {!collapsed && (
         <div className="rule-koz-body">
-          {rules.length ? children : <div className="rule-koz-empty">{t('reglas.groupEmpty')}</div>}
+          {empty ? <div className="rule-koz-empty">{t('reglas.groupEmpty')}</div> : children}
         </div>
       )}
     </section>
   );
 }
 
-// Rules ("Reglas") — a store of Spanish grammar rules. One unified list where
-// ungrouped rule blocks and collapsible group visors are siblings in a single
-// order (profile.rule_layout). Drag any grip to reorder freely; drag a rule onto
-// a visor to file it there (or within it). Tap a rule to open its isolated page.
-// Rule:   { id, title, body, groupId?, created_at }  on profile.rules
-// Group:  { id, name }                               on profile.rule_groups
-// Layout: [{ t:'r'|'g', id }]                        on profile.rule_layout
+// Rules ("Reglas") — a store of Spanish grammar rules laid out as a tree of
+// folders. Group folders nest inside group folders to any depth; rules are
+// leaves that live at the top level or inside any folder. Drag a grip to reorder
+// a node among its siblings, or drop it onto a folder's header to file it inside
+// that folder. Tap a rule to open its isolated page.
+// Rule:   { id, title, body, created_at }                         on profile.rules
+// Group:  { id, name }                                            on profile.rule_groups
+// Layout: [ { t:'r', id } | { t:'g', id, children:[…] } ]  (tree) on profile.rule_layout
 export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -374,7 +429,7 @@ export default function RulesSection({ rootOnBack }) {
     ]);
   const removeRule = (id) => {
     setRules((r) => r.filter((x) => x.id !== id));
-    setLayout((l) => l.filter((e) => !(e.t === 'r' && e.id === id)));
+    setLayout((l) => removeNode(l, 'r:' + id));
   };
   const updateRule = (id, patch) =>
     setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
@@ -384,25 +439,18 @@ export default function RulesSection({ rootOnBack }) {
   const renameGroup = (id, name) =>
     setGroups((g) => g.map((x) => (x.id === id ? { ...x, name } : x)));
   const removeGroup = (id) => {
-    // The group's rules fall back to ungrouped; drop the group from the layout
-    // and splice the freed rules in at the group's old slot.
-    const freed = rules.filter((r) => r.groupId === id).map((r) => ({ t: 'r', id: r.id }));
+    // Delete the folder but keep everything inside it: its children move up into
+    // its own slot one level higher (see dissolveGroup).
     setGroups((g) => g.filter((x) => x.id !== id));
-    setRules((r) => r.map((x) => (x.groupId === id ? { ...x, groupId: null } : x)));
-    setLayout((l) => {
-      const at = l.findIndex((e) => e.t === 'g' && e.id === id);
-      const without = l.filter((e) => !(e.t === 'g' && e.id === id));
-      const pos = at < 0 ? without.length : at;
-      without.splice(pos, 0, ...freed);
-      return without;
-    });
+    setLayout((l) => dissolveGroup(toTree(l, rules, groups), id));
   };
 
-  // Reconciled top-level order actually rendered; persisted back if it drifted
-  // (a new rule/group appeared, or one was removed elsewhere).
-  const renderLayout = useMemo(() => reconcileLayout(layout, rules, groups), [layout, rules, groups]);
+  // Reconciled tree actually rendered; persisted back if it drifted (a new
+  // rule/group appeared, one was removed elsewhere, or an old flat layout was
+  // migrated to the nested tree).
+  const renderLayout = useMemo(() => reconcileTree(toTree(layout, rules, groups), rules, groups), [layout, rules, groups]);
   useEffect(() => {
-    if (!sameLayout(renderLayout, layout)) setLayout(() => renderLayout);
+    if (!sameTree(renderLayout, layout)) setLayout(() => renderLayout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [renderLayout]);
 
@@ -447,14 +495,21 @@ export default function RulesSection({ rootOnBack }) {
   }, [groupMenu]);
 
   // ── Unified drag (window listeners so events survive DOM reshuffles) ──
-  // Grab a grip → drag either a rule ('r') or a group ('g'). A rule can drop
-  // into a group (over a visor) or at any top-level slot (becoming ungrouped);
-  // a group can drop at any top-level slot. Nothing relies on pointer capture.
+  // Grab a grip → drag a rule ('r') or a group ('g'). Two drop intents:
+  //  • NEST  — the pointer is over a folder's header (.rule-koz-head): the node
+  //            is appended inside that folder.
+  //  • REORDER — otherwise: the node lands among the DIRECT children of whatever
+  //            container the pointer is in (a folder's body, or the top level),
+  //            at the gap the pointer sits in.
+  // The dragged node's whole subtree gets `pointer-events:none` (the .dragging
+  // class) so it's invisible to hit-testing — you can't hover, and therefore
+  // can't drop, a folder into itself or its own descendants. commitDrop keeps a
+  // nodeContains guard as a belt-and-braces check. Nothing relies on capture.
   const dragRef = useRef({ kind: null, id: null, started: false });
-  const dropRef = useRef(null);              // { mode:'group'|'top', groupId?, y }
+  const dropRef = useRef(null);              // { mode:'nest', groupId } | { mode:'reorder', containerId, index }
   const [dragKey, setDragKey] = useState(null); // 'r:<id>' | 'g:<id>' being dragged
   const [ghost, setGhost] = useState(null);     // { x, y, title }
-  const [dropGroup, setDropGroup] = useState(null); // highlighted group id (rule→group)
+  const [dropGroup, setDropGroup] = useState(null); // highlighted folder being nested into
 
   const resetDrag = () => {
     dragRef.current = { kind: null, id: null, started: false };
@@ -474,15 +529,24 @@ export default function RulesSection({ rootOnBack }) {
       if (!d.started) { d.started = true; setDragKey(selfKey); }
       setGhost({ x: ev.clientX, y: ev.clientY, title });
       let info = null;
-      if (kind === 'rule') {
-        const el = document.elementFromPoint(ev.clientX, ev.clientY);
-        const koz = el && el.closest ? el.closest('.rule-koz[data-group-id]') : null;
-        if (koz) info = { mode: 'group', groupId: koz.getAttribute('data-group-id') };
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      // Over a folder header → nest inside it.
+      const head = el && el.closest ? el.closest('.rule-koz-head') : null;
+      if (head) {
+        const koz = head.closest('.rule-koz[data-group-id]');
+        const gid = koz && koz.getAttribute('data-group-id');
+        if (gid) info = { mode: 'nest', groupId: gid };
       }
-      if (!info) info = { mode: 'top' };
-      info.y = ev.clientY;
+      // Otherwise reorder within the container the pointer is inside.
+      if (!info) {
+        const bodyEl = el && el.closest ? el.closest('.rule-koz-body') : null;
+        const koz = bodyEl ? bodyEl.closest('.rule-koz[data-group-id]') : null;
+        const containerId = koz ? koz.getAttribute('data-group-id') : null;
+        const zone = bodyEl || document.querySelector('.rules-list');
+        info = { mode: 'reorder', containerId, index: childDropIndex(zone, ev.clientY, selfKey) };
+      }
       dropRef.current = info;
-      setDropGroup(info.mode === 'group' ? info.groupId : null);
+      setDropGroup(info.mode === 'nest' ? info.groupId : null);
     };
     const onUp = () => {
       const d = dragRef.current;
@@ -499,22 +563,16 @@ export default function RulesSection({ rootOnBack }) {
   };
 
   const commitDrop = (kind, id, info) => {
-    if (kind === 'rule' && info.mode === 'group') {
-      const gid = info.groupId;
-      const koz = document.querySelector(`.rule-koz[data-group-id="${cssId(gid)}"]`);
-      const bodyEl = (koz && koz.querySelector('.rule-koz-body')) || koz;
-      const index = ruleDropIndex(bodyEl, info.y, id);
-      setRules((rs) => moveRule(rs, id, gid, index));
-      setLayout((l) => l.filter((e) => !(e.t === 'r' && e.id === id)));
-      return;
-    }
-    // Top-level: place the block among the top-level blocks (rules ungroup).
     const selfKey = (kind === 'group' ? 'g:' : 'r:') + id;
-    const index = topBlockIndex(info.y, selfKey);
-    const base = renderLayout.filter((e) => !(e.t === (kind === 'group' ? 'g' : 'r') && e.id === id));
-    base.splice(Math.max(0, Math.min(index, base.length)), 0, { t: kind === 'group' ? 'g' : 'r', id });
-    if (kind === 'rule') setRules((rs) => rs.map((r) => (r.id === id ? { ...r, groupId: null } : r)));
-    setLayout(() => base);
+    const dragged = findNode(renderLayout, selfKey);
+    if (!dragged) return;
+    const containerId = info.mode === 'nest' ? info.groupId : info.containerId;
+    // Never drop a folder into itself or one of its own descendants.
+    if (kind === 'group' && containerId != null && nodeContains(dragged, 'g:' + containerId)) return;
+    const without = removeNode(renderLayout, selfKey);
+    // Nest → append to the end of the folder; reorder → the measured gap.
+    const index = info.mode === 'nest' ? Infinity : info.index;
+    setLayout(() => insertNode(without, containerId ?? null, index, dragged));
   };
   const anyDrag = dragKey != null;
 
@@ -560,11 +618,12 @@ export default function RulesSection({ rootOnBack }) {
     backToList();
   };
 
-  // Search filter (drag/visors only in the unfiltered view).
+  // Search filter. While searching we show a flat list of every matching rule
+  // (across all folders) and turn off drag/nesting — the tree only makes sense
+  // in the unfiltered view.
   const q = query.trim().toLowerCase();
   const matches = (r) =>
     !q || (r.title ?? '').toLowerCase().includes(q) || (r.body ?? '').toLowerCase().includes(q);
-  const groupRules = (gid) => rules.filter((r) => r.groupId === gid && matches(r));
 
   // ── Header (title / back / gear) ─────────────────────────────
   let pageTitle, onBack, headerRight = null;
@@ -572,7 +631,7 @@ export default function RulesSection({ rootOnBack }) {
     pageTitle = t('reglas.new');
     onBack = backToList;
   } else if (currentRule) {
-    pageTitle = <span className="sub-title-deck">{currentRule.title || t('reglas.title')}</span>;
+    pageTitle = <span className="sub-title-deck rule-title-plain">{currentRule.title || t('reglas.title')}</span>;
     onBack = backToList;
   } else if (readingRule) {
     onBack = backToList;
@@ -591,7 +650,7 @@ export default function RulesSection({ rootOnBack }) {
         }}
       />
     ) : (
-      <span className="sub-title-deck">{readingRule.title || t('reglas.title')}</span>
+      <span className="sub-title-deck rule-title-plain">{readingRule.title || t('reglas.title')}</span>
     );
     headerRight = (
       <div className="cards-gear" ref={menuRef}>
@@ -671,19 +730,49 @@ export default function RulesSection({ rootOnBack }) {
     );
   } else {
     const ruleById = new Map(rules.map((r) => [r.id, r]));
+    const groupById = new Map(groups.map((g) => [g.id, g]));
     const gripRule = q ? null : (e, r) => startDrag(e, 'rule', r.id, r.title || t('reglas.noBody'));
     const gripGroup = q ? null : (e, g) => startDrag(e, 'group', g.id, g.name);
-    const innerCard = (r) => (
-      <RuleCard key={r.id} rule={r} dragging={dragKey === 'r:' + r.id} onGrip={gripRule} onOpen={openFull} t={t} />
-    );
 
-    // Which top-level blocks to render (filtered during search).
-    const blocks = renderLayout.filter((e) => {
-      if (e.t === 'r') { const r = ruleById.get(e.id); return r && matches(r); }
-      if (e.t === 'g') return !q || groupRules(e.id).length > 0;
-      return false;
+    // Recursively render a list of tree nodes: rule leaves as cards, group nodes
+    // as folders whose children are rendered the same way (any depth).
+    const renderNodes = (nodes) => nodes.map((n) => {
+      if (n.t === 'r') {
+        const r = ruleById.get(n.id);
+        if (!r) return null;
+        return <RuleCard key={'r:' + n.id} rule={r} dragging={dragKey === 'r:' + n.id} onGrip={gripRule} onOpen={openFull} t={t} />;
+      }
+      const g = groupById.get(n.id);
+      if (!g) return null;
+      return (
+        <GroupVisor
+          key={'g:' + g.id}
+          group={g}
+          count={collectRuleIds(n.children).length}
+          empty={(n.children || []).length === 0}
+          collapsed={collapsed.has(g.id)}
+          isDrop={dropGroup === g.id}
+          dragging={dragKey === 'g:' + g.id}
+          renaming={groupRenaming === g.id}
+          nameDraft={groupNameDraft}
+          menuOpen={groupMenu === g.id}
+          onGrip={gripGroup}
+          onToggle={toggleCollapse}
+          onMenu={setGroupMenu}
+          onStartRename={(grp) => { setGroupMenu(null); setGroupNameDraft(grp.name); setGroupRenaming(grp.id); }}
+          onRenameChange={setGroupNameDraft}
+          onCommitRename={commitGroupRename}
+          onDelete={(id) => { setGroupMenu(null); removeGroup(id); }}
+          t={t}
+        >
+          {renderNodes(n.children || [])}
+        </GroupVisor>
+      );
     });
-    const nothing = blocks.length === 0;
+
+    // Flat list of matching rules while searching (hierarchy hidden).
+    const searchHits = q ? rules.filter(matches) : [];
+    const nothing = q ? searchHits.length === 0 : renderLayout.length === 0;
 
     content = (
       <>
@@ -713,39 +802,15 @@ export default function RulesSection({ rootOnBack }) {
           <div className="empty-hint">{t('reglas.empty')}</div>
         ) : nothing && q ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
+        ) : q ? (
+          <div className="rules-list">
+            {searchHits.map((r) => (
+              <RuleCard key={'r:' + r.id} rule={r} dragging={false} onGrip={null} onOpen={openFull} t={t} />
+            ))}
+          </div>
         ) : (
           <div className={`rules-list${anyDrag ? ' dragging' : ''}`}>
-            {blocks.map((e) => {
-              if (e.t === 'r') return (
-                <RuleCard key={'r:' + e.id} rule={ruleById.get(e.id)} dragging={dragKey === 'r:' + e.id} topBlock={'r:' + e.id} onGrip={gripRule} onOpen={openFull} t={t} />
-              );
-              const g = groups.find((x) => x.id === e.id);
-              if (!g) return null;
-              const gr = groupRules(g.id);
-              return (
-                <GroupVisor
-                  key={'g:' + g.id}
-                  group={g}
-                  rules={gr}
-                  collapsed={!q && collapsed.has(g.id)}
-                  isDrop={dropGroup === g.id}
-                  dragging={dragKey === 'g:' + g.id}
-                  renaming={groupRenaming === g.id}
-                  nameDraft={groupNameDraft}
-                  menuOpen={groupMenu === g.id}
-                  onGrip={gripGroup}
-                  onToggle={toggleCollapse}
-                  onMenu={setGroupMenu}
-                  onStartRename={(grp) => { setGroupMenu(null); setGroupNameDraft(grp.name); setGroupRenaming(grp.id); }}
-                  onRenameChange={setGroupNameDraft}
-                  onCommitRename={commitGroupRename}
-                  onDelete={(id) => { setGroupMenu(null); removeGroup(id); }}
-                  t={t}
-                >
-                  {gr.map(innerCard)}
-                </GroupVisor>
-              );
-            })}
+            {renderNodes(renderLayout)}
           </div>
         )}
 

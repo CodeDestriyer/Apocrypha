@@ -5479,6 +5479,13 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Rule name in the read/edit header: normal serif, real case (no Cinzel small
+   caps) — matches the mixed-case rule/folder names in the list. */
+.sub-title-deck.rule-title-plain {
+  font-family: 'EB Garamond', serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
 .sub-title-input {
   width: 100%;
   background: transparent;
@@ -6348,7 +6355,9 @@ body {
   border-color: var(--wine); background: #ffffff;
   box-shadow: 0 6px 16px rgba(42, 14, 8, 0.14); transform: translateY(-1px);
 }
-.rule-card.dragging { opacity: 0.4; }
+/* The dragged node's whole subtree is invisible to hit-testing, so it can't be
+   a drop target — you can never drop a folder into itself or its descendants. */
+.rule-card.dragging { opacity: 0.4; pointer-events: none; }
 .rule-card-open {
   flex: 1; min-width: 0;
   padding: 14px 6px 14px 15px;
@@ -6356,8 +6365,10 @@ body {
   font-family: inherit; text-align: left; cursor: pointer;
 }
 .rule-card-title {
-  font-family: 'Cinzel', serif;
-  font-size: 13px; letter-spacing: 0.02em; font-weight: 600;
+  /* EB Garamond (not Cinzel) so ordinary lowercase shows as lowercase, not as
+     small caps — rule names can be normal mixed-case text. */
+  font-family: 'EB Garamond', serif;
+  font-size: 16px; letter-spacing: 0; font-weight: 600;
   color: var(--wine); overflow-wrap: anywhere;
 }
 .rule-card-grip {
@@ -6380,7 +6391,7 @@ body {
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .rule-koz.drop { border-color: var(--wine); background: rgba(110, 36, 19, 0.08); box-shadow: 0 0 0 2px rgba(110, 36, 19, 0.15); }
-.rule-koz.dragging { opacity: 0.4; }
+.rule-koz.dragging { opacity: 0.4; pointer-events: none; }
 .rule-koz-head { display: flex; align-items: center; }
 .rule-koz-grip {
   flex: none;
@@ -6398,9 +6409,11 @@ body {
   display: flex; align-items: center; gap: 9px;
   padding: 11px 6px 11px 13px;
   background: transparent; border: none;
-  font-family: 'Cinzel', serif;
-  font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase;
-  font-weight: 800; color: var(--wine); text-align: left;
+  /* EB Garamond (not Cinzel) + no uppercase so folder names keep their real
+     case — normal lowercase letters instead of forced small caps. */
+  font-family: 'EB Garamond', serif;
+  font-size: 18px; letter-spacing: 0; text-transform: none;
+  font-weight: 700; color: var(--wine); text-align: left;
   cursor: pointer;
 }
 .rule-koz-chevron { flex: none; color: var(--gold); transition: transform 0.18s ease; }
@@ -6445,7 +6458,7 @@ body {
   padding: 8px 12px; max-width: 60vw;
   border: 1.5px solid var(--wine); border-radius: 8px;
   background: var(--paper); box-shadow: 0 10px 24px rgba(42, 14, 8, 0.28);
-  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--wine);
+  font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 700; color: var(--wine);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   pointer-events: none;
 }
