@@ -23,22 +23,24 @@ const esc = (s) =>
 // real content. Used everywhere to drop EMPTY boxes / marks / fences so a stray
 // frame (an outline around nothing, a mark that just tints a line start) can
 // never be created, rendered, or round-tripped.
-const STRUCTURAL = /\[\[\[cols|\[\[\[|\]\]\]|\|\|\||\[\[|\]\]|\*\*|__|==|[\s\u200B]/g;
+const STRUCTURAL = /\[\[\[cols|\[\[\[|\]\]\]|\|\|\||\[\[|\]\]|\*\*|__|==|##|[\s\u200B]/g;
 const isEmptyContent = (s) => String(s ?? '').replace(STRUCTURAL, '') === '';
 
 // One logical line's markers → inline HTML. Mirrors renderRich(), including its
 // recursion so nested markers (e.g. bold inside a mark, `==**x**==`) seed as
-// nested elements rather than literal ** text.
+// nested elements rather than literal ** text. `##heading##` (a big bold
+// heading) is the last alternative so the existing capture-group numbers stay put.
 function inlineToHtml(text) {
   const str = String(text ?? '');
-  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|__([\s\S]+?)__/g;
+  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|__([\s\S]+?)__|##([\s\S]+?)##/g;
   let out = '', last = 0, m;
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) out += esc(str.slice(last, m.index));
     if (m[1] !== undefined) out += `<strong>${inlineToHtml(m[1])}</strong>`;
     else if (m[2] !== undefined) out += isEmptyContent(m[2]) ? esc(m[2]) : `<span class="rule-box">${inlineToHtml(m[2])}</span>`;
     else if (m[3] !== undefined) out += isEmptyContent(m[3]) ? esc(m[3]) : `<mark class="rule-mark">${inlineToHtml(m[3])}</mark>`;
-    else out += `<em>${inlineToHtml(m[4])}</em>`;
+    else if (m[4] !== undefined) out += `<em>${inlineToHtml(m[4])}</em>`;
+    else out += `<span class="rule-heading">${inlineToHtml(m[5])}</span>`;
     last = m.index + m[0].length;
   }
   if (last < str.length) out += esc(str.slice(last));
@@ -191,6 +193,7 @@ function inlineSerialize(node) {
     const inner = inlineSerialize(c);
     if (tag === 'STRONG' || tag === 'B') s += wrapInline(inner, '**', '**');
     else if (tag === 'EM' || tag === 'I') s += wrapInline(inner, '__', '__');
+    else if (c.classList.contains('rule-heading')) s += wrapInline(inner, '##', '##');
     else if (c.classList.contains('rule-box')) s += isEmptyContent(inner) ? inner : wrapInline(inner, '[[', ']]');
     else if (tag === 'MARK' || c.classList.contains('rule-mark')) s += isEmptyContent(inner) ? inner : wrapInline(inner, '==', '==');
     else s += inner;
@@ -309,8 +312,8 @@ function domToMarkers(root) {
 }
 
 // ── inline formatting (bold / box / mark) within a single line ──────────────
-const KIND_TAG = { bold: 'STRONG', italic: 'EM', box: 'SPAN', mark: 'MARK' };
-const KIND_CLASS = { box: 'rule-box', mark: 'rule-mark' };
+const KIND_TAG = { bold: 'STRONG', italic: 'EM', box: 'SPAN', mark: 'MARK', heading: 'SPAN' };
+const KIND_CLASS = { box: 'rule-box', mark: 'rule-mark', heading: 'rule-heading' };
 
 function enclosingFormat(node, kind, editor) {
   let el = node?.nodeType === Node.TEXT_NODE ? node.parentNode : node;
@@ -1160,6 +1163,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           style={{ top: bar.y, left: bar.x }}
           onMouseDown={(e) => e.preventDefault()}
         >
+          {btn('heading', t('reglas.heading'), <span className="rule-fmt-h">H</span>)}
           {btn('bold', t('reglas.bold'), <span className="rule-fmt-b">B</span>)}
           {btn('italic', t('reglas.italic'), <span className="rule-fmt-i">I</span>)}
           {btn('box', t('reglas.box'), <span className="rule-fmt-box" aria-hidden="true" />)}

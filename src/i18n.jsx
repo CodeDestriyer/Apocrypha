@@ -47,6 +47,7 @@ const DICT = {
   'reglas.groupEmpty': 'Arrastra reglas aquí',
   'reglas.reorder': 'Mover',
   'reglas.noBody': '(sin texto)',
+  'reglas.heading': 'Título',
   'reglas.bold': 'Negrita',
   'reglas.italic': 'Cursiva',
   'reglas.box': 'Recuadro',
