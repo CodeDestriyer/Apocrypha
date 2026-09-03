@@ -217,14 +217,33 @@ function topChild(flow, container) {
   while (n && n.parentNode !== flow) n = n.parentNode;
   return n && n.parentNode === flow ? n : null;
 }
+// Index of the top-level child of `flow` a range boundary (container + offset)
+// sits on, or -1. A boundary landing on `flow` ITSELF is offset-based — a
+// select-all, a triple-click, or a drag to the very end leaves the boundary at
+// (flow, N) rather than inside a line's text node — and topChild(flow, flow)
+// is null, which used to collapse the box/columns logic to a single line and
+// silently no-op (the "framing all the text only works on the 2nd–3rd try, and
+// only if I also grab the empty line below" bug). Resolve it to the child at
+// that offset instead: `isEnd` picks the node just before the boundary so the
+// end of a full selection maps to the last line, not one past it.
+function boundaryTopIndex(flow, container, offset, isEnd) {
+  const n = flow.childNodes.length;
+  if (container === flow) {
+    if (!n) return -1;
+    const idx = isEnd ? offset - 1 : offset;
+    return Math.max(0, Math.min(idx, n - 1));
+  }
+  return topIndex(flow, container);
+}
 // Does the selection sit on a whole-line block (columns / box) of its flow? True
 // when either end lands on such a node — the case where a box button should frame
 // the WHOLE block (e.g. draw a box around an existing columns layout) rather than
 // treat it as an inline word. A word inside a column has its flow narrowed to
 // that column, so its ends are plain text there and this stays false.
 function coversBlock(flow, range) {
-  return isBlockNode(topChild(flow, range.startContainer)) ||
-         isBlockNode(topChild(flow, range.endContainer));
+  const kids = flow.childNodes;
+  return isBlockNode(kids[boundaryTopIndex(flow, range.startContainer, range.startOffset, false)]) ||
+         isBlockNode(kids[boundaryTopIndex(flow, range.endContainer, range.endOffset, true)]);
 }
 
 const isTable = (c) => c.nodeType === Node.ELEMENT_NODE && c.tagName === 'TABLE';
@@ -366,13 +385,15 @@ function unwrapBox(editor, box) {
 // lines within the current block, letting columns be made inside a box).
 function isMultiLine(flow, range) {
   const kids = Array.from(flow.childNodes);
-  const lineOf = (container) => {
-    const idx = topIndex(flow, container);
+  const lineOfIdx = (idx) => {
     let ln = 0;
     for (let k = 0; k < idx; k++) if (kids[k].nodeName === 'BR') ln++;
     return ln;
   };
-  return lineOf(range.startContainer) !== lineOf(range.endContainer);
+  const i = boundaryTopIndex(flow, range.startContainer, range.startOffset, false);
+  const j = boundaryTopIndex(flow, range.endContainer, range.endOffset, true);
+  if (i < 0 || j < 0) return false;
+  return lineOfIdx(i) !== lineOfIdx(j);
 }
 // Wrap every whole line the selection touches into one block box, inside `flow`
 // (the editor or the column/box the selection lives in). A whole-line block
@@ -382,11 +403,17 @@ function isMultiLine(flow, range) {
 // the new box.
 function wrapLinesInBox(flow, range) {
   const kids = Array.from(flow.childNodes);
-  let i = topIndex(flow, range.startContainer), j = topIndex(flow, range.endContainer);
+  let i = boundaryTopIndex(flow, range.startContainer, range.startOffset, false);
+  let j = boundaryTopIndex(flow, range.endContainer, range.endOffset, true);
   if (i < 0 || j < 0) return null;
   if (i > j) { const t = i; i = j; j = t; }
   while (i > 0 && !isAtomicLine(kids[i]) && !isAtomicLine(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
   while (j < kids.length - 1 && !isAtomicLine(kids[j]) && !isAtomicLine(kids[j + 1]) && kids[j + 1].nodeName !== 'BR') j++;
+  // A boundary resolved to a leading/trailing <br> (a blank edge line the
+  // selection swept in — e.g. the empty line below the text) would frame an
+  // empty line; hug the real content instead.
+  while (i < j && kids[i].nodeName === 'BR') i++;
+  while (j > i && kids[j].nodeName === 'BR') j--;
   const box = document.createElement('div');
   box.className = 'rule-block-box';
   const ref = kids[j + 1] || null;
@@ -416,7 +443,8 @@ function enclosingCols(node, editor) {
 // within that box) and treats a nested whole-line block as one line.
 function wrapLinesInCols(flow, range) {
   const kids = Array.from(flow.childNodes);
-  let i = topIndex(flow, range.startContainer), j = topIndex(flow, range.endContainer);
+  let i = boundaryTopIndex(flow, range.startContainer, range.startOffset, false);
+  let j = boundaryTopIndex(flow, range.endContainer, range.endOffset, true);
   if (i < 0 || j < 0) return null;
   if (i > j) { const t = i; i = j; j = t; }
   while (i > 0 && !isAtomicLine(kids[i]) && !isAtomicLine(kids[i - 1]) && kids[i - 1].nodeName !== 'BR') i--;
