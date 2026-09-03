@@ -89,17 +89,19 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 // real content — used to drop EMPTY boxes / marks / fences so a stray frame (an
 // outline around nothing, a mark that just tints a line start) never renders,
 // even if one is still sitting in older stored data.
-const STRUCTURAL = /\[\[\[cols|\[\[\[|\]\]\]|\|\|\||\[\[|\]\]|\*\*|__|==|[\s\u200B]/g;
+const STRUCTURAL = /\[\[\[cols|\[\[\[|\]\]\]|\|\|\||\[\[|\]\]|\*\*|__|==|##|[\s\u200B]/g;
 const isEmptyContent = (s) => String(s ?? '').replace(STRUCTURAL, '') === '';
 
 // Rule bodies store inline formatting as markers: **bold**, __italic__,
-// [[boxed]] and ==highlight==. Render each as its own span (newlines are kept
-// by the container's white-space: pre-wrap). Markers nest — a marked span can
-// also be bold-and-italic (`==***x***==`, i.e. `==**__x__**==`) — so each
-// match's inner content is rendered recursively.
+// [[boxed]], ==highlight== and ##heading## (a big bold heading). Render each as
+// its own span (newlines are kept by the container's white-space: pre-wrap).
+// Markers nest — a marked span can also be bold-and-italic (`==***x***==`, i.e.
+// `==**__x__**==`) — so each match's inner content is rendered recursively.
+// `##heading##` is the last alternative so the earlier capture-group numbers
+// stay put.
 function renderRich(text, kp = 'r') {
   const str = String(text ?? '');
-  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|__([\s\S]+?)__/g;
+  const re = /\*\*([\s\S]+?)\*\*|\[\[([\s\S]+?)\]\]|==([\s\S]+?)==|__([\s\S]+?)__|##([\s\S]+?)##/g;
   const out = [];
   let last = 0, m, key = 0;
   while ((m = re.exec(str)) !== null) {
@@ -108,7 +110,8 @@ function renderRich(text, kp = 'r') {
     if (m[1] !== undefined) out.push(<strong key={k}>{renderRich(m[1], k)}</strong>);
     else if (m[2] !== undefined) out.push(isEmptyContent(m[2]) ? m[2] : <span key={k} className="rule-box">{renderRich(m[2], k)}</span>);
     else if (m[3] !== undefined) out.push(isEmptyContent(m[3]) ? m[3] : <mark key={k} className="rule-mark">{renderRich(m[3], k)}</mark>);
-    else out.push(<em key={k}>{renderRich(m[4], k)}</em>);
+    else if (m[4] !== undefined) out.push(<em key={k}>{renderRich(m[4], k)}</em>);
+    else out.push(<span key={k} className="rule-heading">{renderRich(m[5], k)}</span>);
     last = m.index + m[0].length;
   }
   if (last < str.length) out.push(str.slice(last));

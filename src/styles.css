@@ -6482,6 +6482,18 @@ body {
   border-radius: 4px; background: rgba(240, 205, 90, 0.75);
 }
 /* Inline formatting inside a rule body */
+/* A "heading" run: bigger and bold, so a selected phrase reads as a title. Shown
+   live in the editor and in the read view alike. Inline (not display:block) so a
+   run mid-line can be a heading, and box-decoration-break keeps it clean when it
+   wraps across lines. */
+.rule-heading {
+  font-family: 'Cinzel', serif;
+  font-size: 1.35em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--wine);
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
 .rule-box {
   border: 1.5px solid var(--ink); border-radius: 4px;
   padding: 0 5px;
@@ -6645,6 +6657,7 @@ body {
   background: transparent; color: var(--ink); cursor: pointer;
 }
 .rule-fmt-btn:hover { background: rgba(110, 36, 19, 0.08); }
+.rule-fmt-h { font-family: 'Cinzel', serif; font-weight: 700; font-size: 17px; color: var(--wine); }
 .rule-fmt-b { font-family: 'Cinzel', serif; font-weight: 700; font-size: 15px; color: var(--wine); }
 .rule-fmt-i { font-family: 'Cinzel', serif; font-weight: 600; font-style: italic; font-size: 15px; color: var(--wine); }
 .rule-fmt-box { width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 3px; }
