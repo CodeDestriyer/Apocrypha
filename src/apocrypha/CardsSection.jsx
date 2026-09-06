@@ -1191,12 +1191,20 @@ const BOX_MAX = 5;
 const weightForBox = (box) => 2 ** (BOX_MAX - box);
 // Weighted random draw. `boxOf` resolves the box a card is *weighted by* — this
 // is the frozen session box, not necessarily the card's real box (see below).
-// Excludes the just-seen card so it can't repeat back-to-back (unless it's the
-// only card in the deck).
-const pickCard = (cards, excludeId, boxOf = (c) => c.box ?? 1) => {
+// `exclude` is a single id or a list of recently-seen ids (the cooldown window)
+// that are kept out of the pool so a small clutch of hard, top-weight words
+// can't keep resurfacing back-to-back. If the window covers the whole (tiny)
+// deck we fall back to the full set — there must always be a card to draw.
+const pickCard = (cards, exclude, boxOf = (c) => c.box ?? 1) => {
   if (!cards.length) return null;
+  const ex = exclude == null
+    ? null
+    : (Array.isArray(exclude) ? new Set(exclude) : new Set([exclude]));
   let pool = cards;
-  if (excludeId != null && cards.length > 1) pool = cards.filter((c) => c.id !== excludeId);
+  if (ex && ex.size) {
+    const filtered = cards.filter((c) => !ex.has(c.id));
+    if (filtered.length) pool = filtered;
+  }
   const weights = pool.map((c) => weightForBox(boxOf(c)));
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
@@ -1221,14 +1229,30 @@ function StudyView({ deck, studyKey, onGrade, t }) {
   const [drawBoxes, setDrawBoxes] = useState(() => saved?.drawBoxes ?? {});
   const boxOf = (c) => drawBoxes[c.id] ?? (c.box ?? 1);
 
+  // Anti-spam cooldown: how many other cards must go by before a just-seen card
+  // can reappear. Scales with the pool (~half of it), clamped so a 1–2 card deck
+  // still works. This is what stops a handful of hard box-1 words from dominating
+  // the draw and inflating the "reviewed" count with the same few repeats.
+  const cooldown = Math.min(
+    Math.max(0, deck.cards.length - 1),
+    Math.max(1, Math.floor(deck.cards.length / 2)),
+  );
+
   const [currentId, _setCurrentId] = useState(() => {
     if (saved?.currentId && deck.cards.some((c) => c.id === saved.currentId)) return saved.currentId;
     const first = pickCard(deck.cards, null, (c) => (saved?.drawBoxes?.[c.id]) ?? (c.box ?? 1));
     return first ? first.id : null;
   });
   const [shown, _setShown] = useState(!!saved?.shown);
-  const [reviewed, setReviewed] = useState(saved?.reviewed ?? 0);
-  const [known, setKnown] = useState(saved?.known ?? 0);
+  // Recently-shown card ids (newest first), capped at `cooldown` — the exclusion
+  // window handed to pickCard so the same word can't come back until others have.
+  const [recent, setRecent] = useState(() => saved?.recent ?? []);
+  // Progress is counted by DISTINCT words, not raw taps: `seen` is every unique
+  // card graded this session, `knownIds` those whose latest grade was "knew".
+  // This makes a "review 50 words" goal real — 50 means 50 different words, not
+  // the same five over and over.
+  const [seen, setSeen] = useState(() => saved?.seen ?? []);
+  const [knownIds, setKnownIds] = useState(() => saved?.knownIds ?? []);
   // Words marked "No lo sabía" (forgot) during THIS session, newest first, as
   // {id, front, back} snapshots. Lives in the persisted study state so the list
   // survives tab switches / reloads exactly like the rest of the progress, and
@@ -1245,7 +1269,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
 
   // Persist a partial study state, keeping the rest from the current render.
   const persist = (patch) => {
-    _study.set(key, { currentId, shown, reviewed, known, drawBoxes, forgot, ...patch });
+    _study.set(key, { currentId, shown, drawBoxes, forgot, recent, seen, knownIds, ...patch });
     _saveSS();
   };
   const setCurrentId = (v) => { persist({ currentId: v }); _setCurrentId(v); };
@@ -1258,7 +1282,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
   // the deck still has cards, draw a fresh one.
   useEffect(() => {
     if (!currentId || card) return;
-    const next = pickCard(deck.cards, null, boxOf);
+    const next = pickCard(deck.cards, recent, boxOf);
     if (next) setCurrentId(next.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId, card, deck.cards]);
@@ -1300,23 +1324,34 @@ function StudyView({ deck, studyKey, onGrade, t }) {
       : (forgot.some((w) => w.id === card.id)
           ? forgot.map((w) => (w.id === card.id ? { ...w, learned: false } : w))
           : [{ id: card.id, front: card.front, back: card.back, learned: false }, ...forgot]);
-    const next = pickCard(deck.cards, card.id, (c) => nextDraw[c.id] ?? (c.box ?? 1));
+    // Slide the cooldown window forward (this card in front) and keep the whole
+    // window out of the next draw, so the same word can't come straight back.
+    const nextRecent = [card.id, ...recent.filter((id) => id !== card.id)].slice(0, cooldown);
+    // Distinct-word progress: add to `seen` once, and track whether its latest
+    // grade leaves it "known" (knew → add, forgot → drop).
+    const nextSeen = seen.includes(card.id) ? seen : [...seen, card.id];
+    const nextKnownIds = knewIt
+      ? (knownIds.includes(card.id) ? knownIds : [...knownIds, card.id])
+      : knownIds.filter((id) => id !== card.id);
+    const next = pickCard(deck.cards, nextRecent, (c) => nextDraw[c.id] ?? (c.box ?? 1));
     const nextState = {
       currentId: next ? next.id : null,
       shown: false,
-      reviewed: reviewed + 1,
-      known: known + (knewIt ? 1 : 0),
       drawBoxes: nextDraw,
       forgot: nextForgot,
+      recent: nextRecent,
+      seen: nextSeen,
+      knownIds: nextKnownIds,
     };
     _study.set(key, nextState);
     _saveSS();
     _setCurrentId(nextState.currentId);
     _setShown(false);
-    setReviewed(nextState.reviewed);
-    setKnown(nextState.known);
     setDrawBoxes(nextDraw);
     setForgot(nextForgot);
+    setRecent(nextRecent);
+    setSeen(nextSeen);
+    setKnownIds(nextKnownIds);
   };
 
   // knewIt → swipe right (dir +1); forgot → swipe left (dir -1)
@@ -1367,7 +1402,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
         onClick={() => setShowForgot((s) => !s)}
         aria-expanded={showForgot}
       >
-        {t('cards.reviewed')}: {reviewed} · {known} ✓
+        {t('cards.reviewed')}: {seen.length} · {knownIds.length} ✓
         {forgot.length > 0 && <span className="cards-progress-badge">{forgot.length}</span>}
       </button>
 
