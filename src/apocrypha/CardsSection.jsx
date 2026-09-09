@@ -1247,12 +1247,14 @@ function StudyView({ deck, studyKey, onGrade, t }) {
   // Recently-shown card ids (newest first), capped at `cooldown` — the exclusion
   // window handed to pickCard so the same word can't come back until others have.
   const [recent, setRecent] = useState(() => saved?.recent ?? []);
-  // Progress is counted by DISTINCT words, not raw taps: `seen` is every unique
-  // card graded this session, `knownIds` those whose latest grade was "knew".
-  // This makes a "review 50 words" goal real — 50 means 50 different words, not
-  // the same five over and over.
-  const [seen, setSeen] = useState(() => saved?.seen ?? []);
-  const [knownIds, setKnownIds] = useState(() => saved?.knownIds ?? []);
+  // Progress counters count every PASS, not distinct words: `reviewed` bumps on
+  // each grade and `known` on each "knew", so the number keeps climbing as you
+  // drill — it never freezes once you've been through the pool once. (This
+  // matters most on a small hashtag pool, where distinct-word counting would
+  // cap the display at the pool size and look stuck.) The anti-spam cooldown
+  // below still keeps a handful of hard words from dominating the draw.
+  const [reviewed, setReviewed] = useState(saved?.reviewed ?? 0);
+  const [known, setKnown] = useState(saved?.known ?? 0);
   // Words marked "No lo sabía" (forgot) during THIS session, newest first, as
   // {id, front, back} snapshots. Lives in the persisted study state so the list
   // survives tab switches / reloads exactly like the rest of the progress, and
@@ -1269,7 +1271,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
 
   // Persist a partial study state, keeping the rest from the current render.
   const persist = (patch) => {
-    _study.set(key, { currentId, shown, drawBoxes, forgot, recent, seen, knownIds, ...patch });
+    _study.set(key, { currentId, shown, drawBoxes, forgot, recent, reviewed, known, ...patch });
     _saveSS();
   };
   const setCurrentId = (v) => { persist({ currentId: v }); _setCurrentId(v); };
@@ -1327,12 +1329,11 @@ function StudyView({ deck, studyKey, onGrade, t }) {
     // Slide the cooldown window forward (this card in front) and keep the whole
     // window out of the next draw, so the same word can't come straight back.
     const nextRecent = [card.id, ...recent.filter((id) => id !== card.id)].slice(0, cooldown);
-    // Distinct-word progress: add to `seen` once, and track whether its latest
-    // grade leaves it "known" (knew → add, forgot → drop).
-    const nextSeen = seen.includes(card.id) ? seen : [...seen, card.id];
-    const nextKnownIds = knewIt
-      ? (knownIds.includes(card.id) ? knownIds : [...knownIds, card.id])
-      : knownIds.filter((id) => id !== card.id);
+    // Pass-count progress: every grade bumps `reviewed`; a "knew" also bumps
+    // `known`. Counting taps (not distinct cards) keeps the number moving as you
+    // repeat the pool.
+    const nextReviewed = reviewed + 1;
+    const nextKnown = known + (knewIt ? 1 : 0);
     const next = pickCard(deck.cards, nextRecent, (c) => nextDraw[c.id] ?? (c.box ?? 1));
     const nextState = {
       currentId: next ? next.id : null,
@@ -1340,8 +1341,8 @@ function StudyView({ deck, studyKey, onGrade, t }) {
       drawBoxes: nextDraw,
       forgot: nextForgot,
       recent: nextRecent,
-      seen: nextSeen,
-      knownIds: nextKnownIds,
+      reviewed: nextReviewed,
+      known: nextKnown,
     };
     _study.set(key, nextState);
     _saveSS();
@@ -1350,8 +1351,8 @@ function StudyView({ deck, studyKey, onGrade, t }) {
     setDrawBoxes(nextDraw);
     setForgot(nextForgot);
     setRecent(nextRecent);
-    setSeen(nextSeen);
-    setKnownIds(nextKnownIds);
+    setReviewed(nextReviewed);
+    setKnown(nextKnown);
   };
 
   // knewIt → swipe right (dir +1); forgot → swipe left (dir -1)
@@ -1402,7 +1403,7 @@ function StudyView({ deck, studyKey, onGrade, t }) {
         onClick={() => setShowForgot((s) => !s)}
         aria-expanded={showForgot}
       >
-        {t('cards.reviewed')}: {seen.length} · {knownIds.length} ✓
+        {t('cards.reviewed')}: {reviewed} · {known} ✓
         {forgot.length > 0 && <span className="cards-progress-badge">{forgot.length}</span>}
       </button>
 
