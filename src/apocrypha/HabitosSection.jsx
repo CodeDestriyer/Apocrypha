@@ -48,6 +48,7 @@ export default function HabitosSection({ rootOnBack }) {
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState('');
   const [editType, setEditType] = useState(null);
+  const [editTimer, setEditTimer] = useState(true);
   const [menuId, setMenuId] = useState(null);
   const menuRef = useRef(null);
   useEffect(() => {
@@ -97,22 +98,18 @@ export default function HabitosSection({ rootOnBack }) {
     setHabits((h) => h.map((x) => (x.id === id ? { ...x, since: new Date().toISOString() } : x)));
   };
   const remove = (id) => { setMenuId(null); setEditId(null); setHabits((h) => h.filter((x) => x.id !== id)); };
-  // The live hh:mm:ss timer is optional per habit; the day count always shows.
-  const toggleTimer = (id) => {
-    setMenuId(null);
-    setHabits((h) => h.map((x) => (x.id === id ? { ...x, timer: x.timer === false } : x)));
-  };
 
   const startEdit = (hb) => {
     setMenuId(null);
     setEditId(hb.id);
     setEditText(hb.name);
     setEditType(habitTypeOf(hb));
+    setEditTimer(hb.timer !== false);
   };
   const saveEdit = () => {
     const name = editText.trim();
     if (!name) { remove(editId); return; }
-    setHabits((h) => h.map((x) => (x.id === editId ? { ...x, name, type: editType } : x)));
+    setHabits((h) => h.map((x) => (x.id === editId ? { ...x, name, type: editType, timer: editTimer } : x)));
     setEditId(null);
   };
   const cancelEdit = () => setEditId(null);
@@ -159,6 +156,19 @@ export default function HabitosSection({ rootOnBack }) {
               maxLength={60}
             />
             {markPicker(editType, setEditType)}
+            <div className="habito-edit-opts">
+              <button
+                type="button"
+                className={`habito-edit-opt ${editTimer ? 'on' : ''}`}
+                onClick={() => setEditTimer((v) => !v)}
+                aria-pressed={editTimer}
+              >
+                {editTimer ? t('habits.timerHide') : t('habits.timerShow')}
+              </button>
+              <button type="button" className="habito-edit-opt" onClick={() => reset(editId)}>
+                {t('habits.reset')}
+              </button>
+            </div>
             <div className="cards-panel-actions">
               <button className="cards-secondary-btn" onClick={cancelEdit}>{t('cards.cancel')}</button>
               <button className="cards-primary-btn" onClick={saveEdit} disabled={!editText.trim()}>{t('body.save')}</button>
@@ -199,10 +209,6 @@ export default function HabitosSection({ rootOnBack }) {
           {menuId === hb.id && (
             <div className="cards-gear-menu cards-gear-menu--right">
               <button className="cards-gear-item" onClick={() => startEdit(hb)}>{t('habits.edit')}</button>
-              <button className="cards-gear-item" onClick={() => toggleTimer(hb.id)}>
-                {hb.timer === false ? t('habits.timerShow') : t('habits.timerHide')}
-              </button>
-              <button className="cards-gear-item" onClick={() => reset(hb.id)}>{t('habits.reset')}</button>
               <button className="cards-gear-item cards-gear-item--danger" onClick={() => remove(hb.id)}>{t('habits.delete')}</button>
             </div>
           )}
@@ -257,7 +263,7 @@ export default function HabitosSection({ rootOnBack }) {
               return (
                 <div className="habito-folder" key={key} style={{ '--mark-color': color }}>
                   <button
-                    className="habito-folder-head"
+                    className={`habito-folder-head${isOpen ? ' open' : ''}`}
                     onClick={() => toggleFolder(key)}
                     aria-expanded={isOpen}
                   >

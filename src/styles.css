@@ -7388,7 +7388,6 @@ body {
   border: 1.5px solid color-mix(in srgb, var(--mark-color) 45%, var(--line));
   border-radius: 8px;
   background: color-mix(in srgb, var(--mark-color) 6%, transparent);
-  overflow: hidden;
 }
 .habito-folder-head {
   width: 100%;
@@ -7396,7 +7395,11 @@ body {
   padding: 13px 15px;
   background: color-mix(in srgb, var(--mark-color) 12%, transparent);
   border: none; cursor: pointer; text-align: left;
+  border-radius: 7px; /* collapsed: fully rounded */
 }
+/* Open: only the top corners round, the body flows below. No overflow:hidden on
+   the folder, so a card's gear dropdown isn't clipped by the group border. */
+.habito-folder-head.open { border-radius: 7px 7px 0 0; }
 .habito-folder-chevron { flex: none; color: var(--mark-color); transition: transform 0.18s ease; }
 .habito-folder-chevron.open { transform: rotate(90deg); }
 .habito-folder-name {
@@ -7418,6 +7421,19 @@ body {
 .habito-card--editing { align-items: stretch; text-align: left; padding: 14px; }
 .habito-edit { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 .habito-edit .tareas-type-picker { margin: 0; }
+.habito-edit-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.habito-edit-opt {
+  flex: 1 1 130px;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.04em;
+  padding: 9px 10px; border-radius: 6px;
+  border: 1px solid var(--gold-dim); background: transparent;
+  color: var(--text-dim); cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.habito-edit-opt.on {
+  border-color: var(--gold); color: var(--gold-bright);
+  background: rgba(110, 36, 19, 0.06);
+}
 
 /* Desktop: horizontal — big name on the left, day counter on the right,
    the gear pinned to the far-right edge. */
