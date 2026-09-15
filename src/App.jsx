@@ -232,8 +232,12 @@ function DesktopSidebar({ view, setView }) {
   const { t } = useLang();
   // Accordion: only one parent group expanded at a time.
   const [openGroup, setOpenGroup] = useState(
-    view === 'cards' || view === 'reglas' ? 'idiomas' : (view === 'peso' || view === 'habitos') ? 'salud' : null
+    view === 'cards' || view === 'reglas' ? 'idiomas'
+      : (view === 'peso' || view === 'habitos') ? 'salud'
+      : (view === 'home' || view === 'finanzas') ? 'heroe'
+      : null
   );
+  const heroeOpen = openGroup === 'heroe';
   const idiomasOpen = openGroup === 'idiomas';
   const saludOpen = openGroup === 'salud';
   const toggleGroup = (g) => setOpenGroup((cur) => (cur === g ? null : g));
@@ -245,26 +249,37 @@ function DesktopSidebar({ view, setView }) {
       </button>
 
       <nav className="desktop-nav">
-        <button
-          className={`desktop-nav-item ${view === 'home' ? 'active' : ''}`}
-          onClick={() => setView('home')}
-        >
-          <span className="desktop-nav-icon">⚔</span>
-          <span>{t('tab.character')}</span>
-        </button>
+        {/* Héroe is both the home tab and the parent of Finanzas: clicking it
+            opens the Hero home and reveals its child (Finanzas), the same way
+            Español reveals Tarjetas. */}
+        <div className={`desktop-nav-group ${heroeOpen ? 'open' : ''}`}>
+          <button
+            className={`desktop-nav-item desktop-nav-parent ${(view === 'home' || view === 'finanzas') ? 'active-parent' : ''}`}
+            onClick={() => { setView('home'); setOpenGroup('heroe'); }}
+            aria-expanded={heroeOpen}
+          >
+            <span className="desktop-nav-icon">⚔</span>
+            <span>{t('tab.character')}</span>
+            <span className={`desktop-nav-caret ${heroeOpen ? 'open' : ''}`} aria-hidden="true">›</span>
+          </button>
+          {heroeOpen && (
+            <div className="desktop-subnav">
+              <button
+                className={`desktop-nav-item desktop-subnav-item ${view === 'finanzas' ? 'active' : ''}`}
+                onClick={() => setView('finanzas')}
+              >
+                <span className="desktop-nav-icon">€</span>
+                <span>{t('nav.finanzas')}</span>
+              </button>
+            </div>
+          )}
+        </div>
         <button
           className={`desktop-nav-item ${view === 'tareas' ? 'active' : ''}`}
           onClick={() => setView('tareas')}
         >
           <span className="desktop-nav-icon">✓</span>
           <span>{t('nav.tareas')}</span>
-        </button>
-        <button
-          className={`desktop-nav-item ${view === 'finanzas' ? 'active' : ''}`}
-          onClick={() => setView('finanzas')}
-        >
-          <span className="desktop-nav-icon">€</span>
-          <span>{t('nav.finanzas')}</span>
         </button>
         {/* Idiomas is a pure expander: clicking it only reveals its two
             children (Tarjetas / Reglas) — it navigates nowhere itself. */}
