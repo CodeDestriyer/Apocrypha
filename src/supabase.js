@@ -126,6 +126,7 @@ export async function createProfile(name) {
     habits: [],
     weight_log: [],
     weight_goal: null,
+    finances: [],
     tasks: [],
     test_results: [],
     xp: 0,

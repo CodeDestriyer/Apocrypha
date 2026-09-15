@@ -11,6 +11,7 @@ import SaludSection from './apocrypha/SaludSection.jsx';
 import PesoSection from './apocrypha/PesoSection.jsx';
 import HabitosSection from './apocrypha/HabitosSection.jsx';
 import TareasSection from './apocrypha/TareasSection.jsx';
+import FinanzasSection from './apocrypha/FinanzasSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import LoginScreen from './LoginScreen.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
@@ -184,6 +185,7 @@ function Shell() {
             {view === 'peso' && <PesoSection rootOnBack={() => setView('home')} />}
             {view === 'habitos' && <HabitosSection rootOnBack={() => setView('home')} />}
             {view === 'tareas' && <TareasSection rootOnBack={() => setView('home')} />}
+            {view === 'finanzas' && <FinanzasSection rootOnBack={() => setView('home')} />}
             {view === 'salud' && <SaludSection rootOnBack={() => setView('home')} />}
             {view === 'idiomas' && <IdiomasSection rootOnBack={() => setView('home')} />}
             {view === 'body' && <BodySection rootOnBack={() => setView('home')} />}
@@ -208,6 +210,8 @@ function Shell() {
             ? <HabitosSection rootOnBack={() => setView('home')} />
             : view === 'tareas'
             ? <TareasSection rootOnBack={() => setView('home')} />
+            : view === 'finanzas'
+            ? <FinanzasSection rootOnBack={() => setView('home')} />
             : view === 'body'
             ? <BodySection rootOnBack={() => setView('home')} />
             : <CharacterPage onNavigate={setView} showNav={true} onExit={isPwa ? null : () => setShowApp(false)} />
@@ -254,6 +258,13 @@ function DesktopSidebar({ view, setView }) {
         >
           <span className="desktop-nav-icon">✓</span>
           <span>{t('nav.tareas')}</span>
+        </button>
+        <button
+          className={`desktop-nav-item ${view === 'finanzas' ? 'active' : ''}`}
+          onClick={() => setView('finanzas')}
+        >
+          <span className="desktop-nav-icon">€</span>
+          <span>{t('nav.finanzas')}</span>
         </button>
         {/* Idiomas is a pure expander: clicking it only reveals its two
             children (Tarjetas / Reglas) — it navigates nowhere itself. */}

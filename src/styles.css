@@ -7370,6 +7370,90 @@ body {
 .desktop-content .habito-days { font-size: 44px; }
 .desktop-content .habito-gear { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); }
 
+/* ── Finanzas: cash / bank accounts with a running total balance (EUR) ── */
+.finanzas { display: flex; flex-direction: column; gap: 14px; }
+.finanzas-total {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 16px 14px;
+  box-shadow: var(--shadow);
+}
+.finanzas-total-label {
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.finanzas-total-value {
+  font-family: 'Cinzel', serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 34px; font-weight: 700; line-height: 1;
+  color: var(--wine);
+}
+.finanzas-empty {
+  text-align: center; color: var(--text-dim);
+  font-size: 14px; margin: 8px 0 0;
+}
+.finanzas-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+
+.finanza-card {
+  position: relative;
+  display: flex; flex-direction: row; align-items: center; gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 14px 44px 14px 16px;
+  box-shadow: var(--shadow);
+}
+.finanza-main { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; flex: 1; min-width: 0; }
+.finanza-name {
+  font-family: 'EB Garamond', serif;
+  font-size: 18px; font-weight: 600; color: var(--ink);
+  overflow-wrap: anywhere; line-height: 1.2;
+}
+.finanza-badge {
+  display: inline-block;
+  font-size: 11px; letter-spacing: 0.06em;
+  padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--gold-dim);
+  color: var(--ink-soft);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.finanza-badge--bank { border-color: var(--gold); color: var(--gold-bright); }
+.finanza-amount {
+  font-family: 'Cinzel', serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 20px; font-weight: 700; white-space: nowrap;
+  color: var(--ink);
+}
+.finanza-gear { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); }
+.finanza-card.menu-open { z-index: 30; }
+
+/* Add / edit form: type toggle + amount field with a trailing € marker. */
+.finanzas-form { display: flex; flex-direction: column; gap: 10px; }
+.finanzas-typerow { display: flex; gap: 8px; }
+.finanzas-typebtn {
+  flex: 1;
+  font-family: 'Cinzel', serif;
+  font-size: 13px; letter-spacing: 0.06em;
+  padding: 9px 10px; border-radius: 6px;
+  border: 1px solid var(--gold-dim);
+  background: transparent; color: var(--text-dim);
+  cursor: pointer;
+}
+.finanzas-typebtn.active {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+  background: rgba(110, 36, 19, 0.06);
+}
+.finanzas-amountrow { position: relative; display: flex; align-items: center; }
+.finanzas-amount-input { flex: 1; padding-right: 30px; }
+.finanzas-cur {
+  position: absolute; right: 12px;
+  font-family: 'Cinzel', serif; color: var(--text-dim); pointer-events: none;
+}
+
 /* ── Peso: "regla" — draggable weight ruler (replaces the number field) ── */
 .peso-ruler { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
 .peso-ruler-readout { display: flex; align-items: baseline; gap: 6px; }
