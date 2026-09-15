@@ -255,7 +255,7 @@ function DesktopSidebar({ view, setView }) {
         <div className={`desktop-nav-group ${heroeOpen ? 'open' : ''}`}>
           <button
             className={`desktop-nav-item desktop-nav-parent ${(view === 'home' || view === 'finanzas') ? 'active-parent' : ''}`}
-            onClick={() => { setView('home'); setOpenGroup('heroe'); }}
+            onClick={() => { setView('home'); toggleGroup('heroe'); }}
             aria-expanded={heroeOpen}
           >
             <span className="desktop-nav-icon">⚔</span>
