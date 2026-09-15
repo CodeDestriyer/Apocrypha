@@ -6810,6 +6810,7 @@ body {
 }
 @keyframes tareas-pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tareas-type-chip {
+  position: relative;
   flex: 0 0 auto;
   width: 44px; height: 44px;
   display: grid; place-items: center;
@@ -6823,6 +6824,19 @@ body {
   border-color: var(--type-color);
   background: color-mix(in srgb, var(--type-color) 12%, transparent);
 }
+/* Hover/focus tooltip naming what the mark stands for (shared by Tareas types
+   and Hábitos marks). */
+.tareas-type-chip[data-label]::after {
+  content: attr(data-label);
+  position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--cream);
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.05em; white-space: nowrap;
+  padding: 4px 9px; border-radius: 5px;
+  opacity: 0; pointer-events: none; transition: opacity 0.12s;
+  z-index: 40;
+}
+.tareas-type-chip[data-label]:hover::after,
+.tareas-type-chip[data-label]:focus-visible::after { opacity: 1; }
 .tareas-add-row { display: flex; gap: 8px; margin-bottom: 6px; }
 .tareas-input { flex: 1; min-width: 0; }
 .tareas-add-btn {

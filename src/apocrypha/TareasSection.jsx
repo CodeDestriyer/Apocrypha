@@ -264,7 +264,8 @@ export default function TareasSection({ rootOnBack }) {
           style={{ '--type-color': TASK_TYPES[tp].color }}
           onClick={() => onPick(tp)}
           aria-pressed={selected === tp}
-          title={t(TASK_TYPES[tp].labelKey)}
+          aria-label={t(TASK_TYPES[tp].labelKey)}
+          data-label={t(TASK_TYPES[tp].labelKey)}
         >
           <TaskShape type={tp} done={selected === tp} size={22} />
         </button>

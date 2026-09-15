@@ -100,7 +100,8 @@ export default function HabitosSection({ rootOnBack }) {
           style={{ '--type-color': HABIT_TYPES[tp].color }}
           onClick={() => onPick(selected === tp ? null : tp)}
           aria-pressed={selected === tp}
-          title={t(HABIT_TYPES[tp].labelKey)}
+          aria-label={t(HABIT_TYPES[tp].labelKey)}
+          data-label={t(HABIT_TYPES[tp].labelKey)}
         >
           <HabitShape type={tp} filled={selected === tp} size={22} />
         </button>
