@@ -265,9 +265,9 @@ export default function TareasSection({ rootOnBack }) {
           onClick={() => onPick(tp)}
           aria-pressed={selected === tp}
           aria-label={t(TASK_TYPES[tp].labelKey)}
-          data-label={t(TASK_TYPES[tp].labelKey)}
         >
           <TaskShape type={tp} done={selected === tp} size={22} />
+          <span className="tareas-type-chip-label">{t(TASK_TYPES[tp].labelKey)}</span>
         </button>
       ))}
     </div>

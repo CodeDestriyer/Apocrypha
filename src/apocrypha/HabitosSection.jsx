@@ -57,6 +57,27 @@ export default function HabitosSection({ rootOnBack }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuId]);
 
+  // Collapsible mark folders (Reglas-style): a group's key sits in this set when
+  // collapsed. Persisted per-device; groups default to open.
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('lr:habitGroupsCollapsed') || '[]')); }
+    catch { return new Set(); }
+  });
+  const writeCollapsed = (set) => {
+    try { localStorage.setItem('lr:habitGroupsCollapsed', JSON.stringify([...set])); } catch {}
+  };
+  const toggleCollapse = (key) => setCollapsed((prev) => {
+    const next = new Set(prev);
+    next.has(key) ? next.delete(key) : next.add(key);
+    writeCollapsed(next);
+    return next;
+  });
+  const expandGroup = (key) => setCollapsed((prev) => {
+    if (!prev.has(key)) return prev;
+    const next = new Set(prev); next.delete(key); writeCollapsed(next);
+    return next;
+  });
+
   const setHabits = (updater) =>
     update((curr) => ({ habits: updater(Array.isArray(curr.habits) ? curr.habits : []) }));
 
@@ -65,6 +86,7 @@ export default function HabitosSection({ rootOnBack }) {
     if (!name) return;
     const nowISO = new Date().toISOString();
     setHabits((h) => [{ id: newId(), name, since: nowISO, type: draftType, created_at: nowISO }, ...h]);
+    expandGroup(draftType ?? 'none'); // don't hide a fresh habit inside a collapsed folder
     setDraft('');
     setDraftType(null);
     setAdding(false);
@@ -101,9 +123,9 @@ export default function HabitosSection({ rootOnBack }) {
           onClick={() => onPick(selected === tp ? null : tp)}
           aria-pressed={selected === tp}
           aria-label={t(HABIT_TYPES[tp].labelKey)}
-          data-label={t(HABIT_TYPES[tp].labelKey)}
         >
           <HabitShape type={tp} filled={selected === tp} size={22} />
+          <span className="tareas-type-chip-label">{t(HABIT_TYPES[tp].labelKey)}</span>
         </button>
       ))}
     </div>
@@ -219,17 +241,23 @@ export default function HabitosSection({ rootOnBack }) {
           <ul className="habitos-list">{groups[0].items.map(renderCard)}</ul>
         ) : (
           <div className="tareas-groups habitos-groups">
-            {groups.map((g) => (
-              <div className="tareas-group" key={g.type ?? 'none'}>
-                <div
-                  className="tareas-group-label"
-                  style={{ color: g.type ? HABIT_TYPES[g.type].color : 'var(--text-dim)' }}
-                >
-                  {g.type ? t(HABIT_TYPES[g.type].labelKey) : t('habits.mark.none')}
+            {groups.map((g) => {
+              const key = g.type ?? 'none';
+              const isCollapsed = collapsed.has(key);
+              return (
+                <div className="tareas-group" key={key}>
+                  <button
+                    className="tareas-group-label habitos-group-toggle"
+                    style={{ color: g.type ? HABIT_TYPES[g.type].color : 'var(--text-dim)' }}
+                    onClick={() => toggleCollapse(key)}
+                    aria-expanded={!isCollapsed}
+                  >
+                    {g.type ? t(HABIT_TYPES[g.type].labelKey) : t('habits.mark.none')}
+                  </button>
+                  {!isCollapsed && <ul className="habitos-list">{g.items.map(renderCard)}</ul>}
                 </div>
-                <ul className="habitos-list">{g.items.map(renderCard)}</ul>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
