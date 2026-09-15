@@ -1943,6 +1943,14 @@ body {
 }
 .back-btn:hover { background: rgba(127, 184, 199, 0.15); border-color: var(--gold); }
 .back-spacer { display: block; }
+/* When a SubPage puts an add button in the header's right cell, size it to
+   match the back button and pin it to the right edge of the 40px column. */
+.sub-header .search-add-btn {
+  width: 36px; height: 36px;
+  justify-self: end;
+  font-size: 22px;
+  border-radius: 8px;
+}
 
 .looks-top {
   display: grid;
@@ -7391,10 +7399,6 @@ body {
   font-size: 34px; font-weight: 700; line-height: 1;
   color: var(--wine);
 }
-.finanzas-empty {
-  text-align: center; color: var(--text-dim);
-  font-size: 14px; margin: 8px 0 0;
-}
 .finanzas-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 
 .finanza-card {
@@ -7403,24 +7407,15 @@ body {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--paper);
-  padding: 14px 44px 14px 16px;
+  padding: 16px 44px 16px 16px;
   box-shadow: var(--shadow);
 }
-.finanza-main { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; flex: 1; min-width: 0; }
 .finanza-name {
+  flex: 1; min-width: 0;
   font-family: 'EB Garamond', serif;
   font-size: 18px; font-weight: 600; color: var(--ink);
   overflow-wrap: anywhere; line-height: 1.2;
 }
-.finanza-badge {
-  display: inline-block;
-  font-size: 11px; letter-spacing: 0.06em;
-  padding: 2px 8px; border-radius: 999px;
-  border: 1px solid var(--gold-dim);
-  color: var(--ink-soft);
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.finanza-badge--bank { border-color: var(--gold); color: var(--gold-bright); }
 .finanza-amount {
   font-family: 'Cinzel', serif;
   font-variant-numeric: tabular-nums;
@@ -7430,23 +7425,8 @@ body {
 .finanza-gear { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); }
 .finanza-card.menu-open { z-index: 30; }
 
-/* Add / edit form: type toggle + amount field with a trailing € marker. */
+/* Add / edit form: name + amount field with a trailing € marker. */
 .finanzas-form { display: flex; flex-direction: column; gap: 10px; }
-.finanzas-typerow { display: flex; gap: 8px; }
-.finanzas-typebtn {
-  flex: 1;
-  font-family: 'Cinzel', serif;
-  font-size: 13px; letter-spacing: 0.06em;
-  padding: 9px 10px; border-radius: 6px;
-  border: 1px solid var(--gold-dim);
-  background: transparent; color: var(--text-dim);
-  cursor: pointer;
-}
-.finanzas-typebtn.active {
-  border-color: var(--gold);
-  color: var(--gold-bright);
-  background: rgba(110, 36, 19, 0.06);
-}
 .finanzas-amountrow { position: relative; display: flex; align-items: center; }
 .finanzas-amount-input { flex: 1; padding-right: 30px; }
 .finanzas-cur {

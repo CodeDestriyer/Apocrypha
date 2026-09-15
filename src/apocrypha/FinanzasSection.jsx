@@ -10,8 +10,7 @@ const newId = () =>
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
-// All amounts are plain euros stored as numbers. One currency (EUR) app-wide,
-// so the section can sum everything into a single total balance.
+// One currency (EUR), so the section sums every account into a total balance.
 const fmtEur = (n) => {
   const v = Number(n) || 0;
   try {
@@ -23,8 +22,6 @@ const fmtEur = (n) => {
   }
 };
 
-// Accept both "1 234,56" (es) and "1234.56" typing styles, strip anything that
-// isn't part of a number, and fall back to 0 on garbage.
 const parseAmount = (s) => {
   if (typeof s === 'number') return Number.isFinite(s) ? s : 0;
   if (typeof s !== 'string') return 0;
@@ -33,12 +30,10 @@ const parseAmount = (s) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const EMPTY_DRAFT = { name: '', type: 'cash', bank: '', amount: '' };
+const EMPTY_DRAFT = { name: '', amount: '' };
 
-// "Finanzas" (Héroe › Finanzas) — accounts/balances, not a transaction log.
-// Each entry is a place money sits: cash or a named bank, with a current
-// amount. Data lives on profile.finances as
-// { id, name, type: 'cash' | 'bank', bank, amount, created_at }.
+// profile.finances: { id, name, amount, created_at }. Each entry is an account
+// the user names freely (Efectivo, Revolut, N26…) holding a current EUR amount.
 export default function FinanzasSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
@@ -63,50 +58,38 @@ export default function FinanzasSection({ rootOnBack }) {
   const startAdd = () => { setDraft(EMPTY_DRAFT); setMenuId(null); setEditing('new'); };
   const startEdit = (f) => {
     setMenuId(null);
-    setDraft({
-      name: f.name || '',
-      type: f.type === 'bank' ? 'bank' : 'cash',
-      bank: f.bank || '',
-      amount: f.amount != null ? String(f.amount) : '',
-    });
+    setDraft({ name: f.name || '', amount: f.amount != null ? String(f.amount) : '' });
     setEditing(f.id);
   };
   const cancel = () => { setEditing(null); setDraft(EMPTY_DRAFT); };
 
-  // Bank entries need a bank name; cash entries don't. A name is always
-  // required. Amount may be left blank (treated as 0).
-  const canSave = draft.name.trim() && (draft.type === 'cash' || draft.bank.trim());
+  const canSave = draft.name.trim();
 
   const save = () => {
     if (!canSave) return;
     const name = draft.name.trim();
-    const type = draft.type === 'bank' ? 'bank' : 'cash';
-    const bank = type === 'bank' ? draft.bank.trim() : '';
     const amount = parseAmount(draft.amount);
     if (editing === 'new') {
-      const nowISO = new Date().toISOString();
-      setFinances((list) => [{ id: newId(), name, type, bank, amount, created_at: nowISO }, ...list]);
+      setFinances((list) => [{ id: newId(), name, amount, created_at: new Date().toISOString() }, ...list]);
     } else {
-      setFinances((list) => list.map((x) => (x.id === editing ? { ...x, name, type, bank, amount } : x)));
+      setFinances((list) => list.map((x) => (x.id === editing ? { ...x, name, amount } : x)));
     }
     cancel();
   };
 
   const remove = (id) => { setMenuId(null); setFinances((list) => list.filter((x) => x.id !== id)); };
 
+  const addBtn = editing == null
+    ? <button className="search-add-btn" onClick={startAdd} aria-label={t('finanzas.add')}>+</button>
+    : undefined;
+
   return (
-    <SubPage title={t('nav.finanzas')} onBack={rootOnBack}>
+    <SubPage title={t('nav.finanzas')} onBack={rootOnBack} headerRight={addBtn}>
       <div className="finanzas">
         <div className="finanzas-total">
           <span className="finanzas-total-label">{t('finanzas.total')}</span>
           <span className="finanzas-total-value">{fmtEur(total)}</span>
         </div>
-
-        {editing == null && (
-          <div className="habitos-topbar">
-            <button className="search-add-btn" onClick={startAdd} aria-label={t('finanzas.add')}>+</button>
-          </div>
-        )}
 
         {editing != null && (
           <div className="cards-panel finanzas-form">
@@ -118,31 +101,6 @@ export default function FinanzasSection({ rootOnBack }) {
               onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
               maxLength={40}
             />
-            <div className="finanzas-typerow" role="radiogroup" aria-label={t('finanzas.type')}>
-              <button
-                type="button"
-                className={`finanzas-typebtn ${draft.type === 'cash' ? 'active' : ''}`}
-                onClick={() => setDraft((d) => ({ ...d, type: 'cash' }))}
-                role="radio"
-                aria-checked={draft.type === 'cash'}
-              >{t('finanzas.cash')}</button>
-              <button
-                type="button"
-                className={`finanzas-typebtn ${draft.type === 'bank' ? 'active' : ''}`}
-                onClick={() => setDraft((d) => ({ ...d, type: 'bank' }))}
-                role="radio"
-                aria-checked={draft.type === 'bank'}
-              >{t('finanzas.bank')}</button>
-            </div>
-            {draft.type === 'bank' && (
-              <input
-                className="cards-field-input"
-                value={draft.bank}
-                placeholder={t('finanzas.bankPlaceholder')}
-                onChange={(e) => setDraft((d) => ({ ...d, bank: e.target.value }))}
-                maxLength={40}
-              />
-            )}
             <div className="finanzas-amountrow">
               <input
                 className="cards-field-input finanzas-amount-input"
@@ -164,25 +122,16 @@ export default function FinanzasSection({ rootOnBack }) {
           </div>
         )}
 
-        {finances.length === 0 && editing == null && (
-          <p className="finanzas-empty">{t('finanzas.empty')}</p>
-        )}
-
         <ul className="finanzas-list">
           {finances.map((f) => (
             <li key={f.id} className={`finanza-card${menuId === f.id ? ' menu-open' : ''}`}>
-              <div className="finanza-main">
-                <span className="finanza-name">{f.name}</span>
-                <span className={`finanza-badge finanza-badge--${f.type === 'bank' ? 'bank' : 'cash'}`}>
-                  {f.type === 'bank' ? (f.bank?.trim() || t('finanzas.bank')) : t('finanzas.cash')}
-                </span>
-              </div>
+              <span className="finanza-name">{f.name}</span>
               <span className="finanza-amount">{fmtEur(f.amount)}</span>
               <div className="finanza-gear" ref={menuId === f.id ? menuRef : null}>
                 <button
                   className="cards-gear-btn cards-gear-btn--sm"
                   onClick={() => setMenuId((c) => (c === f.id ? null : f.id))}
-                  aria-label={t('finanzas.type')}
+                  aria-label={f.name}
                 >
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="3"/>

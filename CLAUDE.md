@@ -1,5 +1,13 @@
 # Agent instructions for this repo
 
+## Style / tone (read this)
+
+The user is not dumb — don't over-explain. No hand-holding copy in the UI:
+skip empty-state prose ("you don't have any X yet, add one…"), onboarding
+hints, and captions that state the obvious. An empty list should just be
+empty. Keep code comments lean too — comment the non-obvious *why*, not
+every line. Prefer minimal, clean UI over explanatory text.
+
 ## Git push setup (important — read before pushing)
 
 The user has two GitHub accounts on this machine:
