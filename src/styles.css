@@ -6705,8 +6705,8 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-  width: min(230px, 100%);
-  margin: 16px auto 8px;
+  width: 100%;
+  margin: 16px 0 8px;
 }
 /* On desktop: two cubes spanning the full width of the Hero card. They keep a
    fixed height instead of a 1:1 ratio, so a full-width row doesn't grow tall
@@ -6721,7 +6721,8 @@ body {
   height: 300px;
 }
 .hero-cube {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: auto;
+  min-height: 116px;
   display: flex;
   flex-direction: column;
   padding: 16px 18px;
@@ -7365,6 +7366,15 @@ body {
    instead of being covered by it. */
 .habito-card.menu-open { z-index: 30; }
 .habito-add { margin-top: 0; }
+.habito-mark { display: inline-flex; margin-bottom: 2px; }
+.habito-mark svg { display: block; }
+/* Grouped-by-mark layout reuses the Tareas group frame; drop its top margin
+   since the add bar / topbar already sits above. */
+.habitos-groups { margin-top: 4px; }
+/* Editing a habit turns the card into a plain full-width form. */
+.habito-card--editing { align-items: stretch; text-align: left; padding: 14px; }
+.habito-edit { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.habito-edit .tareas-type-picker { margin: 0; }
 
 /* Desktop: horizontal — big name on the left, day counter on the right,
    the gear pinned to the far-right edge. */
@@ -7377,6 +7387,7 @@ body {
 .desktop-content .habito-count { align-items: center; margin-right: 40px; }
 .desktop-content .habito-days { font-size: 44px; }
 .desktop-content .habito-gear { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); }
+.desktop-content .habito-card--editing { flex-direction: column; align-items: stretch; }
 
 /* ── Finanzas: cash / bank accounts with a running total balance (EUR) ── */
 .finanzas { display: flex; flex-direction: column; gap: 14px; }
