@@ -759,7 +759,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
             <>
               <div className="cards-note-head">
                 <label className="cards-field-label">{t('cards.note')}</label>
-                <button className="cards-note-collapse" onClick={() => setNoteOpen(false)}>{t('cards.hide')}</button>
+                <button className="cards-note-collapse" onClick={() => setNoteOpen(false)} aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
               </div>
               <textarea
                 className="cards-field-textarea cards-field-textarea--note"
@@ -775,7 +775,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
             <>
               <div className="cards-note-head">
                 <label className="cards-field-label">{t('cards.tags')}</label>
-                <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }}>{t('cards.hide')}</button>
+                <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }} aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
               </div>
               <TagInput tags={tags} onChange={setTags} suggestions={allDeckTags} t={t} />
             </>
@@ -787,7 +787,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
                 <button
                   className="cards-note-collapse"
                   onClick={() => { if (image) deleteCardImage(image); setImage(null); setImageOpen(false); }}
-                >{t('cards.hide')}</button>
+                 aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
               </div>
               <CardImageField image={image} onChange={setImage} t={t} />
             </>
@@ -904,7 +904,7 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
           <>
             <div className="cards-note-head">
               <label className="cards-field-label">{t('cards.note')}</label>
-              <button className="cards-note-collapse" onClick={() => { setNoteOpen(false); setNote(''); }}>{t('cards.hide')}</button>
+              <button className="cards-note-collapse" onClick={() => { setNoteOpen(false); setNote(''); }} aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
             </div>
             <textarea
               className="cards-field-textarea cards-field-textarea--note"
@@ -919,7 +919,7 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
           <>
             <div className="cards-note-head">
               <label className="cards-field-label">{t('cards.tags')}</label>
-              <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }}>{t('cards.hide')}</button>
+              <button className="cards-note-collapse" onClick={() => { setTagsOpen(false); setTags([]); }} aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
             </div>
             <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
           </>
@@ -931,7 +931,7 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
               <button
                 className="cards-note-collapse"
                 onClick={() => { if (image && image !== card.backImage) deleteCardImage(image); setImage(null); setImageOpen(false); }}
-              >{t('cards.hide')}</button>
+               aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
             </div>
             <CardImageField image={image} onChange={setImage} t={t} />
           </>
@@ -1448,11 +1448,18 @@ function StudyView({ deck, studyKey, onGrade, t }) {
         >
           <div className="study-card-face study-card-front">{card.front}</div>
           <div className="study-card-face study-card-back">
+            <div className="study-card-back-main">{card.back}</div>
+            {card.note && <div className="study-card-note">{card.note}</div>}
+            {(card.tags?.length ?? 0) > 0 && (
+              <div className="study-card-tags">
+                {card.tags.map((tg) => (
+                  <span key={tg} className="study-card-tag">#{tg}</span>
+                ))}
+              </div>
+            )}
             {card.backImage && (
               <img className="study-card-img" src={card.backImage} alt="" loading="lazy" />
             )}
-            <div className="study-card-back-main">{card.back}</div>
-            {card.note && <div className="study-card-note">{card.note}</div>}
           </div>
         </div>
       </div>
