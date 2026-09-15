@@ -58,23 +58,23 @@ export default function HabitosSection({ rootOnBack }) {
   }, [menuId]);
 
   // Collapsible mark folders (Reglas-style): a group's key sits in this set when
-  // collapsed. Persisted per-device; groups default to open.
-  const [collapsed, setCollapsed] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('lr:habitGroupsCollapsed') || '[]')); }
+  // OPEN. Persisted per-device; groups default to collapsed.
+  const [expanded, setExpanded] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('lr:habitGroupsExpanded') || '[]')); }
     catch { return new Set(); }
   });
-  const writeCollapsed = (set) => {
-    try { localStorage.setItem('lr:habitGroupsCollapsed', JSON.stringify([...set])); } catch {}
+  const writeExpanded = (set) => {
+    try { localStorage.setItem('lr:habitGroupsExpanded', JSON.stringify([...set])); } catch {}
   };
-  const toggleCollapse = (key) => setCollapsed((prev) => {
+  const toggleFolder = (key) => setExpanded((prev) => {
     const next = new Set(prev);
     next.has(key) ? next.delete(key) : next.add(key);
-    writeCollapsed(next);
+    writeExpanded(next);
     return next;
   });
-  const expandGroup = (key) => setCollapsed((prev) => {
-    if (!prev.has(key)) return prev;
-    const next = new Set(prev); next.delete(key); writeCollapsed(next);
+  const expandGroup = (key) => setExpanded((prev) => {
+    if (prev.has(key)) return prev;
+    const next = new Set(prev); next.add(key); writeExpanded(next);
     return next;
   });
 
@@ -97,6 +97,11 @@ export default function HabitosSection({ rootOnBack }) {
     setHabits((h) => h.map((x) => (x.id === id ? { ...x, since: new Date().toISOString() } : x)));
   };
   const remove = (id) => { setMenuId(null); setEditId(null); setHabits((h) => h.filter((x) => x.id !== id)); };
+  // The live hh:mm:ss timer is optional per habit; the day count always shows.
+  const toggleTimer = (id) => {
+    setMenuId(null);
+    setHabits((h) => h.map((x) => (x.id === id ? { ...x, timer: x.timer === false } : x)));
+  };
 
   const startEdit = (hb) => {
     setMenuId(null);
@@ -165,6 +170,7 @@ export default function HabitosSection({ rootOnBack }) {
     const since = new Date(hb.since).getTime();
     const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
     const ty = habitTypeOf(hb);
+    const showTimer = hb.timer !== false;
     return (
       <li key={hb.id} className={`habito-card${menuId === hb.id ? ' menu-open' : ''}`}>
         <div className="habito-main">
@@ -176,7 +182,7 @@ export default function HabitosSection({ rootOnBack }) {
           <span className="habito-days">{days}</span>
           <div className="habito-countside">
             <span className="habito-days-label">{days === 1 ? t('habits.day') : t('habits.days')}</span>
-            <span className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</span>
+            {showTimer && <span className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</span>}
           </div>
         </div>
         <div className="habito-gear" ref={menuId === hb.id ? menuRef : null}>
@@ -193,6 +199,9 @@ export default function HabitosSection({ rootOnBack }) {
           {menuId === hb.id && (
             <div className="cards-gear-menu cards-gear-menu--right">
               <button className="cards-gear-item" onClick={() => startEdit(hb)}>{t('habits.edit')}</button>
+              <button className="cards-gear-item" onClick={() => toggleTimer(hb.id)}>
+                {hb.timer === false ? t('habits.timerShow') : t('habits.timerHide')}
+              </button>
               <button className="cards-gear-item" onClick={() => reset(hb.id)}>{t('habits.reset')}</button>
               <button className="cards-gear-item cards-gear-item--danger" onClick={() => remove(hb.id)}>{t('habits.delete')}</button>
             </div>
@@ -240,21 +249,27 @@ export default function HabitosSection({ rootOnBack }) {
         {flat ? (
           <ul className="habitos-list">{groups[0].items.map(renderCard)}</ul>
         ) : (
-          <div className="tareas-groups habitos-groups">
+          <div className="habito-folders">
             {groups.map((g) => {
               const key = g.type ?? 'none';
-              const isCollapsed = collapsed.has(key);
+              const isOpen = expanded.has(key);
+              const color = g.type ? HABIT_TYPES[g.type].color : '#8a7d63';
               return (
-                <div className="tareas-group" key={key}>
+                <div className="habito-folder" key={key} style={{ '--mark-color': color }}>
                   <button
-                    className="tareas-group-label habitos-group-toggle"
-                    style={{ color: g.type ? HABIT_TYPES[g.type].color : 'var(--text-dim)' }}
-                    onClick={() => toggleCollapse(key)}
-                    aria-expanded={!isCollapsed}
+                    className="habito-folder-head"
+                    onClick={() => toggleFolder(key)}
+                    aria-expanded={isOpen}
                   >
-                    {g.type ? t(HABIT_TYPES[g.type].labelKey) : t('habits.mark.none')}
+                    <svg className={`habito-folder-chevron${isOpen ? ' open' : ''}`} viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                    <span className="habito-folder-name">
+                      {g.type ? t(HABIT_TYPES[g.type].labelKey) : t('habits.mark.none')}
+                    </span>
+                    <span className="habito-folder-count">{g.items.length}</span>
                   </button>
-                  {!isCollapsed && <ul className="habitos-list">{g.items.map(renderCard)}</ul>}
+                  {isOpen && <ul className="habitos-list habito-folder-body">{g.items.map(renderCard)}</ul>}
                 </div>
               );
             })}

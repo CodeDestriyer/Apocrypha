@@ -93,6 +93,8 @@ const DICT = {
   'habits.day': 'día',
   'habits.days': 'días',
   'habits.edit': 'Editar',
+  'habits.timerHide': 'Ocultar cronómetro',
+  'habits.timerShow': 'Mostrar cronómetro',
   'habits.markLabel': 'Marca',
   'habits.mark.nutricion': 'Nutrición',
   'habits.mark.descanso': 'Descanso',

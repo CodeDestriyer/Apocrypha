@@ -7380,16 +7380,40 @@ body {
 .habito-add { margin-top: 0; }
 .habito-mark { display: inline-flex; margin-bottom: 2px; }
 .habito-mark svg { display: block; }
-/* Grouped-by-mark layout reuses the Tareas group frame; drop its top margin
-   since the add bar / topbar already sits above. */
-.habitos-groups { margin-top: 4px; }
-/* Group heading doubles as the folder toggle — keep its look, add a button
-   reset and a pointer. */
-button.tareas-group-label {
-  appearance: none; -webkit-appearance: none;
-  background: none; border: 0; width: 100%;
-  padding: 2px 0; cursor: pointer;
+
+/* Mark folders (Reglas-visor style, tinted by the mark colour). Collapsed by
+   default; the bold header is the toggle. */
+.habito-folders { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.habito-folder {
+  border: 1.5px solid color-mix(in srgb, var(--mark-color) 45%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mark-color) 6%, transparent);
+  overflow: hidden;
 }
+.habito-folder-head {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 15px;
+  background: color-mix(in srgb, var(--mark-color) 12%, transparent);
+  border: none; cursor: pointer; text-align: left;
+}
+.habito-folder-chevron { flex: none; color: var(--mark-color); transition: transform 0.18s ease; }
+.habito-folder-chevron.open { transform: rotate(90deg); }
+.habito-folder-name {
+  flex: 1; min-width: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--mark-color); overflow-wrap: anywhere;
+}
+.habito-folder-count {
+  flex: none;
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+  color: var(--mark-color);
+  border: 1.5px solid color-mix(in srgb, var(--mark-color) 45%, var(--line));
+  border-radius: 999px; padding: 1px 9px; line-height: 1.5;
+}
+.habito-folder-body { padding: 12px; }
+
 /* Editing a habit turns the card into a plain full-width form. */
 .habito-card--editing { align-items: stretch; text-align: left; padding: 14px; }
 .habito-edit { display: flex; flex-direction: column; gap: 10px; width: 100%; }
