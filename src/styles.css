@@ -5730,9 +5730,12 @@ body {
 
 /* Note shown under back side during study — pinned to bottom so the main
    translation stays geometrically centered on the card regardless of note. */
-/* Back side mirrors the add/edit form: translation, note, hashtags, then the
-   photo pinned full-width to the bottom. Content flows from the top. */
-.study-card-back { position: relative; flex-direction: column; justify-content: flex-start; gap: 14px; }
+/* Back side mirrors the add/edit form: translation, note, synonyms, then the
+   photo pinned full-width to the bottom. The content stays vertically centered
+   when it's just text, but as soon as there's a photo its `margin-top: auto`
+   steals the free space, pushing the photo to the bottom and the text to the
+   top — the "like when creating" layout, only when it actually earns it. */
+.study-card-back { position: relative; flex-direction: column; justify-content: center; gap: 14px; }
 .study-card-face .study-card-back-main { margin: 0; }
 .study-card-note {
   padding-top: 14px;
@@ -5753,19 +5756,7 @@ body {
   margin: 0 auto 14px;
   background: linear-gradient(90deg, transparent, var(--gold-dim, rgba(190, 158, 92, 0.6)), transparent);
 }
-.study-card-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-.study-card-tag {
-  padding: 2px 10px;
-  background: rgba(190, 158, 92, 0.12);
-  border: 1px solid rgba(190, 158, 92, 0.3);
-  color: #c9bb8c;
-  font-family: 'Cinzel', serif;
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  border-radius: 999px;
-}
-/* Synonyms on the back: italic squared chips, matching the editor's look and
-   set apart from the hashtag pills. */
+/* Synonyms on the back: italic squared chips, matching the editor's look. */
 .study-card-syns { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: -2px; }
 .study-card-syn {
   padding: 2px 10px;
@@ -6361,7 +6352,6 @@ body {
 }
 .study-card-note { color: var(--text-dim); }
 .study-card-note::before { background: var(--gold-dim); }
-.study-card-tag { background: rgba(110, 36, 19, 0.06); border-color: var(--gold-dim); color: var(--wine); }
 .study-card-syn { background: rgba(110, 36, 19, 0.05); border-color: var(--gold-dim); color: var(--ink-soft); }
 .study-grade-tag--knew { color: #3f7a42; }
 .study-grade-tag--forgot { color: #a33f2e; }

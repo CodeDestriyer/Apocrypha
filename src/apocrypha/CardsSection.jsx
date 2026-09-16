@@ -1588,13 +1588,6 @@ function StudyView({ deck, studyKey, onGrade, t }) {
               </div>
             )}
             {card.note && <div className="study-card-note">{card.note}</div>}
-            {(card.tags?.length ?? 0) > 0 && (
-              <div className="study-card-tags">
-                {card.tags.map((tg) => (
-                  <span key={tg} className="study-card-tag">#{tg}</span>
-                ))}
-              </div>
-            )}
             {card.backImage && (
               <img className="study-card-img" src={card.backImage} alt="" loading="lazy" />
             )}
