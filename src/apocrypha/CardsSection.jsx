@@ -37,6 +37,21 @@ const mergeTags = (existing, incoming) => {
   return out;
 };
 const cardHasTag = (card, tag) => (card.tags ?? []).includes(tag);
+
+// Synonyms of the front word (e.g. "empezar" → "comenzar", "iniciar"). Stored
+// on `card.synonyms` as free-text phrases with their original casing preserved
+// (multi-word phrases allowed, so space is NOT a separator — only commas and
+// newlines split). Deduped case-insensitively.
+const normSyn = (s) => String(s).trim().slice(0, 40);
+const parseSyns = (raw) =>
+  String(raw).split(/[,\n]+/).map(normSyn).filter(Boolean);
+const addSyn = (list, raw) => {
+  const out = [...list];
+  for (const v of parseSyns(raw)) {
+    if (!out.some((x) => x.toLowerCase() === v.toLowerCase())) out.push(v);
+  }
+  return out;
+};
 const deckTagsOf = (deck) => {
   const set = new Set();
   for (const c of deck.cards) for (const tg of (c.tags ?? [])) set.add(tg);
@@ -114,13 +129,14 @@ export default function CardsSection({ rootOnBack }) {
   const renameDeck = (id, name) =>
     setDecks((d) => d.map((x) => (x.id === id ? { ...x, name } : x)));
 
-  const addCard = (deckId, front, back, note, tags, image) => {
+  const addCard = (deckId, front, back, note, tags, image, synonyms) => {
     const f = front.trim(); const b = back.trim();
     if (!f || !b) return;
     const card = { id: newId(), front: f, back: b, box: 1, due: todayISO(), interval: 0, ease: 2.5, reps: 0, lapses: 0 };
     if (note && note.trim()) card.note = note.trim();
     if (tags && tags.length) card.tags = tags;
     if (image) card.backImage = image;
+    if (synonyms && synonyms.length) card.synonyms = synonyms;
     setDecks((d) => d.map((x) => x.id === deckId
       ? { ...x, cards: [...x.cards, card] }
       : x));
@@ -156,6 +172,18 @@ export default function CardsSection({ rootOnBack }) {
     () => deckTagsOf({ cards: decks.flatMap((d) => d.cards) }),
     [decks],
   );
+
+  // Autocomplete pool for the synonym field: every word already in the
+  // collection (card fronts) plus every synonym typed before, across all decks.
+  // Filtered by what you're typing, like the search box.
+  const allWords = useMemo(() => {
+    const set = new Set();
+    for (const d of decks) for (const c of d.cards) {
+      if (c.front?.trim()) set.add(c.front.trim());
+      for (const s of (c.synonyms ?? [])) set.add(s);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [decks]);
 
   // Compute SubPage header dynamically
   const isGlobalStudy = studyDeckId === ALL_DECKS;
@@ -248,9 +276,10 @@ export default function CardsSection({ rootOnBack }) {
       <DeckView
         deck={currentDeck}
         allDeckTags={allDeckTags}
+        allWords={allWords}
         onStudy={() => startStudy(currentDeck.id)}
         onStudyTag={(tag) => startStudy(currentDeck.id, tag)}
-        onAddCard={(f, b, n, tags) => addCard(currentDeck.id, f, b, n, tags)}
+        onAddCard={(f, b, n, tags, image, syns) => addCard(currentDeck.id, f, b, n, tags, image, syns)}
         onRemoveCard={(cardId) => removeCard(currentDeck.id, cardId)}
         onEditCard={(cardId, patch) => updateCard(currentDeck.id, cardId, patch)}
         t={t}
@@ -261,6 +290,7 @@ export default function CardsSection({ rootOnBack }) {
       <DeckList
         decks={decks}
         allDeckTags={allDeckTags}
+        allWords={allWords}
         onOpen={(id) => setOpenDeckId(id)}
         onAdd={addDeck}
         onStudyAll={() => startStudy(ALL_DECKS)}
@@ -279,7 +309,7 @@ export default function CardsSection({ rootOnBack }) {
   );
 }
 
-function DeckList({ decks, allDeckTags = [], onOpen, onAdd, onStudyAll, onStudyAllTag, onEditCardAnywhere, onRemoveCardAnywhere, t }) {
+function DeckList({ decks, allDeckTags = [], allWords = [], onOpen, onAdd, onStudyAll, onStudyAllTag, onEditCardAnywhere, onRemoveCardAnywhere, t }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [studyExpanded, setStudyExpanded] = useState(false);
@@ -469,6 +499,7 @@ function DeckList({ decks, allDeckTags = [], onOpen, onAdd, onStudyAll, onStudyA
               card={card}
               deckName={deckName}
               allTags={allDeckTags}
+              allWords={allWords}
               onTagClick={(tg) => setQuery((q) => (q.replace(/^#/, '') === tg ? '' : `#${tg}`))}
               onRemove={() => onRemoveCardAnywhere(card.id)}
               onUpdate={(patch) => onEditCardAnywhere(card.id, patch)}
@@ -533,17 +564,19 @@ function DeckList({ decks, allDeckTags = [], onOpen, onAdd, onStudyAll, onStudyA
   );
 }
 
-function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
-  const _draftDefault = { front: '', back: '', note: '', tags: [], image: null, adding: false, noteOpen: false, tagsOpen: false, imageOpen: false };
+function DeckView({ deck, allDeckTags = [], allWords = [], onStudy, onStudyTag, onAddCard, onRemoveCard, onEditCard, t }) {
+  const _draftDefault = { front: '', back: '', note: '', tags: [], image: null, synonyms: [], adding: false, noteOpen: false, tagsOpen: false, imageOpen: false, synsOpen: false };
   const draft = _drafts.get(deck.id) ?? _draftDefault;
   const [front, _setFront] = useState(draft.front);
   const [back, _setBack] = useState(draft.back);
   const [note, _setNote] = useState(draft.note);
   const [tags, _setTags] = useState(draft.tags ?? []);
   const [image, _setImage] = useState(draft.image ?? null);
+  const [synonyms, _setSynonyms] = useState(draft.synonyms ?? []);
   const [noteOpen, _setNoteOpen] = useState(draft.noteOpen);
   const [tagsOpen, _setTagsOpen] = useState(draft.tagsOpen ?? false);
   const [imageOpen, _setImageOpen] = useState(draft.imageOpen ?? false);
+  const [synsOpen, _setSynsOpen] = useState(draft.synsOpen ?? false);
   const [adding, _setAdding] = useState(draft.adding);
   const persist = (patch) => {
     const cur = _drafts.get(deck.id) ?? _draftDefault;
@@ -555,9 +588,11 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   const setNote = (v) => { persist({ note: v }); _setNote(v); };
   const setTags = (v) => { persist({ tags: v }); _setTags(v); };
   const setImage = (v) => { persist({ image: v }); _setImage(v); };
+  const setSynonyms = (v) => { persist({ synonyms: v }); _setSynonyms(v); };
   const setNoteOpen = (v) => { persist({ noteOpen: v }); _setNoteOpen(v); };
   const setTagsOpen = (v) => { persist({ tagsOpen: v }); _setTagsOpen(v); };
   const setImageOpen = (v) => { persist({ imageOpen: v }); _setImageOpen(v); };
+  const setSynsOpen = (v) => { persist({ synsOpen: v }); _setSynsOpen(v); };
   const setAdding = (v) => { persist({ adding: v }); _setAdding(v); };
   const dueCount = useMemo(() => dueCountFor(deck), [deck]);
   const deckTags = useMemo(() => deckTagsOf(deck), [deck.cards]);
@@ -575,8 +610,8 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   // where the uploaded image now belongs to the card).
   const resetAdd = () => {
     setAdding(false);
-    setFront(''); setBack(''); setNote(''); setTags([]); setImage(null);
-    setNoteOpen(false); setTagsOpen(false); setImageOpen(false);
+    setFront(''); setBack(''); setNote(''); setTags([]); setImage(null); setSynonyms([]);
+    setNoteOpen(false); setTagsOpen(false); setImageOpen(false); setSynsOpen(false);
     _drafts.delete(deck.id);
     _saveSS();
   };
@@ -589,7 +624,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
 
   const submitCard = () => {
     if (!front.trim() || !back.trim() || duplicate) return;
-    onAddCard(front, back, note.trim() || undefined, tags, image);
+    onAddCard(front, back, note.trim() || undefined, tags, image, synonyms);
     resetAdd();
   };
 
@@ -780,6 +815,15 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
               <TagInput tags={tags} onChange={setTags} suggestions={allDeckTags} t={t} />
             </>
           )}
+          {synsOpen && (
+            <>
+              <div className="cards-note-head">
+                <label className="cards-field-label">{t('cards.synonyms')}</label>
+                <button className="cards-note-collapse" onClick={() => { setSynsOpen(false); setSynonyms([]); }} aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
+              </div>
+              <SynonymInput syns={synonyms} onChange={setSynonyms} words={allWords} selfWord={front} t={t} />
+            </>
+          )}
           {imageOpen && (
             <>
               <div className="cards-note-head">
@@ -792,7 +836,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
               <CardImageField image={image} onChange={setImage} t={t} />
             </>
           )}
-          {(!noteOpen || !tagsOpen || !imageOpen) && (
+          {(!noteOpen || !tagsOpen || !synsOpen || !imageOpen) && (
             <div className="cards-extra-row">
               {!noteOpen && (
                 <button className="cards-extra-btn" onClick={() => setNoteOpen(true)}>
@@ -802,6 +846,11 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
               {!tagsOpen && (
                 <button className="cards-extra-btn" onClick={() => setTagsOpen(true)}>
                   <span className="cards-extra-plus">#</span> {t('cards.addTags')}
+                </button>
+              )}
+              {!synsOpen && (
+                <button className="cards-extra-btn" onClick={() => setSynsOpen(true)}>
+                  <span className="cards-extra-plus">≈</span> {t('cards.addSynonyms')}
                 </button>
               )}
               {!imageOpen && (
@@ -843,7 +892,7 @@ function DeckView({ deck, allDeckTags = [], onStudy, onStudyTag, onAddCard, onRe
   );
 }
 
-function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, onUpdate, t }) {
+function CardRow({ card, allTags = [], allWords = [], deckName = null, onTagClick, onRemove, onUpdate, t }) {
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [front, setFront] = useState(card.front);
@@ -851,9 +900,11 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
   const [note, setNote] = useState(card.note ?? '');
   const [tags, setTags] = useState(card.tags ?? []);
   const [image, setImage] = useState(card.backImage ?? null);
+  const [synonyms, setSynonyms] = useState(card.synonyms ?? []);
   const [noteOpen, setNoteOpen] = useState(!!card.note);
   const [tagsOpen, setTagsOpen] = useState((card.tags?.length ?? 0) > 0);
   const [imageOpen, setImageOpen] = useState(!!card.backImage);
+  const [synsOpen, setSynsOpen] = useState((card.synonyms?.length ?? 0) > 0);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -868,13 +919,14 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
     setNote(card.note ?? ''); setNoteOpen(!!card.note);
     setTags(card.tags ?? []); setTagsOpen((card.tags?.length ?? 0) > 0);
     setImage(card.backImage ?? null); setImageOpen(!!card.backImage);
+    setSynonyms(card.synonyms ?? []); setSynsOpen((card.synonyms?.length ?? 0) > 0);
     setEditing(true);
   };
   const save = () => {
     if (!front.trim() || !back.trim()) return;
     // Image changed → the previously saved one is now orphaned; drop it.
     if (card.backImage && card.backImage !== image) deleteCardImage(card.backImage);
-    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null, tags, backImage: image || null });
+    onUpdate({ front: front.trim(), back: back.trim(), note: note.trim() || null, tags, backImage: image || null, synonyms });
     setEditing(false);
   };
   // Cancel: an image freshly uploaded during this edit (not the card's saved
@@ -924,6 +976,15 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
             <TagInput tags={tags} onChange={setTags} suggestions={allTags} t={t} />
           </>
         )}
+        {synsOpen && (
+          <>
+            <div className="cards-note-head">
+              <label className="cards-field-label">{t('cards.synonyms')}</label>
+              <button className="cards-note-collapse" onClick={() => { setSynsOpen(false); setSynonyms([]); }} aria-label={t('cards.hide')} title={t('cards.hide')}>×</button>
+            </div>
+            <SynonymInput syns={synonyms} onChange={setSynonyms} words={allWords} selfWord={front} t={t} />
+          </>
+        )}
         {imageOpen && (
           <>
             <div className="cards-note-head">
@@ -936,7 +997,7 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
             <CardImageField image={image} onChange={setImage} t={t} />
           </>
         )}
-        {(!noteOpen || !tagsOpen || !imageOpen) && (
+        {(!noteOpen || !tagsOpen || !synsOpen || !imageOpen) && (
           <div className="cards-extra-row">
             {!noteOpen && (
               <button className="cards-extra-btn" onClick={() => setNoteOpen(true)}>
@@ -946,6 +1007,11 @@ function CardRow({ card, allTags = [], deckName = null, onTagClick, onRemove, on
             {!tagsOpen && (
               <button className="cards-extra-btn" onClick={() => setTagsOpen(true)}>
                 <span className="cards-extra-plus">#</span> {t('cards.addTags')}
+              </button>
+            )}
+            {!synsOpen && (
+              <button className="cards-extra-btn" onClick={() => setSynsOpen(true)}>
+                <span className="cards-extra-plus">≈</span> {t('cards.addSynonyms')}
               </button>
             )}
             {!imageOpen && (
@@ -1059,6 +1125,71 @@ function TagInput({ tags, onChange, suggestions = [], t }) {
               className="cards-tag-suggest"
               onClick={() => commit(s)}
             >#{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Synonym chip editor. Like TagInput but for free-text phrases: multi-word
+// allowed, original casing kept, no '#'. The autocomplete filters the
+// collection's existing words (`words`) by what you're typing — the way the
+// search box narrows results — instead of showing every option up front. The
+// card's own front word is excluded so it can't be listed as its own synonym.
+function SynonymInput({ syns, onChange, words = [], selfWord = '', t }) {
+  const [text, setText] = useState('');
+  const commit = (raw) => { onChange(addSyn(syns, raw)); setText(''); };
+  const removeAt = (i) => onChange(syns.filter((_, idx) => idx !== i));
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      if (text.trim()) commit(text);
+    } else if (e.key === 'Backspace' && !text && syns.length) {
+      removeAt(syns.length - 1);
+    }
+  };
+  const q = text.trim().toLowerCase();
+  const self = selfWord.trim().toLowerCase();
+  const matches = q
+    ? words.filter((w) => {
+        const lw = w.toLowerCase();
+        return lw !== self && lw.includes(q) && !syns.some((s) => s.toLowerCase() === lw);
+      }).slice(0, 8)
+    : [];
+  return (
+    <div className="cards-syn-field">
+      <div className="cards-syn-box">
+        {syns.map((s, i) => (
+          <span key={s} className="cards-syn-chip">
+            {s}
+            <button
+              type="button"
+              className="cards-syn-chip-x"
+              onClick={() => removeAt(i)}
+              aria-label={t('cards.removeSynonym')}
+            >×</button>
+          </span>
+        ))}
+        <input
+          className="cards-syn-input"
+          value={text}
+          placeholder={syns.length ? '' : t('cards.synonymsPlaceholder')}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          onBlur={() => { if (text.trim()) commit(text); }}
+        />
+      </div>
+      {matches.length > 0 && (
+        <div className="cards-syn-suggest">
+          {matches.map((w) => (
+            <button
+              key={w}
+              type="button"
+              className="cards-syn-suggest-item"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => commit(w)}
+            >{w}</button>
           ))}
         </div>
       )}
@@ -1449,6 +1580,13 @@ function StudyView({ deck, studyKey, onGrade, t }) {
           <div className="study-card-face study-card-front">{card.front}</div>
           <div className="study-card-face study-card-back">
             <div className="study-card-back-main">{card.back}</div>
+            {(card.synonyms?.length ?? 0) > 0 && (
+              <div className="study-card-syns">
+                {card.synonyms.map((s) => (
+                  <span key={s} className="study-card-syn">{s}</span>
+                ))}
+              </div>
+            )}
             {card.note && <div className="study-card-note">{card.note}</div>}
             {(card.tags?.length ?? 0) > 0 && (
               <div className="study-card-tags">
