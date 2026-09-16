@@ -234,7 +234,7 @@ function DesktopSidebar({ view, setView }) {
   const [openGroup, setOpenGroup] = useState(
     view === 'cards' || view === 'reglas' ? 'idiomas'
       : (view === 'peso' || view === 'habitos') ? 'salud'
-      : (view === 'home' || view === 'finanzas') ? 'heroe'
+      : view === 'finanzas' ? 'heroe'
       : null
   );
   const heroeOpen = openGroup === 'heroe';
