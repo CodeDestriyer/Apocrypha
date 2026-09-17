@@ -7513,6 +7513,58 @@ body {
 .desktop-content .habito-gear { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); }
 .desktop-content .habito-card--editing { flex-direction: column; align-items: stretch; }
 
+/* Card is tappable — opens the habit's detail view. */
+.habito-card--tap { cursor: pointer; }
+.habito-prec-badge {
+  margin-top: 4px;
+  min-width: 20px; padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--wine); color: #fff;
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+  line-height: 1.5; text-align: center;
+}
+
+/* ── Hábito detail: note + precedent log ── */
+.habito-detail { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }
+.habito-note { width: 100%; resize: vertical; min-height: 120px; line-height: 1.45; }
+.habito-precedent-btn {
+  align-self: flex-start;
+  border: 1px solid var(--wine);
+  border-radius: 8px;
+  background: var(--wine); color: #fff;
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.06em;
+  text-transform: uppercase; font-weight: 700;
+  padding: 11px 18px; cursor: pointer;
+  transition: filter 120ms ease;
+}
+.habito-precedent-btn:hover { filter: brightness(1.08); }
+.habito-precedent-btn:active { filter: brightness(0.92); }
+.habito-precedents { display: flex; flex-direction: column; gap: 8px; }
+.habito-precedents-head {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.habito-precedents-count {
+  min-width: 18px; padding: 0 6px;
+  border-radius: 999px; background: var(--wine); color: #fff;
+  font-size: 11px; text-align: center;
+}
+.habito-precedents-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.habito-precedent-row {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); padding: 9px 12px;
+}
+.habito-precedent-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--wine); flex: 0 0 auto; }
+.habito-precedent-date { flex: 1; font-size: 14px; color: var(--ink); text-transform: capitalize; }
+.habito-precedent-del {
+  border: none; background: none; cursor: pointer;
+  color: var(--text-dim); font-size: 20px; line-height: 1;
+  padding: 0 4px;
+}
+.habito-precedent-del:hover { color: var(--wine); }
+
 /* ── Finanzas: cash / bank accounts with a running total balance (EUR) ── */
 .finanzas { display: flex; flex-direction: column; gap: 14px; }
 .finanzas-total {

@@ -16,7 +16,7 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 
 const fmtDate = (iso) => {
   const [y, m, d] = iso.split('-').map(Number);
-  try { return new Date(y, m - 1, d).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }); }
+  try { return new Date(y, m - 1, d).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }); }
   catch { return iso; }
 };
 
