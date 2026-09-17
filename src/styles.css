@@ -7526,7 +7526,16 @@ body {
 
 /* ── Hábito detail: note + precedent log ── */
 .habito-detail { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }
-.habito-note { width: 100%; resize: vertical; min-height: 120px; line-height: 1.45; }
+.habito-note { width: 100%; resize: vertical; min-height: 110px; line-height: 1.45; }
+/* Read-only note as shown in the detail view (edited via the form). */
+.habito-note-view {
+  margin: 0; white-space: pre-wrap; overflow-wrap: anywhere;
+  line-height: 1.55; color: var(--ink); font-size: 15px;
+}
+/* Gear lives in the detail header (top-right), not on the card. */
+.habito-gear--header { position: relative; top: auto; right: auto; justify-self: end; }
+.habito-gear--header .cards-gear-menu { top: calc(100% + 8px); }
+.desktop-content .habito-gear--header { position: relative; top: auto; right: auto; transform: none; }
 .habito-precedent-btn {
   align-self: flex-start;
   border: 1px solid var(--wine);

@@ -49,14 +49,15 @@ export default function HabitosSection({ rootOnBack }) {
 
   const [draft, setDraft] = useState('');
   const [draftType, setDraftType] = useState(null);
+  const [draftNote, setDraftNote] = useState('');
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState('');
   const [editType, setEditType] = useState(null);
   const [editTimer, setEditTimer] = useState(true);
+  const [editNote, setEditNote] = useState('');
   const [menuId, setMenuId] = useState(null);
   const [detailId, setDetailId] = useState(null); // habit open in its full-screen detail
-  const [noteDraft, setNoteDraft] = useState('');
   const menuRef = useRef(null);
   useEffect(() => {
     if (menuId == null) return;
@@ -93,10 +94,11 @@ export default function HabitosSection({ rootOnBack }) {
     const name = draft.trim();
     if (!name) return;
     const nowISO = new Date().toISOString();
-    setHabits((h) => [{ id: newId(), name, since: nowISO, type: draftType, created_at: nowISO }, ...h]);
+    setHabits((h) => [{ id: newId(), name, since: nowISO, type: draftType, note: draftNote.trim(), created_at: nowISO }, ...h]);
     expandGroup(draftType ?? 'none'); // don't hide a fresh habit inside a collapsed folder
     setDraft('');
     setDraftType(null);
+    setDraftNote('');
     setAdding(false);
   };
   const reset = (id) => {
@@ -112,20 +114,19 @@ export default function HabitosSection({ rootOnBack }) {
     setEditText(hb.name);
     setEditType(habitTypeOf(hb));
     setEditTimer(hb.timer !== false);
+    setEditNote(hb.note ?? '');
   };
   const saveEdit = () => {
     const name = editText.trim();
     if (!name) { remove(editId); return; }
-    setHabits((h) => h.map((x) => (x.id === editId ? { ...x, name, type: editType, timer: editTimer } : x)));
+    setHabits((h) => h.map((x) => (x.id === editId ? { ...x, name, type: editType, timer: editTimer, note: editNote.trim() } : x)));
     setEditId(null);
   };
   const cancelEdit = () => setEditId(null);
 
   // ---- Detail view (click a card) ----------------------------------------
-  const openDetail = (hb) => { setMenuId(null); setEditId(null); setNoteDraft(hb.note ?? ''); setDetailId(hb.id); };
-  const closeDetail = () => { saveNote(); setDetailId(null); };
-  const saveNote = () =>
-    setHabits((h) => h.map((x) => (x.id === detailId ? { ...x, note: noteDraft } : x)));
+  const openDetail = (hb) => { setMenuId(null); setEditId(null); setDetailId(hb.id); };
+  const closeDetail = () => { setEditId(null); setDetailId(null); };
   // A "precedente" marks today as a slip — logged, but the counter keeps running
   // (unlike reset, which zeroes the clock).
   const addPrecedent = () => {
@@ -176,41 +177,6 @@ export default function HabitosSection({ rootOnBack }) {
   const flat = groups.length === 1 && groups[0].type === null;
 
   const renderCard = (hb) => {
-    if (editId === hb.id) {
-      return (
-        <li key={hb.id} className="habito-card habito-card--editing">
-          <div className="habito-edit">
-            <input
-              className="cards-field-input"
-              value={editText}
-              autoFocus
-              placeholder={t('habits.placeholder')}
-              onChange={(e) => setEditText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
-              maxLength={60}
-            />
-            {markPicker(editType, setEditType)}
-            <div className="habito-edit-opts">
-              <button
-                type="button"
-                className={`habito-edit-opt ${editTimer ? 'on' : ''}`}
-                onClick={() => setEditTimer((v) => !v)}
-                aria-pressed={editTimer}
-              >
-                {editTimer ? t('habits.timerHide') : t('habits.timerShow')}
-              </button>
-              <button type="button" className="habito-edit-opt" onClick={() => reset(editId)}>
-                {t('habits.reset')}
-              </button>
-            </div>
-            <div className="cards-panel-actions">
-              <button className="cards-secondary-btn" onClick={cancelEdit}>{t('cards.cancel')}</button>
-              <button className="cards-primary-btn" onClick={saveEdit} disabled={!editText.trim()}>{t('body.save')}</button>
-            </div>
-          </div>
-        </li>
-      );
-    }
     const since = new Date(hb.since).getTime();
     const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
     const ty = habitTypeOf(hb);
@@ -219,7 +185,7 @@ export default function HabitosSection({ rootOnBack }) {
     return (
       <li
         key={hb.id}
-        className={`habito-card habito-card--tap${menuId === hb.id ? ' menu-open' : ''}`}
+        className="habito-card habito-card--tap"
         onClick={() => openDetail(hb)}
       >
         <div className="habito-main">
@@ -235,68 +201,107 @@ export default function HabitosSection({ rootOnBack }) {
             {showTimer && <span className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</span>}
           </div>
         </div>
-        <div className="habito-gear" ref={menuId === hb.id ? menuRef : null} onClick={(e) => e.stopPropagation()}>
-          <button
-            className="cards-gear-btn cards-gear-btn--sm"
-            onClick={() => setMenuId((cur) => (cur === hb.id ? null : hb.id))}
-            aria-label={t('habits.title')}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3"/>
-              <path d={GEAR_PATH}/>
-            </svg>
-          </button>
-          {menuId === hb.id && (
-            <div className="cards-gear-menu cards-gear-menu--right">
-              <button className="cards-gear-item" onClick={() => startEdit(hb)}>{t('habits.edit')}</button>
-              <button className="cards-gear-item cards-gear-item--danger" onClick={() => remove(hb.id)}>{t('habits.delete')}</button>
-            </div>
-          )}
-        </div>
       </li>
     );
   };
 
+  // The name/mark/note/timer editor, shown inside the detail view.
+  const renderEditForm = () => (
+    <div className="cards-panel habito-edit">
+      <input
+        className="cards-field-input"
+        value={editText}
+        autoFocus
+        placeholder={t('habits.placeholder')}
+        onChange={(e) => setEditText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+        maxLength={60}
+      />
+      {markPicker(editType, setEditType)}
+      <textarea
+        className="cards-field-input habito-note"
+        value={editNote}
+        placeholder={t('habits.notePlaceholder')}
+        onChange={(e) => setEditNote(e.target.value)}
+        rows={5}
+        maxLength={2000}
+      />
+      <div className="habito-edit-opts">
+        <button
+          type="button"
+          className={`habito-edit-opt ${editTimer ? 'on' : ''}`}
+          onClick={() => setEditTimer((v) => !v)}
+          aria-pressed={editTimer}
+        >
+          {editTimer ? t('habits.timerHide') : t('habits.timerShow')}
+        </button>
+        <button type="button" className="habito-edit-opt" onClick={() => reset(editId)}>
+          {t('habits.reset')}
+        </button>
+      </div>
+      <div className="cards-panel-actions">
+        <button className="cards-secondary-btn" onClick={cancelEdit}>{t('cards.cancel')}</button>
+        <button className="cards-primary-btn" onClick={saveEdit} disabled={!editText.trim()}>{t('body.save')}</button>
+      </div>
+    </div>
+  );
+
   const detail = detailId != null ? habits.find((h) => h.id === detailId) : null;
   if (detail) {
+    const editing = editId === detail.id;
     const precedents = Array.isArray(detail.precedents) ? detail.precedents : [];
+    const note = (detail.note ?? '').trim();
+    const gear = editing ? null : (
+      <div className="habito-gear habito-gear--header" ref={menuId === detail.id ? menuRef : null}>
+        <button
+          className="cards-gear-btn cards-gear-btn--sm"
+          onClick={() => setMenuId((cur) => (cur === detail.id ? null : detail.id))}
+          aria-label={t('habits.title')}
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d={GEAR_PATH}/>
+          </svg>
+        </button>
+        {menuId === detail.id && (
+          <div className="cards-gear-menu cards-gear-menu--right">
+            <button className="cards-gear-item" onClick={() => startEdit(detail)}>{t('habits.edit')}</button>
+            <button className="cards-gear-item cards-gear-item--danger" onClick={() => remove(detail.id)}>{t('habits.delete')}</button>
+          </div>
+        )}
+      </div>
+    );
     return (
-      <SubPage title={detail.name} onBack={closeDetail}>
-        <div className="habito-detail">
-          <textarea
-            className="cards-field-input habito-note"
-            value={noteDraft}
-            placeholder={t('habits.notePlaceholder')}
-            onChange={(e) => setNoteDraft(e.target.value)}
-            onBlur={saveNote}
-            rows={6}
-            maxLength={2000}
-          />
-          <button className="habito-precedent-btn" onClick={addPrecedent}>
-            {t('habits.addPrecedent')}
-          </button>
-          {precedents.length > 0 && (
-            <div className="habito-precedents">
-              <div className="habito-precedents-head">
-                <span>{t('habits.precedents')}</span>
-                <span className="habito-precedents-count">{precedents.length}</span>
+      <SubPage title={detail.name} onBack={closeDetail} headerRight={gear}>
+        {editing ? renderEditForm() : (
+          <div className="habito-detail">
+            {note && <p className="habito-note-view">{note}</p>}
+            <button className="habito-precedent-btn" onClick={addPrecedent}>
+              {t('habits.addPrecedent')}
+            </button>
+            {precedents.length > 0 && (
+              <div className="habito-precedents">
+                <div className="habito-precedents-head">
+                  <span>{t('habits.precedents')}</span>
+                  <span className="habito-precedents-count">{precedents.length}</span>
+                </div>
+                <ul className="habito-precedents-list">
+                  {[...precedents].reverse().map((ts) => (
+                    <li key={ts} className="habito-precedent-row">
+                      <span className="habito-precedent-dot" />
+                      <span className="habito-precedent-date">{fmtPrecedent(ts)}</span>
+                      <button
+                        className="habito-precedent-del"
+                        onClick={() => removePrecedent(ts)}
+                        aria-label={t('habits.delete')}
+                      >×</button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="habito-precedents-list">
-                {[...precedents].reverse().map((ts) => (
-                  <li key={ts} className="habito-precedent-row">
-                    <span className="habito-precedent-dot" />
-                    <span className="habito-precedent-date">{fmtPrecedent(ts)}</span>
-                    <button
-                      className="habito-precedent-del"
-                      onClick={() => removePrecedent(ts)}
-                      aria-label={t('habits.delete')}
-                    >×</button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </SubPage>
     );
   }
@@ -320,13 +325,21 @@ export default function HabitosSection({ rootOnBack }) {
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') add();
-                if (e.key === 'Escape') { setAdding(false); setDraft(''); setDraftType(null); }
+                if (e.key === 'Escape') { setAdding(false); setDraft(''); setDraftType(null); setDraftNote(''); }
               }}
               maxLength={60}
             />
             {markPicker(draftType, setDraftType)}
+            <textarea
+              className="cards-field-input habito-note"
+              value={draftNote}
+              placeholder={t('habits.notePlaceholder')}
+              onChange={(e) => setDraftNote(e.target.value)}
+              rows={5}
+              maxLength={2000}
+            />
             <div className="cards-panel-actions">
-              <button className="cards-secondary-btn" onClick={() => { setAdding(false); setDraft(''); setDraftType(null); }}>
+              <button className="cards-secondary-btn" onClick={() => { setAdding(false); setDraft(''); setDraftType(null); setDraftNote(''); }}>
                 {t('cards.cancel')}
               </button>
               <button className="cards-primary-btn" onClick={add} disabled={!draft.trim()}>
