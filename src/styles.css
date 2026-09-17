@@ -7515,14 +7515,11 @@ body {
 
 /* Card is tappable — opens the habit's detail view. */
 .habito-card--tap { cursor: pointer; }
-.habito-prec-badge {
-  margin-top: 4px;
-  min-width: 20px; padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--wine); color: #fff;
-  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
-  line-height: 1.5; text-align: center;
-}
+/* Name row: a suit-style icon sits to the left of the habit name. */
+.habito-nameline { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; }
+.desktop-content .habito-nameline { justify-content: flex-start; }
+.habito-nameicon { display: inline-flex; flex: 0 0 auto; color: var(--gold-dim); }
+.habito-nameicon svg { display: block; }
 
 /* ── Hábito detail: note + precedent log ── */
 .habito-detail { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }

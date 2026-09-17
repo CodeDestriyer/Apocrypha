@@ -181,7 +181,6 @@ export default function HabitosSection({ rootOnBack }) {
     const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
     const ty = habitTypeOf(hb);
     const showTimer = hb.timer !== false;
-    const precCount = Array.isArray(hb.precedents) ? hb.precedents.length : 0;
     return (
       <li
         key={hb.id}
@@ -189,10 +188,17 @@ export default function HabitosSection({ rootOnBack }) {
         onClick={() => openDetail(hb)}
       >
         <div className="habito-main">
-          {ty && <span className="habito-mark"><HabitShape type={ty} size={20} /></span>}
-          <span className="habito-name">{hb.name}</span>
+          <div className="habito-nameline">
+            <span className="habito-nameicon">
+              {ty ? <HabitShape type={ty} size={18} /> : (
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="12,3 21,12 12,21 3,12" />
+                </svg>
+              )}
+            </span>
+            <span className="habito-name">{hb.name}</span>
+          </div>
           <span className="habito-since">{t('habits.since')} {fmtSince(hb.since)}</span>
-          {precCount > 0 && <span className="habito-prec-badge">{precCount}</span>}
         </div>
         <div className="habito-count">
           <span className="habito-days">{days}</span>
