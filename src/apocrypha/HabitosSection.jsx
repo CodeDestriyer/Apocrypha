@@ -26,6 +26,11 @@ const fmtSince = (iso) => {
     return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   } catch { return iso; }
 };
+const fmtPrecedent = (iso) => {
+  try {
+    return new Date(iso).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return iso; }
+};
 
 // "Hábitos" (Salud › Hábitos) — a quit-counter. Each entry counts up live from
 // the moment you started (or last relapsed); a relapse resets the clock. Each
@@ -50,6 +55,8 @@ export default function HabitosSection({ rootOnBack }) {
   const [editType, setEditType] = useState(null);
   const [editTimer, setEditTimer] = useState(true);
   const [menuId, setMenuId] = useState(null);
+  const [detailId, setDetailId] = useState(null); // habit open in its full-screen detail
+  const [noteDraft, setNoteDraft] = useState('');
   const menuRef = useRef(null);
   useEffect(() => {
     if (menuId == null) return;
@@ -113,6 +120,33 @@ export default function HabitosSection({ rootOnBack }) {
     setEditId(null);
   };
   const cancelEdit = () => setEditId(null);
+
+  // ---- Detail view (click a card) ----------------------------------------
+  const openDetail = (hb) => { setMenuId(null); setEditId(null); setNoteDraft(hb.note ?? ''); setDetailId(hb.id); };
+  const closeDetail = () => { saveNote(); setDetailId(null); };
+  const saveNote = () =>
+    setHabits((h) => h.map((x) => (x.id === detailId ? { ...x, note: noteDraft } : x)));
+  // A "precedente" marks today as a slip — logged, but the counter keeps running
+  // (unlike reset, which zeroes the clock).
+  const addPrecedent = () => {
+    const nowISO = new Date().toISOString();
+    setHabits((h) => h.map((x) => (
+      x.id === detailId
+        ? { ...x, precedents: [...(Array.isArray(x.precedents) ? x.precedents : []), nowISO] }
+        : x
+    )));
+  };
+  const removePrecedent = (ts) =>
+    setHabits((h) => h.map((x) => (
+      x.id === detailId
+        ? { ...x, precedents: (Array.isArray(x.precedents) ? x.precedents : []).filter((p) => p !== ts) }
+        : x
+    )));
+
+  // A habit deleted from elsewhere shouldn't leave a stale detail open.
+  useEffect(() => {
+    if (detailId != null && !habits.some((h) => h.id === detailId)) setDetailId(null);
+  }, [detailId, habits]);
 
   // Optional mark chooser: clicking the active chip clears it.
   const markPicker = (selected, onPick) => (
@@ -181,12 +215,18 @@ export default function HabitosSection({ rootOnBack }) {
     const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
     const ty = habitTypeOf(hb);
     const showTimer = hb.timer !== false;
+    const precCount = Array.isArray(hb.precedents) ? hb.precedents.length : 0;
     return (
-      <li key={hb.id} className={`habito-card${menuId === hb.id ? ' menu-open' : ''}`}>
+      <li
+        key={hb.id}
+        className={`habito-card habito-card--tap${menuId === hb.id ? ' menu-open' : ''}`}
+        onClick={() => openDetail(hb)}
+      >
         <div className="habito-main">
           {ty && <span className="habito-mark"><HabitShape type={ty} size={20} /></span>}
           <span className="habito-name">{hb.name}</span>
           <span className="habito-since">{t('habits.since')} {fmtSince(hb.since)}</span>
+          {precCount > 0 && <span className="habito-prec-badge">{precCount}</span>}
         </div>
         <div className="habito-count">
           <span className="habito-days">{days}</span>
@@ -195,7 +235,7 @@ export default function HabitosSection({ rootOnBack }) {
             {showTimer && <span className="habito-clock">{pad(h)}:{pad(m)}:{pad(sec)}</span>}
           </div>
         </div>
-        <div className="habito-gear" ref={menuId === hb.id ? menuRef : null}>
+        <div className="habito-gear" ref={menuId === hb.id ? menuRef : null} onClick={(e) => e.stopPropagation()}>
           <button
             className="cards-gear-btn cards-gear-btn--sm"
             onClick={() => setMenuId((cur) => (cur === hb.id ? null : hb.id))}
@@ -216,6 +256,50 @@ export default function HabitosSection({ rootOnBack }) {
       </li>
     );
   };
+
+  const detail = detailId != null ? habits.find((h) => h.id === detailId) : null;
+  if (detail) {
+    const precedents = Array.isArray(detail.precedents) ? detail.precedents : [];
+    return (
+      <SubPage title={detail.name} onBack={closeDetail}>
+        <div className="habito-detail">
+          <textarea
+            className="cards-field-input habito-note"
+            value={noteDraft}
+            placeholder={t('habits.notePlaceholder')}
+            onChange={(e) => setNoteDraft(e.target.value)}
+            onBlur={saveNote}
+            rows={6}
+            maxLength={2000}
+          />
+          <button className="habito-precedent-btn" onClick={addPrecedent}>
+            {t('habits.addPrecedent')}
+          </button>
+          {precedents.length > 0 && (
+            <div className="habito-precedents">
+              <div className="habito-precedents-head">
+                <span>{t('habits.precedents')}</span>
+                <span className="habito-precedents-count">{precedents.length}</span>
+              </div>
+              <ul className="habito-precedents-list">
+                {[...precedents].reverse().map((ts) => (
+                  <li key={ts} className="habito-precedent-row">
+                    <span className="habito-precedent-dot" />
+                    <span className="habito-precedent-date">{fmtPrecedent(ts)}</span>
+                    <button
+                      className="habito-precedent-del"
+                      onClick={() => removePrecedent(ts)}
+                      aria-label={t('habits.delete')}
+                    >×</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </SubPage>
+    );
+  }
 
   return (
     <SubPage title={t('habits.title')} onBack={rootOnBack}>
