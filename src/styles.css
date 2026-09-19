@@ -5527,6 +5527,8 @@ body {
   background: var(--paper);
   text-align: left;
   min-width: 0;
+  /* Contents bleed to the edges, so clip them to the rounded corners. */
+  overflow: hidden;
 }
 /* On phones the Hero header shows the Tareas cube only; Peso moves to its own
    section. On desktop both cubes sit side by side. */
@@ -5758,18 +5760,9 @@ body {
   background: var(--paper);
   padding: 16px 18px;
   margin-bottom: 14px;
-  /* The chart bleeds to the card edges, so clip it to the rounded corners. */
-  overflow: hidden;
 }
 .peso-plot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.peso-plot .weight-card-plot { flex: none; height: 210px; margin: 14px -18px -16px; }
-.peso-plot .pchart {
-  height: 100%;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
+.peso-plot .weight-card-plot { flex: none; height: 210px; }
 .weight-card-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .weight-card-svg * { vector-effect: non-scaling-stroke; }
 .weight-card-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
@@ -5820,7 +5813,15 @@ body {
 }
 .weight-card-spark { position: absolute; inset: 0; }
 /* Hero cube embeds the axed chart bare (the cube itself is the frame) */
-.hero-cube .pchart { height: 100%; border: none; background: transparent; border-radius: 0; }
+.hero-cube .pchart {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* Bleed the plot past the cube's padding so it fills the frame edge to edge. */
+.hero-cube .weight-card-plot { margin: 12px -18px -16px; }
 /* Charismatic PESO wordmark on the cube */
 .weight-card--link .weight-card-title,
 .weight-card .weight-card-title {
