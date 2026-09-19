@@ -206,12 +206,10 @@ body {
   position: relative;
 }
 
-/* Root windows (Héroe, Tarjetas, Tareas, Finanzas…) are framed in black, with
-   heavier side rules so the frame reads like a spine. */
+/* Root windows (Héroe, Tarjetas, Tareas, Finanzas…) carry an even black frame. */
 .character-card, .sub-page {
   border-color: var(--line);
-  border-left-width: 3px;
-  border-right-width: 3px;
+  border-width: 3px;
 }
 
 .tt-panel {
