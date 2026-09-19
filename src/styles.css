@@ -23,6 +23,9 @@
   --wine-deep: #3B0F07;
   --line: #000000;
   --accent: #6E2413;
+  /* The surface everything is laid on: white with ~3.5% wine in it, so white
+     cards read as sheets on a desk rather than as the page itself. */
+  --desk: #FAF6F5;
 }
 
 * { box-sizing: border-box; }
@@ -39,7 +42,7 @@ html, body, #root {
 }
 
 body {
-  background: var(--cream);
+  background: var(--desk);
 }
 
 .app {
@@ -71,7 +74,7 @@ body {
   background: var(--paper) !important;
   background-color: var(--paper) !important;
   color: var(--text);
-  border: 1px solid var(--line);
+  border: 1px solid rgba(0, 0, 0, 0.22);
   border-radius: 6px;
   padding: 28px 24px 22px;
   box-shadow: var(--shadow);
@@ -3080,7 +3083,7 @@ body {
    public Varkanis landing + login are intentionally left untouched.
    ══════════════════════════════════════════════════════════════════ */
 
-.splash { background: var(--cream); }
+.splash { background: var(--desk); }
 .ornament { color: var(--wine); }
 
 /* ── Shared surfaces ────────────────────────────────────── */
@@ -3715,9 +3718,10 @@ body {
   display: flex;
   flex-direction: column;
   padding: 16px 18px;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid rgba(0, 0, 0, 0.22);
   border-radius: 6px;
   background: var(--paper);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   text-align: left;
   min-width: 0;
   /* Contents bleed to the edges, so clip them to the rounded corners. */
@@ -4041,9 +4045,10 @@ body {
   justify-content: center;
   gap: 4px;
   padding: 12px 16px;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid rgba(0, 0, 0, 0.22);
   border-radius: 6px;
   background: var(--paper);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
