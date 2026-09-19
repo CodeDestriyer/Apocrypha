@@ -206,9 +206,10 @@ body {
   position: relative;
 }
 
-/* Root windows (Héroe, Tarjetas, Tareas, Finanzas…) carry heavier side rules —
-   the frame reads like a spine, while the top and bottom stay hairlines. */
+/* Root windows (Héroe, Tarjetas, Tareas, Finanzas…) are framed in black, with
+   heavier side rules so the frame reads like a spine. */
 .character-card, .sub-page {
+  border-color: var(--line);
   border-left-width: 3px;
   border-right-width: 3px;
 }
