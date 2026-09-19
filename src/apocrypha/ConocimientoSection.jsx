@@ -16,25 +16,25 @@ const newId = () =>
 
 const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z";
 
-// A rule block: tap the title to open its isolated page; drag the grip to move
+// A nota: tap the title to open its isolated page; drag the grip to move
 // it around the list — reorder among its siblings, or into any group folder.
 // `data-node-key` marks it as a direct child of its container so the drop index
 // can measure it (nested cards deeper down are skipped by the :scope selector).
-function RuleCard({ rule, dragging, onGrip, onOpen, t }) {
+function NotaCard({ nota, dragging, onGrip, onOpen, t }) {
   return (
     <div
       className={`rule-card${dragging ? ' dragging' : ''}`}
-      data-rule-id={rule.id}
-      data-node-key={'r:' + rule.id}
+      data-note-id={nota.id}
+      data-node-key={'r:' + nota.id}
     >
-      <button className="rule-card-open" onClick={() => onOpen(rule.id)}>
-        <span className="rule-card-title">{rule.title || t('reglas.noBody')}</span>
+      <button className="rule-card-open" onClick={() => onOpen(nota.id)}>
+        <span className="rule-card-title">{nota.title || t('conocimiento.noBody')}</span>
       </button>
       {onGrip && (
         <button
           className="rule-card-grip"
-          aria-label={t('reglas.reorder')}
-          onPointerDown={(e) => onGrip(e, rule)}
+          aria-label={t('conocimiento.reorder')}
+          onPointerDown={(e) => onGrip(e, nota)}
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
             <circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/>
@@ -47,10 +47,10 @@ function RuleCard({ rule, dragging, onGrip, onOpen, t }) {
   );
 }
 
-// A group "visor" (козырёк): a collapsible header that holds rules. Clicking the
+// A folder "visor" (козырёк): a collapsible header that holds notas. Clicking the
 // header folds/unfolds it (like the nav menu); its own gear renames/deletes it.
-// The whole visor is a drop zone — dragging a rule onto it assigns the group.
-function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming, nameDraft, menuOpen,
+// The whole visor is a drop zone — dragging a nota onto it files it here.
+function CarpetaVisor({ group, count, empty, collapsed, isDrop, dragging, renaming, nameDraft, menuOpen,
   onGrip, onToggle, onMenu, onStartRename, onRenameChange, onCommitRename, onDelete, children, t }) {
   return (
     <section className={`rule-koz${isDrop ? ' drop' : ''}${dragging ? ' dragging' : ''}`} data-group-id={group.id} data-node-key={'g:' + group.id}>
@@ -64,7 +64,7 @@ function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming
               className="rule-koz-rename"
               value={nameDraft}
               autoFocus
-              placeholder={t('reglas.newGroup')}
+              placeholder={t('conocimiento.newGroup')}
               maxLength={40}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => onRenameChange(e.target.value)}
@@ -89,14 +89,14 @@ function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming
           {menuOpen && (
             <div className="cards-gear-menu cards-gear-menu--right">
               <button className="cards-gear-item" onClick={() => onStartRename(group)}>{t('cards.renameDeck')}</button>
-              <button className="cards-gear-item cards-gear-item--danger" onClick={() => onDelete(group.id)}>{t('reglas.deleteGroup')}</button>
+              <button className="cards-gear-item cards-gear-item--danger" onClick={() => onDelete(group.id)}>{t('conocimiento.deleteGroup')}</button>
             </div>
           )}
         </div>
         {onGrip && (
           <button
             className="rule-koz-grip"
-            aria-label={t('reglas.reorder')}
+            aria-label={t('conocimiento.reorder')}
             onPointerDown={(e) => onGrip(e, group)}
           >
             <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
@@ -109,53 +109,59 @@ function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming
       </div>
       {!collapsed && (
         <div className="rule-koz-body">
-          {empty ? <div className="rule-koz-empty">{t('reglas.groupEmpty')}</div> : children}
+          {empty ? <div className="rule-koz-empty">{t('conocimiento.groupEmpty')}</div> : children}
         </div>
       )}
     </section>
   );
 }
 
-// Rules ("Reglas", Español › Reglas) — Spanish grammar rules laid out as a tree of
-// folders. Group folders nest inside group folders to any depth; rules are
-// leaves that live at the top level or inside any folder. Drag a grip to reorder
-// a node among its siblings, or drop it onto a folder's header to file it inside
-// that folder. Tap a rule to open its isolated page.
-// Rule:   { id, title, body, created_at }                        on profile.rules
-// Group:  { id, name }                                           on profile.rule_groups
-// Layout: [ { t:'r', id } | { t:'g', id, children:[…] } ] (tree) on profile.rule_layout
+// Conocimiento (Héroe › Conocimiento) — the personal knowledge base: thoughts
+// and things understood, filed into nested folders.
 //
-// Conocimiento is a SEPARATE section (ConocimientoSection.jsx) over its own
-// columns. The two only share the pure helpers in richText.jsx / noteTree.js and
-// the RichEditor widget — nothing about this section's layout, copy or features
-// is expected to stay in step with it.
-export default function RulesSection({ rootOnBack }) {
+// This is deliberately its OWN section, not a configured Reglas. The two hold
+// different kinds of material (Spanish grammar vs. life notes) and are free to
+// diverge in layout, copy and features without either having to keep in step.
+// What they do share is narrow and generic: the rich-text marker format
+// (richText.jsx), the folder-tree algebra (noteTree.js) and the RichEditor
+// widget. If this section ever wants a different nesting model it simply stops
+// importing from noteTree.js.
+//
+// Nota:   { id, title, body, created_at }                         on profile.notes
+// Folder: { id, name }                                            on profile.note_groups
+// Layout: [ { t:'r', id } | { t:'g', id, children:[…] } ] (tree)  on profile.note_layout
+//
+// `created_at` is bookkeeping only — nothing shows or sorts by a date.
+//
+// Styling currently reuses the rule-* classes, scoped under a `.conocimiento`
+// root so this section can be restyled without touching Reglas.
+export default function ConocimientoSection({ rootOnBack }) {
   const { profile, update } = useProfile();
   const { t } = useLang();
-  const rules = profile.rules ?? [];
-  const groups = profile.rule_groups ?? [];
-  const layout = profile.rule_layout ?? [];
+  const notes = profile.notes ?? [];
+  const groups = profile.note_groups ?? [];
+  const layout = profile.note_layout ?? [];
 
-  const setRules = (updater) =>
-    update((curr) => ({ rules: updater(curr.rules ?? []) }));
+  const setNotes = (updater) =>
+    update((curr) => ({ notes: updater(curr.notes ?? []) }));
   const setGroups = (updater) =>
-    update((curr) => ({ rule_groups: updater(curr.rule_groups ?? []) }));
+    update((curr) => ({ note_groups: updater(curr.note_groups ?? []) }));
   const setLayout = (updater) =>
-    update((curr) => ({ rule_layout: updater(curr.rule_layout ?? []) }));
+    update((curr) => ({ note_layout: updater(curr.note_layout ?? []) }));
 
-  const addRule = (title, body) =>
-    setRules((r) => [
+  const addNote = (title, body) =>
+    setNotes((r) => [
       { id: newId(), title, body, groupId: null, created_at: new Date().toISOString() },
       ...r,
     ]);
-  const removeRule = (id) => {
-    setRules((r) => r.filter((x) => x.id !== id));
+  const removeNote = (id) => {
+    setNotes((r) => r.filter((x) => x.id !== id));
     setLayout((l) => removeNode(l, 'r:' + id));
   };
-  const updateRule = (id, patch) =>
-    setRules((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
-  const renameRule = (id, name) =>
-    setRules((r) => r.map((x) => (x.id === id ? { ...x, title: name } : x)));
+  const updateNote = (id, patch) =>
+    setNotes((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const renameNote = (id, name) =>
+    setNotes((r) => r.map((x) => (x.id === id ? { ...x, title: name } : x)));
 
   const renameGroup = (id, name) =>
     setGroups((g) => g.map((x) => (x.id === id ? { ...x, name } : x)));
@@ -163,13 +169,13 @@ export default function RulesSection({ rootOnBack }) {
     // Delete the folder but keep everything inside it: its children move up into
     // its own slot one level higher (see dissolveGroup).
     setGroups((g) => g.filter((x) => x.id !== id));
-    setLayout((l) => dissolveGroup(toTree(l, rules, groups), id));
+    setLayout((l) => dissolveGroup(toTree(l, notes, groups), id));
   };
 
   // Reconciled tree actually rendered; persisted back if it drifted (a new
-  // rule/group appeared, one was removed elsewhere, or an old flat layout was
+  // nota/folder appeared, one was removed elsewhere, or an old flat layout was
   // migrated to the nested tree).
-  const renderLayout = useMemo(() => reconcileTree(toTree(layout, rules, groups), rules, groups), [layout, rules, groups]);
+  const renderLayout = useMemo(() => reconcileTree(toTree(layout, notes, groups), notes, groups), [layout, notes, groups]);
   useEffect(() => {
     if (!sameTree(renderLayout, layout)) setLayout(() => renderLayout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,13 +198,13 @@ export default function RulesSection({ rootOnBack }) {
 
   // Collapsed visors, persisted per-device
   const [collapsed, setCollapsed] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('lr:ruleGroupsCollapsed') || '[]')); }
+    try { return new Set(JSON.parse(localStorage.getItem('lr:noteGroupsCollapsed') || '[]')); }
     catch { return new Set(); }
   });
   const toggleCollapse = (id) => setCollapsed((prev) => {
     const next = new Set(prev);
     next.has(id) ? next.delete(id) : next.add(id);
-    try { localStorage.setItem('lr:ruleGroupsCollapsed', JSON.stringify([...next])); } catch { /* ignore */ }
+    try { localStorage.setItem('lr:noteGroupsCollapsed', JSON.stringify([...next])); } catch { /* ignore */ }
     return next;
   });
 
@@ -297,20 +303,20 @@ export default function RulesSection({ rootOnBack }) {
   };
   const anyDrag = dragKey != null;
 
-  const currentRule = (open && open !== 'new') ? (rules.find((r) => r.id === open) ?? null) : null;
-  const readingRule = reading ? (rules.find((r) => r.id === reading) ?? null) : null;
-  const isEditing = open === 'new' || !!currentRule;
+  const currentNote = (open && open !== 'new') ? (notes.find((r) => r.id === open) ?? null) : null;
+  const readingNote = reading ? (notes.find((r) => r.id === reading) ?? null) : null;
+  const isEditing = open === 'new' || !!currentNote;
 
   const openNew = () => { setReading(null); setMenuOpen(false); setTitle(''); setBody(''); setOpen('new'); };
   const openFull = (id) => { setMenuOpen(false); setEditingName(false); setReading(id); };
-  const editRule = (r) => { setMenuOpen(false); setEditingName(false); setReading(null); setTitle(r.title ?? ''); setBody(r.body ?? ''); setOpen(r.id); };
+  const editNote = (r) => { setMenuOpen(false); setEditingName(false); setReading(null); setTitle(r.title ?? ''); setBody(r.body ?? ''); setOpen(r.id); };
   const backToList = () => { setOpen(null); setReading(null); setMenuOpen(false); setEditingName(false); };
 
   const addGroup = () => {
     const id = newId();
-    setGroups((g) => [...g, { id, name: t('reglas.newGroup') }]);
+    setGroups((g) => [...g, { id, name: t('conocimiento.newGroup') }]);
     setMenuOpen(false);
-    setGroupNameDraft(t('reglas.newGroup'));
+    setGroupNameDraft(t('conocimiento.newGroup'));
     setGroupRenaming(id);
   };
   const commitGroupRename = () => {
@@ -321,25 +327,25 @@ export default function RulesSection({ rootOnBack }) {
   };
 
   const commitRename = () => {
-    if (!readingRule) return;
-    renameRule(readingRule.id, nameDraft.trim() || readingRule.title);
+    if (!readingNote) return;
+    renameNote(readingNote.id, nameDraft.trim() || readingNote.title);
     setEditingName(false);
   };
 
   const saveNew = () => {
     const ti = title.trim(); const bo = body.trim();
     if (!ti && !bo) { backToList(); return; }
-    addRule(ti, bo);
+    addNote(ti, bo);
     backToList();
   };
   const saveEdit = () => {
     const ti = title.trim(); const bo = body.trim();
     if (!ti && !bo) return;
-    updateRule(currentRule.id, { title: ti, body: bo });
+    updateNote(currentNote.id, { title: ti, body: bo });
     backToList();
   };
 
-  // Search filter. While searching we show a flat list of every matching rule
+  // Search filter. While searching we show a flat list of every matching nota
   // (across all folders) and turn off drag/nesting — the tree only makes sense
   // in the unfiltered view.
   const q = query.trim().toLowerCase();
@@ -349,19 +355,19 @@ export default function RulesSection({ rootOnBack }) {
   // ── Header (title / back / gear) ─────────────────────────────
   let pageTitle, onBack, headerRight = null;
   if (open === 'new') {
-    pageTitle = t('reglas.new');
+    pageTitle = t('conocimiento.new');
     onBack = backToList;
-  } else if (currentRule) {
-    pageTitle = <span className="sub-title-deck rule-title-plain">{currentRule.title || t('reglas.title')}</span>;
+  } else if (currentNote) {
+    pageTitle = <span className="sub-title-deck rule-title-plain">{currentNote.title || t('conocimiento.title')}</span>;
     onBack = backToList;
-  } else if (readingRule) {
+  } else if (readingNote) {
     onBack = backToList;
     pageTitle = editingName ? (
       <input
         className="sub-title-input"
         value={nameDraft}
         autoFocus
-        placeholder={t('reglas.titlePlaceholder')}
+        placeholder={t('conocimiento.titlePlaceholder')}
         maxLength={80}
         onChange={(e) => setNameDraft(e.target.value)}
         onBlur={commitRename}
@@ -371,7 +377,7 @@ export default function RulesSection({ rootOnBack }) {
         }}
       />
     ) : (
-      <span className="sub-title-deck rule-title-plain">{readingRule.title || t('reglas.title')}</span>
+      <span className="sub-title-deck rule-title-plain">{readingNote.title || t('conocimiento.title')}</span>
     );
     headerRight = (
       <div className="cards-gear" ref={menuRef}>
@@ -383,15 +389,15 @@ export default function RulesSection({ rootOnBack }) {
         </button>
         {menuOpen && (
           <div className="cards-gear-menu cards-gear-menu--right">
-            <button className="cards-gear-item" onClick={() => editRule(readingRule)}>{t('cards.editCard')}</button>
-            <button className="cards-gear-item" onClick={() => { setMenuOpen(false); setNameDraft(readingRule.title ?? ''); setEditingName(true); }}>{t('cards.renameDeck')}</button>
-            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); removeRule(readingRule.id); backToList(); }}>{t('cards.deleteCard')}</button>
+            <button className="cards-gear-item" onClick={() => editNote(readingNote)}>{t('cards.editCard')}</button>
+            <button className="cards-gear-item" onClick={() => { setMenuOpen(false); setNameDraft(readingNote.title ?? ''); setEditingName(true); }}>{t('cards.renameDeck')}</button>
+            <button className="cards-gear-item cards-gear-item--danger" onClick={() => { setMenuOpen(false); removeNote(readingNote.id); backToList(); }}>{t('cards.deleteCard')}</button>
           </div>
         )}
       </div>
     );
   } else {
-    pageTitle = t('reglas.title');
+    pageTitle = t('conocimiento.title');
     onBack = rootOnBack;
     headerRight = (
       <div className="cards-gear" ref={menuRef}>
@@ -403,7 +409,7 @@ export default function RulesSection({ rootOnBack }) {
         </button>
         {menuOpen && (
           <div className="cards-gear-menu cards-gear-menu--right">
-            <button className="cards-gear-item" onClick={addGroup}>{t('reglas.addGroup')}</button>
+            <button className="cards-gear-item" onClick={addGroup}>{t('conocimiento.addGroup')}</button>
           </div>
         )}
       </div>
@@ -416,22 +422,22 @@ export default function RulesSection({ rootOnBack }) {
     const submit = open === 'new' ? saveNew : saveEdit;
     content = (
       <div className="cards-panel">
-        <label className="cards-field-label">{t('reglas.titleLabel')}</label>
+        <label className="cards-field-label">{t('conocimiento.titleLabel')}</label>
         <input
           className="cards-field-input"
           value={title}
           autoFocus
-          placeholder={t('reglas.titlePlaceholder')}
+          placeholder={t('conocimiento.titlePlaceholder')}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={80}
         />
-        <label className="cards-field-label">{t('reglas.bodyLabel')}</label>
+        <label className="cards-field-label">{t('conocimiento.bodyLabel')}</label>
         <RichEditor
-          editKey={open === 'new' ? 'new' : currentRule.id}
+          editKey={open === 'new' ? 'new' : currentNote.id}
           initialValue={body}
           onChange={setBody}
           onSubmit={submit}
-          placeholder={t('reglas.bodyPlaceholder')}
+          placeholder={t('conocimiento.bodyPlaceholder')}
         />
         <div className="cards-panel-actions">
           <button className="cards-secondary-btn" onClick={backToList}>{t('cards.cancel')}</button>
@@ -441,32 +447,32 @@ export default function RulesSection({ rootOnBack }) {
         </div>
       </div>
     );
-  } else if (readingRule) {
+  } else if (readingNote) {
     content = (
       <div className="rule-read">
-        {readingRule.body
-          ? <div className="rule-read-body">{renderBody(readingRule.body)}</div>
-          : <div className="empty-hint">{t('reglas.noBody')}</div>}
+        {readingNote.body
+          ? <div className="rule-read-body">{renderBody(readingNote.body)}</div>
+          : <div className="empty-hint">{t('conocimiento.noBody')}</div>}
       </div>
     );
   } else {
-    const ruleById = new Map(rules.map((r) => [r.id, r]));
+    const noteById = new Map(notes.map((r) => [r.id, r]));
     const groupById = new Map(groups.map((g) => [g.id, g]));
-    const gripRule = q ? null : (e, r) => startDrag(e, 'rule', r.id, r.title || t('reglas.noBody'));
+    const gripNote = q ? null : (e, r) => startDrag(e, 'note', r.id, r.title || t('conocimiento.noBody'));
     const gripGroup = q ? null : (e, g) => startDrag(e, 'group', g.id, g.name);
 
     // Recursively render a list of tree nodes: rule leaves as cards, group nodes
     // as folders whose children are rendered the same way (any depth).
     const renderNodes = (nodes) => nodes.map((n) => {
       if (n.t === 'r') {
-        const r = ruleById.get(n.id);
+        const r = noteById.get(n.id);
         if (!r) return null;
-        return <RuleCard key={'r:' + n.id} rule={r} dragging={dragKey === 'r:' + n.id} onGrip={gripRule} onOpen={openFull} t={t} />;
+        return <NotaCard key={'r:' + n.id} nota={r} dragging={dragKey === 'r:' + n.id} onGrip={gripNote} onOpen={openFull} t={t} />;
       }
       const g = groupById.get(n.id);
       if (!g) return null;
       return (
-        <GroupVisor
+        <CarpetaVisor
           key={'g:' + g.id}
           group={g}
           count={collectItemIds(n.children).length}
@@ -487,18 +493,18 @@ export default function RulesSection({ rootOnBack }) {
           t={t}
         >
           {renderNodes(n.children || [])}
-        </GroupVisor>
+        </CarpetaVisor>
       );
     });
 
-    // Flat list of matching rules while searching (hierarchy hidden).
-    const searchHits = q ? rules.filter(matches) : [];
+    // Flat list of matching notas while searching (hierarchy hidden).
+    const searchHits = q ? notes.filter(matches) : [];
     const nothing = q ? searchHits.length === 0 : renderLayout.length === 0;
 
     content = (
       <>
         <div className="search-add-row">
-          {rules.length > 0 && (
+          {notes.length > 0 && (
             <div className="cards-search open">
               <svg className="cards-search-glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"/>
@@ -506,7 +512,7 @@ export default function RulesSection({ rootOnBack }) {
               </svg>
               <input
                 className="cards-search-input"
-                placeholder={t('reglas.searchPlaceholder')}
+                placeholder={t('conocimiento.searchPlaceholder')}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
@@ -516,17 +522,16 @@ export default function RulesSection({ rootOnBack }) {
               )}
             </div>
           )}
-          <button className="search-add-btn" onClick={openNew} aria-label={t('reglas.new')}>+</button>
+          <button className="search-add-btn" onClick={openNew} aria-label={t('conocimiento.new')}>+</button>
         </div>
 
-        {rules.length === 0 && groups.length === 0 ? (
-          <div className="empty-hint">{t('reglas.empty')}</div>
-        ) : nothing && q ? (
+        {notes.length === 0 && groups.length === 0 ? null
+          : nothing && q ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
         ) : q ? (
           <div className="rules-list">
             {searchHits.map((r) => (
-              <RuleCard key={'r:' + r.id} rule={r} dragging={false} onGrip={null} onOpen={openFull} t={t} />
+              <NotaCard key={'r:' + r.id} nota={r} dragging={false} onGrip={null} onOpen={openFull} t={t} />
             ))}
           </div>
         ) : (
@@ -546,7 +551,7 @@ export default function RulesSection({ rootOnBack }) {
 
   return (
     <SubPage title={pageTitle} onBack={onBack} headerRight={headerRight}>
-      {content}
+      <div className="conocimiento">{content}</div>
     </SubPage>
   );
 }

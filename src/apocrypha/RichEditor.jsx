@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
 
-// WYSIWYG body editor for a rule. The stored value is the same marker format
+// WYSIWYG body editor for a rich-text body. The stored value is the same marker format
 // the read view uses so search, Supabase and renderRuleBody stay untouched —
 // but here formatting is shown live: click "bold" on a selection and the text
 // is bold immediately, no asterisks.
@@ -47,7 +47,7 @@ function inlineToHtml(text) {
   return out;
 }
 
-// ── Block-fence helpers (mirror RulesSection's parser) ──────────────────────
+// ── Block-fence helpers (mirror richText.jsx's parser) ──────────────────────
 // `[[[` … `]]]` (box) and `[[[cols` … `]]]` (columns, cells split by `|||`)
 // nest, so scanning balances openers against closers by depth.
 const isFenceOpen = (l) => l === '[[[' || l === '[[[cols';
@@ -1007,7 +1007,7 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
     const table = document.createElement('table');
     table.className = 'rule-table rule-table--edit';
     const tbody = document.createElement('tbody');
-    const headTexts = [t('reglas.tableColHead', { n: 1 }), t('reglas.tableColHead', { n: 2 })];
+    const headTexts = [t('fmt.tableColHead', { n: 1 }), t('fmt.tableColHead', { n: 2 })];
     const head = document.createElement('tr');
     headTexts.forEach((txt) => { const td = document.createElement('td'); td.textContent = txt; head.appendChild(td); });
     tbody.appendChild(head);
@@ -1191,12 +1191,12 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           style={{ top: bar.y, left: bar.x }}
           onMouseDown={(e) => e.preventDefault()}
         >
-          {btn('heading', t('reglas.heading'), <span className="rule-fmt-h">H</span>)}
-          {btn('bold', t('reglas.bold'), <span className="rule-fmt-b">B</span>)}
-          {btn('italic', t('reglas.italic'), <span className="rule-fmt-i">I</span>)}
-          {btn('box', t('reglas.box'), <span className="rule-fmt-box" aria-hidden="true" />)}
-          {btn('mark', t('reglas.mark'), <span className="rule-fmt-mark" aria-hidden="true" />)}
-          {btn('cols', t('reglas.cols'), <span className="rule-fmt-cols" aria-hidden="true"><i /><i /></span>)}
+          {btn('heading', t('fmt.heading'), <span className="rule-fmt-h">H</span>)}
+          {btn('bold', t('fmt.bold'), <span className="rule-fmt-b">B</span>)}
+          {btn('italic', t('fmt.italic'), <span className="rule-fmt-i">I</span>)}
+          {btn('box', t('fmt.box'), <span className="rule-fmt-box" aria-hidden="true" />)}
+          {btn('mark', t('fmt.mark'), <span className="rule-fmt-mark" aria-hidden="true" />)}
+          {btn('cols', t('fmt.cols'), <span className="rule-fmt-cols" aria-hidden="true"><i /><i /></span>)}
         </div>
       )}
       {tableUi && (
@@ -1205,10 +1205,10 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           style={{ top: tableUi.y, left: tableUi.x }}
           onMouseDown={(e) => e.preventDefault()}
         >
-          {tblBtn(t('reglas.rowAdd'), addRow, <span className="rule-tbi rule-tbi-rows"><i /><b>+</b></span>)}
-          {tblBtn(t('reglas.rowDel'), delRow, <span className="rule-tbi rule-tbi-rows"><i /><b>−</b></span>)}
-          {tblBtn(t('reglas.colAdd'), addCol, <span className="rule-tbi rule-tbi-cols"><i /><b>+</b></span>)}
-          {tblBtn(t('reglas.colDel'), delCol, <span className="rule-tbi rule-tbi-cols"><i /><b>−</b></span>)}
+          {tblBtn(t('fmt.rowAdd'), addRow, <span className="rule-tbi rule-tbi-rows"><i /><b>+</b></span>)}
+          {tblBtn(t('fmt.rowDel'), delRow, <span className="rule-tbi rule-tbi-rows"><i /><b>−</b></span>)}
+          {tblBtn(t('fmt.colAdd'), addCol, <span className="rule-tbi rule-tbi-cols"><i /><b>+</b></span>)}
+          {tblBtn(t('fmt.colDel'), delCol, <span className="rule-tbi rule-tbi-cols"><i /><b>−</b></span>)}
         </div>
       )}
       {block && (
@@ -1216,12 +1216,12 @@ export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, 
           <button className="rule-ctx-item" onMouseDown={(e) => e.preventDefault()}
             onClick={insertTable}>
             <span className="rule-ctx-glyph" aria-hidden="true">▦</span>
-            <span>{t('reglas.table')}</span>
+            <span>{t('fmt.table')}</span>
           </button>
           <button className="rule-ctx-item" onMouseDown={(e) => e.preventDefault()}
             onClick={insertDivider}>
             <span className="rule-ctx-glyph" aria-hidden="true">—</span>
-            <span>{t('reglas.divider')}</span>
+            <span>{t('fmt.divider')}</span>
           </button>
         </div>
       )}

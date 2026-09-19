@@ -6,7 +6,8 @@ import { LangProvider, useLang } from './i18n.jsx';
 import { signOut } from './supabase.js';
 import IdiomasSection from './apocrypha/IdiomasSection.jsx';
 import CardsSection from './apocrypha/CardsSection.jsx';
-import RulesSection, { CONOCIMIENTO } from './apocrypha/RulesSection.jsx';
+import RulesSection from './apocrypha/RulesSection.jsx';
+import ConocimientoSection from './apocrypha/ConocimientoSection.jsx';
 import SaludSection from './apocrypha/SaludSection.jsx';
 import PesoSection from './apocrypha/PesoSection.jsx';
 import HabitosSection from './apocrypha/HabitosSection.jsx';
@@ -182,7 +183,7 @@ function Shell() {
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
             {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
-            {view === 'conocimiento' && <RulesSection rootOnBack={() => setView('home')} config={CONOCIMIENTO} />}
+            {view === 'conocimiento' && <ConocimientoSection rootOnBack={() => setView('home')} />}
             {view === 'peso' && <PesoSection rootOnBack={() => setView('home')} />}
             {view === 'habitos' && <HabitosSection rootOnBack={() => setView('home')} />}
             {view === 'tareas' && <TareasSection rootOnBack={() => setView('home')} />}
@@ -204,7 +205,7 @@ function Shell() {
             : view === 'reglas'
             ? <RulesSection rootOnBack={() => setView('home')} />
             : view === 'conocimiento'
-            ? <RulesSection rootOnBack={() => setView('home')} config={CONOCIMIENTO} />
+            ? <ConocimientoSection rootOnBack={() => setView('home')} />
             : view === 'salud'
             ? <SaludSection rootOnBack={() => setView('home')} />
             : view === 'peso'
