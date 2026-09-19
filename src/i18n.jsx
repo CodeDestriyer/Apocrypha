@@ -10,6 +10,8 @@ const DICT = {
   'nav.idiomas': 'Español',
   'nav.tareas': 'Tareas',
   'nav.finanzas': 'Finanzas',
+  'hero.balance': 'Balance',
+  'hero.words': 'Palabras',
   'finanzas.total': 'Balance total',
   'finanzas.add': 'Añadir',
   'finanzas.namePlaceholder': 'Nombre (p. ej. Efectivo, Revolut, N26…)',

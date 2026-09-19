@@ -244,6 +244,29 @@ function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) 
 // Hero stat cubes: a big "PESO" square with the live weight chart + weight,
 // plus a "TAREAS" square holding the day's to-do list, on the left of the Hero
 // card. Tapping Peso opens Peso; tapping Tareas opens the task list.
+// Two compact stat tiles beside the name: total EUR across the Finanzas
+// accounts, and every card in every deck (the Spanish vocabulary count).
+// Cents are dropped — the tile is a glance, not a ledger.
+function HeroMinis({ profile, t, onNavigate }) {
+  const balance = (Array.isArray(profile.finances) ? profile.finances : [])
+    .reduce((sum, f) => sum + (Number(f.amount) || 0), 0);
+  const words = (Array.isArray(profile.decks) ? profile.decks : [])
+    .reduce((sum, d) => sum + (Array.isArray(d.cards) ? d.cards.length : 0), 0);
+  const go = (view) => onNavigate && onNavigate(view);
+  return (
+    <div className="hero-minis">
+      <button type="button" className="hero-mini" onClick={() => go('finanzas')}>
+        <span className="hero-mini-label">{t('hero.balance')}</span>
+        <span className="hero-mini-value">{Math.round(balance).toLocaleString('es-ES')} €</span>
+      </button>
+      <button type="button" className="hero-mini" onClick={() => go('cards')}>
+        <span className="hero-mini-label">{t('hero.words')}</span>
+        <span className="hero-mini-value">{words}</span>
+      </button>
+    </div>
+  );
+}
+
 function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
   const latest = latestEntry(log);
   const unit = t('body.unit');
@@ -382,6 +405,7 @@ export default function CharacterPage({ onNavigate, hideNav = false, showNav = t
             </h1>
           )}
         </div>
+        <HeroMinis profile={profile} t={t} onNavigate={onNavigate} />
       </div>
       {editingInfo && (
         <button className="settings-done nav-done" onClick={() => setEditingInfo(false)}>
