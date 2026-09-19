@@ -29,6 +29,17 @@ const DICT = {
   'tareas.type.varkanis': 'varkanis.com',
   'tareas.type.body': 'Cuerpo',
   'tareas.type.study': 'Estudio',
+  'nav.conocimiento': 'Conocimiento',
+  // Conocimiento reuses the Reglas engine, so it only overrides the labels that
+  // actually differ; everything else falls back to the reglas.* strings.
+  'conocimiento.title': 'Conocimiento',
+  'conocimiento.new': 'Nueva nota',
+  'conocimiento.empty': '',
+  'conocimiento.titleLabel': 'Título',
+  'conocimiento.titlePlaceholder': 'p. ej. Sobre el dinero',
+  'conocimiento.bodyLabel': 'Nota',
+  'conocimiento.bodyPlaceholder': 'Escribe…',
+  'conocimiento.searchPlaceholder': 'Buscar…',
   'reglas.title': 'Reglas',
   'reglas.new': 'Nueva regla',
   'reglas.empty': 'Aún no hay reglas. Crea la primera.',

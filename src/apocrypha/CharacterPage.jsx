@@ -19,6 +19,10 @@ const NAV = [
     const total = list.reduce((s, f) => s + (Number(f.amount) || 0), 0);
     return `${Math.round(total).toLocaleString('es-ES')} €`;
   } },
+  { id: 'conocimiento', labelKey: 'nav.conocimiento', icon: '◆', summary: (p) => {
+    const n = (Array.isArray(p.notes) ? p.notes : []).length;
+    return n || '—';
+  } },
   { id: 'salud', labelKey: 'nav.salud', icon: '✚', summary: () => '—' },
   // Cuerpo (Body) tab is built (see App.jsx / BodySection.jsx) but hidden for
   // now — no nav entry points to it. Re-add this to bring it back:

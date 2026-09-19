@@ -56,6 +56,9 @@ export async function createProfile(name) {
     rules: [],
     rule_groups: [],
     rule_layout: [],
+    notes: [],
+    note_groups: [],
+    note_layout: [],
     habits: [],
     weight_log: [],
     weight_goal: null,
@@ -250,7 +253,14 @@ export function mergeDecks(base, mine, theirs) {
 // concurrent edits from another device aren't clobbered. Each is an array of
 // objects with a stable `id` (decks additionally nest cards; rule_layout uses a
 // composite key).
-export const MERGEABLE_COLUMNS = ['rules', 'rule_groups', 'rule_layout', 'tasks', 'decks'];
+export const MERGEABLE_COLUMNS = [
+  'rules', 'rule_groups', 'rule_layout',
+  'notes', 'note_groups', 'note_layout',
+  'tasks', 'decks',
+];
+
+// Columns holding a layout tree rather than a flat list of {id} items.
+const LAYOUT_COLUMNS = new Set(['rule_layout', 'note_layout']);
 
 // Build a save patch by merging the pending local values of any mergeable column
 // against the row's live DB values. Fetches only the columns actually touched.
@@ -270,9 +280,9 @@ export async function mergeProfilePatch(patch, base, mine) {
   const b = base || {}, m = mine || {};
   const out = { ...patch };
   for (const k of touched) {
-    if (k === 'rule_layout') out[k] = mergeLayout(b[k], m[k], theirs[k]);
+    if (LAYOUT_COLUMNS.has(k)) out[k] = mergeLayout(b[k], m[k], theirs[k]);
     else if (k === 'decks') out[k] = mergeDecks(b[k], m[k], theirs[k]);
-    else out[k] = mergeArrayById(b[k], m[k], theirs[k]); // rules, rule_groups, tasks
+    else out[k] = mergeArrayById(b[k], m[k], theirs[k]); // rules/notes, groups, tasks
   }
   return out;
 }

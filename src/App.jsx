@@ -6,7 +6,7 @@ import { LangProvider, useLang } from './i18n.jsx';
 import { signOut } from './supabase.js';
 import IdiomasSection from './apocrypha/IdiomasSection.jsx';
 import CardsSection from './apocrypha/CardsSection.jsx';
-import RulesSection from './apocrypha/RulesSection.jsx';
+import RulesSection, { CONOCIMIENTO } from './apocrypha/RulesSection.jsx';
 import SaludSection from './apocrypha/SaludSection.jsx';
 import PesoSection from './apocrypha/PesoSection.jsx';
 import HabitosSection from './apocrypha/HabitosSection.jsx';
@@ -182,6 +182,7 @@ function Shell() {
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
             {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
+            {view === 'conocimiento' && <RulesSection rootOnBack={() => setView('home')} config={CONOCIMIENTO} />}
             {view === 'peso' && <PesoSection rootOnBack={() => setView('home')} />}
             {view === 'habitos' && <HabitosSection rootOnBack={() => setView('home')} />}
             {view === 'tareas' && <TareasSection rootOnBack={() => setView('home')} />}
@@ -202,6 +203,8 @@ function Shell() {
             ? <CardsSection rootOnBack={() => setView('home')} />
             : view === 'reglas'
             ? <RulesSection rootOnBack={() => setView('home')} />
+            : view === 'conocimiento'
+            ? <RulesSection rootOnBack={() => setView('home')} config={CONOCIMIENTO} />
             : view === 'salud'
             ? <SaludSection rootOnBack={() => setView('home')} />
             : view === 'peso'
@@ -234,7 +237,7 @@ function DesktopSidebar({ view, setView }) {
   const [openGroup, setOpenGroup] = useState(
     view === 'cards' || view === 'reglas' ? 'idiomas'
       : (view === 'peso' || view === 'habitos') ? 'salud'
-      : view === 'finanzas' ? 'heroe'
+      : (view === 'finanzas' || view === 'conocimiento') ? 'heroe'
       : null
   );
   const heroeOpen = openGroup === 'heroe';
@@ -254,7 +257,7 @@ function DesktopSidebar({ view, setView }) {
             Español reveals Tarjetas. */}
         <div className={`desktop-nav-group ${heroeOpen ? 'open' : ''}`}>
           <button
-            className={`desktop-nav-item desktop-nav-parent ${(view === 'home' || view === 'finanzas') ? 'active-parent' : ''}`}
+            className={`desktop-nav-item desktop-nav-parent ${(view === 'home' || view === 'finanzas' || view === 'conocimiento') ? 'active-parent' : ''}`}
             onClick={() => { setView('home'); toggleGroup('heroe'); }}
             aria-expanded={heroeOpen}
           >
@@ -270,6 +273,13 @@ function DesktopSidebar({ view, setView }) {
               >
                 <span className="desktop-nav-icon">€</span>
                 <span>{t('nav.finanzas')}</span>
+              </button>
+              <button
+                className={`desktop-nav-item desktop-subnav-item ${view === 'conocimiento' ? 'active' : ''}`}
+                onClick={() => setView('conocimiento')}
+              >
+                <span className="desktop-nav-icon">◆</span>
+                <span>{t('nav.conocimiento')}</span>
               </button>
             </div>
           )}

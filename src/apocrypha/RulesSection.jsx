@@ -9,17 +9,17 @@ const newId = () =>
     ? crypto.randomUUID()
     : String(Date.now()) + Math.random().toString(36).slice(2, 8);
 
-// The rule list is a TREE stored in profile.rule_layout. Each node is either a
-// rule leaf { t:'r', id } or a group folder { t:'g', id, children:[…nodes] }.
-// Groups nest inside groups to any depth ("папки в папках"); rules are leaves
-// that live at the top level or inside any group. The rules / rule_groups arrays
-// hold only CONTENT (title/body, name) keyed by id — the tree alone defines the
-// order and the nesting.
+// The entry list is a TREE stored in the section's layout column. Each node is
+// either an entry leaf { t:'r', id } or a group folder { t:'g', id, children:[…] }.
+// Groups nest inside groups to any depth ("папки в папках"); entries are leaves
+// that live at the top level or inside any group. The items / groups arrays hold
+// only CONTENT (title/body, name) keyed by id — the tree alone defines the order
+// and the nesting.
 const nodeKey = (n) => n.t + ':' + n.id;
 
 // Old flat layout → tree (one-time migration). The old format listed only
-// top-level entries and kept each rule's container in rule.groupId, with grouped
-// rules absent from the layout. Detect it by a group entry with no children
+// top-level entries and kept each entry's container in item.groupId, with grouped
+// entries absent from the layout. Detect it by a group entry with no children
 // array, and rebuild each group's children from groupId.
 function toTree(layout, rules, groups) {
   const list = layout || [];
@@ -405,22 +405,56 @@ function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming
 // leaves that live at the top level or inside any folder. Drag a grip to reorder
 // a node among its siblings, or drop it onto a folder's header to file it inside
 // that folder. Tap a rule to open its isolated page.
-// Rule:   { id, title, body, created_at }                         on profile.rules
-// Group:  { id, name }                                            on profile.rule_groups
-// Layout: [ { t:'r', id } | { t:'g', id, children:[…] } ]  (tree) on profile.rule_layout
-export default function RulesSection({ rootOnBack }) {
+// Shapes, each stored in the column the active config names (see REGLAS /
+// CONOCIMIENTO below):
+// Entry:  { id, title, body, created_at }                    → config.itemsKey
+// Group:  { id, name }                                       → config.groupsKey
+// Layout: [ { t:'r', id } | { t:'g', id, children:[…] } ]    → config.layoutKey
+// `created_at` is bookkeeping only — no section displays or sorts by a date.
+// This component is the shared notes engine: a tree of folders holding rich-text
+// entries, with drag-to-nest, search and a full-page read view. It is mounted
+// twice over two independent sets of profile columns — `REGLAS` (Spanish grammar,
+// under Idiomas) and `CONOCIMIENTO` (the personal knowledge base, under Héroe).
+// A config only names the columns, the per-device collapse key and the label
+// prefix; everything else is identical for both.
+export const REGLAS = {
+  itemsKey: 'rules',
+  groupsKey: 'rule_groups',
+  layoutKey: 'rule_layout',
+  collapseKey: 'lr:ruleGroupsCollapsed',
+  tPrefix: 'reglas',
+};
+
+export const CONOCIMIENTO = {
+  itemsKey: 'notes',
+  groupsKey: 'note_groups',
+  layoutKey: 'note_layout',
+  collapseKey: 'lr:noteGroupsCollapsed',
+  tPrefix: 'conocimiento',
+};
+
+export default function RulesSection({ rootOnBack, config = REGLAS }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
-  const rules = profile.rules ?? [];
-  const groups = profile.rule_groups ?? [];
-  const layout = profile.rule_layout ?? [];
+  const { t: tBase } = useLang();
+  // Labels are written once as `reglas.*`; a section overrides only the strings
+  // that actually differ by defining `<prefix>.<suffix>`. Shared controls (the
+  // editor toolbar, folder menus) therefore need no per-section copy.
+  const t = (key, vars) => {
+    if (!key.startsWith('reglas.')) return tBase(key, vars);
+    const scoped = `${config.tPrefix}.${key.slice('reglas.'.length)}`;
+    const val = tBase(scoped, vars);
+    return val === scoped ? tBase(key, vars) : val;   // t() echoes unknown keys
+  };
+  const rules = profile[config.itemsKey] ?? [];
+  const groups = profile[config.groupsKey] ?? [];
+  const layout = profile[config.layoutKey] ?? [];
 
   const setRules = (updater) =>
-    update((curr) => ({ rules: updater(curr.rules ?? []) }));
+    update((curr) => ({ [config.itemsKey]: updater(curr[config.itemsKey] ?? []) }));
   const setGroups = (updater) =>
-    update((curr) => ({ rule_groups: updater(curr.rule_groups ?? []) }));
+    update((curr) => ({ [config.groupsKey]: updater(curr[config.groupsKey] ?? []) }));
   const setLayout = (updater) =>
-    update((curr) => ({ rule_layout: updater(curr.rule_layout ?? []) }));
+    update((curr) => ({ [config.layoutKey]: updater(curr[config.layoutKey] ?? []) }));
 
   const addRule = (title, body) =>
     setRules((r) => [
@@ -471,13 +505,13 @@ export default function RulesSection({ rootOnBack }) {
 
   // Collapsed visors, persisted per-device
   const [collapsed, setCollapsed] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('lr:ruleGroupsCollapsed') || '[]')); }
+    try { return new Set(JSON.parse(localStorage.getItem(config.collapseKey) || '[]')); }
     catch { return new Set(); }
   });
   const toggleCollapse = (id) => setCollapsed((prev) => {
     const next = new Set(prev);
     next.has(id) ? next.delete(id) : next.add(id);
-    try { localStorage.setItem('lr:ruleGroupsCollapsed', JSON.stringify([...next])); } catch { /* ignore */ }
+    try { localStorage.setItem(config.collapseKey, JSON.stringify([...next])); } catch { /* ignore */ }
     return next;
   });
 
@@ -799,7 +833,7 @@ export default function RulesSection({ rootOnBack }) {
         </div>
 
         {rules.length === 0 && groups.length === 0 ? (
-          <div className="empty-hint">{t('reglas.empty')}</div>
+          t('reglas.empty') ? <div className="empty-hint">{t('reglas.empty')}</div> : null
         ) : nothing && q ? (
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
         ) : q ? (
