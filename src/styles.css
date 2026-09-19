@@ -4066,22 +4066,8 @@ body {
   font-weight: 700; font-size: 22px; line-height: 1.1; letter-spacing: 0.02em;
   color: var(--wine); white-space: nowrap;
 }
-/* Both tiles sit on black; only their ink differs. */
-.hero-mini--money, .hero-mini--words {
-  background: #0B0B0B;
-  border-color: #0B0B0B;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-.hero-mini--money:hover, .hero-mini--words:hover { border-color: rgba(255, 255, 255, 0.4); }
-/* Balance: terminal green, tabular so a changing sum doesn't shift the tile. */
-.hero-mini--money .hero-mini-label { color: rgba(111, 191, 138, 0.6); }
-.hero-mini--money .hero-mini-value {
-  color: #6FBF8A;
-  font-variant-numeric: tabular-nums;
-}
-/* Vocabulary: ivory on black, like a printed plate. */
-.hero-mini--words .hero-mini-label { color: rgba(240, 230, 214, 0.55); }
-.hero-mini--words .hero-mini-value { color: #F0E6D6; }
+/* Tabular figures, so a changing balance doesn't shift the tile. */
+.hero-mini-value { font-variant-numeric: tabular-nums; }
 /* Narrow screens: the tiles drop to their own full-width row under the name. */
 @media (max-width: 700px) {
   .char-layout { flex-wrap: wrap; }

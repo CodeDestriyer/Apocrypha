@@ -255,11 +255,11 @@ function HeroMinis({ profile, t, onNavigate }) {
   const go = (view) => onNavigate && onNavigate(view);
   return (
     <div className="hero-minis">
-      <button type="button" className="hero-mini hero-mini--money" onClick={() => go('finanzas')}>
+      <button type="button" className="hero-mini" onClick={() => go('finanzas')}>
         <span className="hero-mini-label">{t('hero.balance')}</span>
         <span className="hero-mini-value">{Math.round(balance).toLocaleString('es-ES')} €</span>
       </button>
-      <button type="button" className="hero-mini hero-mini--words" onClick={() => go('cards')}>
+      <button type="button" className="hero-mini" onClick={() => go('cards')}>
         <span className="hero-mini-label">{t('hero.words')}</span>
         <span className="hero-mini-value">{words}</span>
       </button>
