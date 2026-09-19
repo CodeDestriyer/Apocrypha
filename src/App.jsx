@@ -179,7 +179,9 @@ function Shell() {
       return (
         <div className="desktop-shell">
           <DesktopSidebar view={view} setView={setView} />
-          <main className="desktop-content">
+          {/* Keyed by view so switching sections remounts the pane and replays
+              its slide-in; same view, no animation. */}
+          <main className="desktop-content" key={view}>
             {view === 'home' && <CharacterPage onNavigate={setView} hideNav />}
             {view === 'cards' && <CardsSection rootOnBack={() => setView('home')} />}
             {view === 'reglas' && <RulesSection rootOnBack={() => setView('home')} />}
