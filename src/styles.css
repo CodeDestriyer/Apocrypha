@@ -4889,6 +4889,8 @@ body {
 .ornament { color: var(--wine); }
 
 /* ── Shared surfaces ────────────────────────────────────── */
+/* Sub-page headers stand on their own — no ornament rules boxing the title in. */
+.sub-page::before, .sub-page::after { content: none; }
 .divider { background: var(--line); width: 72%; height: 1px; }
 .empty-hint { color: var(--text-dim); }
 

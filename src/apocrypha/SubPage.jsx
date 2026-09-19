@@ -6,7 +6,6 @@ export default function SubPage({ title, onBack, headerRight, children }) {
         <h1 className="sub-title">{title}</h1>
         {headerRight ?? <span className="back-spacer" />}
       </header>
-      <div className="divider" />
       {children}
     </div>
   );
