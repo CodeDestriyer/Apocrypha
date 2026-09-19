@@ -4891,8 +4891,9 @@ body {
 .ornament { color: var(--wine); }
 
 /* ── Shared surfaces ────────────────────────────────────── */
-/* Sub-page headers stand on their own — no ornament rules boxing the title in. */
-.sub-page::before, .sub-page::after { content: none; }
+/* Page cards stand on their own — no ornament rules boxing the title in. */
+.sub-page::before, .sub-page::after,
+.character-card::before, .character-card::after { content: none; }
 .divider { background: var(--line); width: 72%; height: 1px; }
 .empty-hint { color: var(--text-dim); }
 
@@ -5757,9 +5758,18 @@ body {
   background: var(--paper);
   padding: 16px 18px;
   margin-bottom: 14px;
+  /* The chart bleeds to the card edges, so clip it to the rounded corners. */
+  overflow: hidden;
 }
 .peso-plot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.peso-plot .weight-card-plot { flex: none; height: 210px; }
+.peso-plot .weight-card-plot { flex: none; height: 210px; margin: 14px -18px -16px; }
+.peso-plot .pchart {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .weight-card-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .weight-card-svg * { vector-effect: non-scaling-stroke; }
 .weight-card-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
