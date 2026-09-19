@@ -206,6 +206,13 @@ body {
   position: relative;
 }
 
+/* Root windows (Héroe, Tarjetas, Tareas, Finanzas…) carry heavier side rules —
+   the frame reads like a spine, while the top and bottom stay hairlines. */
+.character-card, .sub-page {
+  border-left-width: 3px;
+  border-right-width: 3px;
+}
+
 .tt-panel {
   margin: 18px 0 6px;
   padding: 14px 16px;
