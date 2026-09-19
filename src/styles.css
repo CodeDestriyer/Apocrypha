@@ -1,27 +1,27 @@
 :root {
   /* ── Neoclassical / luxury editorial palette ──────────────────
-     Warm ivory "paper-stone" surfaces, deep mahogany ink, wine
-     (sealing-wax) accents. Kept under the old variable names so the
-     var()-based rules across the app re-skin without a rewrite. */
+     White surfaces, black ink and hairlines, burgundy accent. Kept
+     under the old variable names so the var()-based rules across the
+     app re-skin without a rewrite. */
   --bg-0: #FFFFFF;      /* deepest page tone */
   --bg-1: #FFFFFF;      /* main page background */
   --bg-2: #FFFFFF;      /* raised paper / card */
-  --gold: #6E2413;      /* accent — sealing wax / wine (borders, icons) */
-  --gold-dim: #C9B8A8;  /* muted warm line */
-  --gold-bright: #2A0E08; /* strongest ink — headings */
-  --text: #3D140C;      /* mahogany body text */
-  --text-dim: #7C5E54;  /* muted brown */
+  --gold: #6E2413;      /* accent — sealing wax / burgundy (icons, fills) */
+  --gold-dim: #000000;  /* hairline / ornament rule */
+  --gold-bright: #000000; /* strongest ink — headings */
+  --text: #000000;      /* body text */
+  --text-dim: #555555;  /* muted */
   --danger: #9d3b2f;
-  --shadow: 0 1px 2px rgba(42, 14, 8, 0.05), 0 14px 40px -16px rgba(42, 14, 8, 0.20);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 14px 40px -16px rgba(0, 0, 0, 0.22);
 
   /* Semantic aliases used by the theme layer below */
   --paper: #FFFFFF;
   --cream: #FFFFFF;
-  --ink: #2A0E08;
-  --ink-soft: #3D140C;
+  --ink: #000000;
+  --ink-soft: #1A1A1A;
   --wine: #4A150B;
   --wine-deep: #3B0F07;
-  --line: #E0DCD3;
+  --line: #000000;
   --accent: #6E2413;
 }
 
@@ -4896,16 +4896,16 @@ body {
 .avatar {
   background: #ffffff;
   border: 1px solid var(--line);
-  box-shadow: 0 2px 12px rgba(42, 14, 8, 0.08), inset 0 0 0 transparent;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), inset 0 0 0 transparent;
 }
-.avatar:hover { box-shadow: 0 4px 18px rgba(42, 14, 8, 0.16); }
+.avatar:hover { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16); }
 .avatar-fallback { color: var(--wine); }
 .name, .name-text { color: var(--ink); }
 .name-input { color: var(--ink); border-bottom-color: var(--gold-dim); }
 
 /* ── Hero: settings menu (top-right gear) ───────────────── */
 .settings-btn { border: 1px solid var(--line); background: var(--cream); color: var(--wine); }
-.settings-btn:hover { background: #efe7df; border-color: var(--gold-dim); }
+.settings-btn:hover { background: #f2f2f2; border-color: var(--gold-dim); }
 .settings-dropdown { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
 .settings-section-title { color: var(--text-dim); }
 .settings-option { color: var(--ink-soft); }
@@ -4929,39 +4929,39 @@ body {
 .nav-summary { color: var(--wine); }
 .nav-check.on { background: var(--wine); border-color: var(--wine); color: var(--cream); }
 .nav-check.off { border-color: var(--gold-dim); }
-.nav-card.dragging { box-shadow: 0 8px 20px rgba(42, 14, 8, 0.18); border-color: var(--wine); }
+.nav-card.dragging { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18); border-color: var(--wine); }
 
 /* ── Desktop sidebar: deep wine accent rail ─────────────── */
 .desktop-sidebar {
   background: linear-gradient(180deg, var(--wine) 0%, var(--wine-deep) 100%);
-  border-right: 1px solid rgba(42, 14, 8, 0.4);
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
 }
 .desktop-brand-text { color: var(--cream); text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
-.desktop-brand:hover .desktop-brand-text { text-shadow: 0 0 18px rgba(245, 242, 236, 0.4); }
-.desktop-nav-section { color: rgba(245, 242, 236, 0.72); border-bottom-color: rgba(245, 242, 236, 0.16); }
-.desktop-nav-item { color: rgba(245, 242, 236, 0.86); border-left-color: transparent; }
+.desktop-brand:hover .desktop-brand-text { text-shadow: 0 0 18px rgba(255, 255, 255, 0.4); }
+.desktop-nav-section { color: rgba(255, 255, 255, 0.72); border-bottom-color: rgba(255, 255, 255, 0.16); }
+.desktop-nav-item { color: rgba(255, 255, 255, 0.86); border-left-color: transparent; }
 .desktop-nav-item:hover {
-  background: rgba(245, 242, 236, 0.08);
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  border-left-color: rgba(245, 242, 236, 0.6);
+  border-left-color: rgba(255, 255, 255, 0.6);
 }
 .desktop-nav-item.active {
-  background: rgba(245, 242, 236, 0.14);
-  border-color: rgba(245, 242, 236, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
   border-left-color: var(--cream);
   color: #ffffff;
 }
-.desktop-nav-icon { color: rgba(245, 242, 236, 0.85); }
+.desktop-nav-icon { color: rgba(255, 255, 255, 0.85); }
 .desktop-nav-item.active .desktop-nav-icon { color: #ffffff; text-shadow: none; }
-.desktop-sidebar-footer { border-top-color: rgba(245, 242, 236, 0.18); }
-.desktop-settings-pop { background: var(--paper); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(42, 14, 8, 0.28); }
-.desktop-logout { color: #e7c9b8; }
-.desktop-logout:hover { background: rgba(245, 242, 236, 0.1); color: #ffffff; border-left-color: var(--cream); }
+.desktop-sidebar-footer { border-top-color: rgba(255, 255, 255, 0.18); }
+.desktop-settings-pop { background: var(--paper); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28); }
+.desktop-logout { color: rgba(255, 255, 255, 0.75); }
+.desktop-logout:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; border-left-color: var(--cream); }
 
 /* ── SubPage shell (Idiomas) ────────────────────────────── */
 .sub-title { color: var(--ink); }
 .back-btn { border: 1px solid var(--line); background: var(--cream); color: var(--wine); }
-.back-btn:hover { background: #efe7df; border-color: var(--gold-dim); }
+.back-btn:hover { background: #f2f2f2; border-color: var(--gold-dim); }
 
 /* ── Tarjetas: deck list ────────────────────────────────── */
 .deck-row { border: 1px solid var(--line) !important; background: var(--paper) !important; }
@@ -4981,7 +4981,7 @@ body {
 .cards-study-btn--outline { background: rgba(110, 36, 19, 0.1); color: var(--wine); border: 2px solid var(--wine); }
 .cards-study-btn--outline:hover:not(:disabled) { background: rgba(110, 36, 19, 0.18); }
 .cards-gear-btn { background: var(--cream); border-color: var(--line); color: var(--wine); }
-.cards-gear-btn:hover { background: #efe7df; color: var(--wine-deep); }
+.cards-gear-btn:hover { background: #f2f2f2; color: var(--wine-deep); }
 .cards-gear-btn--sm { background: transparent; border-color: transparent; color: var(--text-dim); }
 .cards-gear-btn--sm:hover { background: rgba(110, 36, 19, 0.08); color: var(--wine); }
 .cards-gear-menu { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
@@ -5067,7 +5067,7 @@ body {
 .study-card-face {
   border: 1px solid var(--line);
   background: #ffffff;
-  box-shadow: 0 18px 40px -20px rgba(42, 14, 8, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .study-card-face::before,
 .study-card-face::after { border-color: rgba(110, 36, 19, 0.4); }
@@ -5088,7 +5088,7 @@ body {
 .cards-grade-btn--knew:hover { background: rgba(63, 122, 66, 0.14); border-color: rgba(63, 122, 66, 0.6); }
 
 /* ── Tarjetas: back-side image (light theme) ────────────── */
-.study-card-img { border-color: var(--gold-dim); box-shadow: 0 8px 20px -12px rgba(42, 14, 8, 0.4); }
+.study-card-img { border-color: var(--gold-dim); box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.4); }
 .card-img-drop { background: #ffffff; border-color: var(--gold-dim); }
 .card-img-drop:focus, .card-img-drop:focus-within { border-color: var(--wine); }
 .card-img-drop-hint { color: var(--text-dim); }
@@ -5099,12 +5099,12 @@ body {
 /* ── Reglas: note grid ──────────────────────────────────── */
 .rule-note {
   border: 1.5px solid var(--gold-dim); background: var(--paper); color: var(--ink-soft);
-  border-radius: 8px; box-shadow: 0 2px 6px rgba(42, 14, 8, 0.07);
+  border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s;
 }
 .rule-note:hover {
   border-color: var(--wine); background: #ffffff;
-  box-shadow: 0 6px 16px rgba(42, 14, 8, 0.14); transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14); transform: translateY(-2px);
 }
 .rule-note--active { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
 .rule-note-title { color: var(--wine); font-weight: 800; font-size: 14px; letter-spacing: 0.02em; }
@@ -5147,13 +5147,13 @@ body {
   border: 1.5px solid var(--gold-dim);
   border-radius: 8px;
   background: var(--paper);
-  box-shadow: 0 2px 6px rgba(42, 14, 8, 0.07);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
   overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s, opacity 0.15s;
 }
 .rule-card:hover {
   border-color: var(--wine); background: #ffffff;
-  box-shadow: 0 6px 16px rgba(42, 14, 8, 0.14); transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14); transform: translateY(-1px);
 }
 /* The dragged node's whole subtree is invisible to hit-testing, so it can't be
    a drop target — you can never drop a folder into itself or its descendants. */
@@ -5257,7 +5257,7 @@ body {
   transform: translate(12px, 12px);
   padding: 8px 12px; max-width: 60vw;
   border: 1.5px solid var(--wine); border-radius: 8px;
-  background: var(--paper); box-shadow: 0 10px 24px rgba(42, 14, 8, 0.28);
+  background: var(--paper); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
   font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 700; color: var(--wine);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   pointer-events: none;
@@ -5268,7 +5268,7 @@ body {
   position: fixed; z-index: 50;
   padding: 4px;
   border: 1px solid var(--line); border-radius: 8px;
-  background: var(--paper); box-shadow: 0 10px 30px rgba(42, 14, 8, 0.25);
+  background: var(--paper); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 .rule-ctx-item {
   display: flex; align-items: center; gap: 9px;
@@ -5460,7 +5460,7 @@ body {
   padding: 4px;
   border: 1px solid var(--line); border-radius: 8px;
   background: var(--paper);
-  box-shadow: 0 8px 24px rgba(42, 14, 8, 0.28);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 .rule-fmt-btn {
   display: grid; place-items: center;
@@ -5576,7 +5576,7 @@ body {
   border: 1.5px solid var(--gold-dim); border-radius: 8px;
   background: var(--paper); color: var(--wine);
   font-size: 24px; line-height: 1; cursor: pointer;
-  box-shadow: 0 1px 3px rgba(42, 14, 8, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: border-color 0.15s, background 0.15s, transform 0.06s;
 }
 .tareas-day-arrow:hover { border-color: var(--wine); background: #ffffff; }
@@ -5713,7 +5713,7 @@ body {
   display: flex; flex-direction: column; gap: 2px;
   padding: 6px;
   border: 1px solid var(--line); border-radius: 8px;
-  background: var(--paper); box-shadow: 0 10px 30px rgba(42, 14, 8, 0.22);
+  background: var(--paper); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
 }
 .tareas-gear-item {
   padding: 9px 10px; border: none; border-radius: 6px;
@@ -5787,7 +5787,7 @@ body {
   gap: 2px;
   margin: 3px 0 3px 15px;
   padding-left: 11px;
-  border-left: 1px solid rgba(245, 242, 236, 0.18);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
 .desktop-subnav-item { font-size: 14px; padding: 9px 12px; }
 .desktop-subnav-item .desktop-nav-icon { font-size: 15px; }
@@ -5822,10 +5822,10 @@ body {
   padding: 8px 12px;
   border: 1.5px solid var(--gold-dim); border-radius: 9px;
   background: var(--paper); cursor: pointer;
-  box-shadow: 0 2px 8px rgba(42, 14, 8, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.hero-weight-badge:hover { border-color: var(--wine); box-shadow: 0 3px 12px rgba(42, 14, 8, 0.12); }
+.hero-weight-badge:hover { border-color: var(--wine); box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12); }
 .hero-weight-badge-spark { width: 52px; height: 26px; }
 .hero-weight-badge-val {
   font-family: 'Cinzel', serif; font-size: 20px; font-weight: 800;
@@ -5901,7 +5901,7 @@ body {
   background: var(--cream); color: var(--wine);
   font-size: 15px; line-height: 1; cursor: pointer;
 }
-.pchart-reset:hover { border-color: var(--gold-dim); background: #efe7df; }
+.pchart-reset:hover { border-color: var(--gold-dim); background: #f2f2f2; }
 .pchart-grid { stroke: var(--line); stroke-width: 1; }
 .pchart-ylabel, .pchart-xlabel { font-family: 'Inter', 'EB Garamond', sans-serif; font-size: 10px; fill: var(--text-dim); }
 .pchart-goal { stroke: #3f8a45; stroke-width: 1.4; stroke-dasharray: 5 3; opacity: 0.9; }
@@ -5926,7 +5926,7 @@ body {
   border: 1px solid var(--line); border-radius: 6px;
   background: var(--cream); color: var(--wine); cursor: pointer;
 }
-.pchart-gear-btn:hover { border-color: var(--gold-dim); background: #efe7df; }
+.pchart-gear-btn:hover { border-color: var(--gold-dim); background: #f2f2f2; }
 .pchart-gear-btn.is-active { border-color: var(--wine); color: var(--paper); background: var(--wine); }
 .pchart-menu {
   position: absolute; top: 30px; right: 0; z-index: 6;
@@ -5945,7 +5945,7 @@ body {
   color: var(--text); cursor: pointer;
 }
 .pchart-menu-item:hover { background: var(--cream); }
-.pchart-menu-item.is-active { color: var(--wine); font-weight: 600; background: #efe7df; }
+.pchart-menu-item.is-active { color: var(--wine); font-weight: 600; background: #f2f2f2; }
 
 .peso-input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .peso-date {
