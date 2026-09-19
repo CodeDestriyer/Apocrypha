@@ -209,7 +209,7 @@ body {
 /* Root windows (Héroe, Tarjetas, Tareas, Finanzas…) carry an even black frame. */
 .character-card, .sub-page {
   border-color: var(--line);
-  border-width: 3px;
+  border-width: 2px;
 }
 
 .tt-panel {
