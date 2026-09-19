@@ -2015,8 +2015,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    /* left padding matches the nav items so the wordmark lines up with them */
-    padding: 14px 6px 18px 14px;
+    /* left padding clears the nav items' 3px accent border + 14px padding so
+       the wordmark starts on the same edge as their icons */
+    padding: 14px 6px 18px 17px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -2025,9 +2026,9 @@ body {
   .desktop-brand-text {
     font-family: 'Cinzel Decorative', 'Cinzel', serif;
     font-weight: 900;
-    font-size: 28px;
+    font-size: 32px;
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     color: var(--gold-bright);
     text-shadow: 0 0 22px rgba(127, 184, 199, 0.5), 0 2px 0 rgba(0,0,0,0.6);
     text-transform: uppercase;
