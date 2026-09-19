@@ -422,10 +422,7 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
       <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="pchart-svg" role="img" {...handlers}>
         <defs><clipPath id={clipId}><rect x={padL} y={0} width={plotW} height={H} /></clipPath></defs>
         {yTicks.map((v) => (
-          <g key={`y${v}`}>
-            <line className="pchart-grid" x1={padL} y1={Y(v)} x2={w - padR} y2={Y(v)} />
-            <text className="pchart-ylabel" x={padL - 5} y={Y(v) + 3} textAnchor="end">{v}</text>
-          </g>
+          <text key={`y${v}`} className="pchart-ylabel" x={padL - 5} y={Y(v) + 3} textAnchor="end">{v}</text>
         ))}
         {xTicks.map((tk, i) => (
           <text key={`x${i}`} className="pchart-xlabel" x={Math.min(w - padR, Math.max(padL, tk.x))} y={H - (compact ? 4 : 8)} textAnchor="middle">{tk.label}</text>
