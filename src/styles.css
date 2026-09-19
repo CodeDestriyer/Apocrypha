@@ -3765,7 +3765,7 @@ body {
 .tareas-cube-more { font-size: 12px; color: var(--text-dim); font-style: italic; padding-left: 28px; margin-top: 1px; }
 .tareas-cube-rest {
   font-family: 'Cinzel', serif;
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 20px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--text-dim); text-align: center; margin: auto; line-height: 1.5;
 }
 
@@ -4041,7 +4041,7 @@ body {
   flex: 1;
   min-width: 0;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: 4px;
   padding: 12px 16px;
@@ -4050,7 +4050,7 @@ body {
   background: var(--paper);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-family: inherit;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, transform 0.06s;
 }
@@ -4066,8 +4066,22 @@ body {
   font-weight: 700; font-size: 22px; line-height: 1.1; letter-spacing: 0.02em;
   color: var(--wine); white-space: nowrap;
 }
-/* Tabular figures only, so a changing balance doesn't shift the tile. */
-.hero-mini-value { font-variant-numeric: tabular-nums; }
+/* Both tiles sit on black; only their ink differs. */
+.hero-mini--money, .hero-mini--words {
+  background: #0B0B0B;
+  border-color: #0B0B0B;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+.hero-mini--money:hover, .hero-mini--words:hover { border-color: rgba(255, 255, 255, 0.4); }
+/* Balance: terminal green, tabular so a changing sum doesn't shift the tile. */
+.hero-mini--money .hero-mini-label { color: rgba(111, 191, 138, 0.6); }
+.hero-mini--money .hero-mini-value {
+  color: #6FBF8A;
+  font-variant-numeric: tabular-nums;
+}
+/* Vocabulary: ivory on black, like a printed plate. */
+.hero-mini--words .hero-mini-label { color: rgba(240, 230, 214, 0.55); }
+.hero-mini--words .hero-mini-value { color: #F0E6D6; }
 /* Narrow screens: the tiles drop to their own full-width row under the name. */
 @media (max-width: 700px) {
   .char-layout { flex-wrap: wrap; }
