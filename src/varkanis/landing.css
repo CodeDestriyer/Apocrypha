@@ -50,8 +50,9 @@
 
 .landing > * { position: relative; z-index: 1; }
 
+/* Headings carry their own face; this only sets the shared defaults, so it
+   must not declare font-family — it would outrank the component rules. */
 .landing h1, .landing h2, .landing h3, .landing h4 {
-  font-family: 'Inter Tight', 'Inter', sans-serif;
   letter-spacing: -0.02em;
   color: var(--ink);
 }
@@ -284,6 +285,7 @@
   text-align: center;
   color: var(--faint);
 }
+.landing-foot:empty { display: none; }
 
 /* ── Home: the two entrances ───────────────────────────────── */
 
@@ -488,8 +490,9 @@
   margin-top: 10px;
 }
 .landing-test-count { color: var(--muted); white-space: nowrap; }
-.landing-test-author {
-  color: var(--accent);
+.landing-test-author { color: var(--accent); }
+/* The rule only divides an author from a question count that precedes it. */
+.landing-test-count + .landing-test-author {
   padding-left: 12px;
   border-left: 1px solid var(--line);
 }
@@ -526,7 +529,7 @@
   flex: 1;
   min-width: 0;
 }
-.landing-course-card .landing-test-meta { flex: 1; }
+.landing-course-card .landing-test-meta { flex: 0 0 auto; }
 .landing-course-card .landing-test-title { font-size: 23px; }
 .landing-course-actions {
   flex-shrink: 0;
