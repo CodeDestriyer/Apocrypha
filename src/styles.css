@@ -20,6 +20,7 @@
   --ink: #000000;
   --ink-soft: #1A1A1A;
   --wine: #4A150B;
+  --crimson: #9B2119;   /* brighter blood red for accented controls */
   --wine-deep: #3B0F07;
   --line: #000000;
   --accent: #6E2413;
@@ -3791,13 +3792,13 @@ body {
   flex: none;
   width: 42px; height: 42px;
   display: grid; place-items: center;
-  border: 1.5px solid var(--gold-dim); border-radius: 8px;
-  background: var(--paper); color: var(--wine);
+  border: 1.5px solid var(--crimson); border-radius: 8px;
+  background: var(--paper); color: var(--crimson);
   font-size: 24px; line-height: 1; cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: border-color 0.15s, background 0.15s, transform 0.06s;
 }
-.tareas-day-arrow:hover { border-color: var(--wine); background: #ffffff; }
+.tareas-day-arrow:hover { border-color: var(--crimson); background: #ffffff; }
 .tareas-day-arrow:active { transform: scale(0.94); }
 .tareas-day-label {
   min-width: 96px; text-align: center;
@@ -4735,3 +4736,7 @@ body {
 .peso-gear-history .peso-history-caret { margin-left: auto; }
 
 .peso-history--page { margin-top: 4px; }
+
+/* Tareas keeps its pager and exit button in blood red rather than ink. */
+.tareas-page .back-btn { border-color: var(--crimson); color: var(--crimson); }
+.tareas-page .back-btn:hover { border-color: var(--crimson); background: rgba(155, 33, 25, 0.08); }
