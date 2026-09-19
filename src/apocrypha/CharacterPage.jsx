@@ -259,13 +259,18 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
     .slice(0, 8);
   const extra = total - preview.length;
   const openTareas = () => onNavigate && onNavigate('tareas');
+  const openPeso = () => onNavigate && onNavigate('peso');
   return (
     <div className="hero-cubes">
-      <button
-        type="button"
+      {/* A div, not a button: the chart inside pans and zooms, and carries its
+          own reset button. Double-click opens the full Peso chart. */}
+      <div
         className="hero-cube hero-cube--peso weight-card weight-card--link"
+        role="button"
+        tabIndex={0}
         aria-label={t('weight.title')}
-        onClick={() => onNavigate && onNavigate('peso')}
+        onDoubleClick={openPeso}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPeso(); } }}
       >
         <div className="weight-card-head">
           <span className="weight-card-title">{t('weight.title')}</span>
@@ -275,7 +280,7 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
         </div>
         <div className="weight-card-plot">
           {latest ? (
-            <WeightGraph log={log} interactive={false} compact />
+            <WeightGraph log={log} compact onOpen={openPeso} />
           ) : (
             <svg className="weight-card-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <line className="weight-card-grid" x1="0" y1="25" x2="100" y2="25" />
@@ -285,7 +290,7 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
             </svg>
           )}
         </div>
-      </button>
+      </div>
       {/* A plain div, not a button, so the per-task shapes can be real toggle
           buttons inside it. Clicking anywhere else on the cube opens Tareas. */}
       <div
