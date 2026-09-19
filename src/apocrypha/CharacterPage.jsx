@@ -30,7 +30,6 @@ const NAV = [
 const NAV_BY_ID = Object.fromEntries(NAV.map((n) => [n.id, n]));
 const DEFAULT_ORDER = NAV.map((n) => n.id);
 const DEFAULT_HIDDEN = [];
-const MAXING_IDS = [];
 
 const PREFS_KEY = 'lr.modulePrefs';
 
@@ -134,23 +133,17 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
   );
 }
 
-// Total XP earned — accumulates, no levels.
-function XpBadge({ xp }) {
-  return <span className="xp-badge" title={`${xp} XP`}>{xp} <span className="xp-badge-suffix">xp</span></span>;
-}
-
 function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) {
   const { t } = useLang();
   const gridRef = useRef(null);
   const dragState = useRef(null);
   const [dragId, setDragId] = useState(null);
 
-  // When editing — flat list (so user can reorder/hide each maxing module).
-  // When browsing — core modules only; maxing collapses into one "maxing" card.
+  // Editing shows every module (so hidden ones can be toggled back on);
+  // browsing shows only the visible ones.
   const renderedIds = editing
     ? prefs.order.filter((id) => NAV_BY_ID[id])
-    : prefs.order.filter((id) => NAV_BY_ID[id] && !prefs.hidden.includes(id) && !MAXING_IDS.includes(id));
-  const enabledMaxing = MAXING_IDS.filter((id) => !prefs.hidden.includes(id));
+    : prefs.order.filter((id) => NAV_BY_ID[id] && !prefs.hidden.includes(id));
 
   const toggleHidden = (id) =>
     setPrefs((p) => {

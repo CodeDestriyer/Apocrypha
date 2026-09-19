@@ -12,28 +12,6 @@ export const supabase = createClient(url, anon, {
   },
 });
 
-const DEFAULT_STATS = [
-  { key: 'СИЛ', label: 'Сила',      value: 5 },
-  { key: 'СТЙ', label: 'Стойкость', value: 5 },
-  { key: 'ИНТ', label: 'Интеллект', value: 5 },
-  { key: 'ХАР', label: 'Харизма',   value: 5 },
-];
-
-function reconcileStats(stats) {
-  if (!Array.isArray(stats)) return { stats: DEFAULT_STATS, changed: true };
-  const next = DEFAULT_STATS.map((def, i) => ({
-    key: def.key,
-    label: def.label,
-    value: typeof stats[i]?.value === 'number' ? stats[i].value : def.value,
-  }));
-  const changed =
-    stats.length !== next.length ||
-    stats.some((s, i) => s.key !== next[i].key || s.label !== next[i].label);
-  return { stats: next, changed };
-}
-
-const DEFAULT_SKILLS = [];
-
 export async function getSession() {
   const { data: { session } } = await supabase.auth.getSession();
   return session;
@@ -65,44 +43,6 @@ export async function loadProfile() {
     .eq('id', user.id)
     .maybeSingle();
   if (error) throw error;
-  if (!data) return data;
-  const { stats, changed } = reconcileStats(data.stats);
-  if (changed) {
-    data.stats = stats;
-    try {
-      await supabase
-        .from('profiles')
-        .update({ stats, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-    } catch (e) {
-      console.error('stats reconcile save failed', e);
-    }
-  }
-
-  const goalsArr = Array.isArray(data.goals) ? data.goals : [];
-  const legacyCal = goalsArr.filter((g) => g?.source === 'calendar');
-  if (legacyCal.length) {
-    const cleanedGoals = goalsArr.filter((g) => g?.source !== 'calendar');
-    const dayPlans = Array.isArray(data.day_plans) ? data.day_plans : [];
-    const moved = legacyCal.map((g) => ({
-      id: g.id,
-      title: g.title,
-      day: String(g.deadline ?? '').slice(0, 10) || null,
-      done: !!g.done,
-      created_at: g.created_at ?? new Date().toISOString(),
-    }));
-    data.goals = cleanedGoals;
-    data.day_plans = [...dayPlans, ...moved];
-    try {
-      await supabase
-        .from('profiles')
-        .update({ goals: data.goals, day_plans: data.day_plans, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-    } catch (e) {
-      console.error('day_plans migration save failed', e);
-    }
-  }
-
   return data;
 }
 
@@ -112,13 +52,6 @@ export async function createProfile(name) {
   const row = {
     id: user.id,
     name,
-    stats: DEFAULT_STATS,
-    skills: DEFAULT_SKILLS,
-    goals: [],
-    asceses: [],
-    moneymaxing: [],
-    looksmaxing: [],
-    menmaxing: [],
     decks: [],
     rules: [],
     rule_groups: [],
@@ -129,7 +62,6 @@ export async function createProfile(name) {
     finances: [],
     tasks: [],
     test_results: [],
-    xp: 0,
   };
   const { data, error } = await supabase
     .from('profiles')
@@ -161,19 +93,6 @@ export async function createProfile(name) {
   }
 
   return data;
-}
-
-export async function uploadLooksPhoto(file) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No user');
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const path = `${user.id}/photo.${ext}?v=${Date.now()}`.split('?')[0];
-  const { error } = await supabase.storage
-    .from('looks')
-    .upload(path, file, { upsert: true, contentType: file.type });
-  if (error) throw error;
-  const { data } = supabase.storage.from('looks').getPublicUrl(path);
-  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 // Flashcard back-side images live in the public `card-images` bucket, one
@@ -224,30 +143,15 @@ export async function deleteCardImage(url) {
   }
 }
 
-// ── Rule persistence: concurrency-safe merge ────────────────────────────────
-// The three rule columns (rules, rule_groups, rule_layout) are whole-array JSON
-// blobs. Writing them as a plain overwrite means a stale session (an old tab, a
-// second device) can clobber rules another session added. To prevent that, rule
-// saves go through a 3-way merge: `base` = what this session last saw synced
-// with the DB, `mine` = this session's current copy, `theirs` = the row's live
-// value fetched right before writing. Nothing is dropped unless this session
-// deleted it (present in base, absent from mine); local edits win for items this
-// session still has; items only another session has are kept.
-
-export const RULE_COLUMNS = ['rules', 'rule_groups', 'rule_layout'];
-
-// Fetch just the rule columns' live values (used as `theirs` in the merge).
-export async function fetchRuleColumns() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No user');
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('rules, rule_groups, rule_layout')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (error) throw error;
-  return data || { rules: [], rule_groups: [], rule_layout: [] };
-}
+// ── Concurrency-safe merge (see MERGEABLE_COLUMNS below) ───────────────────
+// The mergeable columns are whole-array JSON blobs. Writing one as a plain
+// overwrite means a stale session (an old tab, a second device) can clobber
+// items another session added. To prevent that, those saves go through a 3-way
+// merge: `base` = what this session last saw synced with the DB, `mine` = this
+// session's current copy, `theirs` = the row's live value fetched right before
+// writing. Nothing is dropped unless this session deleted it (present in base,
+// absent from mine); local edits win for items this session still has; items
+// only another session has are kept.
 
 // 3-way merge of an array of objects with a stable `id` (rules, rule_groups).
 // This session's order and edits win: we keep `mine` as-is (so a local reorder
@@ -302,20 +206,6 @@ export function mergeLayout(base, mine, theirs) {
     placed.add(key(t));
   }
   return out;
-}
-
-// Build a rule-column patch by merging the pending local values against the
-// row's live DB values. `base`/`mine` are the synced baseline and current local
-// copies of the whole profile.
-export async function mergeRulePatch(patch, base, mine) {
-  const theirs = await fetchRuleColumns();
-  const b = base || {}, m = mine || {};
-  return {
-    ...patch,
-    rules: mergeArrayById(b.rules, m.rules, theirs.rules),
-    rule_groups: mergeArrayById(b.rule_groups, m.rule_groups, theirs.rule_groups),
-    rule_layout: mergeLayout(b.rule_layout, m.rule_layout, theirs.rule_layout),
-  };
 }
 
 // 3-way merge of the decks array. Decks merge by id like any other {id} array,

@@ -6,12 +6,6 @@ import { createContext, useContext, useEffect } from 'react';
 export const LANG = 'es';
 
 const DICT = {
-  'nav.goals': 'Objetivos',
-  'nav.skills': 'Habilidades',
-  'nav.asceses': 'Hábitos',
-  'nav.moneymaxing': 'Moneymaxing',
-  'nav.looksmaxing': 'Looksmaxing',
-  'nav.menmaxing': 'Menmaxing',
   'nav.cards': 'Tarjetas',
   'nav.idiomas': 'Español',
   'nav.tareas': 'Tareas',
@@ -313,21 +307,6 @@ const DICT = {
   'test.disclaimer': 'Autoevaluación educativa, no es un diagnóstico médico.',
   'settings.done': 'Hecho',
   'tab.character': 'Héroe',
-  'tab.calendar': 'Calendario',
-  'cal.activePeriods': 'Planes activos',
-  'cal.empty': 'aún vacío',
-  'cal.dayEmpty': 'nada en este día',
-  'cal.addGoalPlaceholder': 'añadir meta…',
-  'goal.untitled': 'sin título',
-  'cal.newPeriod': '+ nuevo plan',
-  'cal.cancel': 'cancelar',
-  'cal.daysShort': 'd',
-  'cal.selectRange': 'Elige inicio y fin',
-  'cal.createPlan': 'Crear plan',
-  'cal.choosePlan': '¿Qué plan?',
-  'cal.custom': 'Plan personalizado',
-  'cal.customPlaceholder': 'Nombre…',
-  'cal.saveCustom': 'Guardar',
 };
 
 const LangContext = createContext(null);
