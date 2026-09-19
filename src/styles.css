@@ -4736,7 +4736,3 @@ body {
 .peso-gear-history .peso-history-caret { margin-left: auto; }
 
 .peso-history--page { margin-top: 4px; }
-
-/* Tareas keeps its pager and exit button in blood red rather than ink. */
-.tareas-page .back-btn { border-color: var(--crimson); color: var(--crimson); }
-.tareas-page .back-btn:hover { border-color: var(--crimson); background: rgba(155, 33, 25, 0.08); }

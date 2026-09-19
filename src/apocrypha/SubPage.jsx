@@ -1,6 +1,6 @@
-export default function SubPage({ title, onBack, headerRight, className, children }) {
+export default function SubPage({ title, onBack, headerRight, children }) {
   return (
-    <div className={`card sub-page${className ? ` ${className}` : ''}`}>
+    <div className="card sub-page">
       <header className="sub-header">
         <button className="back-btn" onClick={onBack}>←</button>
         <h1 className="sub-title">{title}</h1>

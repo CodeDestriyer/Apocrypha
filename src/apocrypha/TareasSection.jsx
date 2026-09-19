@@ -274,7 +274,7 @@ export default function TareasSection({ rootOnBack }) {
   );
 
   return (
-    <SubPage title={t('tareas.title')} onBack={rootOnBack} className="tareas-page">
+    <SubPage title={t('tareas.title')} onBack={rootOnBack}>
       <div className="tareas">
         <div className="tareas-daynav">
           <button className="tareas-day-arrow" onClick={() => goDay(-1)} aria-label={t('tareas.yesterday')}>‹</button>
