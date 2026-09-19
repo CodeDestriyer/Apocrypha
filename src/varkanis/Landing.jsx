@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
+import './landing.css';
 import { useProfile } from '../ProfileContext.jsx';
 import { signInWithGoogle, signOut } from '../supabase.js';
 import { isInAppBrowser } from '../inAppBrowser.js';
