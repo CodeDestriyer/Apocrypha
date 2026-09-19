@@ -1404,8 +1404,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    /* left padding matches the nav items so the wordmark lines up with them */
-    padding: 14px 6px 18px 14px;
+    /* left padding clears the nav items' 3px accent border + 14px padding so
+       the wordmark starts on the same edge as their icons */
+    padding: 14px 6px 18px 17px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -1414,9 +1415,9 @@ body {
   .desktop-brand-text {
     font-family: 'Cinzel Decorative', 'Cinzel', serif;
     font-weight: 900;
-    font-size: 28px;
+    font-size: 32px;
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     color: var(--gold-bright);
     text-shadow: 0 0 22px rgba(127, 184, 199, 0.5), 0 2px 0 rgba(0,0,0,0.6);
     text-transform: uppercase;
@@ -3083,8 +3084,9 @@ body {
 .ornament { color: var(--wine); }
 
 /* ── Shared surfaces ────────────────────────────────────── */
-/* Sub-page headers stand on their own — no ornament rules boxing the title in. */
-.sub-page::before, .sub-page::after { content: none; }
+/* Page cards stand on their own — no ornament rules boxing the title in. */
+.sub-page::before, .sub-page::after,
+.character-card::before, .character-card::after { content: none; }
 .divider { background: var(--line); width: 72%; height: 1px; }
 .empty-hint { color: var(--text-dim); }
 
@@ -3718,6 +3720,8 @@ body {
   background: var(--paper);
   text-align: left;
   min-width: 0;
+  /* Contents bleed to the edges, so clip them to the rounded corners. */
+  overflow: hidden;
 }
 /* On phones the Hero header shows the Tareas cube only; Peso moves to its own
    section. On desktop both cubes sit side by side. */
@@ -4002,7 +4006,15 @@ body {
 }
 .weight-card-spark { position: absolute; inset: 0; }
 /* Hero cube embeds the axed chart bare (the cube itself is the frame) */
-.hero-cube .pchart { height: 100%; border: none; background: transparent; border-radius: 0; }
+.hero-cube .pchart {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* Bleed the plot past the cube's padding so it fills the frame edge to edge. */
+.hero-cube .weight-card-plot { margin: 12px -18px -16px; }
 /* Charismatic PESO wordmark on the cube */
 .weight-card--link .weight-card-title,
 .weight-card .weight-card-title {

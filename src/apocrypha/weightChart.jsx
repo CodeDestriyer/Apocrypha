@@ -73,9 +73,10 @@ export function WeightSpark({ log, className = '' }) {
 // default the Y axis is tight on the weight data (goal off-screen), and as
 // you zoom OUT the axis stretches down until the goal comes into view.
 // `compact` shrinks paddings/labels (Hero cube); `interactive={false}`
-// makes it a static read-only chart.
+// makes it a static read-only chart. `onOpen` claims the double-click
+// (Hero cube: pan/zoom in place, double-click to jump to the full chart).
 const DAY = 864e5;
-export function WeightGraph({ log, goal, interactive = true, compact = false }) {
+export function WeightGraph({ log, goal, interactive = true, compact = false, onOpen }) {
   const { t: tr } = useLang();
   const ref = useRef(null);
   const menuRef = useRef(null);
@@ -366,7 +367,7 @@ export function WeightGraph({ log, goal, interactive = true, compact = false }) 
     const gy = (goal != null && Number.isFinite(goal) && goal >= yLo && goal <= yHi) ? Y(goal) : null;
     const handlers = interactive ? {
       onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp,
-      onDoubleClick: resetView,
+      onDoubleClick: onOpen ? (e) => { e.stopPropagation(); onOpen(); } : resetView,
     } : {};
 
     // One candle per day, day-over-day: open = previous logged day's weight,
