@@ -19,7 +19,6 @@ const DICT = {
   'tareas.title': 'Tareas',
   'tareas.add': 'Añadir tarea',
   'tareas.placeholder': 'Nueva tarea del día…',
-  'tareas.cubeEmpty': 'Escribe tus tareas del día',
   'tareas.today': 'Hoy',
   'tareas.diaLibre': 'Día libre',
   'tareas.yesterday': 'Ayer',

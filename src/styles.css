@@ -3763,7 +3763,7 @@ body {
 .tareas-cube-item.done .tareas-cube-text { color: var(--text-dim); text-decoration: line-through; }
 .tareas-cube-item.missed .tareas-cube-text { color: var(--text-dim); }
 .tareas-cube-more { font-size: 12px; color: var(--text-dim); font-style: italic; padding-left: 28px; margin-top: 1px; }
-.tareas-cube-empty {
+.tareas-cube-rest {
   font-family: 'Cinzel', serif;
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--text-dim); text-align: center; margin: auto; line-height: 1.5;
@@ -4062,20 +4062,12 @@ body {
   color: var(--text-dim);
 }
 .hero-mini-value {
-  font-size: 24px; line-height: 1.1;
+  font-family: 'Cinzel', serif;
+  font-weight: 700; font-size: 22px; line-height: 1.1; letter-spacing: 0.02em;
   color: var(--wine); white-space: nowrap;
 }
-/* Balance reads like a ticker: mono digits, tabular so they don't jitter. */
-.hero-mini--money .hero-mini-value {
-  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
-  font-weight: 600; font-size: 22px; letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
-}
-/* Vocabulary reads like a dictionary entry: italic Garamond. */
-.hero-mini--words .hero-mini-value {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-style: italic; font-weight: 600; letter-spacing: 0.01em;
-}
+/* Tabular figures only, so a changing balance doesn't shift the tile. */
+.hero-mini-value { font-variant-numeric: tabular-nums; }
 /* Narrow screens: the tiles drop to their own full-width row under the name. */
 @media (max-width: 700px) {
   .char-layout { flex-wrap: wrap; }

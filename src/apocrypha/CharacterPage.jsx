@@ -4,7 +4,7 @@ import { useLang } from '../i18n.jsx';
 import { signOut } from '../supabase.js';
 import InstallAppButton from '../InstallAppButton.jsx';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
-import { typeOf, TaskShape, todayISO, taskDay, TYPE_ORDER } from './taskTypes.jsx';
+import { typeOf, TaskShape, todayISO, taskDay, TYPE_ORDER, isRestDay } from './taskTypes.jsx';
 
 const NAV = [
   { id: 'tareas', labelKey: 'nav.tareas', icon: '✓', summary: (p) => {
@@ -255,11 +255,11 @@ function HeroMinis({ profile, t, onNavigate }) {
   const go = (view) => onNavigate && onNavigate(view);
   return (
     <div className="hero-minis">
-      <button type="button" className="hero-mini hero-mini--money" onClick={() => go('finanzas')}>
+      <button type="button" className="hero-mini" onClick={() => go('finanzas')}>
         <span className="hero-mini-label">{t('hero.balance')}</span>
         <span className="hero-mini-value">{Math.round(balance).toLocaleString('es-ES')} €</span>
       </button>
-      <button type="button" className="hero-mini hero-mini--words" onClick={() => go('cards')}>
+      <button type="button" className="hero-mini" onClick={() => go('cards')}>
         <span className="hero-mini-label">{t('hero.words')}</span>
         <span className="hero-mini-value">{words}</span>
       </button>
@@ -348,9 +348,9 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
               ))}
               {extra > 0 && <li className="tareas-cube-more">+{extra}</li>}
             </ul>
-          ) : (
-            <span className="tareas-cube-empty">{t('tareas.cubeEmpty')}</span>
-          )}
+          ) : isRestDay(today) ? (
+            <span className="tareas-cube-rest">{t('tareas.diaLibre')}</span>
+          ) : null}
         </div>
       </div>
     </div>
