@@ -55,6 +55,12 @@ That's fine — commits are authored by that identity, but pushed via the person
 
 Connected to Vercel. Push to `main` triggers auto-deploy at https://apocrypha-ochre.vercel.app/.
 
+**Work lands on `main`.** Default flow for this repo: finish the change,
+commit, merge to `main`, `git push origin main`. Don't leave finished work
+parked on a feature branch waiting for a merge request — the user wants it
+deployed. Feature branches are fine as a staging area mid-task, but the task
+isn't done until `main` has it.
+
 ## Profile data / Supabase note
 
 User profiles (stats, skills, goals, etc.) are stored in Supabase. `DEFAULT_STATS` in `src/supabase.js` only applies on profile **creation** — changing labels there does not update existing rows. `loadProfile()` runs a `reconcileStats()` migration on read that normalizes existing profiles to current defaults (preserving values by position). When renaming/reordering stats, update `DEFAULT_STATS` and the migration handles the rest on next page load.
