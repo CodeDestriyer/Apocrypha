@@ -359,10 +359,8 @@
   object-fit: cover;
   border-radius: 4px;
   background: var(--wash);
-  filter: grayscale(1) contrast(1.05);
-  transition: filter 0.25s ease;
+  filter: grayscale(0.55) sepia(0.1) contrast(1.06);
 }
-.landing-link:hover .landing-link-icon { filter: grayscale(0) contrast(1); }
 
 .landing-links { counter-reset: landing-link; }
 
@@ -461,11 +459,8 @@
   object-fit: cover;
   border-radius: 4px;
   background: var(--wash);
-  filter: grayscale(1) contrast(1.05);
-  transition: filter 0.25s ease;
+  filter: grayscale(0.55) sepia(0.1) contrast(1.06);
 }
-.landing-test-card:hover .landing-test-logo,
-.landing-test-card:hover .landing-course-logo { filter: grayscale(0) contrast(1); }
 
 .landing-test-title {
   margin: 0;
@@ -520,8 +515,7 @@
   object-fit: cover;
   border-radius: 4px;
   border: 1px solid var(--line);
-  filter: grayscale(1) contrast(1.05);
-  transition: filter 0.25s ease;
+  filter: grayscale(0.55) sepia(0.1) contrast(1.06);
 }
 .landing-course-content {
   display: flex;
@@ -980,7 +974,7 @@
   border-radius: 4px;
   border: 1px solid var(--line);
   margin-bottom: 18px;
-  filter: grayscale(1) contrast(1.04);
+  filter: grayscale(0.55) sepia(0.1) contrast(1.06);
 }
 
 /* Score block */
