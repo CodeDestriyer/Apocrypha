@@ -13,7 +13,7 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 // Pages a non-registered visitor can read before the sign-up gate.
 const FREE_PAGES = 3;
 
-function PersonIcon({ size = 42 }) {
+function PersonIcon({ size = 24 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="3.7" />

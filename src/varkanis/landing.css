@@ -171,8 +171,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  height: 76px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 4px;
   background: var(--paper);
