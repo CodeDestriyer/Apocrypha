@@ -125,8 +125,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 124px;
-  padding: 30px var(--gutter);
+  min-height: 104px;
+  padding: 20px var(--gutter);
   background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1359,7 +1359,7 @@
 /* ── Narrow screens ────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .landing-nav { min-height: 88px; padding: 22px var(--gutter); }
+  .landing-nav { min-height: 76px; padding: 16px var(--gutter); }
   .landing-brand { font-size: 44px; }
 
   .landing-link { gap: 16px; padding: 18px 16px; min-height: 112px; }
