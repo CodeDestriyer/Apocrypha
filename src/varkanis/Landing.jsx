@@ -532,7 +532,7 @@ export default function Landing() {
       {isHome && (
         <main className="landing-main landing-tree">
           <div className="people-row people-row-top">
-            <PeopleCarousel dir="rtl" speed={1.1} size="lg" />
+            <PeopleCarousel dir="rtl" speed={1.1} />
           </div>
 
           <h1 className="landing-title">Plataforma para mentes pensantes</h1>
@@ -557,7 +557,7 @@ export default function Landing() {
           </div>
 
           <div className="people-row people-row-bottom">
-            <PeopleCarousel dir="ltr" speed={2.8} size="sm" />
+            <PeopleCarousel dir="ltr" speed={2.8} />
           </div>
         </main>
       )}

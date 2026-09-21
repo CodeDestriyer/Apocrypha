@@ -1429,14 +1429,13 @@
 
 .landing .people-card {
   flex: 0 0 auto;
-  width: 200px;
+  width: 116px;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 5px;
   overflow: hidden;
   user-select: none;
 }
-.landing .people-sm .people-card { width: 116px; border-radius: 5px; }
 
 .landing .people-photo {
   position: relative;
@@ -1464,30 +1463,27 @@
 
 .landing .people-idx {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
+  bottom: 6px;
+  left: 6px;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.06em;
   color: var(--accent);
 }
 .landing .people-idx::before {
   content: '';
   display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-right: 5px;
+  width: 4px;
+  height: 4px;
+  margin-right: 4px;
   background: var(--accent);
   vertical-align: middle;
 }
-.landing .people-sm .people-idx { font-size: 9px; bottom: 6px; left: 6px; }
-.landing .people-sm .people-idx::before { width: 4px; height: 4px; margin-right: 4px; }
 
 .landing .people-row { margin: 0; }
 .landing .people-row-top { margin-bottom: 26px; }
 .landing .people-row-bottom { margin-top: 26px; }
 
 @media (min-width: 640px) {
-  .landing .people-card { width: 240px; }
-  .landing .people-sm .people-card { width: 140px; }
+  .landing .people-card { width: 140px; }
 }

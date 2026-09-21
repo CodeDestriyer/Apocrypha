@@ -19,7 +19,7 @@ function shuffle(arr) {
   return a;
 }
 
-export default function PeopleCarousel({ dir = 'ltr', speed = 1.1, size = 'lg' }) {
+export default function PeopleCarousel({ dir = 'ltr', speed = 1.1 }) {
   const trackRef = useRef(null);
   const paused = useRef(false);
 
@@ -69,7 +69,7 @@ export default function PeopleCarousel({ dir = 'ltr', speed = 1.1, size = 'lg' }
   const loop = [...shuffled, ...shuffled];
 
   return (
-    <div className={`people-track people-${size}`} ref={trackRef} aria-hidden="true">
+    <div className="people-track" ref={trackRef} aria-hidden="true">
       {loop.map((src, i) => (
         <div className="people-card" key={i}>
           <div className="people-photo">
