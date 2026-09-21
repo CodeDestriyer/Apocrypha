@@ -6,6 +6,7 @@ import { signInWithGoogle, signOut } from '../supabase.js';
 import { isInAppBrowser } from '../inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
+import PeopleCarousel from './PeopleCarousel.jsx';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -530,6 +531,10 @@ export default function Landing() {
 
       {isHome && (
         <main className="landing-main landing-tree">
+          <div className="people-row people-row-top">
+            <PeopleCarousel dir="rtl" speed={1.1} />
+          </div>
+
           <h1 className="landing-title">Plataforma para mentes pensantes</h1>
 
           <div className="landing-links">
@@ -549,6 +554,10 @@ export default function Landing() {
                 alt="Varkanis — Academia de manipulación social y leyes de la influencia"
               />
             </button>
+          </div>
+
+          <div className="people-row people-row-bottom">
+            <PeopleCarousel dir="ltr" speed={2.8} />
           </div>
         </main>
       )}
