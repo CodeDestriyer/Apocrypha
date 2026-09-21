@@ -542,7 +542,7 @@ export default function Landing() {
               <span className="landing-link-text">{t('landing.btn.test')}</span>
               <img
                 className="landing-link-icon"
-                src="/varkanis-comunidad-psicologia.jpg"
+                src="/hacereltestlogo.jpg"
                 alt="Varkanis — Comunidad de psicología y tests de análisis del comportamiento"
               />
             </button>
@@ -550,7 +550,7 @@ export default function Landing() {
               <span className="landing-link-text">{t('landing.btn.course')}</span>
               <img
                 className="landing-link-icon"
-                src="/varkanis-academia.jpg"
+                src="/course-logo.jpg"
                 alt="Varkanis — Academia de manipulación social y leyes de la influencia"
               />
             </button>
