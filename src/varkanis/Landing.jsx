@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLang } from '../i18n.jsx';
 import './landing.css';
 import { useProfile } from '../ProfileContext.jsx';
-import { signInWithGoogle, signOut } from '../supabase.js';
+import { supabase, signInWithGoogle, signOut } from '../supabase.js';
 import { isInAppBrowser } from '../inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
@@ -11,8 +11,12 @@ import PeopleCarousel from './PeopleCarousel.jsx';
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Pages a non-registered visitor can read before the sign-up gate.
-const FREE_PAGES = 3;
+// Course PDFs live in Supabase Storage, not in public/ — a 20 MB file copied into
+// every Vercel build ate the team's deployment-storage quota. The bucket is private:
+// preview.pdf (the free pages) is signable by anyone, full.pdf only by a registered
+// account, which is also what actually enforces the sign-up gate.
+const PDF_BUCKET = 'courses';
+const SIGNED_URL_TTL = 60 * 60;
 
 function PersonIcon({ size = 24 }) {
   return (
@@ -30,7 +34,8 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    pdf: '/MENTESBAJOCONTROL.pdf',
+    pdfPreview: 'mentes-bajo-control/preview.pdf',
+    pdfFull: 'mentes-bajo-control/full.pdf',
   },
 ];
 
@@ -49,11 +54,18 @@ function PdfBook({ course, onClose, authed, onRegister }) {
         const pdfjs = await import('pdfjs-dist');
         pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-        pdfDoc = await pdfjs.getDocument(course.pdf).promise;
+        const path = authed ? course.pdfFull : course.pdfPreview;
+        const { data, error } = await supabase.storage
+          .from(PDF_BUCKET)
+          .createSignedUrl(path, SIGNED_URL_TTL);
+        if (error) throw error;
         if (cancelled) return;
 
-        const total = pdfDoc.numPages;
-        const limit = authed ? total : Math.min(FREE_PAGES, total);
+        pdfDoc = await pdfjs.getDocument(data.signedUrl).promise;
+        if (cancelled) return;
+
+        // Whatever file we got is exactly what this visitor may read, so render all of it.
+        const limit = pdfDoc.numPages;
 
         const container = pagesRef.current;
         if (!container) return;
@@ -83,7 +95,7 @@ function PdfBook({ course, onClose, authed, onRegister }) {
         }
 
         if (cancelled) return;
-        setGate(!authed && total > limit);
+        setGate(!authed);
         setStatus('ready');
       } catch (e) {
         if (!cancelled) setStatus('error');
@@ -94,7 +106,7 @@ function PdfBook({ course, onClose, authed, onRegister }) {
       cancelled = true;
       try { pdfDoc?.destroy?.(); } catch {}
     };
-  }, [course.pdf, authed]);
+  }, [course.pdfFull, course.pdfPreview, authed]);
 
   return (
     <div className="promo-overlay" role="dialog" aria-modal="true">
@@ -460,7 +472,7 @@ function CoursesPage({ authed, onRegister }) {
                 )}
               </div>
               <div className="landing-course-actions">
-                {course.pdf ? (
+                {course.pdfPreview ? (
                   <button
                     className="landing-test-go"
                     onClick={() => setViewer(course)}
