@@ -332,14 +332,6 @@
 .landing-link:hover { background: #fafafa; border-top-color: var(--accent); }
 
 .landing-link-text { flex: 1; min-width: 0; line-height: 1.15; }
-.landing-link::after {
-  content: '→';
-  flex-shrink: 0;
-  font-size: 20px;
-  color: var(--faint);
-  transition: transform 0.18s ease, color 0.18s ease;
-}
-.landing-link:hover::after { transform: translateX(4px); color: var(--ink); }
 
 .landing-link-icon {
   width: 96px;

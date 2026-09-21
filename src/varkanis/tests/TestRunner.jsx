@@ -380,7 +380,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
                 onClick={() => goTo(index - 1, 'back')}
                 disabled={index === 0}
               >
-                {t('test.back') || '← Back'}
+                {t('test.back') || 'Back'}
               </button>
               {complete && (
                 <button
