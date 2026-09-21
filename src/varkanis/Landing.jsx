@@ -541,7 +541,7 @@ export default function Landing() {
             <button className="landing-link" onClick={() => setView('tests')}>
               <span className="landing-link-text">{t('landing.btn.test')}</span>
               <img
-                className="landing-link-icon"
+                className="landing-link-icon landing-link-icon-test"
                 src="/hacereltestlogo.jpg"
                 alt="Varkanis — Comunidad de psicología y tests de análisis del comportamiento"
               />

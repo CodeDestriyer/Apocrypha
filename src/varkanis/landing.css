@@ -125,8 +125,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  height: 156px;
-  padding: 26px var(--gutter) 0;
+  height: 190px;
+  padding: 46px var(--gutter) 0;
   background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -135,7 +135,7 @@
 .landing-brand {
   font-family: 'Inter Tight', sans-serif;
   font-weight: 800;
-  font-size: 52px;
+  font-size: 64px;
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--ink);
@@ -322,7 +322,7 @@
   color: var(--ink);
   font-family: 'Inter Tight', sans-serif;
   font-size: clamp(22px, 5.4vw, 28px);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
   text-transform: none;
   text-align: left;
@@ -342,6 +342,7 @@
   background: var(--wash);
   filter: contrast(1.06);
 }
+.landing-link-icon-test { border: 1px solid rgba(0, 0, 0, 0.55); }
 
 /* ── Catalogue (tests & courses) ───────────────────────────── */
 
@@ -1361,8 +1362,8 @@
 /* ── Narrow screens ────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .landing-nav { height: 116px; padding-top: 18px; }
-  .landing-brand { font-size: 40px; }
+  .landing-nav { height: 132px; padding-top: 26px; }
+  .landing-brand { font-size: 44px; }
 
   .landing-link { gap: 16px; padding: 18px 16px; min-height: 112px; }
   .landing-link-icon { width: 76px; height: 76px; }
