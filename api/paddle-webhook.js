@@ -27,18 +27,19 @@ function getPaddle() {
   return paddle;
 }
 
-// Paddle signs the exact bytes it sent, so a re-serialised object is useless —
-// `bodyParser: false` above is a Next.js convention and this project is plain
-// Vite, so the runtime may have consumed the stream anyway. Returns null when
-// that happened, which the handler reports rather than silently failing on the
-// signature.
+// Paddle signs the exact bytes it sent, so a re-serialised object is useless.
+//
+// Read the stream FIRST. `req.body` is a lazy getter on Vercel's Node runtime:
+// touching it consumes the stream and parses it, so checking it up front
+// destroys the very bytes we need. It is only a fallback for a runtime that
+// parsed the body before the handler ran.
 async function rawBody(req) {
-  if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
-  if (typeof req.body === 'string') return req.body;
-  if (req.body && typeof req.body === 'object') return null;
   let data = '';
   for await (const chunk of req) data += chunk;
-  return data;
+  if (data) return data;
+  if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
+  if (typeof req.body === 'string') return req.body;
+  return null;
 }
 
 export default async function handler(req, res) {
