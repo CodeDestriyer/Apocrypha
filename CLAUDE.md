@@ -91,6 +91,12 @@ the `VITE_` ones are baked into the bundle at build time:
 Sandbox and live are separate Paddle accounts with their own catalog, keys and
 notification destinations. Nothing carries over between them.
 
+The shop runs on the live account. The sandbox catalog, keys and destination
+are still in place: to fall back, put the sandbox values back and set both env
+vars to `sandbox`. Live values start with `live_` / `pdl_live_`, sandbox ones
+with `test_` / `pdl_sdbx_` — that prefix is the quickest way to tell which
+environment a deployment is actually talking to.
+
 ## Profile data / Supabase note
 
 User profiles (stats, skills, goals, etc.) are stored in Supabase. `DEFAULT_STATS` in `src/supabase.js` only applies on profile **creation** — changing labels there does not update existing rows. `loadProfile()` runs a `reconcileStats()` migration on read that normalizes existing profiles to current defaults (preserving values by position). When renaming/reordering stats, update `DEFAULT_STATS` and the migration handles the rest on next page load.
