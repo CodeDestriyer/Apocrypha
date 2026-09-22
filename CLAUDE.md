@@ -61,6 +61,36 @@ parked on a feature branch waiting for a merge request — the user wants it
 deployed. Feature branches are fine as a staging area mid-task, but the task
 isn't done until `main` has it.
 
+## Paid content (Paddle)
+
+The book is sold through Paddle, which is the merchant of record — it collects
+VAT and pays out, so no company or VAT registration is needed on our side.
+
+Flow: sign in -> `Paddle.Checkout.open()` with the Supabase user id in
+`customData` -> Paddle posts `transaction.completed` to `api/paddle-webhook.js`
+-> a row lands in `purchases` -> `api/book.js` signs a URL for `full.pdf`.
+
+Which product was paid for is resolved from the **price id server-side**, never
+from `custom_data` — that field comes from the browser. Storage RLS
+(`courses_full_read`) independently requires a `purchases` row, so the database
+refuses the full file even if a client tries to sign it directly.
+
+Env vars on Vercel (Production). Changing any of them needs a redeploy, since
+the `VITE_` ones are baked into the bundle at build time:
+
+    SUPABASE_URL
+    SUPABASE_SERVICE_ROLE_KEY
+    PADDLE_API_KEY
+    PADDLE_ENV                              sandbox | production
+    PADDLE_NOTIFICATION_WEBHOOK_SECRET      per notification destination
+    PADDLE_PRICE_MENTES_BAJO_CONTROL        pri_...
+    VITE_PADDLE_CLIENT_TOKEN
+    VITE_PADDLE_ENV                         must match PADDLE_ENV
+    VITE_PADDLE_PRICE_MENTES_BAJO_CONTROL   same pri_...
+
+Sandbox and live are separate Paddle accounts with their own catalog, keys and
+notification destinations. Nothing carries over between them.
+
 ## Profile data / Supabase note
 
 User profiles (stats, skills, goals, etc.) are stored in Supabase. `DEFAULT_STATS` in `src/supabase.js` only applies on profile **creation** — changing labels there does not update existing rows. `loadProfile()` runs a `reconcileStats()` migration on read that normalizes existing profiles to current defaults (preserving values by position). When renaming/reordering stats, update `DEFAULT_STATS` and the migration handles the rest on next page load.
