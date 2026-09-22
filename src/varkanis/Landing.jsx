@@ -29,6 +29,12 @@ const COURSES = [
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
     price: '5,30 $',
+    // Shown before the buy button: what the money actually gets you.
+    details: {
+      es: ['Libro digital en PDF', 'Se lee en tu cuenta', 'Acceso permanente'],
+      en: ['Digital book (PDF)', 'Read inside your account', 'Permanent access'],
+      ru: ['Электронная книга (PDF)', 'Читается в аккаунте', 'Доступ навсегда'],
+    },
   },
 ];
 
@@ -523,6 +529,9 @@ function CoursesPage({ authed, onRegister }) {
                     {course.author && <span className="landing-test-author">{course.author}</span>}
                     {course.price && <span className="landing-course-price">{course.price}</span>}
                   </div>
+                )}
+                {course.details && (
+                  <p className="landing-course-details">{tx(course.details, lang).join(' · ')}</p>
                 )}
               </div>
               <div className="landing-course-actions">
