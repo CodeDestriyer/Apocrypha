@@ -21,6 +21,8 @@ function PersonIcon({ size = 24 }) {
   );
 }
 
+const VIEWS = ['home', 'tests', 'courses'];
+
 const COURSES = [
   {
     id: 'mentes-bajo-control',
@@ -565,7 +567,28 @@ export default function Landing() {
   const { t, setLang } = useLang();
   const { status, googleAvatar, profile, update } = useProfile();
   const authed = status === 'ready';
-  const [view, setView] = useState('home');
+  // The landing is a single page, but the catalogue needs a shareable URL —
+  // a payments review asks for a link that shows the price, and so does anyone
+  // linking to the book. Hash only: no server rewrite to get wrong.
+  const [view, setView] = useState(() => (
+    VIEWS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'home'
+  ));
+
+  useEffect(() => {
+    const onHash = () => {
+      const next = window.location.hash.slice(1);
+      setView(VIEWS.includes(next) ? next : 'home');
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const goTo = (next) => {
+    setView(next);
+    const hash = next === 'home' ? ' ' : `#${next}`;
+    history.replaceState(null, '', next === 'home' ? window.location.pathname : hash);
+  };
+
   const [activeTest, setActiveTest] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -587,7 +610,7 @@ export default function Landing() {
         {isHome ? (
           <span className="landing-brand">Varkanis</span>
         ) : (
-          <button className="landing-back" onClick={() => setView('home')}>
+          <button className="landing-back" onClick={() => goTo('home')}>
             {t('landing.back')}
           </button>
         )}
@@ -609,7 +632,7 @@ export default function Landing() {
           <h1 className="landing-title">Plataforma para mentes pensantes</h1>
 
           <div className="landing-links">
-            <button className="landing-link" onClick={() => setView('tests')}>
+            <button className="landing-link" onClick={() => goTo('tests')}>
               <span className="landing-link-text">{t('landing.btn.test')}</span>
               <img
                 className="landing-link-icon landing-link-icon-test"
@@ -617,7 +640,7 @@ export default function Landing() {
                 alt="Varkanis — Comunidad de psicología y tests de análisis del comportamiento"
               />
             </button>
-            <button className="landing-link" onClick={() => setView('courses')}>
+            <button className="landing-link" onClick={() => goTo('courses')}>
               <span className="landing-link-text">{t('landing.btn.course')}</span>
               <img
                 className="landing-link-icon"
