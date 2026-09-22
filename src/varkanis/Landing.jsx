@@ -28,7 +28,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    price: '3,50 $',
+    price: '5,30 $',
   },
 ];
 
