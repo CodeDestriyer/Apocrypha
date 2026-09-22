@@ -27,13 +27,18 @@ function getPaddle() {
   return paddle;
 }
 
-function rawBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => resolve(data));
-    req.on('error', reject);
-  });
+// Paddle signs the exact bytes it sent, so a re-serialised object is useless —
+// `bodyParser: false` above is a Next.js convention and this project is plain
+// Vite, so the runtime may have consumed the stream anyway. Returns null when
+// that happened, which the handler reports rather than silently failing on the
+// signature.
+async function rawBody(req) {
+  if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
+  if (typeof req.body === 'string') return req.body;
+  if (req.body && typeof req.body === 'object') return null;
+  let data = '';
+  for await (const chunk of req) data += chunk;
+  return data;
 }
 
 export default async function handler(req, res) {
@@ -42,7 +47,10 @@ export default async function handler(req, res) {
   const signature = req.headers['paddle-signature'] ?? '';
   const secret = process.env.PADDLE_NOTIFICATION_WEBHOOK_SECRET ?? '';
   const body = await rawBody(req);
-  if (!signature || !body) return res.status(400).json({ error: 'missing_signature_or_body' });
+  if (!signature) return res.status(400).json({ error: 'missing_signature' });
+  if (body === null) return res.status(500).json({ error: 'body_already_parsed' });
+  if (!body) return res.status(400).json({ error: 'empty_body' });
+  if (!secret) return res.status(500).json({ error: 'webhook_secret_missing' });
 
   try {
     // Throws on a bad signature, an expired timestamp or a malformed event.
