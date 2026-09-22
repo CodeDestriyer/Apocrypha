@@ -35,8 +35,24 @@ export async function hasPurchase(productId) {
   return !!data;
 }
 
-// Signed URL, valid for a few minutes. `part` is 'preview' or 'full'.
+const BUCKET = 'courses';
+const PREVIEW_TTL = 60 * 60;
+
+// Signed URL for a course PDF. `part` is 'preview' or 'full'.
+//
+// The preview is free, and storage RLS already lets anyone sign it, so it goes
+// straight to Supabase — one less hop, and it keeps working even if the
+// serverless env is misconfigured. The full book goes through /api/book, which
+// signs with the service role after checking `purchases`.
 export async function bookUrl(productId, part) {
+  if (part === 'preview') {
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(`${productId}/preview.pdf`, PREVIEW_TTL);
+    if (error) throw new Error('preview_failed');
+    return data.signedUrl;
+  }
+
   const r = await fetch(`/api/book?id=${encodeURIComponent(productId)}&part=${part}`, {
     headers: await authHeaders(),
   });
