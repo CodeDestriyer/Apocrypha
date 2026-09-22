@@ -53,7 +53,7 @@ That's fine — commits are authored by that identity, but pushed via the person
 
 ## Deployment
 
-Connected to Vercel. Push to `main` triggers auto-deploy at https://apocrypha-ochre.vercel.app/.
+Connected to Vercel. Push to `main` triggers auto-deploy at https://www.varkanis.com/.
 
 **Work lands on `main`.** Default flow for this repo: finish the change,
 commit, merge to `main`, `git push origin main`. Don't leave finished work
