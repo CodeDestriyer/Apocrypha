@@ -68,8 +68,19 @@ export default async function handler(req, res) {
 
     // A completed transaction we can't attribute is not worth retrying —
     // retries would replay the same unattributable payload for three days.
+    //
+    // A stale PADDLE_PRICE_* env var fails exactly here and otherwise looks
+    // identical to a simulation, so the reply names the price ids it saw
+    // against the ones it wants: Paddle's delivery log shows the mismatch
+    // instead of a bare "unattributed".
     if (!userId || !productId) {
-      return res.status(200).json({ received: true, unattributed: true });
+      return res.status(200).json({
+        received: true,
+        unattributed: true,
+        sawPriceIds: (tx.items ?? []).map((item) => item?.price?.id ?? null),
+        expectedPriceIds: Object.keys(PRODUCT_BY_PRICE),
+        hasUserId: !!userId,
+      });
     }
 
     const { error } = await admin()
