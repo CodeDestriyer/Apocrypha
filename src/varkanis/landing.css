@@ -1355,6 +1355,13 @@
   color: var(--muted);
 }
 .promo-cta-btn { padding: 14px 26px; font-size: 15px; }
+.promo-cta-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+.promo-gate-error {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
 
 /* ── Narrow screens ────────────────────────────────────────── */
 

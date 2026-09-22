@@ -7,12 +7,10 @@ import { isInAppBrowser } from '../inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 import PeopleCarousel from './PeopleCarousel.jsx';
+import { hasPurchase, bookUrl, openCheckout, waitForPurchase } from './purchase.js';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-
-// Pages a non-registered visitor can read before the sign-up gate.
-const FREE_PAGES = 3;
 
 function PersonIcon({ size = 24 }) {
   return (
@@ -30,17 +28,70 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    pdf: '/MENTESBAJOCONTROL.pdf',
+    price: '3,50 $',
   },
 ];
 
-function PdfBook({ course, onClose, authed, onRegister }) {
+function BuyPanel({ course, authed, onRegister, onOwned }) {
+  const { t } = useLang();
+  const [phase, setPhase] = useState('idle'); // 'idle' | 'confirming'
+  const [error, setError] = useState('');
+
+  // A purchase is tied to an account, so signing in has to come first.
+  if (!authed) {
+    return (
+      <button className="promo-cta-btn" type="button" onClick={onRegister}>
+        {t('preview.gateBtn')}
+      </button>
+    );
+  }
+
+  const buy = async () => {
+    setError('');
+    try {
+      await openCheckout(course.id, async () => {
+        setPhase('confirming');
+        const ok = await waitForPurchase(course.id);
+        setPhase('idle');
+        if (ok) onOwned();
+        else setError(t('preview.buySlow'));
+      });
+    } catch {
+      setPhase('idle');
+      setError(t('preview.buyError'));
+    }
+  };
+
+  return (
+    <>
+      <button className="promo-cta-btn" type="button" onClick={buy} disabled={phase === 'confirming'}>
+        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price}`}
+      </button>
+      {error && <p className="promo-gate-error">{error}</p>}
+    </>
+  );
+}
+
+function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
   const { t } = useLang();
   const pagesRef = useRef(null);
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
-  const [gate, setGate] = useState(false); // sign-up gate shown after the free pages
+  const [gate, setGate] = useState(false); // buy gate shown after the preview
+  const [src, setSrc] = useState(null);
+
+  // Signed URL: the preview is open, the full file needs a purchase.
+  useEffect(() => {
+    let cancelled = false;
+    setSrc(null);
+    setStatus('loading');
+    bookUrl(course.id, owned ? 'full' : 'preview')
+      .then((url) => { if (!cancelled) setSrc(url); })
+      .catch(() => { if (!cancelled) setStatus('error'); });
+    return () => { cancelled = true; };
+  }, [course.id, owned]);
 
   useEffect(() => {
+    if (!src) return undefined;
     let cancelled = false;
     let pdfDoc = null;
 
@@ -49,18 +100,16 @@ function PdfBook({ course, onClose, authed, onRegister }) {
         const pdfjs = await import('pdfjs-dist');
         pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-        pdfDoc = await pdfjs.getDocument(course.pdf).promise;
+        pdfDoc = await pdfjs.getDocument(src).promise;
         if (cancelled) return;
-
-        const total = pdfDoc.numPages;
-        const limit = authed ? total : Math.min(FREE_PAGES, total);
 
         const container = pagesRef.current;
         if (!container) return;
+        container.replaceChildren(); // the file swaps when a purchase lands
         const cw = Math.min(container.clientWidth || 780, 780);
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-        for (let n = 1; n <= limit; n++) {
+        for (let n = 1; n <= pdfDoc.numPages; n++) {
           if (cancelled) return;
           const page = await pdfDoc.getPage(n);
           const base = page.getViewport({ scale: 1 });
@@ -83,7 +132,7 @@ function PdfBook({ course, onClose, authed, onRegister }) {
         }
 
         if (cancelled) return;
-        setGate(!authed && total > limit);
+        setGate(!owned);
         setStatus('ready');
       } catch (e) {
         if (!cancelled) setStatus('error');
@@ -94,7 +143,7 @@ function PdfBook({ course, onClose, authed, onRegister }) {
       cancelled = true;
       try { pdfDoc?.destroy?.(); } catch {}
     };
-  }, [course.pdf, authed]);
+  }, [src, owned]);
 
   return (
     <div className="promo-overlay" role="dialog" aria-modal="true">
@@ -115,10 +164,12 @@ function PdfBook({ course, onClose, authed, onRegister }) {
           {gate && (
             <div className="promo-gate">
               <h3 className="promo-gate-title">{t('preview.gateTitle')}</h3>
-              <p className="promo-gate-text">{t('preview.gateText')}</p>
-              <button className="promo-cta-btn" type="button" onClick={onRegister}>
-                {t('preview.gateBtn')}
-              </button>
+              <BuyPanel
+                course={course}
+                authed={authed}
+                onRegister={onRegister}
+                onOwned={onOwned}
+              />
             </div>
           )}
         </div>
@@ -402,7 +453,21 @@ function TestsPage({ onStart }) {
 function CoursesPage({ authed, onRegister }) {
   const { lang, t } = useLang();
   const [viewer, setViewer] = useState(null);
+  const [owned, setOwned] = useState({});
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (!authed) { setOwned({}); return undefined; }
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        COURSES.map(async (course) => [course.id, await hasPurchase(course.id)]),
+      );
+      if (!cancelled) setOwned(Object.fromEntries(entries));
+    })();
+    return () => { cancelled = true; };
+  }, [authed]);
+
   const q = query.trim().toLowerCase();
   const filtered = q
     ? COURSES.filter((course) => {
@@ -460,18 +525,12 @@ function CoursesPage({ authed, onRegister }) {
                 )}
               </div>
               <div className="landing-course-actions">
-                {course.pdf ? (
-                  <button
-                    className="landing-test-go"
-                    onClick={() => setViewer(course)}
-                  >
-                    {authed ? t('landing.read') : t('landing.preview')}
-                  </button>
-                ) : (
-                  <button className="landing-test-go" disabled>
-                    {t('landing.courseSoon')}
-                  </button>
-                )}
+                <button
+                  className="landing-test-go"
+                  onClick={() => setViewer(course)}
+                >
+                  {owned[course.id] ? t('landing.read') : t('landing.preview')}
+                </button>
               </div>
             </div>
           </li>
@@ -482,6 +541,8 @@ function CoursesPage({ authed, onRegister }) {
         <PdfBook
           course={viewer}
           onClose={() => setViewer(null)}
+          owned={!!owned[viewer.id]}
+          onOwned={() => setOwned((prev) => ({ ...prev, [viewer.id]: true }))}
           authed={authed}
           onRegister={() => { setViewer(null); onRegister(); }}
         />
