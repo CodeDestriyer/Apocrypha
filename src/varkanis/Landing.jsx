@@ -31,9 +31,9 @@ const COURSES = [
     price: '5,30 $',
     // Shown before the buy button: what the money actually gets you.
     details: {
-      es: ['Libro digital en PDF', 'Se lee en tu cuenta', 'Acceso permanente'],
-      en: ['Digital book (PDF)', 'Read inside your account', 'Permanent access'],
-      ru: ['Электронная книга (PDF)', 'Читается в аккаунте', 'Доступ навсегда'],
+      es: ['45 páginas', 'PDF, se lee en tu cuenta', 'Acceso permanente'],
+      en: ['45 pages', 'PDF, read inside your account', 'Permanent access'],
+      ru: ['45 страниц', 'PDF, читается в аккаунте', 'Доступ навсегда'],
     },
   },
 ];
