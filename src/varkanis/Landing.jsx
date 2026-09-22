@@ -518,9 +518,10 @@ function CoursesPage({ authed, onRegister }) {
               <div className="landing-test-meta">
                 <h3 className="landing-test-title">{course.title}</h3>
                 <p className="landing-test-short">{tx(course.short, lang)}</p>
-                {course.author && (
+                {(course.author || course.price) && (
                   <div className="landing-test-byline">
-                    <span className="landing-test-author">{course.author}</span>
+                    {course.author && <span className="landing-test-author">{course.author}</span>}
+                    {course.price && <span className="landing-course-price">{course.price}</span>}
                   </div>
                 )}
               </div>
@@ -625,7 +626,12 @@ export default function Landing() {
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
       {view === 'courses' && <CoursesPage authed={authed} onRegister={() => setShowRegister(true)} />}
 
-      <footer className="landing-foot" />
+      <footer className="landing-foot">
+        <a href="/tos.html">Términos</a>
+        <a href="/privacy.html">Privacidad</a>
+        <a href="/refunds.html">Reembolsos</a>
+        <a href="mailto:oficalstepasik@gmail.com">Contacto</a>
+      </footer>
 
       {activeTest && (
         <TestRunner
