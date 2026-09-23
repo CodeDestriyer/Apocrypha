@@ -8,6 +8,7 @@ import { isInAppBrowser } from '../inAppBrowser.js';
 import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 import PeopleCarousel from './PeopleCarousel.jsx';
+import NetworkStrip from './NetworkStrip.jsx';
 import { hasPurchase, bookUrl, openCheckout, waitForPurchase } from './purchase.js';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
@@ -642,6 +643,7 @@ export default function Landing() {
       </header>
 
       {isHome && SHOW_PEOPLE && <PeopleCarousel dir="rtl" speed={isPhone ? 0.7 : 0.3} />}
+      {isHome && <NetworkStrip />}
 
       {isHome && (
         <main className="landing-main landing-tree">
