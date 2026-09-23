@@ -16,6 +16,7 @@ import FinanzasSection from './apocrypha/FinanzasSection.jsx';
 import BodySection from './apocrypha/BodySection.jsx';
 import LoginScreen from './LoginScreen.jsx';
 import { isInAppBrowser } from './inAppBrowser.js';
+import { markOwnerDevice } from './analytics.js';
 
 function BrowserGate({ onBypass }) {
   const [copied, setCopied] = useState(false);
@@ -145,6 +146,7 @@ function Shell() {
       const bareUrl = window.location.pathname + window.location.search;
       const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
       const isAppHash = hash === 'apocrypha' || hash === 'app';
+      if (showApp || isPwa) markOwnerDevice();
       if (showApp) {
         if (hash !== 'apocrypha') {
           window.history.replaceState(null, '', `${bareUrl}#apocrypha`);
@@ -153,7 +155,7 @@ function Shell() {
         window.history.replaceState(null, '', bareUrl);
       }
     } catch {}
-  }, [showApp]);
+  }, [showApp, isPwa]);
 
   // Navigating to #apocrypha in the same tab (e.g. pasting the link) opens it.
   useEffect(() => {

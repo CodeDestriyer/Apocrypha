@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 import App from './App.jsx';
+import { beforeSend } from './analytics.js';
 import './styles.css';
 
 // One-time recovery: any visitor whose splash hangs for >7s gets every SW
@@ -37,6 +39,7 @@ while (_rootEl?.firstChild) _rootEl.removeChild(_rootEl.firstChild);
 ReactDOM.createRoot(_rootEl).render(
   <React.StrictMode>
     <App />
+    <Analytics beforeSend={beforeSend} />
   </React.StrictMode>
 );
 
