@@ -23,9 +23,6 @@ function PersonIcon({ size = 24 }) {
 
 const VIEWS = ['home', 'tests', 'courses'];
 
-// Carousel photos are off until usage rights are sorted out.
-const SHOW_PEOPLE = false;
-
 const COURSES = [
   {
     id: 'mentes-bajo-control',
@@ -626,13 +623,10 @@ export default function Landing() {
         />
       </header>
 
+      {isHome && <PeopleCarousel dir="rtl" speed={0.6} />}
+
       {isHome && (
         <main className="landing-main landing-tree">
-          {SHOW_PEOPLE && (
-            <div className="people-row people-row-top">
-              <PeopleCarousel dir="rtl" speed={1.7} />
-            </div>
-          )}
 
           <h1 className="landing-title">Plataforma para mentes pensantes</h1>
 

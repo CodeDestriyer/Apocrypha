@@ -1400,19 +1400,22 @@
 
 /* ── Face marquee ──────────────────────────────────────────── */
 
+/* One strip of the background grid: 96px cells from the viewport top, so the
+   strip sits in the first full row under the header (104px, 77px on mobile). */
 .landing .people-track {
+  --cell: 96px;
+  --strip-top: calc(2 * var(--cell) - 104px);
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
   display: flex;
-  gap: 12px;
+  gap: 1px;
+  height: calc(var(--cell) - 1px);
+  margin-top: calc(var(--strip-top) + 1px);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  /* полноширинный вынос за гаттер страницы */
-  width: 100vw;
-  max-width: 100vw;
-  margin-left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 0 6px;
   cursor: grab;
 }
 .landing .people-track:active { cursor: grabbing; }
@@ -1420,62 +1423,21 @@
 
 .landing .people-card {
   flex: 0 0 auto;
-  width: 116px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  overflow: hidden;
+  width: calc(var(--cell) - 1px);
+  height: 100%;
+  background: var(--wash);
   user-select: none;
 }
-
-.landing .people-photo {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  background: var(--wash);
-}
-.landing .people-photo img {
+.landing .people-card img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: contrast(1.05);
-  pointer-events: none;
-}
-/* растворение в бумагу снизу + сканлайны — как в imarsen */
-.landing .people-photo::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to top, var(--paper) 0%, rgba(255, 255, 255, 0.4) 12%, transparent 30%),
-    repeating-linear-gradient(0deg, transparent 0 21px, rgba(0, 0, 0, 0.045) 21px 22px);
   pointer-events: none;
 }
 
-.landing .people-idx {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-}
-.landing .people-idx::before {
-  content: '';
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin-right: 4px;
-  background: var(--accent);
-  vertical-align: middle;
-}
-
-.landing .people-row { margin: 0; }
-.landing .people-row-top { margin-bottom: 26px; }
-
-@media (min-width: 640px) {
-  .landing .people-card { width: 140px; }
+@media (max-width: 640px) {
+  .landing .people-track { --strip-top: calc(var(--cell) - 77px); }
 }
 
 .landing-foot a { color: inherit; text-decoration: none; }

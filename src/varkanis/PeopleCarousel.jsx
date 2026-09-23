@@ -72,10 +72,7 @@ export default function PeopleCarousel({ dir = 'ltr', speed = 1.1 }) {
     <div className="people-track" ref={trackRef} aria-hidden="true">
       {loop.map((src, i) => (
         <div className="people-card" key={i}>
-          <div className="people-photo">
-            <img src={src} alt="" loading="lazy" draggable={false} />
-            <span className="people-idx">{String((i % PHOTOS.length) + 1).padStart(2, '0')}</span>
-          </div>
+          <img src={src} alt="" loading="lazy" draggable={false} />
         </div>
       ))}
     </div>
