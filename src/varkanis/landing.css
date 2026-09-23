@@ -1391,7 +1391,7 @@
   width: var(--w);
   height: var(--h);
   perspective: 1100px;
-  touch-action: pan-y;
+  touch-action: none;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
@@ -1488,6 +1488,8 @@
 }
 .book-3d-edge-top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 2px)); }
 .book-3d-edge-bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 2px)); }
+
+.landing-link-icon.landing-link-icon-cover { object-position: center top; border: 1px solid rgba(0, 0, 0, 0.55); }
 
 .book-page {
   max-width: 880px;

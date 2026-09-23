@@ -784,8 +784,8 @@ export default function Landing() {
             <button className="landing-link" onClick={() => goTo('libro')}>
               <span className="landing-link-text">{t('landing.btn.book')}</span>
               <img
-                className="landing-link-icon"
-                src="/course-logo.jpg"
+                className="landing-link-icon landing-link-icon-cover"
+                src={COURSES[0].logo}
                 alt="Mentes Bajo Control — Manipulación Social, Nivel 1"
               />
             </button>
