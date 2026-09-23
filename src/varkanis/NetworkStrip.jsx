@@ -26,17 +26,17 @@ function rgb(css) {
   return p ? p.slice(0, 3).map(Number) : [0, 0, 0];
 }
 
-// Side view of a brain in a 100×75 box: frontal lobe left, cerebellum and
+// Side view of a brain in a 100×71 box: frontal lobe left, cerebellum and
 // stem bottom right. The outline becomes a ring of dots, the folds become
 // chains, and the inside is filled with loose dots tied to their neighbours.
-const BRAIN_BOX = [100, 75];
-const OUTLINE = 'M13 50 C4 42 4 24 15 15 C24 6 40 2 56 4 C73 5 88 12 94 26 C99 37 96 46 89 50 '
-  + 'C93 57 88 66 77 66 C71 66 67 64 65 61 L63 72 C61 75 56 75 56 71 L56 61 '
-  + 'C48 61 40 63 32 61 C24 59 17 57 13 50 Z';
+const BRAIN_BOX = [100, 71];
+const OUTLINE = 'M9 45 C5 39 7 29 16 22 C26 12 42 6 58 7 C76 8 91 16 95 30 C98 39 95 46 88 49 '
+  + 'C92 55 87 63 77 63 C71 63 67 61 65 58 L63 68 C61 71 56 71 56 67 L56 58 '
+  + 'C46 58 36 58 26 54 C18 51 12 49 9 45 Z';
 const FOLDS = [
-  'M26 47 C38 40 54 40 72 36',     // lateral sulcus
-  'M52 6 C49 17 53 26 49 37',      // central sulcus
-  'M89 50 C82 52 74 54 66 57',     // cerebrum / cerebellum
+  'M22 46 C36 40 52 40 72 35',     // lateral sulcus
+  'M54 8 C51 18 55 27 50 37',      // central sulcus
+  'M88 49 C81 51 73 53 66 55',     // cerebrum / cerebellum
 ];
 
 function sample(pathEl, spacing) {
