@@ -1376,6 +1376,8 @@
 /* ── Narrow screens ────────────────────────────────────────── */
 
 @media (max-width: 640px) {
+  .landing .people-card img { filter: saturate(0.55) contrast(1.08); }
+
   .landing-nav { min-height: 76px; padding: 16px var(--gutter); }
   .landing-brand { font-size: 44px; }
 

@@ -607,6 +607,7 @@ export default function Landing() {
   };
 
   const isHome = view === 'home';
+  const isPhone = window.matchMedia('(max-width: 640px)').matches;
 
   return (
     <div className="landing">
@@ -627,7 +628,7 @@ export default function Landing() {
         />
       </header>
 
-      {isHome && <PeopleCarousel dir="rtl" speed={0.3} />}
+      {isHome && <PeopleCarousel dir="rtl" speed={isPhone ? 0.7 : 0.3} />}
 
       {isHome && (
         <main className="landing-main landing-tree">
