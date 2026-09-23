@@ -1489,7 +1489,13 @@
 .book-3d-edge-top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 2px)); }
 .book-3d-edge-bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 2px)); }
 
-.landing-link-icon.landing-link-icon-cover { width: auto; aspect-ratio: 687 / 1024; border: 1px solid rgba(0, 0, 0, 0.55); }
+/* Centred on the test icon above: pad out to the same square width. */
+.landing-link-icon.landing-link-icon-cover {
+  width: auto;
+  aspect-ratio: 687 / 1024;
+  margin-right: calc(96px * (1 - 687 / 1024) / 2);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+}
 
 .book-page {
   max-width: 880px;
@@ -1657,6 +1663,7 @@
 
   .landing-link { gap: 16px; padding: 18px 16px; min-height: 112px; }
   .landing-link-icon { width: 76px; height: 76px; }
+  .landing-link-icon.landing-link-icon-cover { width: auto; margin-right: calc(76px * (1 - 687 / 1024) / 2); }
 
   .landing-test-card { flex-direction: column; align-items: stretch; padding: 18px 16px; }
   .landing-test-body { flex-direction: row; align-items: center; gap: 14px; }
