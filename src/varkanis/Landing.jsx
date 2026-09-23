@@ -761,6 +761,10 @@ export default function Landing() {
           <span className="landing-brand">Varkanis</span>
         ) : (
           <button className="landing-back" onClick={() => goTo('home')}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="20" y1="12" x2="4" y2="12" />
+              <polyline points="10 6 4 12 10 18" />
+            </svg>
             {t('landing.back')}
           </button>
         )}
@@ -809,7 +813,7 @@ export default function Landing() {
         <a href="/tos.html">Términos</a>
         <a href="/privacy.html">Privacidad</a>
         <a href="/refunds.html">Reembolsos</a>
-        <a href="mailto:oficalstepasik@gmail.com">Contacto</a>
+        <a className="landing-foot-contact" href="mailto:oficalstepasik@gmail.com">Contacto</a>
       </footer>
 
       {activeTest && (

@@ -1691,6 +1691,7 @@
 
 .landing-foot a { color: inherit; text-decoration: none; }
 .landing-foot a:hover { color: var(--ink); text-decoration: underline; }
+.landing-foot .landing-foot-contact { font-weight: 600; }
 .landing-course-price {
   font-family: 'Newsreader', Georgia, serif;
   font-size: 24px;
