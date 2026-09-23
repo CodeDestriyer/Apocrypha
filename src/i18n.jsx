@@ -308,6 +308,7 @@ const DICT = {
   'preview.buyError': 'No se pudo abrir el pago.',
   'preview.buySlow': 'El pago se está procesando. Vuelve en un minuto.',
   'landing.searchPlaceholder': 'Buscar test…',
+  'landing.searchCoursesPlaceholder': 'Buscar curso…',
   'landing.searchEmpty': 'Nada encontrado',
   'landing.tab.about': 'Acerca',
   'landing.tab.tests': 'Tests',

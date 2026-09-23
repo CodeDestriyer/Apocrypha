@@ -1464,10 +1464,8 @@
   color: var(--ink);
 }
 .landing-course-currency {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 400;
-  letter-spacing: 0.16em;
   color: var(--muted);
 }
 .landing-course-details {

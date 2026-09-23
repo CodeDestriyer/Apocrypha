@@ -34,7 +34,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    price: { amount: '5,30', currency: 'USD' },
+    price: { amount: '5,30', currency: '$' },
     // Shown before the buy button: what the money actually gets you.
     details: {
       es: ['45 páginas', 'PDF, se lee en tu cuenta', 'Acceso permanente'],
@@ -505,8 +505,8 @@ function CoursesPage({ authed, onRegister }) {
           className="landing-test-search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('landing.searchPlaceholder')}
-          aria-label={t('landing.searchPlaceholder')}
+          placeholder={t('landing.searchCoursesPlaceholder')}
+          aria-label={t('landing.searchCoursesPlaceholder')}
         />
         {query && (
           <button
