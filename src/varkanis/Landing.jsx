@@ -35,7 +35,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    price: { amount: '5,30', currency: 'USD' },
+    price: { amount: '5,30', currency: '$' },
     // Shown before the buy button: what the money actually gets you.
     details: {
       es: ['45 páginas', 'PDF, se lee en tu cuenta', 'Acceso permanente'],
@@ -78,7 +78,7 @@ function BuyPanel({ course, authed, onRegister, onOwned }) {
   return (
     <>
       <button className="promo-cta-btn" type="button" onClick={buy} disabled={phase === 'confirming'}>
-        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price.amount} ${course.price.currency}`}
+        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price.currency}${course.price.amount}`}
       </button>
       {error && <p className="promo-gate-error">{error}</p>}
     </>
@@ -506,8 +506,8 @@ function CoursesPage({ authed, onRegister }) {
           className="landing-test-search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('landing.searchPlaceholder')}
-          aria-label={t('landing.searchPlaceholder')}
+          placeholder={t('landing.searchCoursesPlaceholder')}
+          aria-label={t('landing.searchCoursesPlaceholder')}
         />
         {query && (
           <button
@@ -535,8 +535,7 @@ function CoursesPage({ authed, onRegister }) {
                 )}
                 {course.price && !owned[course.id] && (
                   <span className="landing-course-price">
-                    {course.price.amount}
-                    <span className="landing-course-currency">{course.price.currency}</span>
+                    {course.price.currency}{course.price.amount}
                   </span>
                 )}
               </div>
