@@ -9,6 +9,7 @@ import { TESTS } from './tests/data.js';
 import TestRunner from './tests/TestRunner.jsx';
 import PeopleCarousel from './PeopleCarousel.jsx';
 import NetworkStrip from './NetworkStrip.jsx';
+import { BOOK_PAGE } from './books.js';
 import { hasPurchase, bookUrl, openCheckout, waitForPurchase } from './purchase.js';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
@@ -23,7 +24,7 @@ function PersonIcon({ size = 24 }) {
   );
 }
 
-const VIEWS = ['home', 'tests', 'courses'];
+const VIEWS = ['home', 'tests', 'courses', 'libro'];
 
 // Face strip under the header, off for now.
 const SHOW_PEOPLE = false;
@@ -580,6 +581,122 @@ function CoursesPage({ authed, onRegister }) {
   );
 }
 
+function BookPage({ course, authed, onRegister }) {
+  const book = BOOK_PAGE[course.id];
+  const [owned, setOwned] = useState(false);
+  const [viewer, setViewer] = useState(false);
+
+  useEffect(() => {
+    if (!authed) { setOwned(false); return undefined; }
+    let cancelled = false;
+    hasPurchase(course.id).then((ok) => { if (!cancelled) setOwned(ok); });
+    return () => { cancelled = true; };
+  }, [authed, course.id]);
+
+  return (
+    <main className="landing-main book-page">
+      <section className="book-hero">
+        <img
+          className="book-cover"
+          src={course.logo}
+          alt={`${book.title} — ${book.subtitle}`}
+        />
+        <div className="book-buy">
+          <h1 className="book-title">{book.title}</h1>
+          <p className="book-subtitle">{book.subtitle}</p>
+          <p className="book-author">{course.author}</p>
+          {!owned && (
+            <p className="book-price">{course.price.currency}{course.price.amount}</p>
+          )}
+          <div className="book-actions">
+            {owned ? (
+              <button className="promo-cta-btn" type="button" onClick={() => setViewer(true)}>
+                Leer
+              </button>
+            ) : (
+              <>
+                {authed ? (
+                  <BuyPanel course={course} authed onRegister={onRegister} onOwned={() => setOwned(true)} />
+                ) : (
+                  <button className="promo-cta-btn" type="button" onClick={onRegister}>
+                    Comprar · {course.price.currency}{course.price.amount}
+                  </button>
+                )}
+                <button className="landing-test-go book-sample" type="button" onClick={() => setViewer(true)}>
+                  Leer un fragmento
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="book-section">
+        {book.description.map((p, i) => <p key={i} className="book-text">{p}</p>)}
+      </section>
+
+      {book.learn.length > 0 && (
+        <section className="book-section">
+          <h2 className="book-h">Qué aprenderás</h2>
+          <ul className="book-learn">
+            {book.learn.map((item, i) => <li key={i}>{item}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {book.toc.length > 0 && (
+        <section className="book-section">
+          <h2 className="book-h">Contenido</h2>
+          <ol className="book-toc">
+            {book.toc.map((item, i) => <li key={i}>{item}</li>)}
+          </ol>
+        </section>
+      )}
+
+      {book.reviews.length > 0 && (
+        <section className="book-section">
+          <h2 className="book-h">Lectores</h2>
+          <ul className="book-reviews">
+            {book.reviews.map((r, i) => (
+              <li key={i} className="book-review">
+                <p className="book-review-text">{r.text}</p>
+                <span className="book-review-name">{r.name}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="book-section">
+        <h2 className="book-h">Detalles</h2>
+        <dl className="book-details">
+          {book.details.map(([k, v]) => (
+            <div key={k} className="book-detail">
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+          <div className="book-detail">
+            <dt>Reembolsos</dt>
+            <dd><a href="/refunds.html">Condiciones</a></dd>
+          </div>
+        </dl>
+      </section>
+
+      {viewer && (
+        <PdfBook
+          course={course}
+          onClose={() => setViewer(false)}
+          owned={owned}
+          onOwned={() => setOwned(true)}
+          authed={authed}
+          onRegister={() => { setViewer(false); onRegister(); }}
+        />
+      )}
+    </main>
+  );
+}
+
 export default function Landing() {
   const { t, setLang } = useLang();
   const { status, googleAvatar, profile, update } = useProfile();
@@ -658,12 +775,12 @@ export default function Landing() {
                 alt="Varkanis — Comunidad de psicología y tests de análisis del comportamiento"
               />
             </button>
-            <button className="landing-link" onClick={() => goTo('courses')}>
-              <span className="landing-link-text">{t('landing.btn.course')}</span>
+            <button className="landing-link" onClick={() => goTo('libro')}>
+              <span className="landing-link-text">{t('landing.btn.book')}</span>
               <img
-                className="landing-link-icon"
-                src="/course-logo.jpg"
-                alt="Varkanis — Academia de manipulación social y leyes de la influencia"
+                className="landing-link-icon landing-link-icon-book"
+                src={COURSES[0].logo}
+                alt="Mentes Bajo Control — Manipulación Social, Nivel 1"
               />
             </button>
           </div>
@@ -671,6 +788,7 @@ export default function Landing() {
       )}
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
       {view === 'courses' && <CoursesPage authed={authed} onRegister={() => setShowRegister(true)} />}
+      {view === 'libro' && <BookPage course={COURSES[0]} authed={authed} onRegister={() => setShowRegister(true)} />}
 
       <footer className="landing-foot">
         <a href="/tos.html">Términos</a>

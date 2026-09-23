@@ -293,6 +293,7 @@ const DICT = {
   'landing.beta': 'Beta gratuita',
   'landing.btn.test': 'Hacer el test',
   'landing.btn.course': 'Obtener el curso',
+  'landing.btn.book': 'Obtener el libro',
   'landing.btn.app': 'Nuestra app',
   'landing.back': 'Volver',
   'landing.coursesIntro': 'Cursos de autor. Más, pronto.',
