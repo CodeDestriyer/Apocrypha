@@ -1473,7 +1473,6 @@
 
 .landing .people-row { margin: 0; }
 .landing .people-row-top { margin-bottom: 26px; }
-.landing .people-row-bottom { margin-top: 26px; }
 
 @media (min-width: 640px) {
   .landing .people-card { width: 140px; }

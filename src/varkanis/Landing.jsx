@@ -649,10 +649,6 @@ export default function Landing() {
               />
             </button>
           </div>
-
-          <div className="people-row people-row-bottom">
-            <PeopleCarousel dir="ltr" speed={1.7} />
-          </div>
         </main>
       )}
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
