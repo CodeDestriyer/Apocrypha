@@ -77,7 +77,7 @@ function BuyPanel({ course, authed, onRegister, onOwned }) {
   return (
     <>
       <button className="promo-cta-btn" type="button" onClick={buy} disabled={phase === 'confirming'}>
-        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price.amount} ${course.price.currency}`}
+        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price.currency}${course.price.amount}`}
       </button>
       {error && <p className="promo-gate-error">{error}</p>}
     </>
@@ -534,8 +534,7 @@ function CoursesPage({ authed, onRegister }) {
                 )}
                 {course.price && !owned[course.id] && (
                   <span className="landing-course-price">
-                    {course.price.amount}
-                    <span className="landing-course-currency">{course.price.currency}</span>
+                    {course.price.currency}{course.price.amount}
                   </span>
                 )}
               </div>
