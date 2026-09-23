@@ -46,6 +46,14 @@
   background-size: 96px 96px;
   mask-image: radial-gradient(ellipse 100% 60% at 50% 0%, #000 20%, transparent 80%);
   -webkit-mask-image: radial-gradient(ellipse 100% 60% at 50% 0%, #000 20%, transparent 80%);
+  animation: landing-grid-drift 14s linear infinite;
+}
+/* One full cell per loop, so the wrap is invisible. */
+@keyframes landing-grid-drift {
+  to { background-position: 96px 96px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing::before { animation: none; }
 }
 
 .landing > * { position: relative; z-index: 1; }
