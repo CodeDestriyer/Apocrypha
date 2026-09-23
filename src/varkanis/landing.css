@@ -1383,68 +1383,111 @@
 
 /* ── Book page (#libro) ────────────────────────────────────── */
 
-/* Book as an object: --t is the thickness of the page block. */
-.book3d {
-  --t: 14px;
-  display: block;
-  flex-shrink: 0;
-  perspective: 900px;
+/* Spinnable book. --w cover width, --t thickness; height follows the cover. */
+.book-3d {
+  --w: 260px;
+  --h: calc(var(--w) * 1024 / 687);
+  --t: 20px;
+  width: var(--w);
+  height: var(--h);
+  perspective: 1100px;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.book3d-body {
+.book-3d.is-grabbing { cursor: grabbing; }
+.book-3d-body {
   position: relative;
-  display: block;
-  transform: rotateY(-28deg);
-  transform-style: preserve-3d;
-  transition: transform 0.35s ease;
-}
-.book3d-front {
-  position: relative;
-  display: block;
   width: 100%;
-  height: auto;
-  border-radius: 1px 3px 3px 1px;
-  transform: translateZ(calc(var(--t) / 2));
-  backface-visibility: hidden;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
-/* Hinge shadow and a highlight where the cover folds into the spine */
-.book3d-crease {
+.book-3d-face {
   position: absolute;
+  display: block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.book-3d-front,
+.book-3d-crease,
+.book-3d-back {
   inset: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 1px 3px 3px 1px;
+}
+.book-3d-front { object-fit: cover; transform: translateZ(calc(var(--t) / 2)); }
+.book-3d-crease {
   transform: translateZ(calc(var(--t) / 2 + 0.5px));
   background: linear-gradient(to right,
     rgba(0, 0, 0, 0.28) 0,
     rgba(255, 255, 255, 0.28) 1.6%,
-    rgba(0, 0, 0, 0.22) 3.4%,
-    rgba(0, 0, 0, 0) 7%,
-    rgba(255, 255, 255, 0.08) 60%,
-    rgba(0, 0, 0, 0.06) 100%);
+    rgba(0, 0, 0, 0.2) 3.4%,
+    rgba(0, 0, 0, 0) 7%);
   pointer-events: none;
 }
-.book3d-pages {
-  position: absolute;
-  top: 1.5%;
-  bottom: 1.5%;
-  left: calc(100% - var(--t) / 2);
+.book-3d-back {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 9%;
+  background: #f1f0ed;
+  transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
+  border-radius: 3px 1px 1px 3px;
+}
+.book-3d-back-mark {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: #111;
+}
+.book-3d-spine {
+  top: 0;
+  left: calc(50% - var(--t) / 2);
   width: var(--t);
-  transform: rotateY(90deg);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #d9d8d4, #f4f3f0 45%, #dcdbd7);
+  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+}
+.book-3d-spine-text {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: calc(var(--t) * 0.46);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #111;
+}
+.book-3d-edge {
   background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.28)),
-    repeating-linear-gradient(to bottom, #f3efe6 0 1px, #d6d0c2 1px 2px);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+    linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.16)),
+    repeating-linear-gradient(to right, #f5f1e8 0 1px, #d8d2c4 1px 2px);
 }
-.book3d-back {
-  position: absolute;
-  inset: 0;
-  border-radius: 1px 3px 3px 1px;
-  background: #1c1c1c;
-  transform: translateZ(calc(var(--t) / -2));
-  box-shadow: 16px 18px 30px -10px rgba(0, 0, 0, 0.45);
+.book-3d-edge-side {
+  top: 1%;
+  left: calc(50% - var(--t) / 2);
+  width: var(--t);
+  height: 98%;
+  transform: rotateY(90deg) translateZ(calc(var(--w) / 2 - 2px));
 }
-
-.landing-link-book { --t: 10px; width: 96px; margin-right: 8px; }
-.landing-link-book .book3d-back { box-shadow: 8px 8px 14px -6px rgba(0, 0, 0, 0.4); }
-.landing-link:hover .book3d-body { transform: rotateY(-16deg); }
+.book-3d-edge-top,
+.book-3d-edge-bottom {
+  left: 1%;
+  top: calc(50% - var(--t) / 2);
+  width: 97%;
+  height: var(--t);
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.16)),
+    repeating-linear-gradient(to bottom, #f5f1e8 0 1px, #d8d2c4 1px 2px);
+}
+.book-3d-edge-top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 2px)); }
+.book-3d-edge-bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 2px)); }
 
 .book-page {
   max-width: 880px;
@@ -1458,7 +1501,7 @@
   gap: 44px;
   align-items: start;
 }
-.book-cover { --t: 22px; width: calc(100% - 22px); }
+.book-cover { justify-self: center; }
 .book-buy { display: flex; flex-direction: column; padding-top: 6px; }
 .book-title {
   margin: 0;
@@ -1593,8 +1636,7 @@
 @media (max-width: 640px) {
   .book-page { padding-top: 28px; }
   .book-hero { grid-template-columns: 1fr; gap: 28px; }
-  .book-cover { --t: 16px; width: 58%; margin: 0 auto; }
-  .landing-link-book { --t: 8px; width: 82px; }
+  .book-cover { --w: 58vw; --t: 16px; margin: 8px auto 0; }
   .book-price { margin-top: 22px; font-size: 34px; }
   .book-actions { flex-direction: column; align-items: stretch; }
   .book-actions .promo-cta-btn,

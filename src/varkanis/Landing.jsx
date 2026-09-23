@@ -10,6 +10,7 @@ import TestRunner from './tests/TestRunner.jsx';
 import PeopleCarousel from './PeopleCarousel.jsx';
 import NetworkStrip from './NetworkStrip.jsx';
 import { BOOK_PAGE } from './books.js';
+import Book3D from './Book3D.jsx';
 import { hasPurchase, bookUrl, openCheckout, waitForPurchase } from './purchase.js';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
@@ -581,21 +582,6 @@ function CoursesPage({ authed, onRegister }) {
   );
 }
 
-// Cover drawn as a physical book: a slight turn, the page block on the side
-// and a crease along the binding.
-function BookCover({ src, alt, className = '' }) {
-  return (
-    <span className={`book3d ${className}`}>
-      <span className="book3d-body">
-        <img className="book3d-front" src={src} alt={alt} />
-        <span className="book3d-crease" aria-hidden="true" />
-        <span className="book3d-pages" aria-hidden="true" />
-        <span className="book3d-back" aria-hidden="true" />
-      </span>
-    </span>
-  );
-}
-
 function BookPage({ course, authed, onRegister }) {
   const book = BOOK_PAGE[course.id];
   const [owned, setOwned] = useState(false);
@@ -611,10 +597,11 @@ function BookPage({ course, authed, onRegister }) {
   return (
     <main className="landing-main book-page">
       <section className="book-hero">
-        <BookCover
+        <Book3D
           className="book-cover"
           src={course.logo}
           alt={`${book.title} — ${book.subtitle}`}
+          spine={`${book.title} · S. Varkanis`}
         />
         <div className="book-buy">
           <h1 className="book-title">{book.title}</h1>
@@ -796,9 +783,9 @@ export default function Landing() {
             </button>
             <button className="landing-link" onClick={() => goTo('libro')}>
               <span className="landing-link-text">{t('landing.btn.book')}</span>
-              <BookCover
-                className="landing-link-book"
-                src={COURSES[0].logo}
+              <img
+                className="landing-link-icon"
+                src="/course-logo.jpg"
                 alt="Mentes Bajo Control — Manipulación Social, Nivel 1"
               />
             </button>
