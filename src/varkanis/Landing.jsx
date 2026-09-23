@@ -24,6 +24,9 @@ function PersonIcon({ size = 24 }) {
 
 const VIEWS = ['home', 'tests', 'courses'];
 
+// Face strip under the header, off for now.
+const SHOW_PEOPLE = false;
+
 const COURSES = [
   {
     id: 'mentes-bajo-control',
@@ -638,7 +641,7 @@ export default function Landing() {
         />
       </header>
 
-      {isHome && <PeopleCarousel dir="rtl" speed={isPhone ? 0.7 : 0.3} />}
+      {isHome && SHOW_PEOPLE && <PeopleCarousel dir="rtl" speed={isPhone ? 0.7 : 0.3} />}
 
       {isHome && (
         <main className="landing-main landing-tree">
