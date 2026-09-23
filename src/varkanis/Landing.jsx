@@ -515,25 +515,26 @@ function CoursesPage({ authed, onRegister }) {
       <ul className="landing-test-list">
         {filtered.map((course) => (
           <li key={course.id} className="landing-test-card landing-course-card">
-            {course.logo && (
-              <img
-                className="landing-course-logo"
-                src={course.logo}
-                alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
-              />
+            {(course.logo || course.price) && (
+              <div className="landing-course-cover">
+                {course.logo && (
+                  <img
+                    className="landing-course-logo"
+                    src={course.logo}
+                    alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
+                  />
+                )}
+                {course.price && <span className="landing-course-price">{course.price}</span>}
+              </div>
             )}
             <div className="landing-course-content">
               <div className="landing-test-meta">
                 <h3 className="landing-test-title">{course.title}</h3>
                 <p className="landing-test-short">{tx(course.short, lang)}</p>
-                {(course.author || course.price) && (
+                {course.author && (
                   <div className="landing-test-byline">
-                    {course.author && <span className="landing-test-author">{course.author}</span>}
-                    {course.price && <span className="landing-course-price">{course.price}</span>}
+                    <span className="landing-test-author">{course.author}</span>
                   </div>
-                )}
-                {course.details && (
-                  <p className="landing-course-details">{tx(course.details, lang).join(' · ')}</p>
                 )}
               </div>
               <div className="landing-course-actions">
@@ -544,6 +545,9 @@ function CoursesPage({ authed, onRegister }) {
                   {owned[course.id] ? t('landing.read') : t('landing.preview')}
                 </button>
               </div>
+              {course.details && (
+                <p className="landing-course-details">{tx(course.details, lang).join(' · ')}</p>
+              )}
             </div>
           </li>
         ))}
