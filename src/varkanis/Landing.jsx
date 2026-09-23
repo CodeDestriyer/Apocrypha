@@ -623,7 +623,7 @@ export default function Landing() {
         />
       </header>
 
-      {isHome && <PeopleCarousel dir="rtl" speed={0.6} />}
+      {isHome && <PeopleCarousel dir="rtl" speed={0.3} />}
 
       {isHome && (
         <main className="landing-main landing-tree">

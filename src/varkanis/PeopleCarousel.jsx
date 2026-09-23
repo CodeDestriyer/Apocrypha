@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef } from 'react';
  */
 const PHOTO_IDS = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11];
 const PHOTOS = PHOTO_IDS.map((n) => `/people/${n}.jpg`);
+const REPEAT = 14; // 10 фото × 20px × 14 ≈ 2800px
 
 function shuffle(arr) {
   const a = [...arr];
@@ -64,9 +65,11 @@ export default function PeopleCarousel({ dir = 'ltr', speed = 1.1 }) {
     };
   }, [dir, speed]);
 
-  // случайный порядок на загрузку + дубль для бесшовной петли
+  // случайный порядок на загрузку; половина петли должна быть шире экрана,
+  // иначе крошечные карточки не закроют ленту — отсюда REPEAT
   const shuffled = useMemo(() => shuffle(PHOTOS), []);
-  const loop = [...shuffled, ...shuffled];
+  const half = Array.from({ length: REPEAT }, () => shuffled).flat();
+  const loop = [...half, ...half];
 
   return (
     <div className="people-track" ref={trackRef} aria-hidden="true">

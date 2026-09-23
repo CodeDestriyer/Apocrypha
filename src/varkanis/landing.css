@@ -1400,18 +1400,15 @@
 
 /* ── Face marquee ──────────────────────────────────────────── */
 
-/* One strip of the background grid: 96px cells from the viewport top, so the
-   strip sits in the first full row under the header (104px, 77px on mobile). */
+/* Fills the sliver between the header (77px on mobile) and the first line of
+   the 96px background grid. Desktop has no such sliver, so it keeps the size. */
 .landing .people-track {
-  --cell: 96px;
-  --strip-top: calc(2 * var(--cell) - 104px);
   position: relative;
-  flex-shrink: 0;
   z-index: 1;
+  flex-shrink: 0;
   display: flex;
   gap: 1px;
-  height: calc(var(--cell) - 1px);
-  margin-top: calc(var(--strip-top) + 1px);
+  height: 19px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
@@ -1423,7 +1420,7 @@
 
 .landing .people-card {
   flex: 0 0 auto;
-  width: calc(var(--cell) - 1px);
+  width: 19px;
   height: 100%;
   background: var(--wash);
   user-select: none;
@@ -1434,10 +1431,6 @@
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-}
-
-@media (max-width: 640px) {
-  .landing .people-track { --strip-top: calc(var(--cell) - 77px); }
 }
 
 .landing-foot a { color: inherit; text-decoration: none; }
