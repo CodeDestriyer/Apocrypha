@@ -1489,7 +1489,7 @@
 .book-3d-edge-top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 2px)); }
 .book-3d-edge-bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 2px)); }
 
-.landing-link-icon.landing-link-icon-cover { object-position: center top; border: 1px solid rgba(0, 0, 0, 0.55); }
+.landing-link-icon.landing-link-icon-cover { width: auto; aspect-ratio: 687 / 1024; border: 1px solid rgba(0, 0, 0, 0.55); }
 
 .book-page {
   max-width: 880px;
