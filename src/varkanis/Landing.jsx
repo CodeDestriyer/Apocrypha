@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLang } from '../i18n.jsx';
 import './landing.css';
 import { useProfile } from '../ProfileContext.jsx';
@@ -30,7 +31,7 @@ const COURSES = [
     short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
-    price: '5,30 $',
+    price: { amount: '5,30', currency: 'USD' },
     // Shown before the buy button: what the money actually gets you.
     details: {
       es: ['45 páginas', 'PDF, se lee en tu cuenta', 'Acceso permanente'],
@@ -73,7 +74,7 @@ function BuyPanel({ course, authed, onRegister, onOwned }) {
   return (
     <>
       <button className="promo-cta-btn" type="button" onClick={buy} disabled={phase === 'confirming'}>
-        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price}`}
+        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price.amount} ${course.price.currency}`}
       </button>
       {error && <p className="promo-gate-error">{error}</p>}
     </>
@@ -153,7 +154,10 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
     };
   }, [src, owned]);
 
-  return (
+  // Portal to the landing root: `.landing > *` makes every page section its own
+  // stacking context, which would trap the overlay under the header and footer.
+  // Staying inside `.landing` keeps its CSS variables.
+  return createPortal(
     <div className="promo-overlay" role="dialog" aria-modal="true">
       <header className="promo-bar">
         <span className="promo-bar-title">{course.title}</span>
@@ -182,7 +186,8 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.querySelector('.landing') ?? document.body
   );
 }
 
@@ -515,7 +520,7 @@ function CoursesPage({ authed, onRegister }) {
       <ul className="landing-test-list">
         {filtered.map((course) => (
           <li key={course.id} className="landing-test-card landing-course-card">
-            {(course.logo || course.price) && (
+            {course.logo && (
               <div className="landing-course-cover">
                 {course.logo && (
                   <img
@@ -524,7 +529,12 @@ function CoursesPage({ authed, onRegister }) {
                     alt={`${course.title} — Varkanis, academia de análisis social y leyes de la influencia`}
                   />
                 )}
-                {course.price && <span className="landing-course-price">{course.price}</span>}
+                {course.price && !owned[course.id] && (
+                  <span className="landing-course-price">
+                    {course.price.amount}
+                    <span className="landing-course-currency">{course.price.currency}</span>
+                  </span>
+                )}
               </div>
             )}
             <div className="landing-course-content">
