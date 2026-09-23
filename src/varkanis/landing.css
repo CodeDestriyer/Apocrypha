@@ -1429,7 +1429,7 @@
 .landing .net-strip canvas.is-grabbing { cursor: grabbing; }
 
 @media (max-width: 640px) {
-  .landing .net-strip { height: 200px; }
+  .landing .net-strip { height: 220px; }
 }
 
 /* ── Face marquee ──────────────────────────────────────────── */

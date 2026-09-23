@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * People as dots, ties as threads. Grab one and the neighbours follow;
+ * People as dots, ties as threads, laid out as a brain. Grab one and the neighbours follow;
  * the grab also sends a pulse of accent colour a few hops out along the ties.
  *
  * Touch: a finger that lands on a dot drags it, anywhere else the page scrolls.
@@ -26,50 +26,107 @@ function rgb(css) {
   return p ? p.slice(0, 3).map(Number) : [0, 0, 0];
 }
 
-function build(w, h) {
-  // Jittered grid: even spread without the look of a grid.
-  const cell = w < 640 ? 44 : 56;
-  const cols = Math.max(3, Math.round(w / cell));
-  const rows = Math.max(2, Math.round(h / cell));
-  const cw = w / cols;
-  const ch = h / rows;
+// Side view of a brain in a 100×75 box: frontal lobe left, cerebellum and
+// stem bottom right. The outline becomes a ring of dots, the folds become
+// chains, and the inside is filled with loose dots tied to their neighbours.
+const BRAIN_BOX = [100, 75];
+const OUTLINE = 'M13 50 C4 42 4 24 15 15 C24 6 40 2 56 4 C73 5 88 12 94 26 C99 37 96 46 89 50 '
+  + 'C93 57 88 66 77 66 C71 66 67 64 65 61 L63 72 C61 75 56 75 56 71 L56 61 '
+  + 'C48 61 40 63 32 61 C24 59 17 57 13 50 Z';
+const FOLDS = [
+  'M26 47 C38 40 54 40 72 36',     // lateral sulcus
+  'M52 6 C49 17 53 26 49 37',      // central sulcus
+  'M89 50 C82 52 74 54 66 57',     // cerebrum / cerebellum
+];
+
+function sample(pathEl, spacing) {
+  const len = pathEl.getTotalLength();
+  const n = Math.max(2, Math.round(len / spacing));
+  return Array.from({ length: n }, (_, i) => {
+    const p = pathEl.getPointAtLength((i / n) * len);
+    return [p.x, p.y];
+  });
+}
+
+function build(w, h, svg) {
+  const pad = 10;
+  const s = Math.min((w - 2 * pad) / BRAIN_BOX[0], (h - 2 * pad) / BRAIN_BOX[1]);
+  const ox = (w - BRAIN_BOX[0] * s) / 2;
+  const oy = (h - BRAIN_BOX[1] * s) / 2;
+  const tf = ([x, y]) => [ox + x * s, oy + y * s];
+  const gap = w < 640 ? 17 : 20; // screen px between dots
+
   const nodes = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const x = (c + 0.5 + (Math.random() - 0.5) * 0.8) * cw;
-      const y = (r + 0.5 + (Math.random() - 0.5) * 0.8) * ch;
-      nodes.push({
-        x, y, vx: 0, vy: 0, hx: x, hy: y,
-        phase: Math.random() * Math.PI * 2,
-        pulseAt: -1, pulseHop: 0,
-        adj: [],
-      });
+  const edges = [];
+  const seen = new Set();
+  const add = (x, y) => {
+    nodes.push({
+      x, y, vx: 0, vy: 0, hx: x, hy: y,
+      phase: Math.random() * Math.PI * 2,
+      pulseAt: -1, pulseHop: 0,
+      adj: [],
+    });
+    return nodes.length - 1;
+  };
+  const tie = (i, j) => {
+    if (i === j) return;
+    const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const a = nodes[i];
+    const b = nodes[j];
+    edges.push({ a: i, b: j, rest: Math.hypot(a.x - b.x, a.y - b.y) });
+    a.adj.push(j);
+    b.adj.push(i);
+  };
+  const chain = (d, closed) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', d);
+    svg.appendChild(el);
+    const pts = sample(el, gap / s).map(tf);
+    svg.removeChild(el);
+    const ids = pts.map(([x, y]) => add(x, y));
+    for (let k = 1; k < ids.length; k++) tie(ids[k - 1], ids[k]);
+    if (closed) tie(ids[ids.length - 1], ids[0]);
+  };
+
+  chain(OUTLINE, true);
+  FOLDS.forEach((d) => chain(d, false));
+  const fixed = nodes.length;
+
+  // Loose dots inside, kept off the drawn lines so those stay readable.
+  const shape = new Path2D(OUTLINE);
+  const probe = document.createElement('canvas').getContext('2d');
+  const cell = gap * 1.35;
+  for (let y = oy; y < oy + BRAIN_BOX[1] * s; y += cell) {
+    for (let x = ox; x < ox + BRAIN_BOX[0] * s; x += cell) {
+      const px = x + (Math.random() - 0.5) * cell * 0.7;
+      const py = y + (Math.random() - 0.5) * cell * 0.7;
+      if (!probe.isPointInPath(shape, (px - ox) / s, (py - oy) / s)) continue;
+      let clear = true;
+      for (let k = 0; k < fixed && clear; k++) {
+        if ((nodes[k].x - px) ** 2 + (nodes[k].y - py) ** 2 < (gap * 0.8) ** 2) clear = false;
+      }
+      if (clear) add(px, py);
     }
   }
 
-  const seen = new Set();
-  const edges = [];
-  nodes.forEach((a, i) => {
-    const near = nodes
+  for (let i = fixed; i < nodes.length; i++) {
+    const a = nodes[i];
+    nodes
       .map((b, j) => [j, (a.x - b.x) ** 2 + (a.y - b.y) ** 2])
       .filter(([j]) => j !== i)
       .sort((p, q) => p[1] - q[1])
-      .slice(0, LINKS);
-    for (const [j, d2] of near) {
-      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      edges.push({ a: i, b: j, rest: Math.sqrt(d2) });
-      a.adj.push(j);
-      nodes[j].adj.push(i);
-    }
-  });
+      .slice(0, LINKS)
+      .forEach(([j]) => tie(i, j));
+  }
   return { nodes, edges };
 }
 
 export default function NetworkStrip() {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
+  const svgRef = useRef(null);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -97,7 +154,7 @@ export default function NetworkStrip() {
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      net = build(w, h);
+      net = build(w, h, svgRef.current);
       drag = null;
     };
 
@@ -269,6 +326,8 @@ export default function NetworkStrip() {
   return (
     <div className="net-strip" ref={wrapRef} aria-hidden="true">
       <canvas ref={canvasRef} />
+      {/* Scratch space for measuring path lengths; never shown. */}
+      <svg ref={svgRef} width="0" height="0" style={{ position: 'absolute' }} />
     </div>
   );
 }
