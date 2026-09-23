@@ -581,6 +581,21 @@ function CoursesPage({ authed, onRegister }) {
   );
 }
 
+// Cover drawn as a physical book: a slight turn, the page block on the side
+// and a crease along the binding.
+function BookCover({ src, alt, className = '' }) {
+  return (
+    <span className={`book3d ${className}`}>
+      <span className="book3d-body">
+        <img className="book3d-front" src={src} alt={alt} />
+        <span className="book3d-crease" aria-hidden="true" />
+        <span className="book3d-pages" aria-hidden="true" />
+        <span className="book3d-back" aria-hidden="true" />
+      </span>
+    </span>
+  );
+}
+
 function BookPage({ course, authed, onRegister }) {
   const book = BOOK_PAGE[course.id];
   const [owned, setOwned] = useState(false);
@@ -596,7 +611,7 @@ function BookPage({ course, authed, onRegister }) {
   return (
     <main className="landing-main book-page">
       <section className="book-hero">
-        <img
+        <BookCover
           className="book-cover"
           src={course.logo}
           alt={`${book.title} — ${book.subtitle}`}
@@ -777,8 +792,8 @@ export default function Landing() {
             </button>
             <button className="landing-link" onClick={() => goTo('libro')}>
               <span className="landing-link-text">{t('landing.btn.book')}</span>
-              <img
-                className="landing-link-icon landing-link-icon-book"
+              <BookCover
+                className="landing-link-book"
                 src={COURSES[0].logo}
                 alt="Mentes Bajo Control — Manipulación Social, Nivel 1"
               />
