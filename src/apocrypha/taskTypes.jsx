@@ -24,13 +24,10 @@ export const shiftISO = (iso, delta) => {
   dt.setDate(dt.getDate() + delta);
   return localISO(dt);
 };
-// Saturdays are a "Día libre" (rest day): the Tareas list shows a plain rest
-// screen instead of the to-do list, on any Saturday — past, present or future.
-// getDay(): 0 = Sunday … 6 = Saturday.
-export const isRestDay = (iso) => {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).getDay() === 6;
-};
+// Rest days ("Día libre") are switched off for now: Saturday is a normal day.
+// The rest screen is still wired up — to bring it back, return
+// `new Date(y, m - 1, d).getDay() === 6` here (0 = Sunday … 6 = Saturday).
+export const isRestDay = () => false;
 
 // The day a task belongs to. Tasks saved before the per-day feature have no
 // `day`; anchor those to their *creation* day (local), NOT the live "today" —
