@@ -893,7 +893,25 @@ export const SILICON_MIND = {
   },
 };
 
-export const TESTS = [ADHD, PSYCH_AGE, DARK_TRIAD, ARCHETYPE_TEST, SILICON_MIND];
+// Hosted elsewhere: the card links out instead of opening TestRunner.
+export const MBTI = {
+  id: 'mbti',
+  logo: '/varkanis-test-mbti.jpg',
+  author: '16Personalities',
+  url: {
+    ru: 'https://www.16personalities.com/ru/test-lichnosti',
+    en: 'https://www.16personalities.com/free-personality-test',
+    es: 'https://www.16personalities.com/es/test-de-personalidad',
+  },
+  title: { ru: 'Тест MBTI', en: 'MBTI Test', es: 'Test MBTI' },
+  short: {
+    ru: '16 типов личности',
+    en: '16 personality types',
+    es: '16 tipos de personalidad',
+  },
+};
+
+export const TESTS = [ADHD, PSYCH_AGE, DARK_TRIAD, ARCHETYPE_TEST, SILICON_MIND, MBTI];
 
 // Concrete psychological age from total score (20..60), interpolated across the
 // three phase bands: reactive 20..33 → 15..22, critical 34..48 → 23..38,

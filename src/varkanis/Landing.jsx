@@ -449,18 +449,26 @@ function TestsPage({ onStart }) {
                 <div className="landing-test-meta">
                   <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
                   <div className="landing-test-byline">
-                    <span className="landing-test-count">
-                      {test.items.length} {t('landing.questions')}
-                    </span>
+                    {test.items && (
+                      <span className="landing-test-count">
+                        {test.items.length} {t('landing.questions')}
+                      </span>
+                    )}
                     {test.author && (
                       <span className="landing-test-author">{test.author}</span>
                     )}
                   </div>
                 </div>
               </div>
-              <button className="landing-test-go" onClick={() => onStart(test)}>
-                {t('landing.takeTest')}
-              </button>
+              {test.url ? (
+                <a className="landing-test-go" href={tx(test.url, lang)} target="_blank" rel="noopener">
+                  {t('landing.takeTest')}
+                </a>
+              ) : (
+                <button className="landing-test-go" onClick={() => onStart(test)}>
+                  {t('landing.takeTest')}
+                </button>
+              )}
             </li>
           ))}
         </ul>
