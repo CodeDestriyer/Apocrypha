@@ -898,6 +898,7 @@ export const MBTI = {
   id: 'mbti',
   logo: '/varkanis-test-mbti.jpg',
   author: '16Personalities',
+  count: 60,
   url: {
     ru: 'https://www.16personalities.com/ru/test-lichnosti',
     en: 'https://www.16personalities.com/free-personality-test',
