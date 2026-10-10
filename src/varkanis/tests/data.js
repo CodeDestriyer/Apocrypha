@@ -897,7 +897,7 @@ export const SILICON_MIND = {
 export const MBTI = {
   id: 'mbti',
   logo: '/varkanis-test-mbti.jpg',
-  author: '16Personalities',
+  author: '16P',
   count: 60,
   url: {
     ru: 'https://www.16personalities.com/ru/test-lichnosti',
