@@ -103,9 +103,31 @@ function loadReader() {
   return readerPromise;
 }
 
+// The free fragment, downloaded in the background while the book page is
+// open so "Leer un fragmento" has nothing left to wait for.
+const previews = new Map(); // productId -> Promise<Uint8Array>
+function loadPreview(productId) {
+  let p = previews.get(productId);
+  if (!p) {
+    p = bookUrl(productId, 'preview')
+      // Low priority: the cover and the rest of the page load first.
+      .then((url) => fetch(url, { priority: 'low' }))
+      .then((r) => {
+        if (!r.ok) throw new Error('preview_failed');
+        return r.arrayBuffer();
+      })
+      .then((buf) => new Uint8Array(buf));
+    previews.set(productId, p);
+    p.catch(() => previews.delete(productId));
+  }
+  return p;
+}
+
 function warmReader(productId, owned) {
+  // Data saver on: don't spend the reader's megabytes on a maybe.
+  if (navigator.connection?.saveData) return;
   loadReader().catch(() => {});
-  if (!owned) bookUrl(productId, 'preview').catch(() => {});
+  if (!owned) loadPreview(productId).catch(() => {});
 }
 
 function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
@@ -113,29 +135,27 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
   const pagesRef = useRef(null);
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [gate, setGate] = useState(false); // buy gate shown after the preview
-  const [src, setSrc] = useState(null);
 
-  // Signed URL: the preview is open, the full file needs a purchase.
+  // The preview comes from bytes already fetched in the background; the full
+  // book is streamed from a signed URL, since it's only fetched once paid for.
   useEffect(() => {
     let cancelled = false;
-    loadReader().catch(() => {}); // in parallel with signing, not after it
-    setSrc(null);
+    let task = null;
     setStatus('loading');
-    bookUrl(course.id, owned ? 'full' : 'preview')
-      .then((url) => { if (!cancelled) setSrc(url); })
-      .catch(() => { if (!cancelled) setStatus('error'); });
-    return () => { cancelled = true; };
-  }, [course.id, owned]);
-
-  useEffect(() => {
-    if (!src) return undefined;
-    let cancelled = false;
-    let pdfDoc = null;
+    setGate(false);
 
     (async () => {
       try {
-        const { pdfjs, worker } = await loadReader();
-        pdfDoc = await pdfjs.getDocument({ url: src, worker }).promise;
+        const [{ pdfjs, worker }, source] = await Promise.all([
+          loadReader(),
+          owned
+            ? bookUrl(course.id, 'full').then((url) => ({ url }))
+            // pdf.js takes ownership of the buffer, so it gets a copy.
+            : loadPreview(course.id).then((data) => ({ data: data.slice() })),
+        ]);
+        if (cancelled) return;
+        task = pdfjs.getDocument({ ...source, worker });
+        const pdfDoc = await task.promise;
         if (cancelled) return;
 
         const container = pagesRef.current;
@@ -176,9 +196,9 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
 
     return () => {
       cancelled = true;
-      try { pdfDoc?.destroy?.(); } catch {}
+      task?.destroy().catch(() => {});
     };
-  }, [src, owned]);
+  }, [course.id, owned]);
 
   // Portal to the landing root: `.landing > *` makes every page section its own
   // stacking context, which would trap the overlay under the header and footer.
