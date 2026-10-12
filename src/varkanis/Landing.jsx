@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLang } from '../i18n.jsx';
 import './landing.css';
@@ -765,6 +765,13 @@ export default function Landing() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  // `.landing` is the scroll container, and it keeps its offset across views:
+  // a tap near the bottom of home would open the book page at its bottom.
+  const rootRef = useRef(null);
+  useLayoutEffect(() => {
+    if (rootRef.current) rootRef.current.scrollTop = 0;
+  }, [view]);
+
   const goTo = (next) => {
     setView(next);
     const hash = next === 'home' ? ' ' : `#${next}`;
@@ -788,7 +795,7 @@ export default function Landing() {
   const isPhone = window.matchMedia('(max-width: 640px)').matches;
 
   return (
-    <div className="landing">
+    <div className="landing" ref={rootRef}>
       <header className="landing-nav">
         {isHome ? (
           <span className="landing-brand">Varkanis</span>
