@@ -52,11 +52,14 @@ function BuyPanel({ course, authed, onRegister, onOwned }) {
   const [phase, setPhase] = useState('idle'); // 'idle' | 'confirming'
   const [error, setError] = useState('');
 
-  // A purchase is tied to an account, so signing in has to come first.
+  const label = `${t('preview.buy')} · ${course.price.currency}${course.price.amount}`;
+
+  // A purchase is tied to an account, so signing in has to come first — but the
+  // button still says what it's for: registering alone unlocks nothing.
   if (!authed) {
     return (
       <button className="promo-cta-btn" type="button" onClick={onRegister}>
-        {t('preview.gateBtn')}
+        {label}
       </button>
     );
   }
@@ -80,11 +83,29 @@ function BuyPanel({ course, authed, onRegister, onOwned }) {
   return (
     <>
       <button className="promo-cta-btn" type="button" onClick={buy} disabled={phase === 'confirming'}>
-        {phase === 'confirming' ? t('preview.buyWait') : `${t('preview.buy')} · ${course.price.currency}${course.price.amount}`}
+        {phase === 'confirming' ? t('preview.buyWait') : label}
       </button>
       {error && <p className="promo-gate-error">{error}</p>}
     </>
   );
+}
+
+// pdf.js plus a running worker, shared by every reader open. Started as soon as
+// a book is on screen so the tap on "read" only waits for the PDF itself.
+let readerPromise = null;
+function loadReader() {
+  readerPromise ??= import('pdfjs-dist')
+    .then((pdfjs) => {
+      pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+      return { pdfjs, worker: new pdfjs.PDFWorker() };
+    })
+    .catch((e) => { readerPromise = null; throw e; });
+  return readerPromise;
+}
+
+function warmReader(productId, owned) {
+  loadReader().catch(() => {});
+  if (!owned) bookUrl(productId, 'preview').catch(() => {});
 }
 
 function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
@@ -97,6 +118,7 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
   // Signed URL: the preview is open, the full file needs a purchase.
   useEffect(() => {
     let cancelled = false;
+    loadReader().catch(() => {}); // in parallel with signing, not after it
     setSrc(null);
     setStatus('loading');
     bookUrl(course.id, owned ? 'full' : 'preview')
@@ -112,10 +134,8 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
 
     (async () => {
       try {
-        const pdfjs = await import('pdfjs-dist');
-        pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-
-        pdfDoc = await pdfjs.getDocument(src).promise;
+        const { pdfjs, worker } = await loadReader();
+        pdfDoc = await pdfjs.getDocument({ url: src, worker }).promise;
         if (cancelled) return;
 
         const container = pagesRef.current;
@@ -493,6 +513,10 @@ function CoursesPage({ authed, onRegister }) {
     return () => { cancelled = true; };
   }, [authed]);
 
+  useEffect(() => {
+    COURSES.forEach((course) => warmReader(course.id, !!owned[course.id]));
+  }, [owned]);
+
   const q = query.trim().toLowerCase();
   const filtered = q
     ? COURSES.filter((course) => {
@@ -600,6 +624,8 @@ function BookPage({ course, authed, onRegister }) {
     return () => { cancelled = true; };
   }, [authed, course.id]);
 
+  useEffect(() => { warmReader(course.id, owned); }, [course.id, owned]);
+
   return (
     <main className="landing-main book-page">
       <section className="book-hero">
@@ -623,13 +649,7 @@ function BookPage({ course, authed, onRegister }) {
               </button>
             ) : (
               <>
-                {authed ? (
-                  <BuyPanel course={course} authed onRegister={onRegister} onOwned={() => setOwned(true)} />
-                ) : (
-                  <button className="promo-cta-btn" type="button" onClick={onRegister}>
-                    Comprar · {course.price.currency}{course.price.amount}
-                  </button>
-                )}
+                <BuyPanel course={course} authed={authed} onRegister={onRegister} onOwned={() => setOwned(true)} />
                 <button className="landing-test-go book-sample" type="button" onClick={() => setViewer(true)}>
                   Leer un fragmento
                 </button>

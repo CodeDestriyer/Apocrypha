@@ -44,13 +44,25 @@ const PREVIEW_TTL = 60 * 60;
 // straight to Supabase — one less hop, and it keeps working even if the
 // serverless env is misconfigured. The full book goes through /api/book, which
 // signs with the service role after checking `purchases`.
+//
+// Preview URLs are cached so the one signed while warming up the book page is
+// the one the reader opens; refreshed well before the signature expires.
+const previewUrls = new Map(); // productId -> { at, promise }
+
 export async function bookUrl(productId, part) {
   if (part === 'preview') {
-    const { data, error } = await supabase.storage
+    const hit = previewUrls.get(productId);
+    if (hit && Date.now() - hit.at < (PREVIEW_TTL / 2) * 1000) return hit.promise;
+    const promise = supabase.storage
       .from(BUCKET)
-      .createSignedUrl(`${productId}/preview.pdf`, PREVIEW_TTL);
-    if (error) throw new Error('preview_failed');
-    return data.signedUrl;
+      .createSignedUrl(`${productId}/preview.pdf`, PREVIEW_TTL)
+      .then(({ data, error }) => {
+        if (error) throw new Error('preview_failed');
+        return data.signedUrl;
+      });
+    previewUrls.set(productId, { at: Date.now(), promise });
+    promise.catch(() => previewUrls.delete(productId));
+    return promise;
   }
 
   const r = await fetch(`/api/book?id=${encodeURIComponent(productId)}&part=${part}`, {

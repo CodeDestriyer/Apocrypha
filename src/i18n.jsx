@@ -303,7 +303,6 @@ const DICT = {
   'preview.loading': 'Cargando…',
   'preview.error': 'No se pudo cargar el libro. Actualiza la página.',
   'preview.gateTitle': 'Sigue leyendo',
-  'preview.gateBtn': 'Regístrate para continuar',
   'preview.buy': 'Comprar',
   'preview.buyWait': 'Confirmando…',
   'preview.buyError': 'No se pudo abrir el pago.',
