@@ -17,6 +17,49 @@ export async function getSession() {
   return session;
 }
 
+// User from the locally stored session. getUser() would cost a round trip to
+// the auth server on every load/save; RLS checks the JWT on each query anyway.
+async function sessionUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user ?? null;
+}
+
+// Last server-confirmed profile row, kept so the app can paint instantly on
+// launch and reconcile with the DB in the background (see ProfileContext).
+const PROFILE_CACHE_KEY = 'lr.profile';
+
+export function readStoredUser() {
+  try {
+    return JSON.parse(window.localStorage.getItem('lr.auth'))?.user ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function readCachedProfile(userId) {
+  if (!userId) return null;
+  try {
+    const p = JSON.parse(window.localStorage.getItem(PROFILE_CACHE_KEY));
+    return p && p.id === userId ? p : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeCachedProfile(p) {
+  if (!p?.id) return;
+  try {
+    window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(p));
+  } catch {
+    // Over quota: drop it rather than keep an ever-older copy around.
+    clearCachedProfile();
+  }
+}
+
+export function clearCachedProfile() {
+  try { window.localStorage.removeItem(PROFILE_CACHE_KEY); } catch {}
+}
+
 export async function signInAnonymous() {
   const { error } = await supabase.auth.signInAnonymously();
   if (error) throw error;
@@ -31,11 +74,12 @@ export async function signInWithGoogle() {
 }
 
 export async function signOut() {
+  clearCachedProfile();
   await supabase.auth.signOut();
 }
 
 export async function loadProfile() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await sessionUser();
   if (!user) return null;
   const { data, error } = await supabase
     .from('profiles')
@@ -47,7 +91,7 @@ export async function loadProfile() {
 }
 
 export async function createProfile(name) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await sessionUser();
   if (!user) throw new Error('No user');
   const row = {
     id: user.id,
@@ -111,7 +155,7 @@ const MIME_EXT = {
 };
 
 export async function uploadCardImage(file) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await sessionUser();
   if (!user) throw new Error('No user');
   // Pasted blobs often have no filename, so derive the extension from the mime
   // type first and fall back to the name.
@@ -268,7 +312,7 @@ const LAYOUT_COLUMNS = new Set(['rule_layout', 'note_layout']);
 export async function mergeProfilePatch(patch, base, mine) {
   const touched = MERGEABLE_COLUMNS.filter((k) => k in patch);
   if (!touched.length) return patch;
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await sessionUser();
   if (!user) throw new Error('No user');
   const { data, error } = await supabase
     .from('profiles')
@@ -288,7 +332,7 @@ export async function mergeProfilePatch(patch, base, mine) {
 }
 
 export async function saveProfile(patch) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await sessionUser();
   if (!user) throw new Error('No user');
   const { data, error } = await supabase
     .from('profiles')

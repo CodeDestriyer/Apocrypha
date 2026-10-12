@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { supabase, getSession, loadProfile, createProfile, saveProfile, mergeProfilePatch, MERGEABLE_COLUMNS } from './supabase.js';
+import {
+  supabase, loadProfile, createProfile, saveProfile, mergeProfilePatch, MERGEABLE_COLUMNS,
+  readStoredUser, readCachedProfile, writeCachedProfile, clearCachedProfile,
+} from './supabase.js';
 
 const ProfileContext = createContext(null);
 
@@ -9,22 +12,43 @@ export function useProfile() {
   return ctx;
 }
 
+const avatarOf = (user) => {
+  const meta = user?.user_metadata ?? {};
+  return meta.avatar_url || meta.picture || null;
+};
+
 export function ProfileProvider({ children }) {
-  const [status, setStatus] = useState('loading'); // loading | unauthenticated | need-name | ready | error
-  const [profile, setProfile] = useState(null);
+  // Paint from the cached profile straight away when the stored session belongs
+  // to the same user; the DB copy is fetched in the background and reconciled
+  // (see adoptFresh). Until then the profile is "stale" and saves are held.
+  const boot = useRef(null);
+  if (boot.current === null) {
+    const user = readStoredUser();
+    boot.current = { user, cached: readCachedProfile(user?.id) };
+  }
+  const { cached: bootCached, user: bootUser } = boot.current;
+
+  const [status, setStatus] = useState(bootCached ? 'ready' : 'loading'); // loading | unauthenticated | need-name | ready | error
+  const [profile, setProfile] = useState(bootCached);
   const [error, setError] = useState(null);
   const [defaultName, setDefaultName] = useState('');
-  const [googleAvatar, setGoogleAvatar] = useState(null);
+  const [googleAvatar, setGoogleAvatar] = useState(bootCached ? avatarOf(bootUser) : null);
   const saveTimer = useRef(null);
   const maxTimer = useRef(null);
   const pendingPatch = useRef({});
-  const currentUserId = useRef(null);
+  const currentUserId = useRef(bootCached ? bootUser.id : null);
+  const staleRef = useRef(!!bootCached);
+  const retryBootRef = useRef(() => {});
   // For the rule-column 3-way merge: `syncedRef` = last values confirmed synced
   // with the DB (the merge baseline); `latestRef` = this session's current
   // in-memory profile. Both are kept up to date as the profile loads and saves.
-  const syncedRef = useRef(null);
-  const latestRef = useRef(null);
-  const setSynced = (p) => { syncedRef.current = p; latestRef.current = p; };
+  const syncedRef = useRef(bootCached);
+  const latestRef = useRef(bootCached);
+  const setSynced = (p) => {
+    syncedRef.current = p;
+    latestRef.current = p;
+    writeCachedProfile(p);
+  };
   // For the background refresh-on-focus (B1): a live mirror of `status` so the
   // visibility handler can read it without re-subscribing, and a throttle stamp
   // so rapid tab focus toggles don't hammer the DB.
@@ -48,21 +72,47 @@ export function ProfileProvider({ children }) {
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout:' + tag)), ms)),
       ]);
 
+    const dropStale = () => {
+      staleRef.current = false;
+      pendingPatch.current = {};
+      clearCachedProfile();
+    };
+
     const handleSession = async (session) => {
       try {
         if (!session) {
           currentUserId.current = null;
+          dropStale();
           if (!cancelled) {
             setGoogleAvatar(null);
             setStatus('unauthenticated');
           }
           return;
         }
-        if (!cancelled) setStatus('loading');
         const meta = session.user?.user_metadata ?? {};
-        if (!cancelled) setGoogleAvatar(meta.avatar_url || meta.picture || null);
-        const p = await withTimeout(loadProfile(), 6000, 'loadProfile');
+        const showingCache = staleRef.current && currentUserId.current === session.user?.id;
+        if (!showingCache) {
+          if (staleRef.current) dropStale(); // cache belongs to another account
+          if (!cancelled) setStatus('loading');
+        }
+        if (!cancelled) setGoogleAvatar(avatarOf(session.user));
+        let p;
+        try {
+          p = await withTimeout(loadProfile(), 6000, 'loadProfile');
+        } catch (e) {
+          // Offline or slow: keep showing the cached copy; retried on refocus/online.
+          if (showingCache && staleRef.current) { console.error(e); return; }
+          throw e;
+        }
         if (cancelled) return;
+        if (p && staleRef.current && currentUserId.current === session.user?.id) {
+          adoptFresh(p);
+          return;
+        }
+        if (!p && staleRef.current) {
+          dropStale();
+          if (!cancelled) setStatus('loading');
+        }
         if (p) {
           currentUserId.current = session.user?.id ?? null;
           setSynced(p);
@@ -108,17 +158,26 @@ export function ProfileProvider({ children }) {
       }
     };
 
-    (async () => {
+    let booting = false;
+    const bootstrap = async () => {
+      if (booting) return;
+      booting = true;
       try {
-        const session = await getSession();
-        await handleSession(session);
+        const { data, error: authError } = await supabase.auth.getSession();
+        // A failed token refresh only signs out when it's not a network error —
+        // supabase keeps the stored session in that case, and so do we.
+        if (authError && !data.session && staleRef.current && readStoredUser()) return;
+        await handleSession(data.session);
       } catch (e) {
         console.error(e);
-        if (!cancelled) setStatus('unauthenticated');
+        if (!cancelled && !staleRef.current) setStatus('unauthenticated');
       } finally {
+        booting = false;
         clearTimeout(loadingFallback);
       }
-    })();
+    };
+    retryBootRef.current = () => { if (staleRef.current) bootstrap(); };
+    bootstrap();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       // Skip events that don't change identity — TOKEN_REFRESHED fires on tab
@@ -140,6 +199,33 @@ export function ProfileProvider({ children }) {
     };
   }, []);
 
+  // First DB read after painting from cache. Edits made on the cached copy are
+  // kept only where they can't clobber another device: a column nobody else
+  // touched keeps the local edit; a mergeable column changed elsewhere gets the
+  // usual 3-way merge with the cached copy as its base; any other column
+  // changed elsewhere takes the server's value.
+  const adoptFresh = (fresh) => {
+    const cached = syncedRef.current || {};
+    const pending = pendingPatch.current;
+    const base = { ...fresh };
+    for (const k of Object.keys(pending)) {
+      if (JSON.stringify(fresh[k]) === JSON.stringify(cached[k])) continue;
+      if (MERGEABLE_COLUMNS.includes(k)) base[k] = cached[k];
+      else delete pending[k];
+    }
+    const keep = new Set(Object.keys(pending));
+    staleRef.current = false;
+    syncedRef.current = base;
+    writeCachedProfile(fresh);
+    setProfile((curr) => {
+      const next = { ...(curr || {}) };
+      for (const k of Object.keys(fresh)) if (!keep.has(k)) next[k] = fresh[k];
+      latestRef.current = next;
+      return next;
+    });
+    if (keep.size) flushNow();
+  };
+
   const submitName = async (name) => {
     try {
       const p = await createProfile(name);
@@ -156,6 +242,8 @@ export function ProfileProvider({ children }) {
   const flushNow = () => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     if (maxTimer.current) { clearTimeout(maxTimer.current); maxTimer.current = null; }
+    // Edits made on the cached copy wait for adoptFresh to rebase them.
+    if (staleRef.current) return;
     const toSave = pendingPatch.current;
     if (!toSave || Object.keys(toSave).length === 0) return;
     pendingPatch.current = {};
@@ -183,6 +271,7 @@ export function ProfileProvider({ children }) {
         // up — but only for columns without a newer edit already queued, so we
         // don't clobber an in-flight local change.
         syncedRef.current = saved;
+        writeCachedProfile(saved);
         const reflect = MERGEABLE_COLUMNS.filter((k) => k in toSave && !(k in pendingPatch.current));
         if (reflect.length === 0) {
           latestRef.current = { ...latestRef.current, ...saved };
@@ -231,6 +320,7 @@ export function ProfileProvider({ children }) {
   // user's own pending changes.
   const refreshFromServer = async () => {
     if (document.visibilityState !== 'visible') return;
+    if (staleRef.current) { retryBootRef.current(); return; }
     if (statusRef.current !== 'ready' || !currentUserId.current) return;
     const now = Date.now();
     if (now - lastRefreshRef.current < 4000) return; // throttle rapid focus toggles
@@ -250,6 +340,7 @@ export function ProfileProvider({ children }) {
         return next;
       });
       syncedRef.current = fresh;
+      writeCachedProfile(fresh);
     } catch (e) {
       console.error('background profile refresh failed', e);
     }
@@ -265,10 +356,13 @@ export function ProfileProvider({ children }) {
       if (document.visibilityState === 'hidden') flushNow();
       else if (document.visibilityState === 'visible') refreshFromServer();
     };
+    const onOnline = () => retryBootRef.current();
     window.addEventListener('pagehide', flushNow);
     window.addEventListener('lr:flush-save', flushNow);
+    window.addEventListener('online', onOnline);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
+      window.removeEventListener('online', onOnline);
       window.removeEventListener('pagehide', flushNow);
       window.removeEventListener('lr:flush-save', flushNow);
       document.removeEventListener('visibilitychange', onVisibility);
