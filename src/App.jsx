@@ -148,7 +148,9 @@ function Shell() {
       const isAppHash = hash === 'apocrypha' || hash === 'app';
       if (showApp || isPwa) markOwnerDevice();
       if (showApp) {
-        if (hash !== 'apocrypha') {
+        // The installed PWA starts with showApp=true, so an OAuth return lands
+        // here with #access_token in the URL — leave any foreign hash alone.
+        if (hash !== 'apocrypha' && (hash === '' || isAppHash)) {
           window.history.replaceState(null, '', `${bareUrl}#apocrypha`);
         }
       } else if (isAppHash) {
