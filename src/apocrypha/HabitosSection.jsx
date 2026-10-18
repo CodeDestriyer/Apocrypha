@@ -67,23 +67,16 @@ export default function HabitosSection({ rootOnBack }) {
   }, [menuId]);
 
   // Collapsible mark folders (Reglas-style): a group's key sits in this set when
-  // OPEN. Persisted per-device; groups default to collapsed.
-  const [expanded, setExpanded] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('lr:habitGroupsExpanded') || '[]')); }
-    catch { return new Set(); }
-  });
-  const writeExpanded = (set) => {
-    try { localStorage.setItem('lr:habitGroupsExpanded', JSON.stringify([...set])); } catch {}
-  };
-  const toggleFolder = (key) => setExpanded((prev) => {
+  // collapsed. Not persisted — every visit starts with all groups open.
+  const [collapsed, setCollapsed] = useState(() => new Set());
+  const toggleFolder = (key) => setCollapsed((prev) => {
     const next = new Set(prev);
     next.has(key) ? next.delete(key) : next.add(key);
-    writeExpanded(next);
     return next;
   });
-  const expandGroup = (key) => setExpanded((prev) => {
-    if (prev.has(key)) return prev;
-    const next = new Set(prev); next.add(key); writeExpanded(next);
+  const expandGroup = (key) => setCollapsed((prev) => {
+    if (!prev.has(key)) return prev;
+    const next = new Set(prev); next.delete(key);
     return next;
   });
 
@@ -361,7 +354,7 @@ export default function HabitosSection({ rootOnBack }) {
           <div className="habito-folders">
             {groups.map((g) => {
               const key = g.type ?? 'none';
-              const isOpen = expanded.has(key);
+              const isOpen = !collapsed.has(key);
               const color = g.type ? HABIT_TYPES[g.type].color : '#8a7d63';
               return (
                 <div className="habito-folder" key={key} style={{ '--mark-color': color }}>
