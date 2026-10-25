@@ -3698,7 +3698,7 @@ body {
 .nota-card-tags { font-size: 13px; color: var(--text-dim); overflow-wrap: anywhere; }
 .nota-read-tags {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
-  margin: -6px 0 16px;
+  margin: -20px 0 18px;
 }
 .nota-tag {
   font-family: inherit; font-size: 12px; line-height: 1.4;

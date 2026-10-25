@@ -238,9 +238,7 @@ export default function ConocimientoSection({ rootOnBack }) {
             ))}
           </div>
         )}
-        {readingNote.body
-          ? <div className="rule-read-body">{renderBody(readingNote.body)}</div>
-          : <div className="empty-hint">{t('conocimiento.noBody')}</div>}
+        {readingNote.body && <div className="rule-read-body">{renderBody(readingNote.body)}</div>}
       </div>
     );
   } else {
@@ -278,6 +276,7 @@ export default function ConocimientoSection({ rootOnBack }) {
               )}
             </div>
           )}
+          <button className="search-add-btn" onClick={openNew} aria-label={t('conocimiento.new')}>+</button>
           {allTags.length > 0 && (
             <button
               className={`search-filter-btn ${filterOpen ? 'active' : ''}`}
@@ -290,7 +289,6 @@ export default function ConocimientoSection({ rootOnBack }) {
               </svg>
             </button>
           )}
-          <button className="search-add-btn" onClick={openNew} aria-label={t('conocimiento.new')}>+</button>
         </div>
 
         {filterOpen && allTags.length > 0 && (
