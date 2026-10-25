@@ -126,7 +126,7 @@ function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming
 // Layout: [ { t:'r', id } | { t:'g', id, children:[…] } ] (tree) on profile.rule_layout
 //
 // Conocimiento is a SEPARATE section (ConocimientoSection.jsx) over its own
-// columns. The two only share the pure helpers in richText.jsx / noteTree.js and
+// columns. The two only share the pure helpers in richText.jsx and
 // the RichEditor widget — nothing about this section's layout, copy or features
 // is expected to stay in step with it.
 export default function RulesSection({ rootOnBack }) {

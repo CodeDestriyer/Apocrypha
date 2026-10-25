@@ -3,6 +3,7 @@ import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import { uploadCardImage, deleteCardImage } from '../supabase.js';
 import SubPage from './SubPage.jsx';
+import TagInput from './tags.jsx';
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -22,20 +23,6 @@ const cardHasNoTag = (card) => !((card.tags ?? []).length);
 
 const dueCountFor = (deck) => deck.cards.length;
 
-// Hashtags on a card (e.g. #trabajo, #psicología). Stored on `card.tags` as a
-// deduped list of normalized strings WITHOUT the leading '#'; the '#' is only
-// added for display. `parseTags` accepts free text — commas, spaces, newlines
-// and stray '#' are all treated as separators — so the same helper powers the
-// chip input and any pasted "trabajo, psicología" blob.
-const normTag = (s) =>
-  String(s).replace(/^#+/, '').trim().toLowerCase().slice(0, 24);
-const parseTags = (raw) =>
-  String(raw).split(/[\s,]+/).map(normTag).filter(Boolean);
-const mergeTags = (existing, incoming) => {
-  const out = [...existing];
-  for (const tg of incoming) if (tg && !out.includes(tg)) out.push(tg);
-  return out;
-};
 const cardHasTag = (card, tag) => (card.tags ?? []).includes(tag);
 
 // Synonyms of the front word (e.g. "empezar" → "comenzar", "iniciar"). Stored
@@ -1069,66 +1056,6 @@ function CardRow({ card, allTags = [], allWords = [], deckName = null, onTagClic
         </div>
       )}
     </li>
-  );
-}
-
-// Chip-style hashtag editor. Typing text and hitting Enter / comma / space
-// commits it as a chip; Backspace on an empty field removes the last chip.
-// `suggestions` are the tags already used elsewhere (deck-wide) — shown as
-// one-tap chips so the same hashtag gets reused rather than re-typed.
-function TagInput({ tags, onChange, suggestions = [], t }) {
-  const [text, setText] = useState('');
-  const commit = (raw) => {
-    const parsed = parseTags(raw);
-    if (parsed.length) onChange(mergeTags(tags, parsed));
-    setText('');
-  };
-  const removeAt = (i) => onChange(tags.filter((_, idx) => idx !== i));
-  const onKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',' || (e.key === ' ' && text.trim())) {
-      e.preventDefault();
-      commit(text);
-    } else if (e.key === 'Backspace' && !text && tags.length) {
-      removeAt(tags.length - 1);
-    }
-  };
-  const avail = suggestions.filter((s) => !tags.includes(s));
-  return (
-    <div className="cards-tags-field">
-      <div className="cards-tags-box">
-        {tags.map((tg, i) => (
-          <span key={tg} className="cards-tag-chip">
-            #{tg}
-            <button
-              type="button"
-              className="cards-tag-chip-x"
-              onClick={() => removeAt(i)}
-              aria-label={t('cards.removeTag')}
-            >×</button>
-          </span>
-        ))}
-        <input
-          className="cards-tags-input"
-          value={text}
-          placeholder={tags.length ? '' : t('cards.tagsPlaceholder')}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={onKeyDown}
-          onBlur={() => { if (text.trim()) commit(text); }}
-        />
-      </div>
-      {avail.length > 0 && (
-        <div className="cards-tags-suggest">
-          {avail.slice(0, 12).map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="cards-tag-suggest"
-              onClick={() => commit(s)}
-            >#{s}</button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 
