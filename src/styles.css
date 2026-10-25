@@ -3696,7 +3696,18 @@ body {
 .rule-read { padding: 2px 2px 10px; text-align: left; }
 .conocimiento .rule-card-open { display: flex; flex-direction: column; gap: 3px; }
 .nota-card-tags { font-size: 13px; color: var(--text-dim); overflow-wrap: anywhere; }
-.nota-read-tags { margin-bottom: 14px; }
+.nota-read-tags {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
+  margin: -6px 0 16px;
+}
+.nota-tag {
+  font-family: inherit; font-size: 12px; line-height: 1.4;
+  padding: 1px 6px;
+  border: 1px solid var(--gold-dim); border-radius: 3px;
+  background: transparent; color: var(--wine);
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.nota-tag:hover { border-color: var(--wine); background: rgba(110, 36, 19, 0.05); }
 .rule-read-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

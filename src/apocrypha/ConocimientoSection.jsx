@@ -58,6 +58,7 @@ export default function ConocimientoSection({ rootOnBack }) {
   const [tags, setTags] = useState([]);
   const [query, setQuery] = useState('');
   const [activeTags, setActiveTags] = useState([]);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -91,6 +92,12 @@ export default function ConocimientoSection({ rootOnBack }) {
 
   const toggleTag = (tg) =>
     setActiveTags((a) => (a.includes(tg) ? a.filter((x) => x !== tg) : [...a, tg]));
+  // The filter only applies while its panel is open, so no hidden filter can
+  // linger behind a collapsed button.
+  const toggleFilter = () => {
+    if (filterOpen) setActiveTags([]);
+    setFilterOpen((o) => !o);
+  };
 
   const currentNote = (open && open !== 'new') ? (notes.find((r) => r.id === open) ?? null) : null;
   const readingNote = reading ? (notes.find((r) => r.id === reading) ?? null) : null;
@@ -111,7 +118,7 @@ export default function ConocimientoSection({ rootOnBack }) {
     setOpen(r.id);
   };
   const backToList = () => { setOpen(null); setReading(null); setMenuOpen(false); setEditingName(false); };
-  const showTag = (tg) => { setQuery(''); setActiveTags([tg]); backToList(); };
+  const showTag = (tg) => { setQuery(''); setActiveTags([tg]); setFilterOpen(true); backToList(); };
 
   const commitRename = () => {
     if (!readingNote) return;
@@ -225,9 +232,9 @@ export default function ConocimientoSection({ rootOnBack }) {
     content = (
       <div className="rule-read">
         {rTags.length > 0 && (
-          <div className="cards-tag-study-chips nota-read-tags">
+          <div className="nota-read-tags">
             {rTags.map((tg) => (
-              <button key={tg} className="cards-tag-study-chip" onClick={() => showTag(tg)}>#{tg}</button>
+              <button key={tg} className="nota-tag" onClick={() => showTag(tg)}>#{tg}</button>
             ))}
           </div>
         )}
@@ -271,10 +278,22 @@ export default function ConocimientoSection({ rootOnBack }) {
               )}
             </div>
           )}
+          {allTags.length > 0 && (
+            <button
+              className={`search-filter-btn ${filterOpen ? 'active' : ''}`}
+              onClick={toggleFilter}
+              aria-label={t('cards.filterTags')}
+              title={t('cards.filterTags')}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+              </svg>
+            </button>
+          )}
           <button className="search-add-btn" onClick={openNew} aria-label={t('conocimiento.new')}>+</button>
         </div>
 
-        {allTags.length > 0 && (
+        {filterOpen && allTags.length > 0 && (
           <div className="cards-tag-study cards-tag-filter">
             <div className="cards-tag-study-chips">
               {allTags.map((tg) => (
