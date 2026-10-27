@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useProfile } from '../ProfileContext.jsx';
 import { useLang } from '../i18n.jsx';
 import SubPage from './SubPage.jsx';
@@ -15,10 +16,14 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 
 const noteTags = (n) => (Array.isArray(n.tags) ? n.tags : []);
 
-function NotaCard({ nota, onOpen, t }) {
+function NotaCard({ nota, onOpen, onMenu, t }) {
   return (
     <div className="rule-card" data-note-id={nota.id}>
-      <button className="rule-card-open" onClick={() => onOpen(nota.id)}>
+      <button
+        className="rule-card-open"
+        onClick={() => onOpen(nota.id)}
+        onContextMenu={(e) => { e.preventDefault(); onMenu(nota.id, e.clientX, e.clientY); }}
+      >
         <span className="rule-card-title">{nota.title || t('conocimiento.noBody')}</span>
       </button>
     </div>
@@ -27,9 +32,10 @@ function NotaCard({ nota, onOpen, t }) {
 
 // Conocimiento (Héroe › Conocimiento) — a tagged Zettelkasten: flat, atomic
 // notes with hashtags, no folders. The feed is newest-first; tag chips filter
-// it, several active tags meaning AND.
+// it, several active tags meaning AND. Pinned notes (right-click a card) head
+// the feed, except under a tag filter, where only the tags decide.
 //
-// Nota: { id, title, body, tags: [string], created_at }   on profile.notes
+// Nota: { id, title, body, tags: [string], pinned?, created_at }   on profile.notes
 //
 // Folder-era columns (note_groups, note_layout) and the `groupId` on older
 // notes are no longer read. They stay in the database untouched.
@@ -59,6 +65,8 @@ export default function ConocimientoSection({ rootOnBack }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const menuRef = useRef(null);
+  const [cardMenu, setCardMenu] = useState(null); // { id, x, y } — right-click menu on a feed card
+  const cardMenuRef = useRef(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -66,6 +74,28 @@ export default function ConocimientoSection({ rootOnBack }) {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
+  useEffect(() => {
+    if (!cardMenu) return;
+    const close = () => setCardMenu(null);
+    const onDoc = (e) => { if (!cardMenuRef.current?.contains(e.target)) close(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [cardMenu]);
+
+  const togglePin = (id) => {
+    const n = notes.find((x) => x.id === id);
+    if (n) updateNote(id, { pinned: !n.pinned });
+    setCardMenu(null);
+  };
 
   // Every tag in use, most used first.
   const tagCounts = useMemo(() => {
@@ -248,8 +278,11 @@ export default function ConocimientoSection({ rootOnBack }) {
           || (n.body ?? '').toLowerCase().includes(q)
           || nt.some((tg) => tg.includes(q));
       })
-      .sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
+      .sort((a, b) =>
+        (activeTags.length ? 0 : (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+        || String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
     const filtering = !!q || activeTags.length > 0;
+    const menuNote = cardMenu ? notes.find((n) => n.id === cardMenu.id) : null;
 
     content = (
       <>
@@ -307,8 +340,23 @@ export default function ConocimientoSection({ rootOnBack }) {
           <div className="cards-search-empty">{t('cards.searchEmpty')}</div>
         ) : feed.length > 0 && (
           <div className="rules-list">
-            {feed.map((n) => <NotaCard key={n.id} nota={n} onOpen={openFull} t={t} />)}
+            {feed.map((n) => (
+              <NotaCard key={n.id} nota={n} onOpen={openFull} onMenu={(id, x, y) => setCardMenu({ id, x, y })} t={t} />
+            ))}
           </div>
+        )}
+
+        {menuNote && createPortal(
+          <div
+            ref={cardMenuRef}
+            className="cards-gear-menu nota-ctx-menu"
+            style={{ left: Math.min(cardMenu.x, window.innerWidth - 170), top: Math.min(cardMenu.y, window.innerHeight - 60) }}
+          >
+            <button className="cards-gear-item" onClick={() => togglePin(menuNote.id)}>
+              {t(menuNote.pinned ? 'conocimiento.unpin' : 'conocimiento.pin')}
+            </button>
+          </div>,
+          document.body,
         )}
       </>
     );

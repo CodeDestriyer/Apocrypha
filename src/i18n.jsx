@@ -44,6 +44,8 @@ const DICT = {
   'conocimiento.searchPlaceholder': 'Buscar…',
   'conocimiento.tagsLabel': 'Etiquetas',
   'conocimiento.tagsPlaceholder': 'dinero, cuerpo…',
+  'conocimiento.pin': 'Fijar arriba',
+  'conocimiento.unpin': 'Desfijar',
   'reglas.title': 'Reglas',
   'reglas.new': 'Nueva regla',
   'reglas.empty': 'Aún no hay reglas. Crea la primera.',
