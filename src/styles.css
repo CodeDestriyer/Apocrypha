@@ -3694,8 +3694,6 @@ body {
 .rule-fmt-cols i { flex: 1; border: 1.5px solid var(--ink); border-radius: 2px; }
 
 .rule-read { padding: 2px 2px 10px; text-align: left; }
-.conocimiento .rule-card-open { display: flex; flex-direction: column; gap: 3px; }
-.nota-card-tags { font-size: 13px; color: var(--text-dim); overflow-wrap: anywhere; }
 .nota-read-tags {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
   margin: -20px 0 18px;

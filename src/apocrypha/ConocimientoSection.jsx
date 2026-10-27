@@ -16,14 +16,10 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 const noteTags = (n) => (Array.isArray(n.tags) ? n.tags : []);
 
 function NotaCard({ nota, onOpen, t }) {
-  const tags = noteTags(nota);
   return (
     <div className="rule-card" data-note-id={nota.id}>
       <button className="rule-card-open" onClick={() => onOpen(nota.id)}>
         <span className="rule-card-title">{nota.title || t('conocimiento.noBody')}</span>
-        {tags.length > 0 && (
-          <span className="nota-card-tags">{tags.map((tg) => '#' + tg).join(' ')}</span>
-        )}
       </button>
     </div>
   );
