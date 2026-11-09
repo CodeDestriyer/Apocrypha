@@ -34,7 +34,7 @@ const fmtPrecedent = (iso) => {
 
 // "Hábitos" (Salud › Hábitos) — a quit-counter. Each entry counts up live from
 // the moment you started (or last relapsed); a relapse resets the clock. Each
-// habit carries an optional mark (Nutrición / Descanso) that groups and colours
+// habit carries an optional mark (Nutrición / Descanso / varkanis.com) that groups and colours
 // the list. A habit is { id, name, since, type?, created_at } on profile.habits.
 export default function HabitosSection({ rootOnBack }) {
   const { profile, update } = useProfile();
