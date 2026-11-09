@@ -2,13 +2,15 @@
 // Tareas types these carry no done/missed state (habits just count days); the
 // mark only groups and colours the list. Shapes are deliberately different from
 // the Tareas set (square/triangle/circle/star) and chosen to fit their meaning:
-// a diamond for Nutrición, an hourglass (rest/time) for Descanso.
+// a diamond for Nutrición, an hourglass (rest/time) for Descanso. Otros is the
+// catch-all: unmarked habits group under it too.
 export const HABIT_TYPES = {
   nutricion: { shape: 'diamond',   color: '#3aa06a', labelKey: 'habits.mark.nutricion' },
   descanso:  { shape: 'hourglass', color: '#7b5cc4', labelKey: 'habits.mark.descanso' },
+  otros:     { shape: 'diamond',   color: '#8a7d63', labelKey: 'habits.mark.otros' },
 };
 
-export const HABIT_TYPE_ORDER = ['nutricion', 'descanso'];
+export const HABIT_TYPE_ORDER = ['nutricion', 'descanso', 'otros'];
 
 // A habit's mark is optional: an unknown/absent type reads as "no mark".
 export const habitTypeOf = (habit) => (HABIT_TYPES[habit?.type] ? habit.type : null);

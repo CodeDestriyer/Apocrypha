@@ -34,7 +34,7 @@ const fmtPrecedent = (iso) => {
 
 // "Hábitos" (Salud › Hábitos) — a quit-counter. Each entry counts up live from
 // the moment you started (or last relapsed); a relapse resets the clock. Each
-// habit carries an optional mark (Nutrición / Descanso) that groups and colours
+// habit carries an optional mark (Nutrición / Descanso / Otros) that groups and colours
 // the list. A habit is { id, name, since, type?, created_at } on profile.habits.
 export default function HabitosSection({ rootOnBack }) {
   const { profile, update } = useProfile();
@@ -88,7 +88,7 @@ export default function HabitosSection({ rootOnBack }) {
     if (!name) return;
     const nowISO = new Date().toISOString();
     setHabits((h) => [{ id: newId(), name, since: nowISO, type: draftType, note: draftNote.trim(), created_at: nowISO }, ...h]);
-    expandGroup(draftType ?? 'none'); // don't hide a fresh habit inside a collapsed folder
+    expandGroup(draftType ?? 'otros'); // don't hide a fresh habit inside a collapsed folder
     setDraft('');
     setDraftType(null);
     setDraftNote('');
@@ -161,18 +161,17 @@ export default function HabitosSection({ rootOnBack }) {
     </div>
   );
 
-  // Group by mark (marked groups in order, then the unmarked ones). A profile
-  // with no marks at all renders as one plain list, no "Sin marca" heading.
-  const groups = [
-    ...HABIT_TYPE_ORDER.map((tp) => ({ type: tp, items: habits.filter((h) => habitTypeOf(h) === tp) })),
-    { type: null, items: habits.filter((h) => habitTypeOf(h) === null) },
-  ].filter((g) => g.items.length);
-  const flat = groups.length === 1 && groups[0].type === null;
+  // Group by mark; unmarked habits fall under Otros. A list that's all Otros
+  // renders flat, without a folder heading.
+  const groupOf = (h) => habitTypeOf(h) ?? 'otros';
+  const groups = HABIT_TYPE_ORDER
+    .map((tp) => ({ type: tp, items: habits.filter((h) => groupOf(h) === tp) }))
+    .filter((g) => g.items.length);
+  const flat = groups.length === 1 && groups[0].type === 'otros';
 
   const renderCard = (hb) => {
     const since = new Date(hb.since).getTime();
     const { days, h, m, sec } = elapsedParts(now - (Number.isNaN(since) ? now : since));
-    const ty = habitTypeOf(hb);
     const showTimer = hb.timer !== false;
     return (
       <li
@@ -183,11 +182,7 @@ export default function HabitosSection({ rootOnBack }) {
         <div className="habito-main">
           <div className="habito-nameline">
             <span className="habito-nameicon">
-              {ty ? <HabitShape type={ty} size={18} /> : (
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
-                  <polygon points="12,3 21,12 12,21 3,12" />
-                </svg>
-              )}
+              <HabitShape type={groupOf(hb)} size={18} />
             </span>
             <span className="habito-name">{hb.name}</span>
           </div>
@@ -353,9 +348,9 @@ export default function HabitosSection({ rootOnBack }) {
         ) : (
           <div className="habito-folders">
             {groups.map((g) => {
-              const key = g.type ?? 'none';
+              const key = g.type;
               const isOpen = !collapsed.has(key);
-              const color = g.type ? HABIT_TYPES[g.type].color : '#8a7d63';
+              const color = HABIT_TYPES[g.type].color;
               return (
                 <div className="habito-folder" key={key} style={{ '--mark-color': color }}>
                   <button
@@ -367,7 +362,7 @@ export default function HabitosSection({ rootOnBack }) {
                       <path d="M9 6l6 6-6 6" />
                     </svg>
                     <span className="habito-folder-name">
-                      {g.type ? t(HABIT_TYPES[g.type].labelKey) : t('habits.mark.none')}
+                      {t(HABIT_TYPES[g.type].labelKey)}
                     </span>
                     <span className="habito-folder-count">{g.items.length}</span>
                   </button>

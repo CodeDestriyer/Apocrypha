@@ -108,7 +108,7 @@ const DICT = {
   'habits.markLabel': 'Marca',
   'habits.mark.nutricion': 'Nutrición',
   'habits.mark.descanso': 'Descanso',
-  'habits.mark.none': 'Sin marca',
+  'habits.mark.otros': 'Otros',
   'habits.reset': 'Reiniciar',
   'habits.resetHint': 'Recaída — reiniciar el contador',
   'habits.resetConfirm': '¿Reiniciar el contador? Perderás el tiempo acumulado.',
