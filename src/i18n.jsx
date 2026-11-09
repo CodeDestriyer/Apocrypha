@@ -106,7 +106,6 @@ const DICT = {
   'habits.markLabel': 'Marca',
   'habits.mark.nutricion': 'Nutrición',
   'habits.mark.descanso': 'Descanso',
-  'habits.mark.varkanis': 'varkanis.com',
   'habits.mark.none': 'Sin marca',
   'habits.reset': 'Reiniciar',
   'habits.resetHint': 'Recaída — reiniciar el contador',
