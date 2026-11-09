@@ -16,6 +16,125 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 
 const noteTags = (n) => (Array.isArray(n.tags) ? n.tags : []);
 
+// Sentinel study scope for the notes carrying no hashtag.
+const NO_TAG = '__notag__';
+
+// Newest first; pinned notes head it unless `ignorePins` (a tag filter is on).
+const byFeedOrder = (ignorePins) => (a, b) =>
+  (ignorePins ? 0 : (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+  || String(b.created_at ?? '').localeCompare(String(a.created_at ?? ''));
+
+// Flip-card browser: title on the front, body on the back. Swipe or ‹ › to
+// move, tap (or Space) to flip. No grading — just reading through the notes.
+function NotaStudy({ notes, t }) {
+  const [idx, setIdx] = useState(0);
+  const [shown, setShown] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [animDir, setAnimDir] = useState(0);
+  const touch = useRef({ x: 0, y: 0, active: false, locked: null });
+
+  // A note deleted elsewhere can shrink the pool under the cursor.
+  const i = Math.min(idx, Math.max(0, notes.length - 1));
+  const nota = notes[i] ?? null;
+  const canPrev = i > 0;
+  const canNext = i < notes.length - 1;
+
+  // dir +1 → next (card leaves to the left), -1 → previous.
+  const go = (dir) => {
+    if (animDir || (dir > 0 ? !canNext : !canPrev)) { setDragX(0); return; }
+    setAnimDir(dir);
+    setTimeout(() => {
+      setIdx(i + dir); setShown(false); setDragX(0); setAnimDir(0);
+    }, 180);
+  };
+
+  const goRef = useRef(go);
+  goRef.current = go;
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target.closest?.('input, textarea, [contenteditable="true"]')) return;
+      if (e.key === 'ArrowRight') goRef.current(1);
+      else if (e.key === 'ArrowLeft') goRef.current(-1);
+      else if (e.key === ' ') { e.preventDefault(); setShown((s) => !s); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  if (!nota) return null;
+
+  const onTouchStart = (e) => {
+    if (e.touches.length !== 1) return;
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true, locked: null };
+  };
+  const onTouchMove = (e) => {
+    if (!touch.current.active) return;
+    const dx = e.touches[0].clientX - touch.current.x;
+    const dy = e.touches[0].clientY - touch.current.y;
+    if (touch.current.locked == null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      touch.current.locked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+    if (touch.current.locked !== 'x') return;
+    // Rubber-band at the ends so it's clear there's nothing further.
+    const blocked = dx < 0 ? !canNext : !canPrev;
+    setDragX(blocked ? dx * 0.25 : dx);
+  };
+  const onTouchEnd = () => {
+    if (!touch.current.active) return;
+    touch.current.active = false;
+    if (dragX < -60) go(1);
+    else if (dragX > 60) go(-1);
+    else setDragX(0);
+  };
+
+  const stageStyle = animDir !== 0
+    ? { transform: `translateX(${animDir > 0 ? -110 : 110}%) rotate(${-animDir * 6}deg)`, opacity: 0, transition: 'transform 0.18s ease-out, opacity 0.18s ease-out' }
+    : dragX !== 0
+      ? { transform: `translateX(${dragX}px) rotate(${dragX * 0.02}deg)`, opacity: Math.max(0.3, 1 - Math.abs(dragX) / 350) }
+      : { transition: 'transform 0.25s ease-out, opacity 0.25s ease-out' };
+
+  const tags = noteTags(nota);
+
+  return (
+    <div className="cards-study nota-study">
+      <div
+        className="study-card-stage"
+        style={stageStyle}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
+      >
+        <div
+          className={`study-card-inner ${shown ? 'flipped' : ''}`}
+          onClick={() => { if (Math.abs(dragX) < 6) setShown((s) => !s); }}
+        >
+          <div className="study-card-face study-card-front">
+            {nota.title || t('conocimiento.noBody')}
+          </div>
+          <div className="study-card-face study-card-back nota-study-back">
+            {tags.length > 0 && (
+              <div className="nota-study-tags">
+                {tags.map((tg) => <span key={tg}>#{tg}</span>)}
+              </div>
+            )}
+            {nota.body
+              ? <div className="rule-read-body">{renderBody(nota.body)}</div>
+              : <div className="nota-study-empty">{t('conocimiento.noBody')}</div>}
+          </div>
+        </div>
+      </div>
+
+      <div className="cards-nav-row">
+        <button className="cards-nav-btn" onClick={() => go(-1)} disabled={!canPrev} aria-label={t('conocimiento.prev')}>‹</button>
+        <span className="cards-nav-counter">{i + 1} / {notes.length}</span>
+        <button className="cards-nav-btn" onClick={() => go(1)} disabled={!canNext} aria-label={t('conocimiento.next')}>›</button>
+      </div>
+    </div>
+  );
+}
+
 function NotaCard({ nota, onOpen, onMenu, t }) {
   return (
     <div className="rule-card" data-note-id={nota.id}>
@@ -72,6 +191,9 @@ export default function ConocimientoSection({ rootOnBack }) {
   const [nameDraft, setNameDraft] = useState('');
   const menuRef = useRef(null);
   const [cardMenu, setCardMenu] = useState(null); // { id, x, y } — right-click menu on a feed card
+  const [studying, setStudying] = useState(null);   // null | { tag: null | NO_TAG | string }
+  const [studyExpanded, setStudyExpanded] = useState(false);
+  const [studyTagsOpen, setStudyTagsOpen] = useState(false);
   const cardMenuRef = useRef(null);
 
   useEffect(() => {
@@ -150,6 +272,25 @@ export default function ConocimientoSection({ rootOnBack }) {
     setOpen(r.id);
   };
   const backToList = () => { setOpen(null); setReading(null); setMenuOpen(false); setEditingName(false); };
+  const startStudy = (tag = null) => { setStudying({ tag }); setStudyExpanded(false); setStudyTagsOpen(false); };
+
+  const noTagCount = useMemo(() => notes.filter((n) => noteTags(n).length === 0).length, [notes]);
+  // Session pool, frozen to the ids at start so edits don't reshuffle it; notes
+  // deleted mid-session drop out.
+  const studyIds = useMemo(() => {
+    if (!studying) return [];
+    const { tag } = studying;
+    return notes
+      .filter((n) => tag == null || (tag === NO_TAG ? noteTags(n).length === 0 : noteTags(n).includes(tag)))
+      .sort(byFeedOrder(tag != null))
+      .map((n) => n.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studying]);
+  const studyNotes = useMemo(
+    () => studyIds.map((id) => notes.find((n) => n.id === id)).filter(Boolean),
+    [studyIds, notes],
+  );
+  useEffect(() => { if (studying && studyNotes.length === 0) setStudying(null); }, [studying, studyNotes.length]);
   const showTag = (tg) => { setQuery(''); setActiveTags([tg]); setFilterOpen(true); backToList(); };
 
   const commitRename = () => {
@@ -173,7 +314,16 @@ export default function ConocimientoSection({ rootOnBack }) {
 
   // ── Header (title / back / gear) ─────────────────────────────
   let pageTitle, onBack, headerRight = null;
-  if (open === 'new') {
+  if (studying) {
+    const tg = studying.tag;
+    pageTitle = (
+      <span className="sub-title-deck rule-title-plain">
+        {t('conocimiento.title')}
+        {tg != null && <span className="sub-title-tag"> · {tg === NO_TAG ? t('cards.noTag') : `#${tg}`}</span>}
+      </span>
+    );
+    onBack = () => setStudying(null);
+  } else if (open === 'new') {
     pageTitle = t('conocimiento.new');
     onBack = backToList;
   } else if (currentNote) {
@@ -222,7 +372,9 @@ export default function ConocimientoSection({ rootOnBack }) {
 
   // ── Body ─────────────────────────────────────────────────────
   let content;
-  if (isEditing) {
+  if (studying) {
+    content = studyNotes.length > 0 && <NotaStudy notes={studyNotes} t={t} />;
+  } else if (isEditing) {
     const submit = open === 'new' ? saveNew : saveEdit;
     content = (
       <div className="cards-panel">
@@ -284,14 +436,53 @@ export default function ConocimientoSection({ rootOnBack }) {
           || (n.body ?? '').toLowerCase().includes(q)
           || nt.some((tg) => tg.includes(q));
       })
-      .sort((a, b) =>
-        (activeTags.length ? 0 : (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
-        || String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
+      .sort(byFeedOrder(activeTags.length > 0));
     const filtering = !!q || activeTags.length > 0;
     const menuNote = cardMenu ? notes.find((n) => n.id === cardMenu.id) : null;
 
     content = (
       <>
+        {notes.length > 0 && (
+          <div className="cards-global-study">
+            {!studyExpanded ? (
+              <button
+                className="cards-study-btn"
+                onClick={() => { if (allTags.length) setStudyExpanded(true); else startStudy(); }}
+              >
+                {t('cards.study')} · {notes.length}
+              </button>
+            ) : (
+              <div className="cards-study-split">
+                <button className="cards-study-btn" onClick={() => startStudy()}>
+                  {t('cards.studyAllLabel')} · {notes.length}
+                </button>
+                <button
+                  className={`cards-study-btn ${studyTagsOpen ? 'active' : ''}`}
+                  onClick={() => setStudyTagsOpen((o) => !o)}
+                >
+                  {t('cards.studyTag')}
+                </button>
+              </div>
+            )}
+            {studyExpanded && studyTagsOpen && (
+              <div className="cards-tag-study">
+                <div className="cards-tag-study-chips">
+                  {noTagCount > 0 && (
+                    <button className="cards-tag-study-chip cards-tag-study-chip--none" onClick={() => startStudy(NO_TAG)}>
+                      {t('cards.noTag')}<span className="cards-tag-study-count">{noTagCount}</span>
+                    </button>
+                  )}
+                  {allTags.map((tg) => (
+                    <button key={tg} className="cards-tag-study-chip" onClick={() => startStudy(tg)}>
+                      #{tg}<span className="cards-tag-study-count">{tagCounts.get(tg)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="search-add-row">
           {notes.length > 0 && (
             <div className="cards-search open">

@@ -4751,3 +4751,42 @@ body {
 .peso-gear-history .peso-history-caret { margin-left: auto; }
 
 .peso-history--page { margin-top: 4px; }
+
+/* Conocimiento study: fixed-height card; the back is a paper page with the
+   note's rich body, scrolling inside the card when it's long. */
+.nota-study .study-card-inner { height: min(62vh, 560px); min-height: 0; }
+.nota-study .study-card-face { min-height: 0; }
+.nota-study-back.study-card-back {
+  display: block;
+  text-align: left;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 28px 26px;
+  background: var(--paper);
+  border-color: var(--line);
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: 0;
+  text-shadow: none;
+  user-select: text;
+}
+.nota-study-back::before,
+.nota-study-back::after { display: none; }
+.nota-study-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 14px;
+  font-size: 12px; color: var(--wine);
+}
+.nota-study-empty { color: var(--text-dim); text-align: center; padding-top: 30%; }
+.nota-study .cards-nav-btn {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--wine);
+}
+.nota-study .cards-nav-btn:hover:not(:disabled) { background: rgba(110, 36, 19, 0.05); border-color: var(--wine); }
+.nota-study .cards-nav-counter { color: var(--text-dim); }
+@media (max-width: 640px) {
+  .nota-study .study-card-inner { height: min(64vh, 520px); min-height: 0; }
+  .nota-study-back.study-card-back { padding: 22px 18px; font-size: 15px; }
+}

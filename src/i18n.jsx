@@ -46,6 +46,8 @@ const DICT = {
   'conocimiento.tagsPlaceholder': 'dinero, cuerpo…',
   'conocimiento.pin': 'Fijar arriba',
   'conocimiento.unpin': 'Desfijar',
+  'conocimiento.prev': 'Anterior',
+  'conocimiento.next': 'Siguiente',
   'reglas.title': 'Reglas',
   'reglas.new': 'Nueva regla',
   'reglas.empty': 'Aún no hay reglas. Crea la primera.',
