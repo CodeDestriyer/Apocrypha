@@ -17,7 +17,7 @@ export const ADHD = {
   id: 'adhd',
   scale: 'freq5',
   max: 5,
-  logo: '/varkanis-test-tdah.png',
+  logo: '/fghd-logo.jpg',
   author: 'Varkanis',
   // Final result image, one per probability band (low/mid/high).
   images: {
