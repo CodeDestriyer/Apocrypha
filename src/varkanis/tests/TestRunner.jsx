@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang } from '../../i18n.jsx';
-import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE5, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge, scoreSilicon } from './data.js';
+import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE5, AGREE3, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge, scoreSilicon } from './data.js';
 
-const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5 };
+const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5, agree3: AGREE3 };
 
 function tx(obj, lang) {
   return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
@@ -11,8 +11,8 @@ function tx(obj, lang) {
 // Short one-line summary of a finished test, for the saved history.
 function summarizeResult(test, answers, lang) {
   if (test.id === ADHD.id) {
-    const { total, max, band } = scoreAdhd(test, answers);
-    return { score: `${total}/${max}`, label: tx(test.bands[band], lang) };
+    const { pct, band } = scoreAdhd(test, answers);
+    return { score: `${pct}%`, label: tx(test.bands[band], lang) };
   }
   if (test.id === DARK_TRIAD.id) {
     const { subscales } = scoreDarkTriad(test, answers);
@@ -57,8 +57,7 @@ function RegisterCta({ onRegister }) {
 
 function AdhdResult({ test, answers, onClose, onRestart }) {
   const { lang, t } = useLang();
-  const { total, max, band, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
-  const pct = Math.round((total / max) * 100);
+  const { pct, band, unsureHigh, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
   const order = ['I', 'H', 'P'];
   return (
     <div className="test-result">
@@ -67,13 +66,14 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
         <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
       )}
       <div className="rosenberg-score">
-        <div className="rosenberg-score-num">{total}<span>/{max}</span></div>
+        <div className="rosenberg-score-num">{pct}<span>%</span></div>
         <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
       </div>
       <div className="big5-bar-track" style={{ marginTop: 12 }}>
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      {unsureHigh && <p className="big5-bar-desc" style={{ marginTop: 6, opacity: 0.7 }}>{tx(test.unsureNote, lang)}</p>}
       <div className="big5-bars" style={{ marginTop: 18 }}>
         {order.map((k) => {
           const s = subscales[k];

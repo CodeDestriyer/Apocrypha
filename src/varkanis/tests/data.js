@@ -1,10 +1,17 @@
-// ADHD self-report screening. 20 items, 5-point frequency scale (0..4),
-// total 0..80. Adapted from WHO ASRS / DSM-5 ADHD symptom list. Educational use only.
+// ADHD self-report screening. 20 items, 3-point scale. Adapted from WHO ASRS v1.1 /
+// DSM-5 ADHD symptom list. Educational use only.
 
 export const FREQ5 = {
   ru: ['Никогда', 'Редко', 'Иногда', 'Часто', 'Очень часто'],
   en: ['Never', 'Rarely', 'Sometimes', 'Often', 'Very often'],
   es: ['Nunca', 'Rara vez', 'A veces', 'Con frecuencia', 'Muy a menudo'],
+};
+
+// Order matters: answer value is index+1, scoreAdhd maps 1/2/3 → 2/1/0 points.
+export const AGREE3 = {
+  ru: ['Согласен', 'Не знаю', 'Не согласен'],
+  en: ['Agree', "Don't know", 'Disagree'],
+  es: ['De acuerdo', 'No lo sé', 'En desacuerdo'],
 };
 
 export const AGREE5 = {
@@ -15,8 +22,8 @@ export const AGREE5 = {
 
 export const ADHD = {
   id: 'adhd',
-  scale: 'freq5',
-  max: 5,
+  scale: 'agree3',
+  max: 3,
   logo: '/fghd-logo.jpg',
   author: 'Varkanis',
   // Final result image, one per probability band (low/mid/high).
@@ -27,27 +34,28 @@ export const ADHD = {
   },
   title: { ru: 'Скрининг СДВГ', en: 'ADHD Screening', es: 'Cribado de TDAH' },
   short: {
-    ru: '20 вопросов, ~3 минуты. Оцени, как часто это происходило за последние 6 месяцев.',
-    en: '20 questions, ~3 minutes. Rate how often you experienced this in the last 6 months.',
-    es: '20 preguntas, ~3 minutos. Evalúa con qué frecuencia te ocurrió en los últimos 6 meses.',
+    ru: '20 вопросов, ~3 минуты. Отвечай про последние 6 месяцев.',
+    en: '20 questions, ~3 minutes. Answer about the last 6 months.',
+    es: '20 preguntas, ~3 minutos. Responde sobre los últimos 6 meses.',
   },
-  // subscale codes: I=Inattention, H=Hyperactivity, P=Impulsivity
+  // subscale codes: I=Inattention, H=Hyperactivity, P=Impulsivity.
+  // core: ASRS Part A item — weight ×2 and counts toward the 4-of-6 rule.
   items: [
-    { subscale: 'I', ru: 'Тебе сложно доводить до конца последние детали работы, когда основная часть уже сделана?', en: 'Do you have trouble wrapping up the final details of a task once the main part is done?',          es: '¿Te cuesta terminar los últimos detalles de un trabajo cuando la parte principal ya está lista?' },
-    { subscale: 'I', ru: 'Тебе трудно организовать вещи или спланировать ежедневные задачи?',                       en: 'Do you find it hard to organize your things or plan your daily tasks?',                                es: '¿Te resulta difícil organizar tus cosas o planificar tus tareas diarias?' },
-    { subscale: 'I', ru: 'Часто ли ты забываешь о встречах, обещаниях или повседневных обязанностях?',              en: 'Do you often forget appointments, promises, or everyday obligations?',                                 es: '¿Te olvidas a menudo de citas, promesas u obligaciones cotidianas?' },
-    { subscale: 'I', ru: 'Откладываешь ли задачи, требующие большого умственного усилия или концентрации?',         en: 'Do you put off tasks that require a lot of mental effort or concentration?',                          es: '¿Dejas para más tarde las tareas que requieren mucho esfuerzo mental o concentración?' },
+    { core: true, subscale: 'I', ru: 'Тебе сложно доводить до конца последние детали работы, когда основная часть уже сделана?', en: 'Do you have trouble wrapping up the final details of a task once the main part is done?',          es: '¿Te cuesta terminar los últimos detalles de un trabajo cuando la parte principal ya está lista?' },
+    { core: true, subscale: 'I', ru: 'Тебе трудно организовать вещи или спланировать ежедневные задачи?',                       en: 'Do you find it hard to organize your things or plan your daily tasks?',                                es: '¿Te resulta difícil organizar tus cosas o planificar tus tareas diarias?' },
+    { core: true, subscale: 'I', ru: 'Часто ли ты забываешь о встречах, обещаниях или повседневных обязанностях?',              en: 'Do you often forget appointments, promises, or everyday obligations?',                                 es: '¿Te olvidas a menudo de citas, promesas u obligaciones cotidianas?' },
+    { core: true, subscale: 'I', ru: 'Откладываешь ли задачи, требующие большого умственного усилия или концентрации?',         en: 'Do you put off tasks that require a lot of mental effort or concentration?',                          es: '¿Dejas para más tarde las tareas que requieren mucho esfuerzo mental o concentración?' },
     { subscale: 'I', ru: 'Часто ли ты теряешь вещи (ключи, телефон, кошелёк, документы)?',                          en: 'Do you frequently lose things (keys, phone, wallet, documents)?',                                      es: '¿Pierdes cosas con frecuencia (llaves, móvil, cartera, documentos)?' },
     { subscale: 'I', ru: 'Легко ли отвлекаешься на шум или на то, что происходит вокруг?',                          en: 'Do you get easily distracted by noise or by what is going on around you?',                             es: '¿Te distraes fácilmente con el ruido o con lo que pasa a tu alrededor?' },
     { subscale: 'I', ru: 'Допускаешь ли ошибки по невнимательности, когда задача скучная или однообразная?',        en: 'Do you make careless mistakes when the task is boring or repetitive?',                                 es: '¿Cometes errores por descuido cuando la tarea es aburrida o repetitiva?' },
     { subscale: 'I', ru: 'Тебе трудно удерживать внимание на монотонной работе?',                                   en: 'Do you find it hard to keep your attention on monotonous work?',                                       es: '¿Te cuesta mantener la atención en un trabajo monótono?' },
     { subscale: 'I', ru: 'Чувствуешь ли, что витаешь в облаках даже когда с тобой говорят напрямую?',               en: 'Do you feel like you are in the clouds even when someone is talking directly to you?',                es: '¿Sientes que estás en las nubes incluso cuando alguien te está hablando directamente?' },
 
-    { subscale: 'H', ru: 'Покачиваешь ли ногами или вертишь что-то в руках, когда долго сидишь?',                   en: 'Do you tap your legs or fidget with your hands when you have to sit still for a long time?',          es: '¿Mueves las piernas o juegas con las manos cuando tienes que estar sentado mucho tiempo?' },
+    { core: true, subscale: 'H', ru: 'Покачиваешь ли ногами или вертишь что-то в руках, когда долго сидишь?',                   en: 'Do you tap your legs or fidget with your hands when you have to sit still for a long time?',          es: '¿Mueves las piernas o juegas con las manos cuando tienes que estar sentado mucho tiempo?' },
     { subscale: 'H', ru: 'Встаёшь ли с места на собраниях, занятиях или на работе, когда стоило бы сидеть?',         en: 'Do you get up from your seat in meetings, classes, or at work when you should stay seated?',          es: '¿Te levantas de tu sitio en reuniones, clases o en el trabajo cuando deberías quedarte sentado?' },
     { subscale: 'H', ru: 'Чувствуешь ли внутреннее беспокойство или невозможность просто посидеть и расслабиться?',  en: 'Do you feel inner restlessness or an inability to stay still and relax?',                              es: '¿Sientes inquietud por dentro o incapacidad para quedarte quieto y relajarte?' },
     { subscale: 'H', ru: 'Тебе сложно спокойно наслаждаться хобби или свободным временем?',                          en: 'Do you find it hard to enjoy your hobbies or free time quietly?',                                      es: '¿Te cuesta disfrutar de tus aficiones o del tiempo libre de forma tranquila?' },
-    { subscale: 'H', ru: 'Чувствуешь ли, будто внутри мотор, который постоянно подгоняет что-то делать?',           en: 'Do you feel as if you have a motor inside driving you to keep doing things?',                          es: '¿Sientes como si tuvieras un motor dentro que te impulsa a hacer cosas todo el tiempo?' },
+    { core: true, subscale: 'H', ru: 'Чувствуешь ли, будто внутри мотор, который постоянно подгоняет что-то делать?',           en: 'Do you feel as if you have a motor inside driving you to keep doing things?',                          es: '¿Sientes como si tuvieras un motor dentro que te impulsa a hacer cosas todo el tiempo?' },
     { subscale: 'H', ru: 'Говоришь ли слишком много или слишком громко в компании?',                                en: 'Do you talk too much or too loudly when you are around other people?',                                 es: '¿Hablas demasiado o demasiado fuerte cuando estás con más gente?' },
 
     { subscale: 'P', ru: 'Перебиваешь ли людей, заканчивая их фразы, потому что они говорят слишком медленно?',     en: 'Do you interrupt people by finishing their sentences because they talk too slowly?',                  es: '¿Interrumpes a la gente terminando sus frases porque hablan despacio?' },
@@ -82,6 +90,12 @@ export const ADHD = {
       en: 'Symptoms are pronounced. It is worth consulting a specialist.',
       es: 'Síntomas marcados. Conviene consultar a un especialista.',
     },
+  },
+  // Shown when more than UNSURE_LIMIT answers are "don't know".
+  unsureNote: {
+    ru: 'Много ответов «не знаю» — результат неточный.',
+    en: 'Many "don\'t know" answers — the result is imprecise.',
+    es: 'Muchas respuestas «no lo sé»: el resultado es impreciso.',
   },
 };
 
@@ -984,26 +998,37 @@ export function scoreDarkTriad(test, answers) {
   return { subscales };
 }
 
+const ADHD_POINTS = { 1: 2, 2: 1, 3: 0 }; // agree / don't know / disagree
+const ADHD_UNSURE_LIMIT = 5;
+
+// ASRS-style: high = agree on ≥4 of 6 core items; mid = 2-3 core agrees
+// or weighted total >50%; low otherwise. Subscales are unweighted, display only.
 export function scoreAdhd(test, answers) {
   const sums = { I: 0, H: 0, P: 0 };
   const counts = { I: 0, H: 0, P: 0 };
   let total = 0;
+  let max = 0;
+  let coreAgree = 0;
+  let unsure = 0;
   test.items.forEach((item, i) => {
+    const w = item.core ? 2 : 1;
+    max += 2 * w;
     const raw = answers[i];
     if (raw == null) return;
-    const v = raw - 1; // shift 1..5 → 0..4
-    sums[item.subscale] += v;
+    const pts = ADHD_POINTS[raw] ?? 0;
+    sums[item.subscale] += pts;
     counts[item.subscale] += 1;
-    total += v;
+    total += pts * w;
+    if (raw === 1 && item.core) coreAgree += 1;
+    if (raw === 2) unsure += 1;
   });
   const subscales = Object.fromEntries(Object.entries(sums).map(([k, s]) => {
-    const c = counts[k] || 1;
-    const m = c * 4;
+    const m = (counts[k] || 1) * 2;
     return [k, { sum: s, max: m, pct: Math.round((s / m) * 100) }];
   }));
-  const max = test.items.length * 4;
+  const pct = Math.round((total / max) * 100);
   let band = 'low';
-  if (total > 50) band = 'high';
-  else if (total > 25) band = 'mid';
-  return { total, max, band, subscales };
+  if (coreAgree >= 4) band = 'high';
+  else if (coreAgree >= 2 || pct > 50) band = 'mid';
+  return { total, max, pct, band, coreAgree, unsure, unsureHigh: unsure > ADHD_UNSURE_LIMIT, subscales };
 }
