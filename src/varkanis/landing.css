@@ -244,6 +244,21 @@
 .landing-account-logout { color: var(--accent); }
 .landing-account-logout:hover { background: var(--accent-wash); }
 
+.landing-author-card {
+  width: min(280px, calc(100vw - 32px));
+  padding: 14px 16px;
+}
+.landing-author-creds {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.landing-author-creds li + li { margin-top: 6px; }
+
 .landing-plan-badge {
   flex-shrink: 0;
   padding: 3px 8px;

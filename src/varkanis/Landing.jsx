@@ -237,6 +237,43 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
   );
 }
 
+// Sign-up is hidden for now; the corner shows the author instead. Purchase
+// still prompts for Google sign-in, since Paddle ties the book to an account.
+const SHOW_ACCOUNT = false;
+
+function AuthorBadge() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div className="landing-account-wrap" ref={ref}>
+      <button
+        className="landing-account landing-account-authed"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Stepan Kulunuch"
+        aria-expanded={open}
+      >
+        <img className="landing-account-img" src="/author.jpg" alt="Stepan Kulunuch" />
+      </button>
+      {open && (
+        <div className="landing-account-menu landing-author-card">
+          <span className="landing-account-name">Stepan Kulunuch</span>
+          <ul className="landing-author-creds">
+            <li>Graduado en Psicología por la Universidad Hryhorii Skovoroda</li>
+            <li>International Coaching Federation — Level 3 (ACSTH)</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AccountButton({ authed, avatarUrl, name, onRegister, onOpenProfile }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -808,13 +845,15 @@ export default function Landing() {
             {t('landing.back')}
           </button>
         )}
-        <AccountButton
-          authed={authed}
-          avatarUrl={googleAvatar}
-          name={profile?.name}
-          onRegister={() => setShowRegister(true)}
-          onOpenProfile={() => setShowProfile(true)}
-        />
+        {SHOW_ACCOUNT ? (
+          <AccountButton
+            authed={authed}
+            avatarUrl={googleAvatar}
+            name={profile?.name}
+            onRegister={() => setShowRegister(true)}
+            onOpenProfile={() => setShowProfile(true)}
+          />
+        ) : <AuthorBadge />}
       </header>
 
       {isHome && SHOW_PEOPLE && <PeopleCarousel dir="rtl" speed={isPhone ? 0.7 : 0.3} />}
@@ -860,7 +899,7 @@ export default function Landing() {
         <TestRunner
           test={activeTest}
           onClose={() => setActiveTest(null)}
-          onRegister={authed ? null : () => setShowRegister(true)}
+          onRegister={authed || !SHOW_ACCOUNT ? null : () => setShowRegister(true)}
           onSaveResult={authed ? saveResult : null}
         />
       )}
