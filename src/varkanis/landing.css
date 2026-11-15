@@ -257,7 +257,26 @@
   line-height: 1.45;
   color: var(--muted);
 }
-.landing-author-creds li + li { margin-top: 6px; }
+.landing-author-creds li {
+  position: relative;
+  padding-left: 14px;
+}
+.landing-author-creds li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.landing-author-creds li + li {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+.landing-author-creds li + li::before { top: calc(8px + 0.6em); }
 
 .landing-plan-badge {
   flex-shrink: 0;
