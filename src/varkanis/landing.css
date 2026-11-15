@@ -255,7 +255,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   line-height: 1.45;
-  color: var(--muted);
+  color: var(--ink);
 }
 .landing-author-creds li {
   position: relative;
