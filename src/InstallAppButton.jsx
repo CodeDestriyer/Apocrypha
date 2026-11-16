@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLang } from './i18n.jsx';
+import { useStrings } from './strings.jsx';
 import { useInstall } from './installPrompt.js';
 
 // Visible "Install Apocrypha" control. Renders nothing when the app is already
@@ -10,7 +10,7 @@ import { useInstall } from './installPrompt.js';
 //   'login'    — a full-width secondary button (used on the login screen).
 //   'row'      — a settings-dropdown row (used in the in-app ⚙ menu).
 export default function InstallAppButton({ variant = 'login' }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const { installed, canPrompt, ios, promptInstall } = useInstall();
   const [iosHint, setIosHint] = useState(false);
 

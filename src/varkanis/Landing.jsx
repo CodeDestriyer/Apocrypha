@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import './landing.css';
 import { useProfile } from '../ProfileContext.jsx';
 import { signInWithGoogle, signOut } from '../supabase.js';
@@ -34,21 +34,17 @@ const COURSES = [
   {
     id: 'mentes-bajo-control',
     title: 'Manipulación Social Nivel 1',
-    short: { es: 'Cómo se manipula a las masas y cómo no caer.', en: 'How crowds are manipulated and how not to fall for it.', ru: 'Как манипулируют массами и как не попадаться.' },
+    short: 'Cómo se manipula a las masas y cómo no caer.',
     logo: '/varkanis-libro-mentes-bajo-control.jpg',
     author: 'Varkanis',
     price: { amount: '5,30', currency: '$' },
     // Shown before the buy button: what the money actually gets you.
-    details: {
-      es: ['45 páginas', 'PDF, se lee en tu cuenta', 'Acceso permanente'],
-      en: ['45 pages', 'PDF, read inside your account', 'Permanent access'],
-      ru: ['45 страниц', 'PDF, читается в аккаунте', 'Доступ навсегда'],
-    },
+    details: ['45 páginas', 'PDF, se lee en tu cuenta', 'Acceso permanente'],
   },
 ];
 
 function BuyPanel({ course, authed, onRegister, onOwned }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const [phase, setPhase] = useState('idle'); // 'idle' | 'confirming'
   const [error, setError] = useState('');
 
@@ -131,7 +127,7 @@ function warmReader(productId, owned) {
 }
 
 function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const pagesRef = useRef(null);
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [gate, setGate] = useState(false); // buy gate shown after the preview
@@ -469,17 +465,14 @@ function RegisterModal({ onClose }) {
   );
 }
 
-function tx(obj, lang) {
-  return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
-}
 
 function TestsPage({ onStart }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filtered = q
     ? TESTS.filter((test) => {
-        const hay = `${tx(test.title, lang)} ${tx(test.short, lang)} ${test.author ?? ''}`.toLowerCase();
+        const hay = `${test.title} ${test.short} ${test.author ?? ''}`.toLowerCase();
         return hay.includes(q);
       })
     : TESTS;
@@ -505,7 +498,7 @@ function TestsPage({ onStart }) {
             type="button"
             className="landing-test-search-clear"
             onClick={() => setQuery('')}
-            aria-label={t('cards.close') || 'Close'}
+            aria-label={t('cards.close')}
           >×</button>
         )}
       </div>
@@ -520,11 +513,11 @@ function TestsPage({ onStart }) {
                   <img
                     className="landing-test-logo"
                     src={test.logo}
-                    alt={`${tx(test.title, lang)} — Varkanis, comunidad de psicología y desarrollo personal`}
+                    alt={`${test.title} — Varkanis, comunidad de psicología y desarrollo personal`}
                   />
                 )}
                 <div className="landing-test-meta">
-                  <h3 className="landing-test-title">{tx(test.title, lang)}</h3>
+                  <h3 className="landing-test-title">{test.title}</h3>
                   <div className="landing-test-byline">
                     <span className="landing-test-count">
                       {test.count ?? test.items.length} {t('landing.questions')}
@@ -536,7 +529,7 @@ function TestsPage({ onStart }) {
                 </div>
               </div>
               {test.url ? (
-                <a className="landing-test-go" href={tx(test.url, lang)} target="_blank" rel="noopener">
+                <a className="landing-test-go" href={test.url} target="_blank" rel="noopener">
                   {t('landing.takeTest')}
                 </a>
               ) : (
@@ -553,7 +546,7 @@ function TestsPage({ onStart }) {
 }
 
 function CoursesPage({ authed, onRegister }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const [viewer, setViewer] = useState(null);
   const [owned, setOwned] = useState({});
   const [query, setQuery] = useState('');
@@ -577,7 +570,7 @@ function CoursesPage({ authed, onRegister }) {
   const q = query.trim().toLowerCase();
   const filtered = q
     ? COURSES.filter((course) => {
-        const hay = `${course.title} ${tx(course.short, lang)} ${course.author ?? ''}`.toLowerCase();
+        const hay = `${course.title} ${course.short} ${course.author ?? ''}`.toLowerCase();
         return hay.includes(q);
       })
     : COURSES;
@@ -603,7 +596,7 @@ function CoursesPage({ authed, onRegister }) {
             type="button"
             className="landing-test-search-clear"
             onClick={() => setQuery('')}
-            aria-label={t('cards.close') || 'Close'}
+            aria-label={t('cards.close')}
           >×</button>
         )}
       </div>
@@ -632,7 +625,7 @@ function CoursesPage({ authed, onRegister }) {
             <div className="landing-course-content">
               <div className="landing-test-meta">
                 <h3 className="landing-test-title">{course.title}</h3>
-                <p className="landing-test-short">{tx(course.short, lang)}</p>
+                <p className="landing-test-short">{course.short}</p>
                 {course.author && (
                   <div className="landing-test-byline">
                     <span className="landing-test-author">{course.author}</span>
@@ -648,7 +641,7 @@ function CoursesPage({ authed, onRegister }) {
                 </button>
               </div>
               {course.details && (
-                <p className="landing-course-details">{tx(course.details, lang).join(' · ')}</p>
+                <p className="landing-course-details">{course.details.join(' · ')}</p>
               )}
             </div>
           </li>
@@ -783,7 +776,7 @@ function BookPage({ course, authed, onRegister }) {
 }
 
 export default function Landing() {
-  const { t, setLang } = useLang();
+  const { t } = useStrings();
   const { status, googleAvatar, profile, update } = useProfile();
   const authed = status === 'ready';
   // The landing is a single page, but the catalogue needs a shareable URL —
@@ -818,9 +811,6 @@ export default function Landing() {
   const [activeTest, setActiveTest] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
-  // Public site is Spanish-only.
-  useEffect(() => { setLang('es'); }, [setLang]);
 
   const saveResult = (record) => {
     update((curr) => ({

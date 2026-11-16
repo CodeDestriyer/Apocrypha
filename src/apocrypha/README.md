@@ -33,7 +33,7 @@ which constrains how a section looks or behaves:
 - `noteTree.js` — folder-tree algebra (Reglas only now).
 - `tags.jsx` — hashtag helpers and the chip `TagInput` (also used by Idiomas).
 - `RichEditor.jsx` — the WYSIWYG editor for that format. Its toolbar labels live
-  under `fmt.*` in i18n; each section owns its own label namespace otherwise.
+  under `fmt.*` in strings.jsx; each section owns its own label namespace otherwise.
 
-Shared infrastructure (auth, profile, i18n) lives one level up in `../` and is
+Shared infrastructure (auth, profile, UI strings) lives one level up in `../` and is
 used by both apps.

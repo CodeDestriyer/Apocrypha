@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import SubPage from './SubPage.jsx';
 import WeightRuler from './WeightRuler.jsx';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
@@ -55,7 +55,7 @@ const GEAR_PATH = "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l
 // lives on profile.weight_log (newest first) + profile.weight_goal.
 export default function PesoSection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const log = Array.isArray(profile.weight_log) ? profile.weight_log : [];
   const goal = typeof profile.weight_goal === 'number' ? profile.weight_goal : null;
   const latest = latestEntry(log);

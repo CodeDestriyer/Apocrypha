@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import SubPage from './SubPage.jsx';
 import {
   TASK_TYPES, TYPE_ORDER, DEFAULT_TYPE, typeOf, TaskShape,
@@ -27,7 +27,7 @@ const fmtDate = (iso) => {
 // { id, title, done, type, day, created_at } on profile.tasks.
 export default function TareasSection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const tasks = Array.isArray(profile.tasks) ? profile.tasks : [];
 
   const setTasks = (updater) =>

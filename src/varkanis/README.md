@@ -11,5 +11,5 @@ Modules:
 - `tests/data.js` — test definitions and scoring.
 - `tests/TestRunner.jsx` — the test-taking UI and results.
 
-Shared infrastructure (auth, profile, i18n) lives one level up in `../` and is
+Shared infrastructure (auth, profile, UI strings) lives one level up in `../` and is
 used by both apps.

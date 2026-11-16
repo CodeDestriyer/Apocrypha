@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import SubPage from './SubPage.jsx';
 import RichEditor from './RichEditor.jsx';
 import TagInput from './tags.jsx';
@@ -166,7 +166,7 @@ function NotaCard({ nota, onOpen, onMenu, t }) {
 // notes are no longer read. They stay in the database untouched.
 export default function ConocimientoSection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const notes = profile.notes ?? [];
 
   const setNotes = (updater) =>

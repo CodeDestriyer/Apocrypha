@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 
 // WYSIWYG body editor for a rich-text body. The stored value is the same marker format
 // the read view uses so search, Supabase and renderRuleBody stay untouched —
@@ -741,7 +741,7 @@ function insertColAfter(table, c) {
 }
 
 export default function RuleEditor({ editKey, initialValue, onChange, onSubmit, placeholder }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const ref = useRef(null);
   const [bar, setBar] = useState(null);   // { x, y } floating format toolbar
   const [block, setBlock] = useState(null); // { x, y } block-insert menu

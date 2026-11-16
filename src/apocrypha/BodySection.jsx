@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import SubPage from './SubPage.jsx';
 
 const newId = () =>
@@ -30,7 +30,7 @@ const parseWeight = (raw) => {
 // with the remaining delta from the latest entry shown next to it.
 export default function BodySection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const log = Array.isArray(profile.weight_log) ? profile.weight_log : [];
   const goal = typeof profile.weight_goal === 'number' ? profile.weight_goal : null;
   const [draft, setDraft] = useState('');

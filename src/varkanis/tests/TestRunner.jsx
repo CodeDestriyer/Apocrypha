@@ -1,37 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLang } from '../../i18n.jsx';
+import { useStrings } from '../../strings.jsx';
 import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE5, AGREE3, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge, scoreSilicon } from './data.js';
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5, agree3: AGREE3 };
 
-function tx(obj, lang) {
-  return obj?.[lang] ?? obj?.en ?? obj?.ru ?? '';
-}
 
 // Short one-line summary of a finished test, for the saved history.
-function summarizeResult(test, answers, lang) {
+function summarizeResult(test, answers) {
   if (test.id === ADHD.id) {
     const { pct, band } = scoreAdhd(test, answers);
-    return { score: `${pct}%`, label: tx(test.bands[band], lang) };
+    return { score: `${pct}%`, label: test.bands[band] };
   }
   if (test.id === DARK_TRIAD.id) {
     const { subscales } = scoreDarkTriad(test, answers);
     const order = ['M', 'N', 'P'];
     const top = order.reduce((a, b) => (subscales[b].pct > subscales[a].pct ? b : a), order[0]);
-    return { score: `${subscales[top].sum}/${subscales[top].max}`, label: tx(test.subscales[top], lang) };
+    return { score: `${subscales[top].sum}/${subscales[top].max}`, label: test.subscales[top] };
   }
   if (test.id === ARCHETYPE_TEST.id) {
     const { core } = scoreArchetypes(test, answers);
-    return { score: `${core.sum}/${core.max}`, label: tx(test.archetypes[core.key], lang) };
+    return { score: `${core.sum}/${core.max}`, label: test.archetypes[core.key] };
   }
   if (test.id === PSYCH_AGE.id) {
     const { age, band } = scorePsychAge(test, answers);
-    const yearsWord = { ru: 'лет', en: 'years', es: 'años' };
-    return { score: `${age} ${tx(yearsWord, lang)}`, label: tx(test.bands[band], lang) };
+    const yearsWord = 'años';
+    return { score: `${age} ${yearsWord}`, label: test.bands[band] };
   }
   if (test.id === SILICON_MIND.id) {
     const { pct, band } = scoreSilicon(test, answers);
-    return { score: `${pct}%`, label: tx(test.bands[band], lang) };
+    return { score: `${pct}%`, label: test.bands[band] };
   }
   return { score: '', label: '' };
 }
@@ -56,31 +53,31 @@ function RegisterCta({ onRegister }) {
 }
 
 function AdhdResult({ test, answers, onClose, onRestart }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const { pct, band, unsureHigh, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
   const order = ['I', 'H', 'P'];
   return (
     <div className="test-result">
-      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <h3 className="test-result-title">{test.title}</h3>
       {test.images?.[band] && (
-        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+        <img className="test-result-image" src={test.images[band]} alt={test.bands[band]} />
       )}
       <div className="rosenberg-score">
         <div className="rosenberg-score-num">{pct}<span>%</span></div>
-        <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
+        <div className="rosenberg-score-band">{test.bands[band]}</div>
       </div>
       <div className="big5-bar-track" style={{ marginTop: 12 }}>
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
-      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
-      {unsureHigh && <p className="big5-bar-desc" style={{ marginTop: 6, opacity: 0.7 }}>{tx(test.unsureNote, lang)}</p>}
+      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{test.bandDesc[band]}</p>
+      {unsureHigh && <p className="big5-bar-desc" style={{ marginTop: 6, opacity: 0.7 }}>{test.unsureNote}</p>}
       <div className="big5-bars" style={{ marginTop: 18 }}>
         {order.map((k) => {
           const s = subscales[k];
           return (
             <div key={k} className="big5-bar">
               <div className="big5-bar-head">
-                <span className="big5-bar-name">{tx(test.subscales[k], lang)}</span>
+                <span className="big5-bar-name">{test.subscales[k]}</span>
                 <span className="big5-bar-pct">{s.sum}/{s.max}</span>
               </div>
               <div className="big5-bar-track">
@@ -95,13 +92,13 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
 }
 
 const DT_BAND_LABEL = {
-  low:  { ru: 'Низкий',  en: 'Low',      es: 'Bajo' },
-  mid:  { ru: 'Средний', en: 'Moderate', es: 'Medio' },
-  high: { ru: 'Высокий', en: 'High',     es: 'Alto' },
+  low:  'Bajo',
+  mid:  'Medio',
+  high: 'Alto',
 };
 
 function DarkTriadResult({ test, answers, onClose, onRestart }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const { subscales } = useMemo(() => scoreDarkTriad(test, answers), [test, answers]);
   const order = ['M', 'N', 'P'];
   const dom = order.reduce((a, b) => (subscales[b].sum > subscales[a].sum ? b : a), order[0]);
@@ -110,19 +107,19 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
   const maxSum = Math.max(...sums);
   const balanced = sums.filter((s) => s === maxSum).length >= 2;
   const imgKey = balanced ? 'balanced' : dom;
-  const domLabel = { ru: 'Доминирующая черта', en: 'Dominant trait', es: 'Rasgo dominante' };
+  const domLabel = 'Rasgo dominante';
   return (
     <div className="test-result">
-      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <h3 className="test-result-title">{test.title}</h3>
 
       <div className={`dt-dominant dt-${subscales[dom].band}`}>
-        <span className="dt-dominant-label">{tx(domLabel, lang)}</span>
-        <span className="dt-dominant-name">{tx(test.subscales[dom], lang)}</span>
-        <span className="dt-dominant-tag">{tx(test.subscaleBands[dom][subscales[dom].band], lang)}</span>
+        <span className="dt-dominant-label">{domLabel}</span>
+        <span className="dt-dominant-name">{test.subscales[dom]}</span>
+        <span className="dt-dominant-tag">{test.subscaleBands[dom][subscales[dom].band]}</span>
       </div>
 
       {test.images?.[imgKey] && (
-        <img className="test-result-image" src={test.images[imgKey]} alt={tx(test.title, lang)} />
+        <img className="test-result-image" src={test.images[imgKey]} alt={test.title} />
       )}
 
       <div className="dt-traits">
@@ -131,12 +128,12 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
           return (
             <div key={k} className={`dt-trait dt-${s.band}`}>
               <div className="dt-trait-head">
-                <span className="dt-trait-name">{tx(test.subscales[k], lang)}</span>
-                <span className="dt-trait-level">{tx(DT_BAND_LABEL[s.band], lang)}</span>
+                <span className="dt-trait-name">{test.subscales[k]}</span>
+                <span className="dt-trait-level">{DT_BAND_LABEL[s.band]}</span>
                 <span className="dt-trait-score">{s.sum}<i>/{s.max}</i></span>
               </div>
               <div className="dt-meter"><span style={{ width: `${s.pct}%` }} /></div>
-              <p className="dt-trait-desc">{tx(test.subscaleDesc[k][s.band], lang)}</p>
+              <p className="dt-trait-desc">{test.subscaleDesc[k][s.band]}</p>
             </div>
           );
         })}
@@ -147,24 +144,24 @@ function DarkTriadResult({ test, answers, onClose, onRestart }) {
 }
 
 function ArchetypeResult({ test, answers, onClose, onRestart }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const { ranked, core, shadow } = useMemo(() => scoreArchetypes(test, answers), [test, answers]);
   const rest = ranked.slice(2);
   return (
     <div className="test-result">
-      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <h3 className="test-result-title">{test.title}</h3>
 
       <div className="archetype-duo">
         <div className="archetype-card archetype-core">
-          <span className="archetype-tag">{tx(test.coreLabel, lang)}</span>
-          <h4 className="archetype-name">{tx(test.archetypes[core.key], lang)}</h4>
-          <p className="archetype-desc">{tx(test.descriptions[core.key], lang)}</p>
+          <span className="archetype-tag">{test.coreLabel}</span>
+          <h4 className="archetype-name">{test.archetypes[core.key]}</h4>
+          <p className="archetype-desc">{test.descriptions[core.key]}</p>
           <span className="archetype-score">{core.sum}/{core.max}</span>
         </div>
         <div className="archetype-card archetype-shadow">
-          <span className="archetype-tag">{tx(test.shadowLabel, lang)}</span>
-          <h4 className="archetype-name">{tx(test.archetypes[shadow.key], lang)}</h4>
-          <p className="archetype-desc">{tx(test.descriptions[shadow.key], lang)}</p>
+          <span className="archetype-tag">{test.shadowLabel}</span>
+          <h4 className="archetype-name">{test.archetypes[shadow.key]}</h4>
+          <p className="archetype-desc">{test.descriptions[shadow.key]}</p>
           <span className="archetype-score">{shadow.sum}/{shadow.max}</span>
         </div>
       </div>
@@ -173,7 +170,7 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
         {rest.map((r, i) => (
           <li key={r.key} className="archetype-row">
             <span className="archetype-row-rank">{i + 3}</span>
-            <span className="archetype-row-name">{tx(test.archetypes[r.key], lang)}</span>
+            <span className="archetype-row-name">{test.archetypes[r.key]}</span>
             <span className="archetype-row-bar"><span style={{ width: `${r.pct}%` }} /></span>
             <span className="archetype-row-score">{r.sum}/{r.max}</span>
           </li>
@@ -185,58 +182,57 @@ function ArchetypeResult({ test, answers, onClose, onRestart }) {
 }
 
 function PsychAgeResult({ test, answers, onClose, onRestart }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const { total, min, max, band, age } = useMemo(() => scorePsychAge(test, answers), [test, answers]);
   const pct = Math.round(((total - min) / (max - min)) * 100);
-  const yearsWord = { ru: 'лет', en: 'years', es: 'años' };
-  const caption = { ru: 'Твой психологический возраст', en: 'Your psychological age', es: 'Tu edad psicológica' };
+  const yearsWord = 'años';
+  const caption = 'Tu edad psicológica';
   return (
     <div className="test-result">
-      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <h3 className="test-result-title">{test.title}</h3>
       {test.images?.[band] && (
-        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+        <img className="test-result-image" src={test.images[band]} alt={test.bands[band]} />
       )}
-      <p className="psychage-caption">{tx(caption, lang)}</p>
+      <p className="psychage-caption">{caption}</p>
       <div className="rosenberg-score">
-        <div className="rosenberg-score-num psychage-num">{age}<span>{tx(yearsWord, lang)}</span></div>
-        <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
+        <div className="rosenberg-score-num psychage-num">{age}<span>{yearsWord}</span></div>
+        <div className="rosenberg-score-band">{test.bands[band]}</div>
       </div>
       <div className="big5-bar-track" style={{ marginTop: 12 }}>
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
-      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{test.bandDesc[band]}</p>
     </div>
   );
 }
 
 function SiliconResult({ test, answers, onClose, onRestart }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const { pct, band } = useMemo(() => scoreSilicon(test, answers), [test, answers]);
-  const caption = { ru: 'Нейродивергентная оптимизация', en: 'Neurodivergent optimization', es: 'Optimización neurodivergente' };
+  const caption = 'Optimización neurodivergente';
   return (
     <div className="test-result">
-      <h3 className="test-result-title">{tx(test.title, lang)}</h3>
+      <h3 className="test-result-title">{test.title}</h3>
       {test.images?.[band] && (
-        <img className="test-result-image" src={test.images[band]} alt={tx(test.bands[band], lang)} />
+        <img className="test-result-image" src={test.images[band]} alt={test.bands[band]} />
       )}
-      <p className="psychage-caption">{tx(caption, lang)}</p>
+      <p className="psychage-caption">{caption}</p>
       <div className="rosenberg-score">
         <div className="rosenberg-score-num psychage-num">{pct}<span>%</span></div>
-        <div className="rosenberg-score-band">{tx(test.bands[band], lang)}</div>
+        <div className="rosenberg-score-band">{test.bands[band]}</div>
       </div>
       <div className="big5-bar-track" style={{ marginTop: 12 }}>
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
-      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{tx(test.bandDesc[band], lang)}</p>
+      <p className="big5-bar-desc" style={{ marginTop: 14 }}>{test.bandDesc[band]}</p>
     </div>
   );
 }
 
 export default function TestRunner({ test, onClose, onRegister, onSaveResult }) {
-  const { lang, t } = useLang();
+  const { t } = useStrings();
   const isChoice = test.scale === 'choice';
-  const scaleSet = SCALE_LABELS[test.scale] ?? FREQ5;
-  const labels = scaleSet[lang] ?? scaleSet.en;
+  const labels = SCALE_LABELS[test.scale] ?? FREQ5;
 
   const total = test.items.length;
   const [answers, setAnswers] = useState(() => new Array(total).fill(null));
@@ -268,16 +264,16 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
   useEffect(() => {
     if (!submitted || !onSaveResult || savedRef.current) return;
     savedRef.current = true;
-    const { score, label } = summarizeResult(test, answers, lang);
+    const { score, label } = summarizeResult(test, answers);
     onSaveResult({
       id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       testId: test.id,
-      title: tx(test.title, lang),
+      title: test.title,
       date: new Date().toISOString(),
       score,
       label,
     });
-  }, [submitted, onSaveResult, test, answers, lang]);
+  }, [submitted, onSaveResult, test, answers]);
 
   const progressPct = Math.round(((submitted ? total : index) / total) * 100);
   const complete = answers.every((a) => a != null);
@@ -323,8 +319,8 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
     <div className="test-overlay" role="dialog" aria-modal="true">
       <div className={`test-modal test-modal-card ${submitted ? 'test-modal-result' : ''}`}>
         <header className="test-header">
-          {!submitted && <h2 className="test-title">{tx(test.title, lang)}</h2>}
-          <button className="test-close" onClick={onClose} aria-label={t('test.close') || 'Close'}>×</button>
+          {!submitted && <h2 className="test-title">{test.title}</h2>}
+          <button className="test-close" onClick={onClose} aria-label={t('test.close')}>×</button>
         </header>
 
         {!submitted ? (
@@ -337,7 +333,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
             <div className="qcard-stage">
               <div className={`qcard ${transition ? `qcard-${transition}` : ''}`}>
                 <div className="qcard-num"><span>{String(index + 1).padStart(2, '0')}</span></div>
-                <p className="qcard-question">{tx(item, lang)}</p>
+                <p className="qcard-question">{item.text}</p>
                 <div className="qcard-options">
                   {isChoice
                     ? shuffledOptions[index].map((opt, i) => {
@@ -351,7 +347,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
                             onClick={() => pick(val)}
                           >
                             <span className="qcard-option-dot" />
-                            <span className="qcard-option-label">{tx(opt, lang)}</span>
+                            <span className="qcard-option-label">{opt.text}</span>
                           </button>
                         );
                       })
@@ -380,14 +376,14 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
                 onClick={() => goTo(index - 1, 'back')}
                 disabled={index === 0}
               >
-                {t('test.back') || 'Back'}
+                {t('test.back')}
               </button>
               {complete && (
                 <button
                   className="test-submit qcard-nav-result"
                   onClick={() => setSubmitted(true)}
                 >
-                  {t('test.result') || 'Show result'}
+                  {t('test.result')}
                 </button>
               )}
             </div>
@@ -412,7 +408,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
             <RegisterCta onRegister={onRegister} />
             <div className="test-done-row">
               <button className="test-submit" onClick={onClose}>
-                {t('test.done') || 'Done'}
+                {t('test.done')}
               </button>
             </div>
           </div>

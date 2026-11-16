@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 
 // Geometry for the weight line chart. Works in a 100×100 SVG box (rendered
 // with preserveAspectRatio="none" + non-scaling strokes), so the same paths
@@ -77,7 +77,7 @@ export function WeightSpark({ log, className = '' }) {
 // (Hero cube: pan/zoom in place, double-click to jump to the full chart).
 const DAY = 864e5;
 export function WeightGraph({ log, goal, interactive = true, compact = false, onOpen }) {
-  const { t: tr } = useLang();
+  const { t: tr } = useStrings();
   const ref = useRef(null);
   const menuRef = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });

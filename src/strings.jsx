@@ -1,9 +1,6 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext } from 'react';
 
-// The app ships in Spanish only. `useLang()` still exposes a `lang` value and a
-// no-op `setLang` so the shared Varkanis test/course content (whose strings are
-// keyed by language via `tx(obj, lang)`) keeps resolving to the Spanish field.
-export const LANG = 'es';
+// UI string table. The platform is Spanish-only; there are no other languages.
 
 const DICT = {
   'nav.cards': 'Tarjetas',
@@ -329,30 +326,24 @@ const DICT = {
   'tab.character': 'Héroe',
 };
 
-const LangContext = createContext(null);
+const StringsContext = createContext(null);
 
-export function LangProvider({ children }) {
-  useEffect(() => {
-    document.documentElement.lang = LANG;
-  }, []);
-
+export function StringsProvider({ children }) {
   const t = (key, vars) => {
     const str = DICT[key] ?? key;
     if (!vars) return str;
     return str.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? `{${k}}`));
   };
 
-  // `lang` is fixed and `setLang` is a no-op — the app is Spanish-only, but the
-  // shared Varkanis content still reads `lang` to pick its Spanish strings.
   return (
-    <LangContext.Provider value={{ lang: LANG, setLang: () => {}, t }}>
+    <StringsContext.Provider value={{ t }}>
       {children}
-    </LangContext.Provider>
+    </StringsContext.Provider>
   );
 }
 
-export function useLang() {
-  const ctx = useContext(LangContext);
-  if (!ctx) throw new Error('useLang must be used inside <LangProvider>');
+export function useStrings() {
+  const ctx = useContext(StringsContext);
+  if (!ctx) throw new Error('useStrings must be used inside <StringsProvider>');
   return ctx;
 }

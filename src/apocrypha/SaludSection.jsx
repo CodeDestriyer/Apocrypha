@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import { useProfile } from '../ProfileContext.jsx';
 import PesoSection from './PesoSection.jsx';
 import HabitosSection from './HabitosSection.jsx';
@@ -14,7 +14,7 @@ const _initSub = (() => {
 })();
 
 export default function SaludSection({ rootOnBack }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const { profile } = useProfile();
   const [sub, _setSub] = useState(_initSub);
   const setSub = (v) => {

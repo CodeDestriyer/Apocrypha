@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { signInWithGoogle } from './supabase.js';
-import { useLang } from './i18n.jsx';
+import { useStrings } from './strings.jsx';
 import InstallAppButton from './InstallAppButton.jsx';
 
 export default function LoginScreen() {
-  const { t } = useLang();
+  const { t } = useStrings();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
 

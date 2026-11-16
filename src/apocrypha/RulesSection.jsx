@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import SubPage from './SubPage.jsx';
 import RichEditor from './RichEditor.jsx';
 import { renderBody } from './richText.jsx';
@@ -131,7 +131,7 @@ function GroupVisor({ group, count, empty, collapsed, isDrop, dragging, renaming
 // is expected to stay in step with it.
 export default function RulesSection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const rules = profile.rules ?? [];
   const groups = profile.rule_groups ?? [];
   const layout = profile.rule_layout ?? [];

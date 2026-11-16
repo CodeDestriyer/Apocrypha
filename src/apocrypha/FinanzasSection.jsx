@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import SubPage from './SubPage.jsx';
 
 const newId = () =>
@@ -36,7 +36,7 @@ const EMPTY_DRAFT = { name: '', amount: '' };
 // the user names freely (Efectivo, Revolut, N26…) holding a current EUR amount.
 export default function FinanzasSection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const finances = Array.isArray(profile.finances) ? profile.finances : [];
 
   const [editing, setEditing] = useState(null); // 'new' | id | null

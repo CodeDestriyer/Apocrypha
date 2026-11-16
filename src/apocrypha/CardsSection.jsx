@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import { uploadCardImage, deleteCardImage } from '../supabase.js';
 import SubPage from './SubPage.jsx';
 import TagInput from './tags.jsx';
@@ -80,7 +80,7 @@ const _saveSS = () => {
 
 export default function CardsSection({ rootOnBack }) {
   const { profile, update } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const decks = profile.decks ?? [];
 
   const [openDeckId, _setOpenDeckId] = useState(_nav.openDeckId);

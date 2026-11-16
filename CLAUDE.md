@@ -8,6 +8,13 @@ hints, and captions that state the obvious. An empty list should just be
 empty. Keep code comments lean too — comment the non-obvious *why*, not
 every line. Prefer minimal, clean UI over explanatory text.
 
+## Language
+
+The platform is Spanish-only. All user-facing text is written directly in
+Spanish — no translations, no `ru`/`en` fields, no language switching. UI
+labels live in `src/strings.jsx` (`useStrings().t`); test content lives in
+`src/varkanis/tests/data.js` as plain strings. Don't add other languages.
+
 ## Git push setup (important — read before pushing)
 
 The user has two GitHub accounts on this machine:

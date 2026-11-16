@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import CharacterPage from './apocrypha/CharacterPage.jsx';
 import Landing from './varkanis/Landing.jsx';
 import { ProfileProvider, useProfile } from './ProfileContext.jsx';
-import { LangProvider, useLang } from './i18n.jsx';
+import { StringsProvider, useStrings } from './strings.jsx';
 import { signOut } from './supabase.js';
 import IdiomasSection from './apocrypha/IdiomasSection.jsx';
 import CardsSection from './apocrypha/CardsSection.jsx';
@@ -239,7 +239,7 @@ function Shell() {
 }
 
 function DesktopSidebar({ view, setView }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   // Accordion: only one parent group expanded at a time.
   const [openGroup, setOpenGroup] = useState(
     view === 'cards' || view === 'reglas' ? 'idiomas'
@@ -374,10 +374,10 @@ function DesktopSidebar({ view, setView }) {
 
 export default function App() {
   return (
-    <LangProvider>
+    <StringsProvider>
       <ProfileProvider>
         <Shell />
       </ProfileProvider>
-    </LangProvider>
+    </StringsProvider>
   );
 }

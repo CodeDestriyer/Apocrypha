@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../ProfileContext.jsx';
-import { useLang } from '../i18n.jsx';
+import { useStrings } from '../strings.jsx';
 import { signOut } from '../supabase.js';
 import InstallAppButton from '../InstallAppButton.jsx';
 import { WeightGraph, latestEntry } from './weightChart.jsx';
@@ -81,7 +81,7 @@ function useModulePrefs() {
 }
 
 function SettingsMenu({ setEditing, setEditingInfo }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -138,7 +138,7 @@ function SettingsMenu({ setEditing, setEditingInfo }) {
 }
 
 function NavGrid({ profile, onNavigate, prefs, setPrefs, editing, setEditing }) {
-  const { t } = useLang();
+  const { t } = useStrings();
   const gridRef = useRef(null);
   const dragState = useRef(null);
   const [dragId, setDragId] = useState(null);
@@ -359,7 +359,7 @@ function HeroCubes({ t, onNavigate, log, tasks, onToggleTask, onMissTask }) {
 
 export default function CharacterPage({ onNavigate, hideNav = false, showNav = true, extra = null }) {
   const { profile, update, googleAvatar } = useProfile();
-  const { t } = useLang();
+  const { t } = useStrings();
   const [prefs, setPrefs] = useModulePrefs();
   const [editing, setEditing] = useState(false);
   const [editingInfo, setEditingInfo] = useState(false);
