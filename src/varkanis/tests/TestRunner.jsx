@@ -52,9 +52,26 @@ function RegisterCta({ onRegister }) {
   );
 }
 
+function UpsellCard({ product }) {
+  return (
+    <div className="test-upsell">
+      {product.cover
+        ? <img className="test-upsell-cover" src={product.cover} alt={product.title} />
+        : <div className="test-upsell-cover test-upsell-cover--empty">Aquí irá la foto</div>}
+      <div className="test-upsell-body">
+        <strong className="test-upsell-title">{product.title}</strong>
+        <span className="test-upsell-short">{product.short}</span>
+        <button className="promo-cta-btn test-upsell-btn" type="button" disabled>
+          {product.price} · Próximamente
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdhdResult({ test, answers, onClose, onRestart }) {
   const { t } = useStrings();
-  const { pct, band, unsureHigh, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
+  const { pct, band, subscales } = useMemo(() => scoreAdhd(test, answers), [test, answers]);
   const order = ['I', 'H', 'P'];
   return (
     <div className="test-result">
@@ -70,7 +87,6 @@ function AdhdResult({ test, answers, onClose, onRestart }) {
         <div className="big5-bar-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="big5-bar-desc" style={{ marginTop: 14 }}>{test.bandDesc[band]}</p>
-      {unsureHigh && <p className="big5-bar-desc" style={{ marginTop: 6, opacity: 0.7 }}>{test.unsureNote}</p>}
       <div className="big5-bars" style={{ marginTop: 18 }}>
         {order.map((k) => {
           const s = subscales[k];
@@ -314,6 +330,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
   };
 
   const item = test.items[index];
+  const upsell = submitted && test.upsell?.bands.includes(scoreAdhd(test, answers).band) ? test.upsell : null;
 
   return (
     <div className="test-overlay" role="dialog" aria-modal="true">
@@ -406,11 +423,15 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
               <SiliconResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
             )}
             <RegisterCta onRegister={onRegister} />
-            <div className="test-done-row">
-              <button className="test-submit" onClick={onClose}>
-                {t('test.done')}
-              </button>
-            </div>
+            {upsell ? (
+              <UpsellCard product={upsell} />
+            ) : (
+              <div className="test-done-row">
+                <button className="test-submit" onClick={onClose}>
+                  {t('test.done')}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

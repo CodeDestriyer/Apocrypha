@@ -61,8 +61,14 @@ export const ADHD = {
     mid: 'Hay señales de falta de atención o impulsividad, posiblemente vinculadas al estrés o al cansancio.',
     high: 'Síntomas marcados. Conviene consultar a un especialista.',
   },
-  // Shown when more than UNSURE_LIMIT answers are "don't know".
-  unsureNote: 'Muchas respuestas «no lo sé»: el resultado es impreciso.',
+  // Product card shown instead of the "Listo" button on these bands.
+  upsell: {
+    bands: ['mid', 'high'],
+    title: 'Atención Bajo Control',
+    short: 'Mini-curso: técnicas concretas para enfocar la atención, organizarte y dejar de posponer.',
+    price: '$3',
+    cover: null, // TODO: cover image
+  },
 };
 
 // Dark Triad self-report. 18 items, 5-point agree-disagree scale (0..4),
@@ -769,7 +775,6 @@ export function scoreDarkTriad(test, answers) {
 }
 
 const ADHD_POINTS = { 1: 2, 2: 1, 3: 0 }; // agree / don't know / disagree
-const ADHD_UNSURE_LIMIT = 5;
 
 // ASRS-style: high = agree on ≥4 of 6 core items; mid = 2-3 core agrees
 // or weighted total >50%; low otherwise. Subscales are unweighted, display only.
@@ -779,7 +784,6 @@ export function scoreAdhd(test, answers) {
   let total = 0;
   let max = 0;
   let coreAgree = 0;
-  let unsure = 0;
   test.items.forEach((item, i) => {
     const w = item.core ? 2 : 1;
     max += 2 * w;
@@ -790,7 +794,6 @@ export function scoreAdhd(test, answers) {
     counts[item.subscale] += 1;
     total += pts * w;
     if (raw === 1 && item.core) coreAgree += 1;
-    if (raw === 2) unsure += 1;
   });
   const subscales = Object.fromEntries(Object.entries(sums).map(([k, s]) => {
     const m = (counts[k] || 1) * 2;
@@ -800,5 +803,5 @@ export function scoreAdhd(test, answers) {
   let band = 'low';
   if (coreAgree >= 4) band = 'high';
   else if (coreAgree >= 2 || pct > 50) band = 'mid';
-  return { total, max, pct, band, coreAgree, unsure, unsureHigh: unsure > ADHD_UNSURE_LIMIT, subscales };
+  return { total, max, pct, band, coreAgree, subscales };
 }
