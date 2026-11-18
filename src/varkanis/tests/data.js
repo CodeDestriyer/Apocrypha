@@ -67,7 +67,7 @@ export const ADHD = {
     title: 'Atención Bajo Control',
     short: 'Mini-curso: técnicas concretas para enfocar la atención, organizarte y dejar de posponer.',
     price: '$3',
-    cover: null, // TODO: cover image
+    cover: '/Atencion-bajo-control-logo.webp',
   },
 };
 

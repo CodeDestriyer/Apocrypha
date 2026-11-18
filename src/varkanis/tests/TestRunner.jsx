@@ -55,9 +55,7 @@ function RegisterCta({ onRegister }) {
 function UpsellCard({ product }) {
   return (
     <div className="test-upsell">
-      {product.cover
-        ? <img className="test-upsell-cover" src={product.cover} alt={product.title} />
-        : <div className="test-upsell-cover test-upsell-cover--empty">Aquí irá la foto</div>}
+      <img className="test-upsell-cover" src={product.cover} alt={product.title} />
       <div className="test-upsell-body">
         <strong className="test-upsell-title">{product.title}</strong>
         <span className="test-upsell-short">{product.short}</span>
