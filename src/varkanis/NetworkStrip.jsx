@@ -15,7 +15,7 @@ const DAMP = 0.86;
 const PULSE_HOPS = 3;
 const PULSE_STEP = 140; // ms between hops
 const PULSE_LIFE = 1100;
-const WOBBLE = 3.6;     // idle drift, px
+const WOBBLE = 5;       // idle drift, px
 // Until the first grab the brain tugs one of its own dots now and then,
 // so it reads as something you can touch rather than a picture.
 const POKE_FIRST = 1200;
