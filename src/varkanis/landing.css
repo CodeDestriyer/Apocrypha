@@ -455,6 +455,7 @@
 }
 
 .landing-test-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -465,6 +466,12 @@
   transition: background 0.18s ease, border-color 0.18s ease;
 }
 .landing-test-card:hover { background: #fafafa; border-top-color: var(--accent); }
+.landing-test-star {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: var(--accent);
+}
 
 .landing-test-body {
   display: flex;

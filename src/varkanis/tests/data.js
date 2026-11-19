@@ -10,6 +10,7 @@ export const AGREE5 = ['Totalmente en desacuerdo', 'En desacuerdo', 'Neutral', '
 
 export const ADHD = {
   id: 'adhd',
+  featured: true,
   scale: 'agree3',
   max: 3,
   logo: '/fghd-logo.jpg',

@@ -508,6 +508,11 @@ function TestsPage({ onStart }) {
         <ul className="landing-test-list">
           {filtered.map((test) => (
             <li key={test.id} className="landing-test-card">
+              {test.featured && (
+                <svg className="landing-test-star" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z" fill="currentColor" />
+                </svg>
+              )}
               <div className="landing-test-body">
                 {test.logo && (
                   <img
