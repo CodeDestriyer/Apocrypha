@@ -15,7 +15,10 @@ const DAMP = 0.86;
 const PULSE_HOPS = 3;
 const PULSE_STEP = 140; // ms between hops
 const PULSE_LIFE = 1100;
-const WOBBLE = 5;       // idle drift, px
+const WOBBLE = 3.6;     // idle drift, px
+// Random dots twitch on their own all the time, so the brain looks alive.
+const TWITCH_EVERY = [500, 1300];
+const TWITCH_KICK = 3;
 // Until the first grab the brain tugs one of its own dots now and then,
 // so it reads as something you can touch rather than a picture.
 const POKE_FIRST = 1200;
@@ -153,6 +156,7 @@ export default function NetworkStrip() {
     let visible = true;
     let touched = false;
     let nextPoke = performance.now() + POKE_FIRST;
+    let nextTwitch = performance.now() + TWITCH_EVERY[0];
 
     const resize = () => {
       const r = wrap.getBoundingClientRect();
@@ -244,9 +248,9 @@ export default function NetworkStrip() {
       });
     };
 
-    const poke = (now) => {
+    const kick = (kickPx) => {
       const { nodes } = net;
-      if (!nodes.length) return;
+      if (!nodes.length) return -1;
       // Prefer dots away from the masked edges.
       let i;
       for (let tries = 0; tries < 10; tries++) {
@@ -254,15 +258,20 @@ export default function NetworkStrip() {
         if (nodes[i].hx > w * 0.2 && nodes[i].hx < w * 0.8) break;
       }
       const a = Math.random() * Math.PI * 2;
-      nodes[i].vx += Math.cos(a) * POKE_KICK;
-      nodes[i].vy += Math.sin(a) * POKE_KICK;
-      pulse(i, now);
+      nodes[i].vx += Math.cos(a) * kickPx;
+      nodes[i].vy += Math.sin(a) * kickPx;
+      return i;
     };
 
     const frame = (now) => {
       if (!still && !touched && !drag && now >= nextPoke) {
-        poke(now);
+        const i = kick(POKE_KICK);
+        if (i >= 0) pulse(i, now);
         nextPoke = now + POKE_EVERY[0] + Math.random() * (POKE_EVERY[1] - POKE_EVERY[0]);
+      }
+      if (!still && now >= nextTwitch) {
+        kick(TWITCH_KICK);
+        nextTwitch = now + TWITCH_EVERY[0] + Math.random() * (TWITCH_EVERY[1] - TWITCH_EVERY[0]);
       }
       step(now);
       draw(now);
