@@ -15,7 +15,6 @@ const DAMP = 0.86;
 const PULSE_HOPS = 3;
 const PULSE_STEP = 140; // ms between hops
 const PULSE_LIFE = 1100;
-const WOBBLE = 3.6;     // idle drift, px
 // Random dots twitch on their own all the time, so the brain looks alive.
 const TWITCH_EVERY = [500, 1300];
 const TWITCH_KICK = 3;
@@ -71,8 +70,6 @@ function build(w, h, svg) {
   const add = (x, y) => {
     nodes.push({
       x, y, vx: 0, vy: 0, hx: x, hy: y,
-      // Mostly position-driven so the drift rolls across the brain as a wave.
-      phase: x * 0.035 + Math.random() * 1.4,
       pulseAt: -1, pulseHop: 0,
       adj: [],
     });
@@ -194,7 +191,7 @@ export default function NetworkStrip() {
       return t >= 1 ? 0 : (1 - t) * (1 - n.pulseHop / (PULSE_HOPS + 1));
     };
 
-    const step = (now) => {
+    const step = () => {
       const { nodes, edges } = net;
       for (const e of edges) {
         const a = nodes[e.a];
@@ -206,17 +203,13 @@ export default function NetworkStrip() {
         a.vx += dx * f; a.vy += dy * f;
         b.vx -= dx * f; b.vy -= dy * f;
       }
-      const t = now / 1000;
       nodes.forEach((n, i) => {
         if (drag && drag.i === i) {
           n.x = drag.x; n.y = drag.y; n.vx = 0; n.vy = 0;
           return;
         }
-        const wob = still ? 0 : WOBBLE;
-        const tx = n.hx + Math.sin(t * 0.7 + n.phase) * wob;
-        const ty = n.hy + Math.cos(t * 0.9 + n.phase) * wob;
-        n.vx = (n.vx + (tx - n.x) * HOME_K) * DAMP;
-        n.vy = (n.vy + (ty - n.y) * HOME_K) * DAMP;
+        n.vx = (n.vx + (n.hx - n.x) * HOME_K) * DAMP;
+        n.vy = (n.vy + (n.hy - n.y) * HOME_K) * DAMP;
         n.x += n.vx;
         n.y += n.vy;
       });
@@ -273,7 +266,7 @@ export default function NetworkStrip() {
         kick(TWITCH_KICK);
         nextTwitch = now + TWITCH_EVERY[0] + Math.random() * (TWITCH_EVERY[1] - TWITCH_EVERY[0]);
       }
-      step(now);
+      step();
       draw(now);
       raf = visible ? requestAnimationFrame(frame) : 0;
     };
