@@ -15,6 +15,12 @@ const DAMP = 0.86;
 const PULSE_HOPS = 3;
 const PULSE_STEP = 140; // ms between hops
 const PULSE_LIFE = 1100;
+const WOBBLE = 3.6;     // idle drift, px
+// Until the first grab the brain tugs one of its own dots now and then,
+// so it reads as something you can touch rather than a picture.
+const POKE_FIRST = 1200;
+const POKE_EVERY = [3200, 5200];
+const POKE_KICK = 4.5;
 
 function rgb(css) {
   const m = css.trim().match(/^#([0-9a-f]{6})$/i);
@@ -62,7 +68,8 @@ function build(w, h, svg) {
   const add = (x, y) => {
     nodes.push({
       x, y, vx: 0, vy: 0, hx: x, hy: y,
-      phase: Math.random() * Math.PI * 2,
+      // Mostly position-driven so the drift rolls across the brain as a wave.
+      phase: x * 0.035 + Math.random() * 1.4,
       pulseAt: -1, pulseHop: 0,
       adj: [],
     });
@@ -144,6 +151,8 @@ export default function NetworkStrip() {
     let drag = null; // { i, x, y, id }
     let raf = 0;
     let visible = true;
+    let touched = false;
+    let nextPoke = performance.now() + POKE_FIRST;
 
     const resize = () => {
       const r = wrap.getBoundingClientRect();
@@ -199,7 +208,7 @@ export default function NetworkStrip() {
           n.x = drag.x; n.y = drag.y; n.vx = 0; n.vy = 0;
           return;
         }
-        const wob = still ? 0 : 2.2;
+        const wob = still ? 0 : WOBBLE;
         const tx = n.hx + Math.sin(t * 0.7 + n.phase) * wob;
         const ty = n.hy + Math.cos(t * 0.9 + n.phase) * wob;
         n.vx = (n.vx + (tx - n.x) * HOME_K) * DAMP;
@@ -235,7 +244,26 @@ export default function NetworkStrip() {
       });
     };
 
+    const poke = (now) => {
+      const { nodes } = net;
+      if (!nodes.length) return;
+      // Prefer dots away from the masked edges.
+      let i;
+      for (let tries = 0; tries < 10; tries++) {
+        i = Math.floor(Math.random() * nodes.length);
+        if (nodes[i].hx > w * 0.2 && nodes[i].hx < w * 0.8) break;
+      }
+      const a = Math.random() * Math.PI * 2;
+      nodes[i].vx += Math.cos(a) * POKE_KICK;
+      nodes[i].vy += Math.sin(a) * POKE_KICK;
+      pulse(i, now);
+    };
+
     const frame = (now) => {
+      if (!still && !touched && !drag && now >= nextPoke) {
+        poke(now);
+        nextPoke = now + POKE_EVERY[0] + Math.random() * (POKE_EVERY[1] - POKE_EVERY[0]);
+      }
       step(now);
       draw(now);
       raf = visible ? requestAnimationFrame(frame) : 0;
@@ -260,6 +288,7 @@ export default function NetworkStrip() {
       const i = hit(x, y);
       if (i < 0) return;
       drag = { i, x, y, id: e.pointerId };
+      touched = true;
       canvas.setPointerCapture(e.pointerId);
       canvas.classList.add('is-grabbing');
       pulse(i, performance.now());
