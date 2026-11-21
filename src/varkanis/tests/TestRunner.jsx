@@ -7,22 +7,28 @@ const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5, agree3: AGREE3 };
 const CALC_MIN_MS = 850;
 const CALC_MAX_MS = 2500;
 
-// Ticks random digits, easing out, until `done`; then lands on 100.
-function CalcCounter({ done }) {
+// Counts answers 1..total with ease-out, holding one short of the end until
+// `done` so the last tick coincides with the reveal.
+function CalcCounter({ total, done }) {
   const [n, setN] = useState(0);
   useEffect(() => {
-    if (done) return setN(100);
-    let delay = 40;
-    let id;
-    const tick = () => {
-      setN(Math.floor(Math.random() * 100));
-      delay = Math.min(delay * 1.08, 140);
-      id = setTimeout(tick, delay);
-    };
-    tick();
-    return () => clearTimeout(id);
-  }, [done]);
-  return <span className="test-calc-num">{String(n).padStart(2, '0')}</span>;
+    // Scaled so tick total-1 lands just before CALC_MIN_MS.
+    const span = (CALC_MIN_MS - 70) / (1 - Math.sqrt(1 / total));
+    const ids = [];
+    for (let i = 1; i < total; i++) {
+      const at = span * (1 - Math.sqrt(1 - i / total));
+      ids.push(setTimeout(() => setN((v) => Math.max(v, i)), at));
+    }
+    return () => ids.forEach(clearTimeout);
+  }, [total]);
+  useEffect(() => { if (done) setN(total); }, [done, total]);
+  const w = String(total).length;
+  return (
+    <span className="test-calc-num">
+      {String(n).padStart(w, '0')}
+      <span className="test-calc-total">/{total}</span>
+    </span>
+  );
 }
 
 
@@ -459,7 +465,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
           </>
         ) : !revealed ? (
           <div className={`test-calc ${calcDone ? 'test-calc--done' : ''}`} aria-live="polite">
-            <CalcCounter done={calcDone} />
+            <CalcCounter total={total} done={calcDone} />
             <span className="test-calc-label">{t('test.calculating')}</span>
           </div>
         ) : (

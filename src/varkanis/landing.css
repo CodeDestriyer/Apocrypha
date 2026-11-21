@@ -1016,6 +1016,13 @@
   color: var(--ink);
 }
 .test-calc--done .test-calc-num { color: var(--accent); }
+.test-calc-total {
+  margin-left: 4px;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--faint);
+}
 .test-calc-label {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 11px;
