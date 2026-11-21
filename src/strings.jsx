@@ -315,6 +315,7 @@ const DICT = {
   'landing.questions': 'preguntas',
   'test.close': 'Cerrar',
   'test.result': 'Mostrar resultado',
+  'test.calculating': 'calculando',
   'test.answerAll': 'Responde todas',
   'test.review': 'Revisar respuestas',
   'test.done': 'Listo',

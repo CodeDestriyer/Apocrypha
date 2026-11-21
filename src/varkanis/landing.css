@@ -994,7 +994,38 @@
 /* ── Results ───────────────────────────────────────────────── */
 
 .test-modal-result .test-header { justify-content: flex-end; margin-bottom: 4px; }
-.test-result-panel { display: flex; flex-direction: column; }
+.test-result-panel { display: flex; flex-direction: column; animation: test-result-in 320ms ease-out; }
+@keyframes test-result-in { from { opacity: 0; transform: translateY(6px); } }
+
+.test-calc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 260px;
+  transition: opacity 200ms ease;
+}
+.test-calc-num {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 72px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+.test-calc--done .test-calc-num { color: var(--accent); }
+.test-calc-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+@media (prefers-reduced-motion: reduce) {
+  .test-result-panel { animation: none; }
+}
 .test-result { display: flex; flex-direction: column; }
 .test-result-title {
   margin: 0 0 20px;

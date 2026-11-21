@@ -4,6 +4,27 @@ import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5, agree3: AGREE3 };
 
+const CALC_MIN_MS = 850;
+const CALC_MAX_MS = 2500;
+
+// Ticks random digits, easing out, until `done`; then lands on 100.
+function CalcCounter({ done }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (done) return setN(100);
+    let delay = 40;
+    let id;
+    const tick = () => {
+      setN(Math.floor(Math.random() * 100));
+      delay = Math.min(delay * 1.08, 140);
+      id = setTimeout(tick, delay);
+    };
+    tick();
+    return () => clearTimeout(id);
+  }, [done]);
+  return <span className="test-calc-num">{String(n).padStart(2, '0')}</span>;
+}
+
 
 // Short one-line summary of a finished test, for the saved history.
 function summarizeResult(test, answers) {
@@ -252,6 +273,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
   const [answers, setAnswers] = useState(() => new Array(total).fill(null));
   const [index, setIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [calcDone, setCalcDone] = useState(false);
   const [transition, setTransition] = useState(null); // 'out-left' | 'in-right' | null
   const [shuffleSeed, setShuffleSeed] = useState(0);
   const advanceTimer = useRef(null);
@@ -273,6 +295,38 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
   }, [test, isChoice, shuffleSeed]);
 
   useEffect(() => () => clearTimeout(advanceTimer.current), []);
+
+  // Fetch + decode every outcome image while the user answers, so the result
+  // renders with its image already sized instead of shifting the text down.
+  const imagesReady = useMemo(() => {
+    const srcs = Object.values(test.images ?? {});
+    return Promise.all(srcs.map((src) => {
+      const img = new Image();
+      img.src = src;
+      return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+    }));
+  }, [test]);
+
+  useEffect(() => {
+    if (!submitted) return;
+    setCalcDone(false);
+    let alive = true;
+    const minWait = new Promise((r) => setTimeout(r, CALC_MIN_MS));
+    const cap = new Promise((r) => setTimeout(r, CALC_MAX_MS));
+    Promise.race([Promise.all([minWait, imagesReady]), cap]).then(() => {
+      if (!alive) return;
+      setCalcDone(true);
+    });
+    return () => { alive = false; };
+  }, [submitted, imagesReady]);
+
+  // Counter lands on its final value before the result replaces it.
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (!calcDone) return setRevealed(false);
+    const id = setTimeout(() => setRevealed(true), 220);
+    return () => clearTimeout(id);
+  }, [calcDone]);
 
   // Persist the finished test to the logged-in user's history (once).
   useEffect(() => {
@@ -403,6 +457,11 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
               )}
             </div>
           </>
+        ) : !revealed ? (
+          <div className={`test-calc ${calcDone ? 'test-calc--done' : ''}`} aria-live="polite">
+            <CalcCounter done={calcDone} />
+            <span className="test-calc-label">{t('test.calculating')}</span>
+          </div>
         ) : (
           <div className="test-result-panel">
             {test.id === ADHD.id && (
