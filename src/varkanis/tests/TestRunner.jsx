@@ -81,16 +81,19 @@ function RegisterCta({ onRegister }) {
 
 function UpsellCard({ product }) {
   return (
-    <div className="test-upsell">
-      <img className="test-upsell-cover" src={product.cover} alt={product.title} />
-      <div className="test-upsell-body">
-        <strong className="test-upsell-title">{product.title}</strong>
-        <span className="test-upsell-short">{product.short}</span>
-        <button className="promo-cta-btn test-upsell-btn" type="button" disabled>
-          {product.price} · Próximamente
-        </button>
+    <section className="test-upsell">
+      <span className="test-upsell-kicker">Curso recomendado</span>
+      <div className="test-upsell-row">
+        <img className="test-upsell-cover" src={product.cover} alt={product.title} />
+        <div className="test-upsell-body">
+          <strong className="test-upsell-title">{product.title}</strong>
+          <span className="test-upsell-short">{product.short}</span>
+          <button className="promo-cta-btn test-upsell-btn" type="button" disabled>
+            {product.price} · Próximamente
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -392,111 +395,112 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
 
   return (
     <div className="test-overlay" role="dialog" aria-modal="true">
-      <div className={`test-modal test-modal-card ${submitted ? 'test-modal-result' : ''}`}>
-        <header className="test-header">
-          {!submitted && <h2 className="test-title">{test.title}</h2>}
-          <button className="test-close" onClick={onClose} aria-label={t('test.close')}>×</button>
-        </header>
+      <div className="test-stack">
+        <div className={`test-modal test-modal-card ${submitted ? 'test-modal-result' : ''}`}>
+          <header className="test-header">
+            {!submitted && <h2 className="test-title">{test.title}</h2>}
+            <button className="test-close" onClick={onClose} aria-label={t('test.close')}>×</button>
+          </header>
 
-        {!submitted ? (
-          <>
-            <div className="test-progress">
-              <div className="test-progress-bar"><div style={{ width: `${progressPct}%` }} /></div>
-              <span>{index + 1} / {total}</span>
-            </div>
+          {!submitted ? (
+            <>
+              <div className="test-progress">
+                <div className="test-progress-bar"><div style={{ width: `${progressPct}%` }} /></div>
+                <span>{index + 1} / {total}</span>
+              </div>
 
-            <div className="qcard-stage">
-              <div className={`qcard ${transition ? `qcard-${transition}` : ''}`}>
-                <div className="qcard-num"><span>{String(index + 1).padStart(2, '0')}</span></div>
-                <p className="qcard-question">{item.text}</p>
-                <div className="qcard-options">
-                  {isChoice
-                    ? shuffledOptions[index].map((opt, i) => {
-                        const val = opt.points;
-                        const active = answers[index] === val;
-                        return (
-                          <button
-                            key={i}
-                            type="button"
-                            className={`qcard-option qcard-option--choice opt-${i} ${active ? 'active' : ''}`}
-                            onClick={() => pick(val)}
-                          >
-                            <span className="qcard-option-dot" />
-                            <span className="qcard-option-label">{opt.text}</span>
-                          </button>
-                        );
-                      })
-                    : labels.map((label, i) => {
-                        const val = i + 1;
-                        const active = answers[index] === val;
-                        return (
-                          <button
-                            key={val}
-                            type="button"
-                            className={`qcard-option opt-${i} ${active ? 'active' : ''}`}
-                            onClick={() => pick(val)}
-                          >
-                            <span className="qcard-option-dot" />
-                            <span className="qcard-option-label">{label}</span>
-                          </button>
-                        );
-                      })}
+              <div className="qcard-stage">
+                <div className={`qcard ${transition ? `qcard-${transition}` : ''}`}>
+                  <div className="qcard-num"><span>{String(index + 1).padStart(2, '0')}</span></div>
+                  <p className="qcard-question">{item.text}</p>
+                  <div className="qcard-options">
+                    {isChoice
+                      ? shuffledOptions[index].map((opt, i) => {
+                          const val = opt.points;
+                          const active = answers[index] === val;
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              className={`qcard-option qcard-option--choice opt-${i} ${active ? 'active' : ''}`}
+                              onClick={() => pick(val)}
+                            >
+                              <span className="qcard-option-dot" />
+                              <span className="qcard-option-label">{opt.text}</span>
+                            </button>
+                          );
+                        })
+                      : labels.map((label, i) => {
+                          const val = i + 1;
+                          const active = answers[index] === val;
+                          return (
+                            <button
+                              key={val}
+                              type="button"
+                              className={`qcard-option opt-${i} ${active ? 'active' : ''}`}
+                              onClick={() => pick(val)}
+                            >
+                              <span className="qcard-option-dot" />
+                              <span className="qcard-option-label">{label}</span>
+                            </button>
+                          );
+                        })}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="qcard-nav">
-              <button
-                className="qcard-nav-btn"
-                onClick={() => goTo(index - 1, 'back')}
-                disabled={index === 0}
-              >
-                {t('test.back')}
-              </button>
-              {complete && (
+              <div className="qcard-nav">
                 <button
-                  className="test-submit qcard-nav-result"
-                  onClick={() => setSubmitted(true)}
+                  className="qcard-nav-btn"
+                  onClick={() => goTo(index - 1, 'back')}
+                  disabled={index === 0}
                 >
-                  {t('test.result')}
+                  {t('test.back')}
                 </button>
+                {complete && (
+                  <button
+                    className="test-submit qcard-nav-result"
+                    onClick={() => setSubmitted(true)}
+                  >
+                    {t('test.result')}
+                  </button>
+                )}
+              </div>
+            </>
+          ) : !revealed ? (
+            <div className={`test-calc ${calcDone ? 'test-calc--done' : ''}`} aria-live="polite">
+              <CalcCounter total={total} done={calcDone} />
+              <span className="test-calc-label">{t('test.calculating')}</span>
+            </div>
+          ) : (
+            <div className="test-result-panel">
+              {test.id === ADHD.id && (
+                <AdhdResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+              )}
+              {test.id === DARK_TRIAD.id && (
+                <DarkTriadResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+              )}
+              {test.id === ARCHETYPE_TEST.id && (
+                <ArchetypeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+              )}
+              {test.id === PSYCH_AGE.id && (
+                <PsychAgeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+              )}
+              {test.id === SILICON_MIND.id && (
+                <SiliconResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
+              )}
+              <RegisterCta onRegister={onRegister} />
+              {!upsell && (
+                <div className="test-done-row">
+                  <button className="test-submit" onClick={onClose}>
+                    {t('test.done')}
+                  </button>
+                </div>
               )}
             </div>
-          </>
-        ) : !revealed ? (
-          <div className={`test-calc ${calcDone ? 'test-calc--done' : ''}`} aria-live="polite">
-            <CalcCounter total={total} done={calcDone} />
-            <span className="test-calc-label">{t('test.calculating')}</span>
-          </div>
-        ) : (
-          <div className="test-result-panel">
-            {test.id === ADHD.id && (
-              <AdhdResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
-            )}
-            {test.id === DARK_TRIAD.id && (
-              <DarkTriadResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
-            )}
-            {test.id === ARCHETYPE_TEST.id && (
-              <ArchetypeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
-            )}
-            {test.id === PSYCH_AGE.id && (
-              <PsychAgeResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
-            )}
-            {test.id === SILICON_MIND.id && (
-              <SiliconResult test={test} answers={answers} onClose={onClose} onRestart={restart} />
-            )}
-            <RegisterCta onRegister={onRegister} />
-            {upsell ? (
-              <UpsellCard product={upsell} />
-            ) : (
-              <div className="test-done-row">
-                <button className="test-submit" onClick={onClose}>
-                  {t('test.done')}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
+        {revealed && upsell && <UpsellCard product={upsell} />}
       </div>
     </div>
   );

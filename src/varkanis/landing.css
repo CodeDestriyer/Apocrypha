@@ -825,11 +825,18 @@
   backdrop-filter: blur(14px) saturate(120%);
   -webkit-backdrop-filter: blur(14px) saturate(120%);
 }
+.test-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 640px;
+  margin: auto 0;
+}
 .test-modal,
 .test-modal-card {
   width: 100%;
   max-width: 640px;
-  margin: auto 0;
   padding: 22px 24px 26px;
   background: var(--paper);
   border: 1px solid var(--ink);
@@ -1756,6 +1763,7 @@
   .landing-course-card .landing-test-go { margin-top: 0; }
 
   .test-modal, .test-modal-card { padding: 18px 16px 22px; }
+  .test-upsell { padding: 16px 16px 20px; }
   .qcard { padding: 22px 18px 20px; gap: 18px; }
 
   .test-register { flex-wrap: wrap; }
@@ -1840,15 +1848,23 @@
 
 /* Paid product offered under some test results */
 .test-upsell {
-  display: flex;
-  gap: 18px;
-  margin-top: 16px;
-  padding: 18px 20px;
+  padding: 18px 24px 22px;
   background: var(--paper);
-  border: 1px solid var(--line);
-  border-top: 2px solid var(--accent);
-  border-radius: 4px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.5);
+  animation: test-result-in 320ms ease-out 120ms both;
 }
+.test-upsell-kicker {
+  display: block;
+  margin-bottom: 14px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.test-upsell-row { display: flex; gap: 18px; }
 .test-upsell-cover {
   flex-shrink: 0;
   width: 96px;
