@@ -91,9 +91,13 @@ the `VITE_` ones are baked into the bundle at build time:
     PADDLE_ENV                              sandbox | production
     PADDLE_NOTIFICATION_WEBHOOK_SECRET      per notification destination
     PADDLE_PRICE_MENTES_BAJO_CONTROL        pri_...
+    PADDLE_PRICE_ATENCION_BAJO_CONTROL      pri_...
     VITE_PADDLE_CLIENT_TOKEN
     VITE_PADDLE_ENV                         must match PADDLE_ENV
     VITE_PADDLE_PRICE_MENTES_BAJO_CONTROL   same pri_...
+    VITE_PADDLE_PRICE_ATENCION_BAJO_CONTROL same pri_...
+
+A product whose `VITE_PADDLE_PRICE_*` is unset shows as "Próximamente".
 
 Sandbox and live are separate Paddle accounts with their own catalog, keys and
 notification destinations. Nothing carries over between them.
@@ -103,6 +107,18 @@ are still in place: to fall back, put the sandbox values back and set both env
 vars to `sandbox`. Live values start with `live_` / `pdl_live_`, sandbox ones
 with `test_` / `pdl_sdbx_` — that prefix is the quickest way to tell which
 environment a deployment is actually talking to.
+
+## Card courses (Atención Bajo Control)
+
+Mini-courses are vertical full-screen cards (`src/varkanis/CourseViewer.jsx`),
+sold on their own page (`#atencion`, defined in `src/varkanis/products.js`).
+
+**The repo is public, so course text never goes into it.** It lives in
+Supabase `course_content` (one jsonb row per product, RLS: readable only with a
+`purchases` row; no write policies — write via the Supabase MCP / SQL editor).
+Content shape is documented at the top of `CourseViewer.jsx`. Images/GIFs go in
+`public/courses/<product_id>/` and are referenced by file name (they are public).
+Reading position is saved in `profiles.course_progress`.
 
 ## Profile data / Supabase note
 

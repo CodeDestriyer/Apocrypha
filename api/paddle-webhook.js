@@ -14,7 +14,9 @@ export const config = { api: { bodyParser: false } };
 // can't grant access to something that wasn't paid for.
 const PRODUCT_BY_PRICE = {
   [process.env.PADDLE_PRICE_MENTES_BAJO_CONTROL]: 'mentes-bajo-control',
+  [process.env.PADDLE_PRICE_ATENCION_BAJO_CONTROL]: 'atencion-bajo-control',
 };
+delete PRODUCT_BY_PRICE.undefined; // a product whose env var isn't set yet
 
 let paddle = null;
 function getPaddle() {

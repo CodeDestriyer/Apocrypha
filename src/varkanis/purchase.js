@@ -3,7 +3,22 @@ import { supabase } from '../supabase.js';
 
 const PRICE_IDS = {
   'mentes-bajo-control': import.meta.env.VITE_PADDLE_PRICE_MENTES_BAJO_CONTROL,
+  'atencion-bajo-control': import.meta.env.VITE_PADDLE_PRICE_ATENCION_BAJO_CONTROL,
 };
+
+// No price id in this build -> the product shows as "Próximamente".
+export const isForSale = (productId) => !!PRICE_IDS[productId];
+
+// Card-course content. RLS returns no row unless the caller bought it.
+export async function loadCourse(productId) {
+  const { data, error } = await supabase
+    .from('course_content')
+    .select('content')
+    .eq('product_id', productId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.content ?? null;
+}
 
 let paddlePromise = null;
 let onCompleted = null;

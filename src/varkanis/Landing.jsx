@@ -11,7 +11,9 @@ import PeopleCarousel from './PeopleCarousel.jsx';
 import NetworkStrip from './NetworkStrip.jsx';
 import { BOOK_PAGE } from './books.js';
 import Book3D from './Book3D.jsx';
-import { hasPurchase, bookUrl, openCheckout, waitForPurchase } from './purchase.js';
+import { hasPurchase, bookUrl, openCheckout, waitForPurchase, isForSale } from './purchase.js';
+import { CARD_COURSES } from './products.js';
+import CourseViewer from './CourseViewer.jsx';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -25,7 +27,7 @@ function PersonIcon({ size = 24 }) {
   );
 }
 
-const VIEWS = ['home', 'tests', 'courses', 'libro'];
+const VIEWS = ['home', 'tests', 'courses', 'libro', ...CARD_COURSES.map((c) => c.view)];
 
 // Face strip under the header, off for now.
 const SHOW_PEOPLE = false;
@@ -780,6 +782,48 @@ function BookPage({ course, authed, onRegister }) {
   );
 }
 
+function CardCoursePage({ course, authed, onRegister }) {
+  const { t } = useStrings();
+  const [owned, setOwned] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { profile } = useProfile();
+  const started = (profile?.course_progress?.[course.id] ?? 0) > 0;
+
+  useEffect(() => {
+    if (!authed) { setOwned(false); return undefined; }
+    let cancelled = false;
+    hasPurchase(course.id).then((ok) => { if (!cancelled) setOwned(ok); });
+    return () => { cancelled = true; };
+  }, [authed, course.id]);
+
+  return (
+    <main className="landing-main book-page">
+      <section className="book-hero">
+        <img className="book-cover course-cover" src={course.cover} alt={course.title} />
+        <div className="book-buy">
+          <h1 className="book-title">{course.title}</h1>
+          <p className="book-subtitle">{course.short}</p>
+          <p className="book-author">{course.author}</p>
+          {!owned && <p className="book-price">{course.price.currency}{course.price.amount}</p>}
+          <div className="book-actions">
+            {owned ? (
+              <button className="promo-cta-btn" type="button" onClick={() => setOpen(true)}>
+                {started ? t('course.continue') : t('course.open')}
+              </button>
+            ) : isForSale(course.id) ? (
+              <BuyPanel course={course} authed={authed} onRegister={onRegister} onOwned={() => { setOwned(true); setOpen(true); }} />
+            ) : (
+              <button className="promo-cta-btn" type="button" disabled>{t('course.soon')}</button>
+            )}
+          </div>
+          <p className="landing-course-details">{course.details.join(' · ')}</p>
+        </div>
+      </section>
+      {open && <CourseViewer course={course} onClose={() => setOpen(false)} />}
+    </main>
+  );
+}
+
 export default function Landing() {
   const { t } = useStrings();
   const { status, googleAvatar, profile, update } = useProfile();
@@ -882,6 +926,9 @@ export default function Landing() {
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
       {view === 'courses' && <CoursesPage authed={authed} onRegister={() => setShowRegister(true)} />}
       {view === 'libro' && <BookPage course={COURSES[0]} authed={authed} onRegister={() => setShowRegister(true)} />}
+      {CARD_COURSES.filter((c) => c.view === view).map((c) => (
+        <CardCoursePage key={c.id} course={c} authed={authed} onRegister={() => setShowRegister(true)} />
+      ))}
 
       <footer className="landing-foot">
         <a href="/tos.html">Términos</a>
@@ -896,6 +943,7 @@ export default function Landing() {
           onClose={() => setActiveTest(null)}
           onRegister={authed || !SHOW_ACCOUNT ? null : () => setShowRegister(true)}
           onSaveResult={authed ? saveResult : null}
+          onOpenProduct={(view) => { setActiveTest(null); goTo(view); }}
         />
       )}
 

@@ -1,3 +1,5 @@
+import { ATENCION } from '../products.js';
+
 // ADHD self-report screening. 18 items, 3-point scale. Adapted from WHO ASRS v1.1 /
 // DSM-5 ADHD symptom list. Educational use only.
 
@@ -63,13 +65,7 @@ export const ADHD = {
     high: 'Síntomas marcados. Conviene consultar a un especialista.',
   },
   // Product card shown instead of the "Listo" button on these bands.
-  upsell: {
-    bands: ['mid', 'high'],
-    title: 'Atención Bajo Control',
-    short: 'Mini-curso: técnicas concretas para enfocar la atención, organizarte y dejar de posponer.',
-    price: '$3',
-    cover: '/Atencion-bajo-control-logo.webp',
-  },
+  upsell: { bands: ['mid', 'high'], product: ATENCION },
 };
 
 // Dark Triad self-report. 18 items, 5-point agree-disagree scale (0..4),

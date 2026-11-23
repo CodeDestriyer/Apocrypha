@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStrings } from '../../strings.jsx';
+import { isForSale } from '../purchase.js';
 import { ADHD, DARK_TRIAD, ARCHETYPE_TEST, PSYCH_AGE, SILICON_MIND, FREQ5, AGREE5, AGREE3, scoreAdhd, scoreDarkTriad, scoreArchetypes, scorePsychAge, scoreSilicon } from './data.js';
 
 const SCALE_LABELS = { freq5: FREQ5, agree5: AGREE5, agree3: AGREE3 };
@@ -79,7 +80,9 @@ function RegisterCta({ onRegister }) {
   );
 }
 
-function UpsellCard({ product }) {
+function UpsellCard({ product, onOpen }) {
+  const { t } = useStrings();
+  const forSale = isForSale(product.id);
   return (
     <section className="test-upsell">
       <span className="test-upsell-kicker">Curso recomendado</span>
@@ -88,8 +91,8 @@ function UpsellCard({ product }) {
         <div className="test-upsell-body">
           <strong className="test-upsell-title">{product.title}</strong>
           <span className="test-upsell-short">{product.short}</span>
-          <button className="promo-cta-btn test-upsell-btn" type="button" disabled>
-            {product.price} · Próximamente
+          <button className="promo-cta-btn test-upsell-btn" type="button" disabled={!forSale} onClick={() => onOpen(product.view)}>
+            {product.price.currency}{product.price.amount} · {forSale ? t('course.view') : t('course.soon')}
           </button>
         </div>
       </div>
@@ -273,7 +276,7 @@ function SiliconResult({ test, answers, onClose, onRestart }) {
   );
 }
 
-export default function TestRunner({ test, onClose, onRegister, onSaveResult }) {
+export default function TestRunner({ test, onClose, onRegister, onSaveResult, onOpenProduct }) {
   const { t } = useStrings();
   const isChoice = test.scale === 'choice';
   const labels = SCALE_LABELS[test.scale] ?? FREQ5;
@@ -500,7 +503,7 @@ export default function TestRunner({ test, onClose, onRegister, onSaveResult }) 
             </div>
           )}
         </div>
-        {revealed && upsell && <UpsellCard product={upsell} />}
+        {revealed && upsell && <UpsellCard product={upsell.product} onOpen={onOpenProduct} />}
       </div>
     </div>
   );
