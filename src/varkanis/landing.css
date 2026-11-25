@@ -1965,6 +1965,7 @@
   background: var(--cv-bg);
   color: var(--cv-fg);
   cursor: pointer;
+  container-type: inline-size;
   -webkit-tap-highlight-color: transparent;
 }
 .cv-inner h2, .cv-inner h3 { color: inherit; }
@@ -2000,7 +2001,7 @@
 .cv-chapter-title {
   margin: 0;
   font-family: 'Newsreader', Georgia, serif;
-  font-size: clamp(40px, 11vw, 60px);
+  font-size: clamp(40px, 11cqw, 60px);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.02;
@@ -2008,7 +2009,7 @@
 .cv-big {
   margin: 0;
   font-family: 'Inter Tight', sans-serif;
-  font-size: clamp(34px, 9.5vw, 52px);
+  font-size: clamp(34px, 9.5cqw, 52px);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.08;
@@ -2027,7 +2028,7 @@
 .cv-p {
   margin: 0;
   font-family: 'Inter Tight', sans-serif;
-  font-size: clamp(22px, 6vw, 27px);
+  font-size: clamp(22px, 6cqw, 27px);
   font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.35;
@@ -2040,7 +2041,7 @@
 .cv-stat { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--cv-line); padding-top: 14px; }
 .cv-stat-value {
   font-family: 'Inter Tight', sans-serif;
-  font-size: clamp(64px, 20vw, 104px);
+  font-size: clamp(64px, 20cqw, 104px);
   font-weight: 700;
   letter-spacing: -0.045em;
   line-height: 0.95;
@@ -2052,7 +2053,7 @@
 .cv-q {
   margin: 0;
   font-family: 'Inter Tight', sans-serif;
-  font-size: clamp(28px, 7.5vw, 38px);
+  font-size: clamp(28px, 7.5cqw, 38px);
   font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.12;
@@ -2083,7 +2084,7 @@
 .cv-task {
   margin: 0;
   font-family: 'Inter Tight', sans-serif;
-  font-size: clamp(26px, 7vw, 34px);
+  font-size: clamp(26px, 7cqw, 34px);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -2106,7 +2107,7 @@
 .cv-quote p {
   margin: 0;
   font-family: 'Newsreader', Georgia, serif;
-  font-size: clamp(32px, 8.5vw, 44px);
+  font-size: clamp(32px, 8.5cqw, 44px);
   font-style: italic;
   line-height: 1.15;
   letter-spacing: -0.015em;

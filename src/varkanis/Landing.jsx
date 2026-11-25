@@ -14,6 +14,9 @@ import Book3D from './Book3D.jsx';
 import { hasPurchase, bookUrl, openCheckout, waitForPurchase, isForSale } from './purchase.js';
 import { CARD_COURSES } from './products.js';
 import CourseViewer from './CourseViewer.jsx';
+import Panel from './Panel.jsx';
+import { isAdmin } from './admin.js';
+import { loadTestTexts } from './tests/texts.js';
 // Worker is emitted as a separate asset (its URL only) — the pdfjs library
 // itself is dynamically imported inside PdfBook so it stays out of the main bundle.
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -27,7 +30,7 @@ function PersonIcon({ size = 24 }) {
   );
 }
 
-const VIEWS = ['home', 'tests', 'courses', 'libro', ...CARD_COURSES.map((c) => c.view)];
+const VIEWS = ['home', 'tests', 'courses', 'libro', 'panel', ...CARD_COURSES.map((c) => c.view)];
 
 // Face strip under the header, off for now.
 const SHOW_PEOPLE = false;
@@ -239,9 +242,22 @@ function PdfBook({ course, onClose, owned, onOwned, authed, onRegister }) {
 // still prompts for Google sign-in, since Paddle ties the book to an account.
 const SHOW_ACCOUNT = false;
 
-function AuthorBadge() {
+// Double tap on the photo opens #panel, for admins only.
+function AuthorBadge({ onDoubleTap }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const lastTap = useRef(0);
+  const onTap = () => {
+    const now = Date.now();
+    if (onDoubleTap && now - lastTap.current < 350) {
+      lastTap.current = 0;
+      setOpen(false);
+      onDoubleTap();
+      return;
+    }
+    lastTap.current = now;
+    setOpen((o) => !o);
+  };
   useEffect(() => {
     if (!open) return;
     const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -253,7 +269,7 @@ function AuthorBadge() {
     <div className="landing-account-wrap" ref={ref}>
       <button
         className="landing-account landing-account-authed"
-        onClick={() => setOpen((o) => !o)}
+        onClick={onTap}
         aria-label="Stepan Kulunuch"
         aria-expanded={open}
       >
@@ -857,6 +873,17 @@ export default function Landing() {
     history.replaceState(null, '', next === 'home' ? window.location.pathname : hash);
   };
 
+  const [admin, setAdmin] = useState(false);
+  useEffect(() => {
+    if (status === 'ready' || status === 'need-name') isAdmin().then(setAdmin);
+  }, [status]);
+
+  // Edited test wording from #panel; re-render once it's applied.
+  const [, setTextsVersion] = useState(0);
+  useEffect(() => {
+    loadTestTexts().then(() => setTextsVersion((v) => v + 1)).catch(() => {});
+  }, []);
+
   const [activeTest, setActiveTest] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -892,7 +919,7 @@ export default function Landing() {
             onRegister={() => setShowRegister(true)}
             onOpenProfile={() => setShowProfile(true)}
           />
-        ) : <AuthorBadge />}
+        ) : <AuthorBadge onDoubleTap={admin ? () => goTo('panel') : null} />}
       </header>
 
       {isHome && SHOW_PEOPLE && <PeopleCarousel dir="rtl" speed={isPhone ? 0.7 : 0.3} />}
@@ -925,6 +952,7 @@ export default function Landing() {
       )}
       {view === 'tests' && <TestsPage onStart={setActiveTest} />}
       {view === 'courses' && <CoursesPage authed={authed} onRegister={() => setShowRegister(true)} />}
+      {view === 'panel' && <Panel />}
       {view === 'libro' && <BookPage course={COURSES[0]} authed={authed} onRegister={() => setShowRegister(true)} />}
       {CARD_COURSES.filter((c) => c.view === view).map((c) => (
         <CardCoursePage key={c.id} course={c} authed={authed} onRegister={() => setShowRegister(true)} />

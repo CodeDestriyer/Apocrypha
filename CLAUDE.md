@@ -120,6 +120,19 @@ Content shape is documented at the top of `CourseViewer.jsx`. Images/GIFs go in
 `public/courses/<product_id>/` and are referenced by file name (they are public).
 Reading position is saved in `profiles.course_progress`.
 
+## Author panel (`#panel`)
+
+Double tap on the author photo (top right) opens `#panel` — only for users in
+`public.admins` (checked by `is_admin()`). `src/varkanis/Panel.jsx`:
+
+- **Courses**: edits `course_drafts` (autosaved, admin-only). "Publicar" copies
+  the draft into `course_content`, which buyers read. Uploads go to the public
+  `course-media` bucket.
+- **Tests**: text-only overrides in `test_texts` (`{ "<dot.path>": "text" }`),
+  applied in place over `tests/data.js` at load (`tests/texts.js`). Scoring and
+  structure stay in code. Paths are positional — reordering items in data.js
+  shifts saved overrides.
+
 ## Profile data / Supabase note
 
 User profiles (stats, skills, goals, etc.) are stored in Supabase. `DEFAULT_STATS` in `src/supabase.js` only applies on profile **creation** — changing labels there does not update existing rows. `loadProfile()` runs a `reconcileStats()` migration on read that normalizes existing profiles to current defaults (preserving values by position). When renaming/reordering stats, update `DEFAULT_STATS` and the migration handles the rest on next page load.

@@ -45,7 +45,7 @@ function Poll({ card }) {
     <>
       <h3 className="cv-q">{inline(card.q)}</h3>
       <div className="cv-options">
-        {card.options.map((o, i) => (
+        {card.options.filter(Boolean).map((o, i) => (
           <button
             key={i}
             type="button"
@@ -74,7 +74,7 @@ function Reveal({ card, t }) {
   );
 }
 
-function Card({ card, courseId, t, onClose, onNext }) {
+export function Card({ card, courseId, t, onClose, onNext }) {
   switch (card.type) {
     case 'chapter':
       return (
@@ -126,7 +126,7 @@ function Card({ card, courseId, t, onClose, onNext }) {
       return (
         <>
           {card.title && <h3 className="cv-title">{inline(card.title)}</h3>}
-          <ul className="cv-list">{card.items.map((it, i) => <li key={i}>{inline(it)}</li>)}</ul>
+          <ul className="cv-list">{card.items.filter(Boolean).map((it, i) => <li key={i}>{inline(it)}</li>)}</ul>
         </>
       );
     case 'end':
@@ -148,17 +148,20 @@ function Card({ card, courseId, t, onClose, onNext }) {
 }
 
 const DEFAULT_TONE = { chapter: 'dark', end: 'dark' };
+export const toneOf = (c) => c?.tone ?? DEFAULT_TONE[c?.type] ?? 'paper';
 
-export default function CourseViewer({ course, onClose }) {
+// `preview`: render this content instead of loading it, and keep no progress.
+export default function CourseViewer({ course, onClose, preview }) {
   const { t } = useStrings();
   const { profile, update } = useProfile();
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState(preview ?? null);
   const [error, setError] = useState(false);
   const [index, setIndex] = useState(0);
   const scrollerRef = useRef(null);
-  const resumeRef = useRef(profile?.course_progress?.[course.id] ?? 0);
+  const resumeRef = useRef(preview ? 0 : (profile?.course_progress?.[course.id] ?? 0));
 
   useEffect(() => {
+    if (preview) return undefined;
     let cancelled = false;
     loadCourse(course.id)
       .then((c) => { if (!cancelled) (c ? setContent(c) : setError(true)); })
@@ -200,7 +203,7 @@ export default function CourseViewer({ course, onClose }) {
   }, [cards]);
 
   useEffect(() => {
-    if (!cards.length || profile?.course_progress?.[course.id] === index) return;
+    if (preview || !cards.length || profile?.course_progress?.[course.id] === index) return;
     update((curr) => ({ course_progress: { ...(curr?.course_progress ?? {}), [course.id]: index } }));
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -223,12 +226,11 @@ export default function CourseViewer({ course, onClose }) {
   };
 
   const pct = cards.length > 1 ? Math.round((index / (cards.length - 1)) * 100) : 0;
-  const tone = (c) => c?.tone ?? DEFAULT_TONE[c?.type] ?? 'paper';
 
   // Into the landing root, like the PDF reader: escapes the per-section
   // stacking contexts but keeps the CSS variables.
   return createPortal(
-    <div className="cv-overlay" data-tone={tone(cards[index])} role="dialog" aria-modal="true" aria-label={course.title}>
+    <div className="cv-overlay" data-tone={toneOf(cards[index])} role="dialog" aria-modal="true" aria-label={course.title}>
       <div className="cv-bar">
         <div className="cv-progress"><div style={{ width: `${pct}%` }} /></div>
         {cards.length > 0 && <span className="cv-count">{index + 1}/{cards.length}</span>}
@@ -241,7 +243,7 @@ export default function CourseViewer({ course, onClose }) {
           <section
             key={i}
             data-i={i}
-            data-tone={tone(card)}
+            data-tone={toneOf(card)}
             className={`cv-card cv-card--${card.type ?? 'text'}${i === index ? ' is-active' : ''}`}
           >
             <div className="cv-inner">
