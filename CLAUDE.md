@@ -116,9 +116,12 @@ sold on their own page (`#atencion`, defined in `src/varkanis/products.js`).
 **The repo is public, so course text never goes into it.** It lives in
 Supabase `course_content` (one jsonb row per product, RLS: readable only with a
 `purchases` row; no write policies — write via the Supabase MCP / SQL editor).
-Content shape is documented at the top of `CourseViewer.jsx`. Images/GIFs go in
-`public/courses/<product_id>/` and are referenced by file name (they are public).
-Reading position is saved in `profiles.course_progress`.
+Content shape is documented at the top of `CourseViewer.jsx`. The look is a
+TikTok text-post feed: auto-rotating colour backgrounds (`BACKGROUNDS`), centered
+text, `**x**` as sticker plates, a right rail (like / save / share), double tap
+= like. Any card can take a background photo/GIF (`image`). Cards carry a stable
+`id` — likes/saves in `profiles.course_marks` point at it, so keep ids when
+editing. Reading position is saved in `profiles.course_progress`.
 
 ## Author panel (`#panel`)
 

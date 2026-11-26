@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useStrings } from '../strings.jsx';
 import { getSession, signInWithGoogle } from '../supabase.js';
 import { CARD_COURSES } from './products.js';
-import CourseViewer, { Card, toneOf } from './CourseViewer.jsx';
+import CourseViewer, { Slide, BACKGROUNDS, toneOf } from './CourseViewer.jsx';
 import { isAdmin, loadCourseAdmin, saveDraft, publishCourse, uploadMedia } from './admin.js';
 import { EDITABLE_TESTS, originalTexts, currentOverrides, saveTestTexts } from './tests/texts.js';
 import './panel.css';
 
 const TYPES = ['big', 'text', 'stat', 'poll', 'reveal', 'task', 'quote', 'list', 'media'];
-const TONES = ['paper', 'dark', 'accent'];
+const newId = () => Math.random().toString(36).slice(2, 10);
 
 const BLANK = {
   big: { text: '' },
@@ -119,7 +119,7 @@ function CourseEditor({ course, onBack }) {
 
   const addCard = (ch) => {
     const i = chapters[ch].cards.length;
-    edit((cs) => { cs[ch].cards.push({ type: 'text', body: '' }); });
+    edit((cs) => { cs[ch].cards.push({ id: newId(), type: 'text', body: '' }); });
     setSel({ ch, i });
   };
   const addChapter = () => {
@@ -128,6 +128,8 @@ function CourseEditor({ course, onBack }) {
   };
 
   const card = sel && sel.i != null ? chapters[sel.ch]?.cards[sel.i] : null;
+  // Same running position the viewer uses for auto backgrounds.
+  const autoOf = (ch, i) => chapters.slice(0, ch).reduce((n, c) => n + c.cards.length, 0) + i;
   const chapter = sel ? chapters[sel.ch] : null;
 
   return (
@@ -161,7 +163,7 @@ function CourseEditor({ course, onBack }) {
                   className={`pn-row${sel?.ch === ci && sel.i === i ? ' is-sel' : ''}`}
                   onClick={() => setSel({ ch: ci, i })}
                 >
-                  <span className="pn-swatch" data-tone={toneOf(c)} />
+                  <span className="pn-swatch" style={{ background: BACKGROUNDS[toneOf(c, autoOf(ci, i))][0] }} />
                   <span className="pn-type">{c.type}</span>
                   <span className="pn-snip">{snippet(c) || '—'}</span>
                 </button>
@@ -178,6 +180,7 @@ function CourseEditor({ course, onBack }) {
             <CardForm
               key={`${sel.ch}-${sel.i}`}
               card={card}
+              autoIndex={autoOf(sel.ch, sel.i)}
               courseId={course.id}
               onChange={(next) => edit((cs) => { cs[sel.ch].cards[sel.i] = next; })}
               onMove={(d) => {
@@ -187,7 +190,7 @@ function CourseEditor({ course, onBack }) {
                 setSel({ ch: sel.ch, i: j });
               }}
               onDuplicate={() => {
-                edit((cs) => { cs[sel.ch].cards.splice(sel.i + 1, 0, structuredClone(card)); });
+                edit((cs) => { cs[sel.ch].cards.splice(sel.i + 1, 0, { ...structuredClone(card), id: newId() }); });
                 setSel({ ch: sel.ch, i: sel.i + 1 });
               }}
               onDelete={() => {
@@ -244,14 +247,14 @@ function ChapterForm({ chapter, n, onTitle, onMove, onDelete }) {
   );
 }
 
-function CardForm({ card, courseId, onChange, onMove, onDuplicate, onDelete }) {
+function CardForm({ card, autoIndex, courseId, onChange, onMove, onDuplicate, onDelete }) {
   const { t } = useStrings();
   const set = (k, v) => onChange({ ...card, [k]: v });
   const setType = (type) => {
-    const { tone } = card;
+    const { id, tone, image } = card;
     // Carry over whichever text the old card had into the new type's main field.
     const carry = snippet(card);
-    const next = { type, ...structuredClone(BLANK[type]), ...(tone ? { tone } : {}) };
+    const next = { id: id ?? newId(), type, ...structuredClone(BLANK[type]), ...(tone ? { tone } : {}), ...(image ? { image } : {}) };
     const main = { big: 'text', text: 'body', poll: 'q', reveal: 'q', task: 'text', quote: 'text' }[type];
     if (main && carry) next[main] = carry;
     onChange(next);
@@ -282,14 +285,21 @@ function CardForm({ card, courseId, onChange, onMove, onDuplicate, onDelete }) {
           ))}
         </div>
         <div className="pn-pills pn-tones">
-          {TONES.map((to) => (
+          <button
+            type="button"
+            className={`pn-auto${card.tone ? '' : ' is-on'}`}
+            onClick={() => { const { tone, ...rest } = card; onChange(rest); }}
+          >
+            auto
+          </button>
+          {Object.entries(BACKGROUNDS).map(([key, [bg]]) => (
             <button
-              key={to}
+              key={key}
               type="button"
-              data-tone={to}
-              className={toneOf(card) === to ? 'is-on' : ''}
-              onClick={() => { const { tone, ...rest } = card; onChange(to === 'paper' ? rest : { ...rest, tone: to }); }}
-              aria-label={to}
+              style={{ background: bg }}
+              className={card.tone === key ? 'is-on' : ''}
+              onClick={() => onChange({ ...card, tone: key })}
+              aria-label={key}
             />
           ))}
         </div>
@@ -317,15 +327,21 @@ function CardForm({ card, courseId, onChange, onMove, onDuplicate, onDelete }) {
           <MediaField courseId={courseId} value={card.src} onChange={(v) => set('src', v)} />
           {text('caption', t('panel.f.caption'), 2)}
         </>}
+        {card.type !== 'media' && (
+          <MediaField label={t('panel.f.image')} courseId={courseId} value={card.image} onChange={(v) => {
+            const { image, ...rest } = card;
+            onChange(v ? { ...rest, image: v } : rest);
+          }} />
+        )}
         <p className="pn-hint">{t('panel.f.bold')}</p>
         <Actions onMove={onMove} onDuplicate={onDuplicate} onDelete={onDelete} />
       </div>
-      <Phone card={card} courseId={courseId} />
+      <Phone card={card} autoIndex={autoIndex} courseId={courseId} />
     </div>
   );
 }
 
-function MediaField({ courseId, value, onChange }) {
+function MediaField({ label, courseId, value, onChange }) {
   const { t } = useStrings();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(false);
@@ -338,7 +354,7 @@ function MediaField({ courseId, value, onChange }) {
     e.target.value = '';
   };
   return (
-    <Field label={t('panel.f.media')}>
+    <Field label={label ?? t('panel.f.media')}>
       <label className="pn-btn pn-upload">
         {busy ? t('panel.uploading') : t('panel.upload')}
         <input type="file" accept="image/*,video/mp4" onChange={onFile} disabled={busy} hidden />
@@ -371,15 +387,11 @@ function Actions({ onMove, onDuplicate, onDelete }) {
 }
 
 // The card exactly as the viewer draws it, at phone size.
-function Phone({ card, courseId }) {
+function Phone({ card, autoIndex = 0, courseId }) {
   const { t } = useStrings();
   return (
     <div className="pn-phone">
-      <section className={`cv-card cv-card--${card.type} is-active`} data-tone={toneOf(card)}>
-        <div className="cv-inner">
-          <Card card={card} courseId={courseId} t={t} onClose={() => {}} onNext={() => {}} />
-        </div>
-      </section>
+      <Slide card={card} autoIndex={autoIndex} courseId={courseId} t={t} onClose={() => {}} onNext={() => {}} className="is-active" />
     </div>
   );
 }

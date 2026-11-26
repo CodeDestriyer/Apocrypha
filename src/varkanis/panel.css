@@ -97,8 +97,6 @@
 .pn-type { flex: none; width: 46px; font: 500 11px 'JetBrains Mono', ui-monospace, monospace; opacity: 0.55; }
 .pn-snip { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pn-swatch { flex: none; width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--line); background: var(--paper); }
-.pn-swatch[data-tone='dark'], .pn-tones [data-tone='dark'] { background: #0e0e0e; }
-.pn-swatch[data-tone='accent'], .pn-tones [data-tone='accent'] { background: var(--accent); }
 .pn-add {
   padding: 6px 10px;
   border: 0;
@@ -115,11 +113,10 @@
 .pn-fields { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .pn-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .pn-pills button { padding: 6px 11px; font: 500 12px 'JetBrains Mono', ui-monospace, monospace; }
-.pn-tones button { width: 30px; height: 30px; padding: 0; background: var(--paper); }
-.pn-tones button.is-on { outline: 2px solid var(--ink); outline-offset: 2px; border-color: var(--line); }
-.pn-tones button[data-tone='paper'].is-on { background: var(--paper); }
-.pn-tones button[data-tone='dark'].is-on { background: #0e0e0e; }
-.pn-tones button[data-tone='accent'].is-on { background: var(--accent); }
+.pn-tones button { width: 30px; height: 30px; padding: 0; border-color: var(--line); }
+.pn-tones button.is-on { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pn-tones .pn-auto { width: auto; padding: 0 10px; background: var(--paper); }
+.pn-tones .pn-auto.is-on { background: var(--ink); color: var(--paper); outline: none; }
 
 .pn-field { display: flex; flex-direction: column; gap: 6px; }
 .pn-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -156,7 +153,7 @@
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
-.pn-phone .cv-card { height: 100%; cursor: default; padding: 56px 22px 40px; }
+.pn-phone .cv-card { height: 100%; padding: 48px 22px 48px; }
 
 /* Test texts */
 .pn-search { margin: 8px 0 16px; }
