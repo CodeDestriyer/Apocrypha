@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom';
 import { useStrings } from '../strings.jsx';
 import { useProfile } from '../ProfileContext.jsx';
 import { loadCourse } from './purchase.js';
+import { isVideo } from './gifLink.js';
 
 // Content shape (course_content.content):
 // { chapters: [{ title, cards: [card] }] }
 // One idea per card, ~30 words max. Every card has a stable `id` (likes and
 // saves point at it) and takes optional:
 //   tone:  a BACKGROUNDS key; unset = auto, rotating by position
-//   image: background photo/GIF URL, text goes on top
+//   image: background photo/GIF/mp4 URL, text goes on top
 //   { type: 'big',    text }                         one line in sticker plates
 //   { type: 'text',   kicker?, title?, body }        body: paragraphs split by a blank line
 //   { type: 'stat',   items: [{ value, label }] }    1-3 big numbers
@@ -177,15 +178,24 @@ export function Card({ card, courseId, t, onClose, onNext }) {
 
 // One full-screen card: background (colour or image) + centered content.
 // Shared with the panel preview.
-export function Slide({ card, autoIndex, courseId, t, onClose, onNext, className = '', children, ...rest }) {
+export function Slide({ card, autoIndex, courseId, t, onClose, onNext, active = true, className = '', children, ...rest }) {
   const bgImage = card.image ?? (card.type === 'media' ? card.src : null);
+  // Only the card on screen plays; thirty looping videos at once would choke a phone.
+  const videoRef = useRef(null);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (active) v.play().catch(() => {}); else v.pause();
+  }, [active, bgImage]);
   return (
     <section
       className={`cv-card cv-card--${card.type ?? 'text'}${bgImage ? ' has-image' : ''} ${className}`}
       style={slideStyle(card, autoIndex)}
       {...rest}
     >
-      {bgImage && <img className="cv-bg" src={mediaSrc(courseId, bgImage)} alt="" loading="lazy" />}
+      {bgImage && (isVideo(bgImage)
+        ? <video ref={videoRef} className="cv-bg" src={mediaSrc(courseId, bgImage)} muted loop playsInline preload="metadata" />
+        : <img className="cv-bg" src={mediaSrc(courseId, bgImage)} alt="" loading="lazy" />)}
       <div className="cv-inner">
         <Card card={card} courseId={courseId} t={t} onClose={onClose} onNext={onNext} />
       </div>
@@ -353,6 +363,7 @@ export default function CourseViewer({ course, onClose, preview }) {
             t={t}
             onClose={onClose}
             onNext={() => go(i + 1)}
+            active={i === index}
             className={i === index ? 'is-active' : ''}
           />
         ))}

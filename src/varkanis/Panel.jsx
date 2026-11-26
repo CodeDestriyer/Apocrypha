@@ -4,6 +4,7 @@ import { getSession, signInWithGoogle } from '../supabase.js';
 import { CARD_COURSES } from './products.js';
 import CourseViewer, { Slide, BACKGROUNDS, toneOf } from './CourseViewer.jsx';
 import { isAdmin, loadCourseAdmin, saveDraft, publishCourse, uploadMedia } from './admin.js';
+import { resolveMediaLink } from './gifLink.js';
 import { EDITABLE_TESTS, originalTexts, currentOverrides, saveTestTexts } from './tests/texts.js';
 import './panel.css';
 
@@ -345,22 +346,45 @@ function MediaField({ label, courseId, value, onChange }) {
   const { t } = useStrings();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(false);
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [draft, setDraft] = useState(value ?? '');
+  useEffect(() => { setDraft(value ?? ''); }, [value]);
+
+  const run = async (fn) => {
     setBusy(true); setErr(false);
-    try { onChange(await uploadMedia(courseId, file)); } catch { setErr(true); }
+    try { onChange(await fn()); } catch { setErr(true); }
     setBusy(false);
-    e.target.value = '';
   };
+  const onFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) run(() => uploadMedia(courseId, file));
+  };
+  // A Giphy/Tenor/Imgur page link becomes the file behind it.
+  const commit = (raw) => {
+    if ((raw ?? '') === (value ?? '')) return;
+    if (!raw.trim()) { onChange(''); return; }
+    run(() => resolveMediaLink(raw));
+  };
+
   return (
     <Field label={label ?? t('panel.f.media')}>
-      <label className="pn-btn pn-upload">
-        {busy ? t('panel.uploading') : t('panel.upload')}
-        <input type="file" accept="image/*,video/mp4" onChange={onFile} disabled={busy} hidden />
-      </label>
-      <input value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder="https://…" />
-      {err && <span className="pn-err">{t('panel.error')}</span>}
+      <div className="pn-media-row">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onPaste={(e) => { const v = e.clipboardData.getData('text'); if (v) { e.preventDefault(); setDraft(v); commit(v); } }}
+          onBlur={() => commit(draft)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(draft); } }}
+          placeholder="giphy.com / tenor.com / …"
+          disabled={busy}
+        />
+        <label className="pn-btn pn-upload">
+          {busy ? '…' : t('panel.upload')}
+          <input type="file" accept="image/*,video/mp4" onChange={onFile} disabled={busy} hidden />
+        </label>
+        {value && <button type="button" className="pn-x" onClick={() => onChange('')} aria-label={t('panel.delete')}>×</button>}
+      </div>
+      {err && <span className="pn-err">{t('panel.linkError')}</span>}
     </Field>
   );
 }

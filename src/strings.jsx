@@ -335,6 +335,7 @@ const DICT = {
   'panel.search': 'Buscar',
   'panel.upload': 'Subir archivo',
   'panel.uploading': 'Subiendo…',
+  'panel.linkError': 'No se pudo leer el enlace. Prueba con «Copiar dirección de imagen».',
   'panel.error': 'Error. Inténtalo otra vez.',
   'panel.confirmDelete': '¿Eliminar la tarjeta?',
   'panel.confirmDeleteChapter': '¿Eliminar el capítulo con todas sus tarjetas?',

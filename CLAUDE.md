@@ -130,7 +130,9 @@ Double tap on the author photo (top right) opens `#panel` — only for users in
 
 - **Courses**: edits `course_drafts` (autosaved, admin-only). "Publicar" copies
   the draft into `course_content`, which buyers read. Uploads go to the public
-  `course-media` bucket.
+  `course-media` bucket. Pasting a Giphy/Tenor/Imgur page link resolves it to
+  the file (`gifLink.js`; Giphy client-side, the rest via admin-only
+  `api/gif.js` reading og: tags), preferring mp4.
 - **Tests**: text-only overrides in `test_texts` (`{ "<dot.path>": "text" }`),
   applied in place over `tests/data.js` at load (`tests/texts.js`). Scoring and
   structure stay in code. Paths are positional — reordering items in data.js
