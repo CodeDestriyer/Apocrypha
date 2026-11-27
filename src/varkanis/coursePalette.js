@@ -16,9 +16,7 @@ export const BACKGROUNDS = {
   night:  ['linear-gradient(160deg, #120c2c, #4a1f7a)', '#fff', '#2a1450'],
 };
 const LEGACY = { paper: 'white', accent: 'wine' };
-// Auto background for cards without a tone. Black-only for now; add keys
-// here to rotate colours again.
-export const AUTO = ['dark'];
+export const AUTO = ['dark', 'blue', 'wine', 'sunset', 'purple', 'yellow', 'green', 'night', 'pink', 'ocean', 'orange'];
 
 export function toneOf(card, autoIndex = 0) {
   if (card?.type === 'chapter' || card?.type === 'end') return 'dark';

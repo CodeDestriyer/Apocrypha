@@ -12,7 +12,7 @@ import { BACKGROUNDS, toneOf } from './coursePalette.js';
 // saves point at it) and takes optional:
 //   tone:  a BACKGROUNDS key; unset = auto, rotating by position
 //   image: background photo/GIF/mp4 URL, text goes on top
-//   { type: 'big',    text }                         one punchy line, a size up
+//   { type: 'big',    text }                         one line in sticker plates
 //   { type: 'text',   kicker?, title?, body }        body: paragraphs split by a blank line
 //   { type: 'stat',   items: [{ value, label }] }    1-3 big numbers
 //   { type: 'poll',   q, options: [], reply }        tap an option -> reply
@@ -103,7 +103,7 @@ export function Card({ card, courseId, t, onClose, onNext }) {
         </div>
       );
     case 'big':
-      return <p className="cv-big">{inline(card.text)}</p>;
+      return <p className="cv-big"><span className="cv-plate">{plain(card.text)}</span></p>;
     case 'stat':
       return (
         <div className="cv-stats">
