@@ -252,10 +252,10 @@ function CardForm({ card, autoIndex, courseId, onChange, onMove, onDuplicate, on
   const { t } = useStrings();
   const set = (k, v) => onChange({ ...card, [k]: v });
   const setType = (type) => {
-    const { id, tone, image } = card;
+    const { id, tone, image, imageMode } = card;
     // Carry over whichever text the old card had into the new type's main field.
     const carry = snippet(card);
-    const next = { id: id ?? newId(), type, ...structuredClone(BLANK[type]), ...(tone ? { tone } : {}), ...(image ? { image } : {}) };
+    const next = { id: id ?? newId(), type, ...structuredClone(BLANK[type]), ...(tone ? { tone } : {}), ...(image ? { image } : {}), ...(imageMode ? { imageMode } : {}) };
     const main = { big: 'text', text: 'body', poll: 'q', reveal: 'q', task: 'text', quote: 'text' }[type];
     if (main && carry) next[main] = carry;
     onChange(next);
@@ -330,9 +330,23 @@ function CardForm({ card, autoIndex, courseId, onChange, onMove, onDuplicate, on
         </>}
         {card.type !== 'media' && (
           <MediaField label={t('panel.f.image')} courseId={courseId} value={card.image} onChange={(v) => {
-            const { image, ...rest } = card;
-            onChange(v ? { ...rest, image: v } : rest);
+            const { image, imageMode, ...rest } = card;
+            onChange(v ? { ...rest, image: v, ...(imageMode ? { imageMode } : {}) } : rest);
           }} />
+        )}
+        {(card.type === 'media' ? card.src : card.image) && (
+          <div className="pn-pills">
+            {['bg', 'inline'].map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={(card.imageMode ?? 'bg') === m ? 'is-on' : ''}
+                onClick={() => { const { imageMode, ...rest } = card; onChange(m === 'bg' ? rest : { ...rest, imageMode: m }); }}
+              >
+                {t(`panel.f.mode.${m}`)}
+              </button>
+            ))}
+          </div>
         )}
         <p className="pn-hint">{t('panel.f.bold')}</p>
         <Actions onMove={onMove} onDuplicate={onDuplicate} onDelete={onDelete} />
