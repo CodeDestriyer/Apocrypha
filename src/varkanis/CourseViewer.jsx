@@ -4,6 +4,7 @@ import { useStrings } from '../strings.jsx';
 import { useProfile } from '../ProfileContext.jsx';
 import { loadCourse } from './purchase.js';
 import { isVideo } from './gifLink.js';
+import { BACKGROUNDS, toneOf } from './coursePalette.js';
 
 // Content shape (course_content.content):
 // { chapters: [{ title, cards: [card] }] }
@@ -11,7 +12,7 @@ import { isVideo } from './gifLink.js';
 // saves point at it) and takes optional:
 //   tone:  a BACKGROUNDS key; unset = auto, rotating by position
 //   image: background photo/GIF/mp4 URL, text goes on top
-//   { type: 'big',    text }                         one line in sticker plates
+//   { type: 'big',    text }                         one punchy line, a size up
 //   { type: 'text',   kicker?, title?, body }        body: paragraphs split by a blank line
 //   { type: 'stat',   items: [{ value, label }] }    1-3 big numbers
 //   { type: 'poll',   q, options: [], reply }        tap an option -> reply
@@ -22,29 +23,7 @@ import { isVideo } from './gifLink.js';
 //   { type: 'media',  src, caption? }                full-bleed image, caption on top
 // Inline: **text** = highlighted plate.
 
-// [background, text color, plate text color]
-export const BACKGROUNDS = {
-  dark:   ['#0f0f0f', '#fff', '#0f0f0f'],
-  white:  ['#ffffff', '#111', '#fff'],
-  wine:   ['#6e2413', '#fff', '#6e2413'],
-  blue:   ['#2350ff', '#fff', '#2350ff'],
-  yellow: ['#ffd400', '#111', '#ffd400'],
-  pink:   ['#ff3d7f', '#fff', '#e0245e'],
-  green:  ['#0f8a5f', '#fff', '#0f8a5f'],
-  purple: ['#5b2be0', '#fff', '#5b2be0'],
-  orange: ['#ff5a1f', '#fff', '#e8480f'],
-  sunset: ['linear-gradient(160deg, #ff7a18, #e0245e)', '#fff', '#d8304f'],
-  ocean:  ['linear-gradient(160deg, #1f3cff, #00b4ff)', '#fff', '#1f5cff'],
-  night:  ['linear-gradient(160deg, #120c2c, #4a1f7a)', '#fff', '#2a1450'],
-};
-const LEGACY = { paper: 'white', accent: 'wine' };
-const AUTO = ['dark', 'blue', 'wine', 'sunset', 'purple', 'yellow', 'green', 'night', 'pink', 'ocean', 'orange'];
-
-export function toneOf(card, autoIndex = 0) {
-  if (card?.type === 'chapter' || card?.type === 'end') return 'dark';
-  const t = LEGACY[card?.tone] ?? card?.tone;
-  return BACKGROUNDS[t] ? t : AUTO[autoIndex % AUTO.length];
-}
+export { BACKGROUNDS, toneOf } from './coursePalette.js';
 
 function slideStyle(card, autoIndex) {
   const [bg, fg, plateFg] = BACKGROUNDS[toneOf(card, autoIndex)];
@@ -112,13 +91,19 @@ export function Card({ card, courseId, t, onClose, onNext }) {
   switch (card.type) {
     case 'chapter':
       return (
-        <>
-          <span className="cv-tag">{t('course.chapter')} {card.n}</span>
-          <h2 className="cv-big">{card.title}</h2>
-        </>
+        <div className="cv-ch">
+          <span className="cv-ch-num">{String(card.n).padStart(2, '0')}</span>
+          <span className="cv-ch-label">{t('course.chapter')}</span>
+          <span className="cv-ch-rule" />
+          <h2 className="cv-ch-title">
+            {(card.title ?? '').split(/\s+/).map((w, i) => (
+              <span key={i} style={{ '--i': i }}>{w} </span>
+            ))}
+          </h2>
+        </div>
       );
     case 'big':
-      return <p className="cv-big"><span className="cv-plate">{plain(card.text)}</span></p>;
+      return <p className="cv-big">{inline(card.text)}</p>;
     case 'stat':
       return (
         <div className="cv-stats">

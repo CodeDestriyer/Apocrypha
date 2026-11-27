@@ -1977,13 +1977,56 @@
 
 .cv-big {
   margin: 0;
-  font-size: clamp(30px, 8.6cqw, 42px);
+  font-size: clamp(28px, 7.8cqw, 36px);
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.42;
+  line-height: 1.25;
   text-wrap: balance;
 }
-.cv-card--chapter .cv-big { line-height: 1.1; font-size: clamp(36px, 10cqw, 50px); }
+
+/* Chapter opener: plays each time it lands. */
+.cv-ch { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.cv-ch-num {
+  font-size: clamp(120px, 40cqw, 190px);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.9);
+  opacity: 0;
+}
+.cv-ch-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  opacity: 0;
+}
+.cv-ch-rule { width: 56px; height: 2px; background: currentColor; transform: scaleX(0); }
+.cv-ch-title {
+  margin: 6px 0 0;
+  font-size: clamp(32px, 9cqw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.cv-ch-title span { display: inline-block; white-space: pre; opacity: 0; }
+.cv-card.is-active .cv-ch-num { animation: cv-ch-num 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.cv-card.is-active .cv-ch-label { animation: cv-ch-fade 0.6s ease 0.3s both; }
+.cv-card.is-active .cv-ch-rule { animation: cv-ch-rule 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s both; }
+.cv-card.is-active .cv-ch-title span { animation: cv-ch-word 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.55s + var(--i) * 0.07s) both; }
+@keyframes cv-ch-num { from { opacity: 0; transform: translateY(40px) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes cv-ch-fade { from { opacity: 0; letter-spacing: 0.8em; } to { opacity: 0.7; } }
+@keyframes cv-ch-rule { to { transform: scaleX(1); } }
+@keyframes cv-ch-word { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .cv-ch-num, .cv-ch-title span { opacity: 1; }
+  .cv-ch-label { opacity: 0.7; }
+  .cv-ch-rule { transform: none; }
+  .cv-card.is-active .cv-ch-num, .cv-card.is-active .cv-ch-label,
+  .cv-card.is-active .cv-ch-rule, .cv-card.is-active .cv-ch-title span { animation: none; }
+}
 
 .cv-tag {
   padding: 5px 12px;
@@ -1995,25 +2038,22 @@
   letter-spacing: 0.02em;
 }
 
-.cv-lead {
+/* One type scale for every card: a main size and a secondary one. */
+.cv-lead,
+.cv-p,
+.cv-quote p,
+.cv-list li {
   margin: 0;
-  font-size: clamp(26px, 7.4cqw, 34px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  text-wrap: balance;
-}
-.cv-p {
-  margin: 0;
-  font-size: clamp(22px, 6.2cqw, 28px);
+  font-size: clamp(24px, 6.6cqw, 30px);
   font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
   text-wrap: balance;
 }
-.cv-p + .cv-p { font-size: clamp(19px, 5.2cqw, 23px); font-weight: 600; opacity: 0.85; }
+.cv-p + .cv-p,
+.cv-stat-label,
+.cv-quote cite { font-size: clamp(18px, 5cqw, 22px); font-weight: 600; opacity: 0.75; }
 .cv-reply { display: flex; flex-direction: column; gap: 12px; animation: cv-in 0.35s ease both; }
-.cv-reply .cv-p { font-size: clamp(20px, 5.6cqw, 25px); }
 @keyframes cv-in { from { opacity: 0; transform: translateY(8px); } }
 
 .cv-pill {
@@ -2058,17 +2098,13 @@
 .cv-stats { display: flex; flex-direction: column; gap: 22px; }
 .cv-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .cv-stat-value { font-size: clamp(72px, 22cqw, 110px); font-weight: 800; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
-.cv-stat-label { font-size: 18px; font-weight: 600; opacity: 0.85; }
 
 .cv-quote { margin: 0; }
-.cv-quote p { margin: 0; font-size: clamp(26px, 7.4cqw, 34px); font-weight: 800; line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; }
-.cv-quote cite { display: block; margin-top: 14px; font-style: normal; font-size: 15px; font-weight: 600; opacity: 0.75; }
+.cv-quote cite { display: block; margin-top: 14px; font-style: normal; }
 
 .cv-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.cv-list li { font-size: clamp(20px, 5.6cqw, 24px); font-weight: 700; line-height: 1.3; }
 
 .cv-card--media { align-items: flex-end; }
-.cv-caption .cv-p { font-size: clamp(20px, 5.6cqw, 25px); }
 
 /* Chrome over the feed. */
 .cv-top {
