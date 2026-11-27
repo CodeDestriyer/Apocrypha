@@ -64,10 +64,12 @@ self.addEventListener('fetch', (e) => {
   }
   if (url.origin !== self.location.origin) return;
 
-  // The SPA lives at / (hash-routed). Other pages (privacy, tos…) and /api go
-  // to the network untouched.
+  // The SPA lives at / (hash-routed) and /apocrypha/ (the PWA's scope). Other
+  // pages (privacy, tos…) and /api go to the network untouched.
   if (req.mode === 'navigate') {
-    if (url.pathname !== '/' && url.pathname !== '/index.html') return;
+    const spa = url.pathname === '/' || url.pathname === '/index.html' ||
+      url.pathname === '/apocrypha' || url.pathname.startsWith('/apocrypha/');
+    if (!spa) return;
     e.respondWith(
       caches.match('/index.html').then((hit) => hit || fetch(req))
     );

@@ -92,9 +92,25 @@ function useMediaQuery(query) {
 function readEnterIntent() {
   try {
     if (typeof window === 'undefined') return false;
+    if (isApocryphaPath()) return true;
     const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
     return hash === 'apocrypha' || hash === 'app';
   } catch { return false; }
+}
+
+// /apocrypha/ is the PWA's scope (manifest). Keeping the scope off "/" stops
+// Android from capturing every varkanis.com link into the installed app.
+function isApocryphaPath() {
+  const p = window.location.pathname;
+  return p === '/apocrypha' || p.startsWith('/apocrypha/');
+}
+
+// A site route (#atencion, #panel, …). Installs from before the scope change
+// still capture these links into the app window — show the site, not the app.
+// OAuth returns (#access_token=…, #error=…) are not routes.
+function readSiteHash() {
+  const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+  return hash !== '' && hash !== 'apocrypha' && hash !== 'app' && !hash.includes('=');
 }
 
 // Installed-PWA detection. When launched from the home screen (standalone
@@ -106,6 +122,7 @@ function readEnterIntent() {
 function readStandalone() {
   try {
     if (typeof window === 'undefined') return false;
+    if (readSiteHash() && !isApocryphaPath()) return false;
     return (
       window.matchMedia?.('(display-mode: standalone)').matches ||
       window.matchMedia?.('(display-mode: fullscreen)').matches ||
@@ -143,7 +160,10 @@ function Shell() {
   // read the tokens out of the URL; clobbering it silently breaks sign-up.
   useEffect(() => {
     try {
-      const bareUrl = window.location.pathname + window.location.search;
+      // In the PWA, pull an out-of-scope URL (e.g. the OAuth return to "/")
+      // back under /apocrypha/ so the app window drops its URL bar.
+      const path = isPwa && !isApocryphaPath() ? '/apocrypha/' : window.location.pathname;
+      const bareUrl = path + window.location.search;
       const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
       const isAppHash = hash === 'apocrypha' || hash === 'app';
       if (showApp || isPwa) markOwnerDevice();
@@ -153,8 +173,8 @@ function Shell() {
         if (hash !== 'apocrypha' && (hash === '' || isAppHash)) {
           window.history.replaceState(null, '', `${bareUrl}#apocrypha`);
         }
-      } else if (isAppHash) {
-        window.history.replaceState(null, '', bareUrl);
+      } else if (isAppHash || isApocryphaPath()) {
+        window.history.replaceState(null, '', '/' + window.location.search);
       }
     } catch {}
   }, [showApp, isPwa]);
