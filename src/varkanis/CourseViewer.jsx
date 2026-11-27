@@ -11,7 +11,8 @@ import { BACKGROUNDS, toneOf } from './coursePalette.js';
 // One idea per card, ~30 words max. Every card has a stable `id` (likes and
 // saves point at it) and takes optional:
 //   tone:  a BACKGROUNDS key; unset = auto, rotating by position
-//   image: background photo/GIF/mp4 URL, text goes on top
+//   image: photo/GIF/mp4 URL — the background with text on top, or with
+//          imageMode: 'inline', right under the text on the card's colour
 //   { type: 'big',    text }                         one line in sticker plates
 //   { type: 'text',   kicker?, title?, body }        body: paragraphs split by a blank line
 //   { type: 'stat',   items: [{ value, label }] }    1-3 big numbers
@@ -20,7 +21,7 @@ import { BACKGROUNDS, toneOf } from './coursePalette.js';
 //   { type: 'task',   text, done? }                  exercise, button advances
 //   { type: 'quote',  text, by? }
 //   { type: 'list',   title?, items: [] }
-//   { type: 'media',  src, caption? }                full-bleed image, caption on top
+//   { type: 'media',  src, caption?, imageMode? }    image with a caption, same two modes
 // Inline: **text** = highlighted plate.
 
 export { BACKGROUNDS, toneOf } from './coursePalette.js';
@@ -164,25 +165,28 @@ export function Card({ card, courseId, t, onClose, onNext }) {
 // One full-screen card: background (colour or image) + centered content.
 // Shared with the panel preview.
 export function Slide({ card, autoIndex, courseId, t, onClose, onNext, active = true, className = '', children, ...rest }) {
-  const bgImage = card.image ?? (card.type === 'media' ? card.src : null);
+  const src = card.image ?? (card.type === 'media' ? card.src : null);
+  const inline = !!src && card.imageMode === 'inline';
   // Only the card on screen plays; thirty looping videos at once would choke a phone.
   const videoRef = useRef(null);
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (active) v.play().catch(() => {}); else v.pause();
-  }, [active, bgImage]);
+  }, [active, src, inline]);
+  const media = src && (isVideo(src)
+    ? <video ref={videoRef} className={inline ? 'cv-inline-media' : 'cv-bg'} src={mediaSrc(courseId, src)} muted loop playsInline preload="metadata" />
+    : <img className={inline ? 'cv-inline-media' : 'cv-bg'} src={mediaSrc(courseId, src)} alt="" loading="lazy" />);
   return (
     <section
-      className={`cv-card cv-card--${card.type ?? 'text'}${bgImage ? ' has-image' : ''} ${className}`}
+      className={`cv-card cv-card--${card.type ?? 'text'}${src && !inline ? ' has-image' : ''}${inline ? ' has-inline' : ''} ${className}`}
       style={slideStyle(card, autoIndex)}
       {...rest}
     >
-      {bgImage && (isVideo(bgImage)
-        ? <video ref={videoRef} className="cv-bg" src={mediaSrc(courseId, bgImage)} muted loop playsInline preload="metadata" />
-        : <img className="cv-bg" src={mediaSrc(courseId, bgImage)} alt="" loading="lazy" />)}
+      {!inline && media}
       <div className="cv-inner">
         <Card card={card} courseId={courseId} t={t} onClose={onClose} onNext={onNext} />
+        {inline && media}
       </div>
       {children}
     </section>
@@ -365,8 +369,8 @@ export default function CourseViewer({ course, onClose, preview }) {
   };
 
   const current = cards[index];
-  const light = current && !current.card.image && current.card.type !== 'media'
-    && BACKGROUNDS[toneOf(current.card, current.auto)][1] !== '#fff';
+  const onImage = current && (current.card.image || current.card.type === 'media') && current.card.imageMode !== 'inline';
+  const light = current && !onImage && BACKGROUNDS[toneOf(current.card, current.auto)][1] !== '#fff';
   const pct = cards.length > 1 ? (index / (cards.length - 1)) * 100 : 0;
   const saved = cards.filter((c) => c.key && has('saved', c.key));
 
