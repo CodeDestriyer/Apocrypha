@@ -257,6 +257,54 @@ export default function CourseViewer({ course, onClose, preview }) {
     el?.children[next]?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
   };
 
+  // Mouse drag = finger swipe on desktop. The scroller follows the cursor with
+  // snapping off; on release a long or fast enough pull moves one card,
+  // anything less springs back.
+  const drag = useRef(null);
+  const suppressClick = useRef(false);
+  const indexRef = useRef(0);
+  indexRef.current = index;
+  const goRef = useRef(go);
+  goRef.current = go;
+
+  const onPointerDown = (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('button, a, input')) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    e.preventDefault();
+    drag.current = { y: e.clientY, top: el.scrollTop, t: performance.now(), i: indexRef.current, moved: false };
+    el.classList.add('is-dragging');
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      const d = drag.current;
+      if (!d) return;
+      const dy = e.clientY - d.y;
+      if (Math.abs(dy) > 5) d.moved = true;
+      scrollerRef.current.scrollTop = d.top - dy;
+    };
+    const onUp = (e) => {
+      const d = drag.current;
+      if (!d) return;
+      drag.current = null;
+      const el = scrollerRef.current;
+      const dy = e.clientY - d.y;
+      const v = dy / Math.max(1, performance.now() - d.t); // px per ms
+      const dir = dy < -80 || v < -0.4 ? 1 : dy > 80 || v > 0.4 ? -1 : 0;
+      if (d.moved) suppressClick.current = true;
+      goRef.current(d.i + dir);
+      // Snap back on only once the smooth scroll has landed, or it yanks mid-way.
+      setTimeout(() => el?.classList.remove('is-dragging'), 450);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, []);
+
   // Resume where the reader left off, then track the card in view.
   useEffect(() => {
     const el = scrollerRef.current;
@@ -318,6 +366,7 @@ export default function CourseViewer({ course, onClose, preview }) {
 
   // Double tap = like, with a heart where the finger was.
   const onTap = (e) => {
+    if (suppressClick.current) { suppressClick.current = false; return; }
     if (e.target.closest('button, a, input')) return;
     const now = Date.now();
     if (now - lastTap.current > 300) { lastTap.current = now; return; }
@@ -352,7 +401,7 @@ export default function CourseViewer({ course, onClose, preview }) {
       {error && <p className="cv-status">{t('course.error')}</p>}
       {!error && !content && <p className="cv-status">{t('preview.loading')}</p>}
 
-      <div className="cv-scroller" ref={scrollerRef} onClick={onTap}>
+      <div className="cv-scroller" ref={scrollerRef} onClick={onTap} onPointerDown={onPointerDown}>
         {cards.map((c, i) => (
           <Slide
             key={c.key ?? `x${i}`}

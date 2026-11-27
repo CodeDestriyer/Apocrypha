@@ -1914,6 +1914,9 @@
   scrollbar-width: none;
 }
 .cv-scroller::-webkit-scrollbar { display: none; }
+@media (pointer: fine) { .cv-scroller { cursor: grab; } }
+.cv-scroller.is-dragging { scroll-snap-type: none; cursor: grabbing; }
+.cv-scroller img, .cv-scroller video { -webkit-user-drag: none; pointer-events: none; }
 
 .cv-card {
   position: relative;
