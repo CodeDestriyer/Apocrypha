@@ -356,40 +356,76 @@ function CardForm({ card, autoIndex, courseId, onChange, onMove, onDuplicate, on
   );
 }
 
+const imageFrom = (dt) => [...(dt?.items ?? [])]
+  .find((it) => it.kind === 'file' && /^(image|video)\//.test(it.type))?.getAsFile() ?? null;
+
 function MediaField({ label, courseId, value, onChange }) {
   const { t } = useStrings();
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(false);
+  const [err, setErr] = useState('');
+  const [over, setOver] = useState(false);
   const [draft, setDraft] = useState(value ?? '');
   useEffect(() => { setDraft(value ?? ''); }, [value]);
 
-  const run = async (fn) => {
-    setBusy(true); setErr(false);
-    try { onChange(await fn()); } catch { setErr(true); }
+  const run = async (fn, errKey) => {
+    setBusy(true); setErr('');
+    try { onChange(await fn()); } catch { setErr(errKey); }
     setBusy(false);
   };
+  const upload = (file) => run(() => uploadMedia(courseId, file), 'panel.error');
   const onFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (file) run(() => uploadMedia(courseId, file));
+    if (file) upload(file);
   };
   // A Giphy/Tenor/Imgur page link becomes the file behind it.
   const commit = (raw) => {
     if ((raw ?? '') === (value ?? '')) return;
     if (!raw.trim()) { onChange(''); return; }
-    run(() => resolveMediaLink(raw));
+    run(() => resolveMediaLink(raw), 'panel.linkError');
   };
+
+  // Ctrl/Cmd+V of a copied image anywhere on the form, unless the cursor is in
+  // a text field (that paste is text).
+  const uploadRef = useRef(upload);
+  uploadRef.current = upload;
+  useEffect(() => {
+    const onPaste = (e) => {
+      if (e.target.closest?.('input, textarea, [contenteditable]')) return;
+      const file = imageFrom(e.clipboardData);
+      if (!file) return;
+      e.preventDefault();
+      uploadRef.current(file);
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, []);
 
   return (
     <Field label={label ?? t('panel.f.media')}>
-      <div className="pn-media-row">
+      <div
+        className={`pn-media-row${over ? ' is-over' : ''}`}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setOver(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) upload(file);
+        }}
+      >
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onPaste={(e) => { const v = e.clipboardData.getData('text'); if (v) { e.preventDefault(); setDraft(v); commit(v); } }}
+          onPaste={(e) => {
+            const file = imageFrom(e.clipboardData);
+            if (file) { e.preventDefault(); upload(file); return; }
+            const v = e.clipboardData.getData('text');
+            if (v) { e.preventDefault(); setDraft(v); commit(v); }
+          }}
           onBlur={() => commit(draft)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(draft); } }}
-          placeholder="giphy.com / tenor.com / …"
+          placeholder="Ctrl+V · giphy.com · tenor.com"
           disabled={busy}
         />
         <label className="pn-btn pn-upload">
@@ -398,7 +434,7 @@ function MediaField({ label, courseId, value, onChange }) {
         </label>
         {value && <button type="button" className="pn-x" onClick={() => onChange('')} aria-label={t('panel.delete')}>×</button>}
       </div>
-      {err && <span className="pn-err">{t('panel.linkError')}</span>}
+      {err && <span className="pn-err">{t(err)}</span>}
     </Field>
   );
 }

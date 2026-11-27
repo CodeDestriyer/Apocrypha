@@ -141,6 +141,7 @@
 .pn-x { border: 0; background: none; font-size: 20px; color: var(--muted); cursor: pointer; }
 .pn-media-row { display: flex; gap: 6px; align-items: center; }
 .pn-media-row input { flex: 1; min-width: 0; }
+.pn-media-row.is-over input { border-color: var(--ink); border-style: dashed; background: var(--wash); }
 .pn-upload { flex: none; min-height: 44px; }
 .pn-hint { margin: 0; font-size: 12px; color: var(--faint); }
 .pn-actions { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; border-top: 1px solid var(--line-soft); }
